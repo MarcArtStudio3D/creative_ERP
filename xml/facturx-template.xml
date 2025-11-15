@@ -1,0 +1,18 @@
+# -----------------------------
+# xml_templates/facturx_template.xml.j2
+# -----------------------------
+# Plantilla simplificada para Factur-X (EN16931)
+
+
+"""
+<FacturX>
+<ID>{{ invoice.number }}</ID>
+<Date>{{ invoice.date.strftime('%Y-%m-%d') }}</Date>
+<LegalMonetaryTotal>
+<PayableAmount>{{ invoice.total }}</PayableAmount>
+</LegalMonetaryTotal>
+<AccountingCustomerParty>
+<Name>{{ invoice.client.name }}</Name>
+</AccountingCustomerParty>
+</FacturX>
+"""

@@ -1,0 +1,18 @@
+# -----------------------------
+# xml_templates/facturae_template.xml.j2
+# -----------------------------
+# (guardar como xml_templates/facturae_template.xml.j2)
+# Plantilla muy simplificada — debes completarla con el XSD Facturae real.
+
+
+"""
+<Facturae>
+<InvoiceNumber>{{ invoice.number }}</InvoiceNumber>
+<IssueDate>{{ invoice.date.strftime('%Y-%m-%d') }}</IssueDate>
+<Total>{{ invoice.total }}</Total>
+<Client>
+<Name>{{ invoice.client.name }}</Name>
+<VAT>{{ invoice.client.vat_number }}</VAT>
+</Client>
+</Facturae>
+"""

@@ -1,0 +1,15 @@
+# -----------------------------
+# requirements.txt
+# -----------------------------
+pyside6>=6.6
+SQLAlchemy>=1.4
+alembic
+Jinja2
+lxml
+pikepdf
+reportlab
+signxml
+python-dateutil
+requests
+pytest
+pyinstaller

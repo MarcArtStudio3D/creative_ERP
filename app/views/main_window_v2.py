@@ -433,6 +433,7 @@ class MainWindowV2(QMainWindow):
         # Contenedor principal
         container = QWidget()
         container.setFixedWidth(250)
+        container.setMinimumHeight(600)  # Altura mínima inicial
         container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
         
         layout = QHBoxLayout()
@@ -442,14 +443,19 @@ class MainWindowV2(QMainWindow):
         # Panel de avisos
         panel = QFrame()
         panel.setObjectName("avisosPanel")
-        panel.setMinimumWidth(230)
-        panel.setMaximumWidth(230)
+        panel.setFixedWidth(230)
+        panel.setMinimumHeight(600)  # Altura mínima inicial
         
         # TODO: Consultar si hay avisos reales en la BD
         has_avisos = False  # Cambiar a True cuando haya avisos
         
-        bg_color = "rgb(200, 50, 50)" if has_avisos else "rgb(70, 130, 180)"  # Rojo si hay avisos, azul si no
-        border_color = "rgb(150, 30, 30)" if has_avisos else "rgb(50, 100, 150)"
+        bg_color_rgb = (200, 50, 50) if has_avisos else (70, 130, 180)  # Rojo si hay avisos, azul si no
+        border_color_rgb = (150, 30, 30) if has_avisos else (50, 100, 150)
+        hover_color_rgb = (220, 80, 80) if has_avisos else (100, 160, 210)
+        
+        # Para los stylesheets necesitamos el formato rgb()
+        bg_color = f"rgb{bg_color_rgb}"
+        border_color = f"rgb{border_color_rgb}"
         
         panel.setStyleSheet(f"""
             QFrame#avisosPanel {{
@@ -487,7 +493,7 @@ class MainWindowV2(QMainWindow):
         # Pestaña vertical con texto rotado
         from PySide6.QtGui import QPainterPath
         
-        class VerticalTabButton(QPushButton):
+        class VerticalTabButton(QWidget):
             def __init__(self, text, bg_color, border_color, hover_color, parent=None):
                 super().__init__(parent)
                 self.vertical_text = text
@@ -495,7 +501,15 @@ class MainWindowV2(QMainWindow):
                 self.border_color = border_color
                 self.hover_color = hover_color
                 self.is_hovered = False
-                self.setStyleSheet("border: none; background: transparent;")
+                # Configurar para que no tenga fondo por defecto
+                self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
+                self.setAutoFillBackground(False)
+                
+            def mousePressEvent(self, event):
+                # Emitir señal de click
+                if hasattr(self, '_click_callback'):
+                    self._click_callback()
+                super().mousePressEvent(event)
                 
             def enterEvent(self, event):
                 self.is_hovered = True
@@ -511,16 +525,34 @@ class MainWindowV2(QMainWindow):
                 painter = QPainter(self)
                 painter.setRenderHint(QPainter.RenderHint.Antialiasing)
                 
-                # Dibujar fondo con bordes redondeados
+                # Color de fondo - crear QColor desde tupla RGB
                 if self.is_hovered:
-                    painter.setBrush(QBrush(QColor(self.hover_color)))
+                    bg_color = QColor(*self.hover_color)
                 else:
-                    painter.setBrush(QBrush(QColor(self.bg_color)))
+                    bg_color = QColor(*self.bg_color)
                 
-                painter.setPen(QPen(QColor(self.border_color), 2))
-                painter.drawRoundedRect(1, 1, self.width()-2, self.height()-2, 15, 15)
+                # Crear path con bordes redondeados a la derecha
+                rect = self.rect()
+                radius = 10
                 
-                # Configurar texto
+                from PySide6.QtGui import QPainterPath
+                path = QPainterPath()
+                path.moveTo(0, 0)
+                path.lineTo(rect.width() - radius, 0)
+                path.arcTo(rect.width() - radius * 2, 0, radius * 2, radius * 2, 90, -90)
+                path.lineTo(rect.width(), rect.height() - radius)
+                path.arcTo(rect.width() - radius * 2, rect.height() - radius * 2, radius * 2, radius * 2, 0, -90)
+                path.lineTo(0, rect.height())
+                path.lineTo(0, 0)
+                
+                # Rellenar path con color de fondo
+                painter.fillPath(path, bg_color)
+                
+                # Dibujar el borde
+                painter.setPen(QPen(QColor(*self.border_color), 1))
+                painter.drawPath(path)
+                
+                # Configurar y dibujar texto
                 painter.setPen(QColor("white"))
                 font = QFont()
                 font.setPointSize(8)
@@ -539,13 +571,16 @@ class MainWindowV2(QMainWindow):
         
         tab = VerticalTabButton(
             "AVISOS",
-            bg_color,
-            border_color,
-            'rgb(220, 80, 80)' if has_avisos else 'rgb(100, 160, 210)'
+            bg_color_rgb,
+            border_color_rgb,
+            hover_color_rgb
         )
         tab.setObjectName("avisosTab")
         tab.setFixedSize(20, 80)
         tab.setCursor(Qt.CursorShape.PointingHandCursor)
+        # Asegurar que el fondo se dibuje correctamente
+        tab.setAttribute(Qt.WidgetAttribute.WA_OpaquePaintEvent, False)
+        tab.setAutoFillBackground(False)
         
         # Añadir a layout
         layout.addWidget(panel)
@@ -575,7 +610,7 @@ class MainWindowV2(QMainWindow):
                 container._animation.start()
                 panel._is_open = True
         
-        tab.clicked.connect(toggle_panel)
+        tab._click_callback = toggle_panel
         
         # Posicionar inicialmente cerrado
         container.move(-230, 0)
@@ -593,6 +628,10 @@ class MainWindowV2(QMainWindow):
                     container.move(0, y_pos)
         
         container.update_position = update_position
+        
+        # Llamar update_position con un timer para asegurar que el parent exista
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(0, update_position)
         
         return container
     

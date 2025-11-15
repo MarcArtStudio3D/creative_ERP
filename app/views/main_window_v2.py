@@ -586,8 +586,11 @@ class MainWindowV2(QMainWindow):
             if parent:
                 y_pos = 0
                 container.setFixedHeight(parent.height())
+                panel.setFixedHeight(parent.height())
                 if not panel._is_open:
                     container.move(-230, y_pos)
+                else:
+                    container.move(0, y_pos)
         
         container.update_position = update_position
         
@@ -659,28 +662,20 @@ class MainWindowV2(QMainWindow):
             # Contenido ocupa todo el espacio
             module_content.setGeometry(0, 0, container.width(), container.height())
             
-            # Panel derecho: siempre pegado al borde derecho
-            # El ancho depende de si está abierto o cerrado
-            if hasattr(actions_panel, '_is_open'):
-                if actions_panel._is_open:
-                    actions_panel.setFixedWidth(250)  # Tab + panel
-                else:
-                    actions_panel.setFixedWidth(20)  # Solo tab
-            
-            x_pos = container.width() - actions_panel.width()
-            actions_panel.move(x_pos, 0)
-            actions_panel.setFixedHeight(container.height())
-            
-            # Actualizar altura del panel interno
-            panel_widget = actions_panel.findChild(QFrame, "sidePanel")
-            if panel_widget:
-                panel_widget.setFixedHeight(container.height())
+            # Panel derecho: actualizar posición
+            if hasattr(actions_panel, 'update_position'):
+                actions_panel.update_position()
             
             # Elevar panel sobre el contenido
             actions_panel.raise_()
         
         # Aplicar posiciones iniciales
-        update_positions()
+        # Dar tiempo para que el contenedor tenga las dimensiones correctas
+        from PySide6.QtCore import QTimer
+        def delayed_update():
+            update_positions()
+            actions_panel.raise_()
+        QTimer.singleShot(100, delayed_update)
         
         # Actualizar al redimensionar
         original_resize = container.resizeEvent
@@ -878,9 +873,14 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(exceptions_btn)
         
         panel.setLayout(panel_layout)
-        panel.setVisible(False)  # Oculto inicialmente
         
-        # Botón pestaña
+        # Pestaña en un contenedor para alinearla arriba
+        tab_container = QWidget()
+        tab_container.setFixedWidth(20)
+        tab_layout = QVBoxLayout()
+        tab_layout.setContentsMargins(0, 0, 0, 0)
+        tab_layout.setSpacing(0)
+        
         tab = QPushButton("◀")
         tab.setObjectName("panelTab")
         tab.setFixedSize(20, 80)
@@ -900,34 +900,72 @@ class MainWindowV2(QMainWindow):
             }
         """)
         
-        # Estado del panel
-        container._is_open = False
+        tab_layout.addWidget(tab)
+        tab_layout.addStretch()  # Empuja el tab hacia arriba
+        tab_container.setLayout(tab_layout)
         
-        # Animación con fade y ancho
-        panel_animation = QPropertyAnimation(panel, b"maximumWidth")
+        # Añadir al layout (tab primero a la derecha, luego panel a la izquierda)
+        layout.addWidget(tab_container)
+        layout.addWidget(panel)
+        container.setLayout(layout)
+        
+        # Estado del panel
+        panel._is_open = False
+        container.setFixedWidth(250)
+        
+        # Animación
+        panel_animation = QPropertyAnimation(container, b"pos")
         panel_animation.setDuration(600)
         panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
+        container._animation = panel_animation
         
         def toggle_panel():
-            if container._is_open:
-                # Cerrar
+            parent = container.parent()
+            if not parent:
+                return
+            
+            if panel._is_open:
+                # Cerrar - mover hacia la derecha
                 tab.setText("◀")
-                panel.setVisible(False)
-                container._is_open = False
+                container._animation.setStartValue(container.pos())
+                # Solo dejar visible la pestaña (20px desde el borde derecho)
+                container._animation.setEndValue(QPoint(parent.width() - 20, container.pos().y()))
+                container._animation.start()
+                panel._is_open = False
             else:
-                # Abrir
+                # Abrir - mover hacia la izquierda
                 tab.setText("▶")
-                panel.setVisible(True)
-                container._is_open = True
+                container._animation.setStartValue(container.pos())
+                # Mostrar todo: 250px desde el borde derecho
+                container._animation.setEndValue(QPoint(parent.width() - 250, container.pos().y()))
+                container._animation.start()
+                panel._is_open = True
         
         tab.clicked.connect(toggle_panel)
         
-        # Agregar al layout
-        layout.addWidget(panel)
-        layout.addWidget(tab)
-        container.setLayout(layout)
-        container.setStyleSheet("background-color: transparent;")
+        # Actualizar posición al redimensionar y al mostrar
+        def update_position():
+            parent = container.parent()
+            if parent and parent.width() > 0:
+                container.setFixedHeight(parent.height())
+                panel.setFixedHeight(parent.height())
+                # Reposicionar según estado
+                if not panel._is_open:
+                    container.move(parent.width() - 20, 0)
+                else:
+                    container.move(parent.width() - 250, 0)
         
+        container.update_position = update_position
+        
+        # Sobrescribir showEvent para posicionar al mostrarse
+        original_show = container.showEvent
+        def on_show(event):
+            update_position()
+            if original_show:
+                original_show(event)
+        container.showEvent = on_show
+        
+        container.setStyleSheet("background-color: transparent;")
         return container
     
     def _get_panel_button_style(self, hover_color: str = "#2d3436") -> str:

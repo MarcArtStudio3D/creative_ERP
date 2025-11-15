@@ -1,0 +1,1144 @@
+"""
+MainWindow v2 - Basada en RedFox SGC
+Usa QStackedWidget para módulos dinámicos con barra superior personalizada.
+"""
+
+from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
+                               QLabel, QPushButton, QFrame, QStackedWidget, 
+                               QDateEdit, QMenu, QMenuBar, QToolButton, QMessageBox,
+                               QScrollArea, QComboBox, QLineEdit)
+from PySide6.QtCore import Qt, QDate, Signal, QPropertyAnimation, QEasingCurve, Property, QPoint
+from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush
+
+from core.auth import Session, UserRole
+from core.modules import ModuleManager, ModuleCategory
+
+
+class MainWindowV2(QMainWindow):
+    """
+    Ventana principal estilo RedFox SGC.
+    
+    Características:
+    - Barra superior negra con logo, shortcuts, usuario, ejercicio
+    - QStackedWidget para módulos dinámicos
+    - MenuBar con categorías de módulos
+    - Sistema de shortcuts rápidos
+    """
+    
+    logout_requested = Signal()
+    
+    def __init__(self, session: Session):
+        super().__init__()
+        self.session = session
+        self.module_manager = ModuleManager()
+        self.module_widgets = {}  # Caché de widgets de módulos
+        
+        self.setup_ui()
+        self.create_menus()
+        self.update_user_info()
+    
+    def setup_ui(self):
+        """Configura la interfaz principal."""
+        self.setWindowTitle("Creative ERP - Sistema de Gestión Empresarial")
+        self.setMinimumSize(1400, 800)
+        self.resize(1600, 900)  # Tamaño inicial más grande
+        
+        # Widget central
+        central_widget = QWidget()
+        main_layout = QVBoxLayout()
+        main_layout.setSpacing(0)
+        main_layout.setContentsMargins(18, 0, 18, 0)
+        
+        # ========== BARRA SUPERIOR ==========
+        top_bar = self.create_top_bar()
+        main_layout.addWidget(top_bar)
+        
+        # ========== CONTENEDOR HORIZONTAL: Sidebar + StackedWidget ==========
+        content_layout = QHBoxLayout()
+        content_layout.setSpacing(0)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Sidebar izquierda con módulos
+        self.sidebar = self.create_sidebar()
+        content_layout.addWidget(self.sidebar)
+        
+        # StackedWidget para contenido
+        self.stacked_widget = QStackedWidget()
+        self.stacked_widget.setStyleSheet("")
+        
+        # Página inicial (splash/bienvenida)
+        welcome_page = self.create_welcome_page()
+        self.stacked_widget.addWidget(welcome_page)
+        
+        content_layout.addWidget(self.stacked_widget, 1)  # stretch=1 para que ocupe el espacio restante
+        
+        content_container = QWidget()
+        content_container.setLayout(content_layout)
+        main_layout.addWidget(content_container)
+        
+        # ========== PANEL DE AVISOS GLOBAL (superpuesto) ==========
+        self.avisos_panel_widget = self.create_global_avisos_panel()
+        self.avisos_panel_widget.setParent(content_container)
+        self.avisos_panel_widget.raise_()
+        
+        central_widget.setLayout(main_layout)
+        self.setCentralWidget(central_widget)
+        
+        # Barra de estado
+        self.statusBar().showMessage(self.get_status_text())
+    
+    def create_sidebar(self) -> QFrame:
+        """Crea la barra lateral izquierda con módulos disponibles."""
+        sidebar = QFrame()
+        sidebar.setMinimumWidth(200)
+        sidebar.setMaximumWidth(250)
+        sidebar.setFrameShape(QFrame.Shape.StyledPanel)
+        sidebar.setStyleSheet("""
+            QFrame {
+                background-color: palette(window);
+                border-right: 1px solid palette(mid);
+            }
+        """)
+        
+        layout = QVBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 10, 0, 10)
+        
+        # Título de la sidebar
+        title = QLabel("MÓDULOS")
+        title_font = QFont()
+        title_font.setPointSize(11)
+        title_font.setBold(True)
+        title.setFont(title_font)
+        title.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        title.setStyleSheet("padding: 10px; background-color: palette(dark);")
+        layout.addWidget(title)
+        
+        # Scroll area para los módulos
+        scroll = QScrollArea()
+        scroll.setWidgetResizable(True)
+        scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        scroll.setStyleSheet("QScrollArea { border: none; background-color: transparent; }")
+        
+        # Widget contenedor de módulos
+        modules_widget = QWidget()
+        self.sidebar_modules_container = QVBoxLayout()
+        self.sidebar_modules_container.setSpacing(2)
+        self.sidebar_modules_container.setContentsMargins(5, 10, 5, 5)
+        self.sidebar_modules_container.addStretch()  # Push todo hacia arriba
+        modules_widget.setLayout(self.sidebar_modules_container)
+        
+        scroll.setWidget(modules_widget)
+        layout.addWidget(scroll)
+        
+        # Cargar módulos iniciales
+        self.update_sidebar_modules()
+        
+        sidebar.setLayout(layout)
+        return sidebar
+    
+    def update_sidebar_modules(self, category: ModuleCategory = None):
+        """
+        Actualiza los módulos mostrados en la sidebar.
+        
+        Args:
+            category: Si se especifica, muestra solo módulos de esa categoría.
+                     Si es None, muestra todos los módulos disponibles.
+        """
+        # Limpiar botones existentes (excepto el stretch final)
+        while self.sidebar_modules_container.count() > 1:
+            item = self.sidebar_modules_container.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Obtener módulos disponibles
+        user_permissions = self.session.user.get_effective_permissions()
+        available_modules = self.module_manager.get_available_modules(user_permissions)
+        
+        # Filtrar por categoría si se especificó
+        if category:
+            available_modules = [m for m in available_modules if m.category == category]
+        
+        # Agrupar por categoría
+        categories = {}
+        for module in available_modules:
+            cat = module.category
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(module)
+        
+        category_names = {
+            ModuleCategory.VENTAS: "VENTAS",
+            ModuleCategory.COMPRAS: "COMPRAS",
+            ModuleCategory.ALMACEN: "ALMACÉN",
+            ModuleCategory.FINANCIERO: "FINANCIERO",
+            ModuleCategory.PROYECTOS: "PROYECTOS",
+            ModuleCategory.ADMINISTRACION: "ADMINISTRACIÓN"
+        }
+        
+        # Crear botones agrupados por categoría
+        for cat in [ModuleCategory.VENTAS, ModuleCategory.COMPRAS, 
+                   ModuleCategory.ALMACEN, ModuleCategory.FINANCIERO,
+                   ModuleCategory.PROYECTOS, ModuleCategory.ADMINISTRACION]:
+            
+            if cat not in categories:
+                continue
+            
+            # Header de categoría
+            cat_label = QLabel(category_names[cat])
+            cat_font = QFont()
+            cat_font.setPointSize(9)
+            cat_font.setBold(True)
+            cat_label.setFont(cat_font)
+            cat_label.setStyleSheet("""
+                padding: 8px 10px 4px 10px;
+                color: palette(mid);
+            """)
+            self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, cat_label)
+            
+            # Botones de módulos
+            for module in categories[cat]:
+                btn = QPushButton(f"{module.icon} {module.name}")
+                btn.setMinimumHeight(40)
+                btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                btn.setStyleSheet("""
+                    QPushButton {
+                        text-align: left;
+                        padding: 8px 15px;
+                        border: none;
+                        background-color: transparent;
+                        border-radius: 4px;
+                    }
+                    QPushButton:hover {
+                        background-color: palette(midlight);
+                    }
+                    QPushButton:pressed {
+                        background-color: palette(mid);
+                    }
+                """)
+                btn.clicked.connect(lambda checked, m=module: self.open_module(m.id))
+                self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, btn)
+            
+            # Espaciado entre categorías
+            self.sidebar_modules_container.insertSpacing(self.sidebar_modules_container.count() - 1, 5)
+    
+    def create_top_bar(self) -> QFrame:
+        """Crea la barra superior negra estilo RedFox."""
+        frame = QFrame()
+        frame.setMinimumHeight(38)
+        frame.setMaximumHeight(38)
+        frame.setStyleSheet("background-color: rgb(0, 0, 0);")
+        frame.setFrameShape(QFrame.Shape.StyledPanel)
+        
+        layout = QHBoxLayout()
+        layout.setContentsMargins(9, 1, 9, 1)
+        layout.setSpacing(5)
+        
+        # Logo pequeño
+        logo_label = QLabel()
+        logo_label.setMaximumSize(32, 32)
+        logo_label.setStyleSheet("background-color: transparent;")
+        # TODO: Cargar logo real
+        # logo_label.setPixmap(QPixmap(":/icons/logo.png").scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio))
+        layout.addWidget(logo_label)
+        
+        # Ícono de avisos/mensajes
+        avisos_label = QLabel()
+        avisos_label.setMaximumSize(40, 32)
+        avisos_label.setStyleSheet("background-color: transparent;")
+        # TODO: Cargar ícono de mail/avisos
+        layout.addWidget(avisos_label)
+        
+        # Pequeño espaciador
+        layout.addSpacing(10)
+        
+        # Contenedor de shortcuts dinámicos (botones de módulos activos)
+        self.shortcut_container = QHBoxLayout()
+        self.shortcut_container.setSpacing(3)
+        layout.addLayout(self.shortcut_container)
+        
+        # Espaciador expansible
+        layout.addStretch()
+        
+        # ========== ZONA DERECHA: Usuario, Empresa, Ejercicio, Bloquear ==========
+        
+        # Label Usuario/Grupo
+        self.user_label = QLabel("Usuario")
+        user_font = QFont()
+        user_font.setPointSize(10)
+        user_font.setBold(True)
+        self.user_label.setFont(user_font)
+        self.user_label.setStyleSheet("color: rgb(255, 255, 127); background-color: transparent;")
+        layout.addWidget(self.user_label)
+        
+        # Empresa (botón clicable para cambiar)
+        self.company_button = QPushButton("Empresa")
+        self.company_button.setStyleSheet("""
+            color: rgb(255, 255, 127);
+            background-color: transparent;
+            border: none;
+            font-weight: bold;
+            padding: 2px 8px;
+        """)
+        self.company_button.setFlat(True)
+        self.company_button.clicked.connect(self.change_company)
+        layout.addWidget(self.company_button)
+        
+        # Selector de ejercicio (año)
+        self.year_selector = QDateEdit()
+        self.year_selector.setDate(QDate.currentDate())
+        self.year_selector.setDisplayFormat("yyyy")
+        self.year_selector.setStyleSheet("color: rgb(255, 255, 127); background-color: rgb(30, 30, 30);")
+        self.year_selector.setCalendarPopup(False)
+        self.year_selector.setMaximumWidth(80)
+        self.year_selector.dateChanged.connect(self.on_year_changed)
+        layout.addWidget(self.year_selector)
+        
+        # Botón Bloquear/Salir
+        lock_button = QPushButton("Bloq.")
+        lock_button.setMinimumHeight(27)
+        lock_button.setStyleSheet("""
+            color: rgb(0, 0, 0);
+            background-color: rgb(133, 170, 142);
+            border-radius: 3px;
+            font-weight: bold;
+            padding: 2px 8px;
+        """)
+        lock_button.clicked.connect(self.lock_or_logout)
+        layout.addWidget(lock_button)
+        
+        frame.setLayout(layout)
+        return frame
+    
+    def create_welcome_page(self) -> QWidget:
+        """Crea la página de bienvenida (mostrada al iniciar sin módulos abiertos)."""
+        page = QWidget()
+        layout = QVBoxLayout()
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        
+        # Logo grande
+        logo_label = QLabel("CREATIVE ERP")
+        logo_font = QFont()
+        logo_font.setPointSize(48)
+        logo_font.setBold(True)
+        logo_label.setFont(logo_font)
+        logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(logo_label)
+        
+        # Subtítulo
+        subtitle = QLabel("Sistema de Gestión Empresarial")
+        subtitle_font = QFont()
+        subtitle_font.setPointSize(14)
+        subtitle.setFont(subtitle_font)
+        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(subtitle)
+        
+        layout.addSpacing(30)
+        
+        # Información del usuario
+        user_info = QLabel(f"Bienvenido, {self.session.user.username}")
+        info_font = QFont()
+        info_font.setPointSize(12)
+        user_info.setFont(info_font)
+        user_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(user_info)
+        
+        if self.session.company_context:
+            company_info = QLabel(
+                f"{self.session.company_context.group.name} - "
+                f"{self.session.company_context.company.name}"
+            )
+            company_info.setFont(info_font)
+            company_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(company_info)
+        
+        layout.addSpacing(20)
+        
+        instructions = QLabel("Selecciona un módulo del menú superior para comenzar")
+        instructions.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        layout.addWidget(instructions)
+        
+        page.setLayout(layout)
+        return page
+    
+    def create_menus(self):
+        """Crea el menú principal con categorías de módulos."""
+        menubar = self.menuBar()
+        
+        # Obtener módulos disponibles para el usuario
+        user_permissions = self.session.user.get_effective_permissions()
+        available_modules = self.module_manager.get_available_modules(user_permissions)
+        
+        # Agrupar por categoría
+        categories = {}
+        for module in available_modules:
+            cat = module.category
+            if cat not in categories:
+                categories[cat] = []
+            categories[cat].append(module)
+        
+        # Crear menús por categoría
+        category_names = {
+            ModuleCategory.VENTAS: "Ventas",
+            ModuleCategory.COMPRAS: "Compras",
+            ModuleCategory.ALMACEN: "Almacén",
+            ModuleCategory.FINANCIERO: "Financiero",
+            ModuleCategory.PROYECTOS: "Proyectos",
+            ModuleCategory.ADMINISTRACION: "Administración"
+        }
+        
+        for category in [ModuleCategory.VENTAS, ModuleCategory.COMPRAS, 
+                        ModuleCategory.ALMACEN, ModuleCategory.FINANCIERO,
+                        ModuleCategory.PROYECTOS, ModuleCategory.ADMINISTRACION]:
+            
+            if category not in categories:
+                continue
+            
+            menu = menubar.addMenu(category_names[category])
+            
+            for module in categories[category]:
+                action = QAction(module.icon + " " + module.name, self)
+                action.setStatusTip(module.description)
+                action.triggered.connect(lambda checked, m=module: self.open_module(m.id))
+                menu.addAction(action)
+        
+        # Menú Utilidades
+        utils_menu = menubar.addMenu("Utilidades")
+        
+        preferences_action = QAction("⚙️ Preferencias", self)
+        preferences_action.triggered.connect(self.open_preferences)
+        utils_menu.addAction(preferences_action)
+        
+        utils_menu.addSeparator()
+        
+        about_action = QAction("ℹ️ Acerca de", self)
+        about_action.triggered.connect(self.show_about)
+        utils_menu.addAction(about_action)
+        
+        # Menú Sesión
+        session_menu = menubar.addMenu("Sesión")
+        
+        change_company_action = QAction("🏢 Cambiar Empresa", self)
+        change_company_action.triggered.connect(self.change_company)
+        session_menu.addAction(change_company_action)
+        
+        session_menu.addSeparator()
+        
+        logout_action = QAction("🚪 Cerrar Sesión", self)
+        logout_action.triggered.connect(self.logout_requested.emit)
+        session_menu.addAction(logout_action)
+    
+    def create_global_avisos_panel(self) -> QWidget:
+        """Crea el panel de avisos global que está siempre disponible."""
+        # Contenedor principal
+        container = QWidget()
+        container.setFixedWidth(250)
+        container.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, False)
+        
+        layout = QHBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Panel de avisos
+        panel = QFrame()
+        panel.setObjectName("avisosPanel")
+        panel.setMinimumWidth(230)
+        panel.setMaximumWidth(230)
+        
+        # TODO: Consultar si hay avisos reales en la BD
+        has_avisos = False  # Cambiar a True cuando haya avisos
+        
+        bg_color = "rgb(200, 50, 50)" if has_avisos else "rgb(70, 130, 180)"  # Rojo si hay avisos, azul si no
+        border_color = "rgb(150, 30, 30)" if has_avisos else "rgb(50, 100, 150)"
+        
+        panel.setStyleSheet(f"""
+            QFrame#avisosPanel {{
+                background-color: {bg_color};
+                border-right: 2px solid {border_color};
+                border-radius: 0px 10px 10px 0px;
+            }}
+        """)
+        
+        panel_layout = QVBoxLayout()
+        panel_layout.setContentsMargins(15, 20, 15, 20)
+        panel_layout.setSpacing(10)
+        
+        # Título
+        title_label = QLabel("⚠️ AVISOS" if has_avisos else "✓ Sin Avisos")
+        title_font = QFont()
+        title_font.setPointSize(12)
+        title_font.setBold(True)
+        title_label.setFont(title_font)
+        title_label.setStyleSheet("color: white; background: transparent;")
+        title_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        panel_layout.addWidget(title_label)
+        
+        panel_layout.addSpacing(10)
+        
+        # Lista de avisos
+        no_avisos = QLabel("No hay avisos pendientes")
+        no_avisos.setStyleSheet("color: white; background: transparent;")
+        no_avisos.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        panel_layout.addWidget(no_avisos)
+        
+        panel_layout.addStretch()
+        panel.setLayout(panel_layout)
+        
+        # Pestaña vertical con texto rotado
+        from PySide6.QtGui import QPainterPath
+        
+        class VerticalTabButton(QPushButton):
+            def __init__(self, text, bg_color, border_color, hover_color, parent=None):
+                super().__init__(parent)
+                self.vertical_text = text
+                self.bg_color = bg_color
+                self.border_color = border_color
+                self.hover_color = hover_color
+                self.is_hovered = False
+                self.setStyleSheet("border: none; background: transparent;")
+                
+            def enterEvent(self, event):
+                self.is_hovered = True
+                self.update()
+                super().enterEvent(event)
+                
+            def leaveEvent(self, event):
+                self.is_hovered = False
+                self.update()
+                super().leaveEvent(event)
+                
+            def paintEvent(self, event):
+                painter = QPainter(self)
+                painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+                
+                # Dibujar fondo con bordes redondeados
+                if self.is_hovered:
+                    painter.setBrush(QBrush(QColor(self.hover_color)))
+                else:
+                    painter.setBrush(QBrush(QColor(self.bg_color)))
+                
+                painter.setPen(QPen(QColor(self.border_color), 2))
+                painter.drawRoundedRect(1, 1, self.width()-2, self.height()-2, 15, 15)
+                
+                # Configurar texto
+                painter.setPen(QColor("white"))
+                font = QFont()
+                font.setPointSize(8)
+                font.setBold(True)
+                painter.setFont(font)
+                
+                # Guardar estado, rotar y dibujar texto
+                painter.save()
+                painter.translate(self.width() / 2, self.height() / 2)
+                painter.rotate(-90)  # -90 para leer de abajo hacia arriba
+                
+                # Calcular ancho del texto aproximado
+                text_width = len(self.vertical_text) * 6
+                painter.drawText(-text_width // 2, 4, self.vertical_text)
+                painter.restore()
+        
+        tab = VerticalTabButton(
+            "AVISOS",
+            bg_color,
+            border_color,
+            'rgb(220, 80, 80)' if has_avisos else 'rgb(100, 160, 210)'
+        )
+        tab.setObjectName("avisosTab")
+        tab.setFixedSize(20, 80)
+        tab.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        # Añadir a layout
+        layout.addWidget(panel)
+        layout.addWidget(tab)
+        container.setLayout(layout)
+        
+        # Estado del panel
+        panel._is_open = False
+        
+        # Animación
+        panel_animation = QPropertyAnimation(container, b"pos")
+        panel_animation.setDuration(600)
+        panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
+        container._animation = panel_animation
+        
+        def toggle_panel():
+            if panel._is_open:
+                # Cerrar
+                container._animation.setStartValue(container.pos())
+                container._animation.setEndValue(QPoint(-230, container.pos().y()))
+                container._animation.start()
+                panel._is_open = False
+            else:
+                # Abrir
+                container._animation.setStartValue(container.pos())
+                container._animation.setEndValue(QPoint(0, container.pos().y()))
+                container._animation.start()
+                panel._is_open = True
+        
+        tab.clicked.connect(toggle_panel)
+        
+        # Posicionar inicialmente cerrado
+        container.move(-230, 0)
+        
+        # Actualizar posición al redimensionar ventana
+        def update_position():
+            parent = container.parent()
+            if parent:
+                y_pos = 0
+                container.setFixedHeight(parent.height())
+                if not panel._is_open:
+                    container.move(-230, y_pos)
+        
+        container.update_position = update_position
+        
+        return container
+    
+    def resizeEvent(self, event):
+        """Actualizar posiciones de paneles al redimensionar."""
+        super().resizeEvent(event)
+        if hasattr(self, 'avisos_panel_widget'):
+            self.avisos_panel_widget.update_position()
+    
+    def open_module(self, module_id: str):
+        """
+        Abre un módulo en el stacked widget.
+        
+        Si el módulo ya está abierto, lo muestra.
+        Si no, lo crea dinámicamente.
+        """
+        # Si el módulo ya está abierto, simplemente lo muestra
+        if module_id in self.module_widgets:
+            widget = self.module_widgets[module_id]
+            self.stacked_widget.setCurrentWidget(widget)
+            self.update_shortcuts()
+            self.statusBar().showMessage(f"Módulo {module_id} activo")
+            return
+        
+        # Crear el widget del módulo (carga bajo demanda)
+        module_widget = self.create_module_widget(module_id)
+        
+        if module_widget:
+            self.module_widgets[module_id] = module_widget
+            self.stacked_widget.addWidget(module_widget)
+            self.stacked_widget.setCurrentWidget(module_widget)
+            self.update_shortcuts()
+            self.statusBar().showMessage(f"Módulo {module_id} cargado")
+        else:
+            QMessageBox.information(
+                self,
+                "Módulo en desarrollo",
+                f"El módulo '{module_id}' aún no está implementado."
+            )
+    
+    def create_module_widget(self, module_id: str) -> QWidget:
+        """
+        Crea el widget para un módulo específico con panel lateral derecho superpuesto.
+        - Panel derecho: acciones del módulo (verde) - overlay sobre el contenido
+        """
+        module_info = self.module_manager.get_module(module_id)
+        if not module_info:
+            return None
+        
+        # Contenedor principal
+        container = QWidget()
+        container.setMinimumSize(800, 600)
+        
+        # ========== CONTENIDO PRINCIPAL (fondo) ==========
+        module_content = self.load_module_view(module_id)
+        if not module_content:
+            module_content = self.create_placeholder_content(module_info)
+        
+        module_content.setParent(container)
+        
+        # ========== PANEL DERECHO SUPERPUESTO ==========
+        actions_panel = self.create_module_side_panel(module_id, module_info)
+        actions_panel.setParent(container)
+        
+        # Función para posicionar elementos
+        def update_positions():
+            # Contenido ocupa todo el espacio
+            module_content.setGeometry(0, 0, container.width(), container.height())
+            
+            # Panel derecho: siempre pegado al borde derecho
+            # El ancho depende de si está abierto o cerrado
+            if hasattr(actions_panel, '_is_open'):
+                if actions_panel._is_open:
+                    actions_panel.setFixedWidth(250)  # Tab + panel
+                else:
+                    actions_panel.setFixedWidth(20)  # Solo tab
+            
+            x_pos = container.width() - actions_panel.width()
+            actions_panel.move(x_pos, 0)
+            actions_panel.setFixedHeight(container.height())
+            
+            # Actualizar altura del panel interno
+            panel_widget = actions_panel.findChild(QFrame, "sidePanel")
+            if panel_widget:
+                panel_widget.setFixedHeight(container.height())
+            
+            # Elevar panel sobre el contenido
+            actions_panel.raise_()
+        
+        # Aplicar posiciones iniciales
+        update_positions()
+        
+        # Actualizar al redimensionar
+        original_resize = container.resizeEvent
+        def on_resize(event):
+            update_positions()
+            if original_resize:
+                original_resize(event)
+        
+        container.resizeEvent = on_resize
+        
+        return container
+    
+    def load_module_view(self, module_id: str) -> QWidget:
+        """
+        Intenta cargar dinámicamente la vista de un módulo.
+        
+        Busca en modules/{module_id}/view.py una clase con nombre {ModuleId}View
+        Por ejemplo: modules/clientes/view.py → ClientesView
+        """
+        try:
+            # Importar dinámicamente el módulo
+            module_name = f"modules.{module_id}.view"
+            view_class_name = f"{module_id.capitalize()}View"
+            
+            module = __import__(module_name, fromlist=[view_class_name])
+            view_class = getattr(module, view_class_name)
+            
+            # Crear instancia de la vista
+            view_instance = view_class(self.session)
+            return view_instance
+            
+        except (ImportError, AttributeError) as e:
+            print(f"No se pudo cargar módulo {module_id}: {e}")
+            return None
+    
+    def create_placeholder_content(self, module_info) -> QWidget:
+        """Crea un contenido placeholder para módulos sin implementar."""
+        content_container = QWidget()
+        content_layout = QVBoxLayout()
+        content_layout.setSpacing(0)
+        content_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Título del módulo
+        header = QFrame()
+        header.setMinimumHeight(60)
+        header.setStyleSheet("background-color: palette(light); border-bottom: 1px solid palette(mid);")
+        header_layout = QHBoxLayout()
+        header_layout.setContentsMargins(20, 10, 20, 10)
+        
+        title = QLabel(f"{module_info.icon} {module_info.name}")
+        title_font = QFont()
+        title_font.setPointSize(18)
+        title_font.setBold(True)
+        title.setFont(title_font)
+        header_layout.addWidget(title)
+        header_layout.addStretch()
+        header.setLayout(header_layout)
+        
+        content_layout.addWidget(header)
+        
+        # Contenido placeholder
+        module_content = QWidget()
+        module_content_layout = QVBoxLayout()
+        module_content_layout.setContentsMargins(20, 20, 20, 20)
+        
+        description = QLabel(module_info.description)
+        module_content_layout.addWidget(description)
+        
+        module_content_layout.addSpacing(20)
+        
+        placeholder = QLabel("Este módulo está en desarrollo.\nAquí se cargará la tabla/lista de datos.")
+        placeholder.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        module_content_layout.addWidget(placeholder)
+        
+        module_content_layout.addStretch()
+        
+        module_content.setLayout(module_content_layout)
+        content_layout.addWidget(module_content)
+        
+        content_container.setLayout(content_layout)
+        return content_container
+    
+    def create_module_side_panel(self, module_id: str, module_info) -> QWidget:
+        """
+        Crea el panel lateral derecho deslizante con las acciones del módulo.
+        
+        El panel está oculto por defecto y se despliega al hacer clic en la pestaña.
+        """
+        # Contenedor principal con layout
+        container = QWidget()
+        layout = QHBoxLayout()
+        layout.setSpacing(0)
+        layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Panel con contenido
+        panel = QFrame()
+        panel.setObjectName("sidePanel")
+        panel.setFixedWidth(230)
+        panel.setStyleSheet("""
+            QFrame#sidePanel {
+                background-color: rgb(133, 170, 142);
+                border-left: 2px solid rgb(100, 140, 110);
+                border-radius: 10px 0px 0px 10px;
+            }
+        """)
+        
+        panel_layout = QVBoxLayout()
+        panel_layout.setContentsMargins(15, 20, 15, 20)
+        panel_layout.setSpacing(10)
+        
+        # Imagen/logo superior
+        logo_container = QFrame()
+        logo_container.setMinimumHeight(80)
+        logo_container.setStyleSheet("""
+            background-color: white;
+            border-radius: 8px;
+            border: 2px solid rgb(100, 140, 110);
+        """)
+        logo_layout = QVBoxLayout()
+        logo_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo_label = QLabel("🔍")
+        logo_label.setStyleSheet("font-size: 32px; background: transparent; border: none;")
+        logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo_layout.addWidget(logo_label)
+        id_label = QLabel(f"ID: {module_info.id.upper()[:3]}")
+        id_label.setStyleSheet("background: transparent; border: none; font-size: 9px;")
+        id_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        logo_layout.addWidget(id_label)
+        logo_container.setLayout(logo_layout)
+        panel_layout.addWidget(logo_container)
+        
+        # Botón "Limpiar y Refrescar"
+        refresh_btn = QPushButton("🔄 Limpiar y Refrescar")
+        refresh_btn.setMinimumHeight(35)
+        refresh_btn.setStyleSheet(self._get_panel_button_style())
+        refresh_btn.clicked.connect(lambda: self.on_module_action(module_id, 'refresh'))
+        panel_layout.addWidget(refresh_btn)
+        
+        # Controles de ordenación y búsqueda
+        order_label = QLabel("Ordenar por:")
+        order_label.setStyleSheet("color: white; font-weight: bold; background: transparent;")
+        panel_layout.addWidget(order_label)
+        
+        order_combo = QComboBox()
+        order_combo.addItems(["Nombre Fiscal", "Código", "Fecha"])
+        order_combo.setMinimumHeight(30)
+        panel_layout.addWidget(order_combo)
+        
+        mode_label = QLabel("Modo:")
+        mode_label.setStyleSheet("color: white; font-weight: bold; background: transparent;")
+        panel_layout.addWidget(mode_label)
+        
+        mode_combo = QComboBox()
+        mode_combo.addItems(["A-Z", "Z-A"])
+        mode_combo.setMinimumHeight(30)
+        panel_layout.addWidget(mode_combo)
+        
+        search_label = QLabel("Búsqueda:")
+        search_label.setStyleSheet("color: white; font-weight: bold; background: transparent;")
+        panel_layout.addWidget(search_label)
+        
+        search_input = QLineEdit()
+        search_input.setPlaceholderText("Buscar...")
+        search_input.setMinimumHeight(30)
+        panel_layout.addWidget(search_input)
+        
+        panel_layout.addSpacing(20)
+        
+        # Botones de acción principales
+        add_btn = QPushButton("➕ Añadir")
+        add_btn.setMinimumHeight(40)
+        add_btn.setStyleSheet(self._get_panel_button_style())
+        add_btn.clicked.connect(lambda: self.on_module_action(module_id, 'new'))
+        panel_layout.addWidget(add_btn)
+        
+        edit_btn = QPushButton("📝 Editar")
+        edit_btn.setMinimumHeight(40)
+        edit_btn.setStyleSheet(self._get_panel_button_style())
+        edit_btn.clicked.connect(lambda: self.on_module_action(module_id, 'edit'))
+        panel_layout.addWidget(edit_btn)
+        
+        delete_btn = QPushButton("🗑️ Borrar")
+        delete_btn.setMinimumHeight(40)
+        delete_btn.setStyleSheet(self._get_panel_button_style("#d63031"))
+        delete_btn.clicked.connect(lambda: self.on_module_action(module_id, 'delete'))
+        panel_layout.addWidget(delete_btn)
+        
+        panel_layout.addStretch()
+        
+        # Botón Excepciones (abajo)
+        exceptions_btn = QPushButton("📋 Excepciones")
+        exceptions_btn.setMinimumHeight(40)
+        exceptions_btn.setStyleSheet(self._get_panel_button_style())
+        exceptions_btn.clicked.connect(lambda: self.on_module_action(module_id, 'exceptions'))
+        panel_layout.addWidget(exceptions_btn)
+        
+        panel.setLayout(panel_layout)
+        panel.setVisible(False)  # Oculto inicialmente
+        
+        # Botón pestaña
+        tab = QPushButton("◀")
+        tab.setObjectName("panelTab")
+        tab.setFixedSize(20, 80)
+        tab.setCursor(Qt.CursorShape.PointingHandCursor)
+        tab.setStyleSheet("""
+            QPushButton#panelTab {
+                background-color: rgb(133, 170, 142);
+                border: 2px solid rgb(100, 140, 110);
+                border-right: none;
+                border-top-left-radius: 15px;
+                border-bottom-left-radius: 15px;
+                color: white;
+                font-weight: bold;
+            }
+            QPushButton#panelTab:hover {
+                background-color: rgb(150, 190, 160);
+            }
+        """)
+        
+        # Estado del panel
+        container._is_open = False
+        
+        # Animación con fade y ancho
+        panel_animation = QPropertyAnimation(panel, b"maximumWidth")
+        panel_animation.setDuration(600)
+        panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
+        
+        def toggle_panel():
+            if container._is_open:
+                # Cerrar
+                tab.setText("◀")
+                panel.setVisible(False)
+                container._is_open = False
+            else:
+                # Abrir
+                tab.setText("▶")
+                panel.setVisible(True)
+                container._is_open = True
+        
+        tab.clicked.connect(toggle_panel)
+        
+        # Agregar al layout
+        layout.addWidget(panel)
+        layout.addWidget(tab)
+        container.setLayout(layout)
+        container.setStyleSheet("background-color: transparent;")
+        
+        return container
+    
+    def _get_panel_button_style(self, hover_color: str = "#2d3436") -> str:
+        """Retorna el estilo CSS para los botones del panel lateral."""
+        return f"""
+            QPushButton {{
+                background-color: {hover_color};
+                color: white;
+                border: none;
+                border-radius: 5px;
+                padding: 8px;
+                font-weight: bold;
+                text-align: center;
+            }}
+            QPushButton:hover {{
+                background-color: #636e72;
+            }}
+            QPushButton:pressed {{
+                background-color: #2d3436;
+            }}
+        """
+    
+    def get_module_actions(self, module_id: str) -> list:
+        """
+        Retorna las acciones disponibles para un módulo específico.
+        
+        TODO: Esto debería estar en la definición de cada módulo.
+        """
+        # Acciones comunes para módulos de gestión
+        common_actions = {
+            'facturas': [
+                {'icon': '➕', 'label': 'Nueva', 'action': 'new', 'tooltip': 'Crear nueva factura'},
+                {'icon': '🔍', 'label': 'Buscar', 'action': 'search', 'tooltip': 'Buscar facturas'},
+                {'icon': '📄', 'label': 'Listado', 'action': 'list', 'tooltip': 'Ver listado completo'},
+                {'icon': '🖨️', 'label': 'Imprimir', 'action': 'print', 'tooltip': 'Imprimir factura'},
+                {'icon': '📤', 'label': 'Exportar', 'action': 'export', 'tooltip': 'Exportar XML/PDF'},
+            ],
+            'clientes': [
+                {'icon': '➕', 'label': 'Nuevo', 'action': 'new', 'tooltip': 'Crear nuevo cliente'},
+                {'icon': '🔍', 'label': 'Buscar', 'action': 'search', 'tooltip': 'Buscar clientes'},
+                {'icon': '📋', 'label': 'Listado', 'action': 'list', 'tooltip': 'Ver todos los clientes'},
+                {'icon': '📊', 'label': 'Estadísticas', 'action': 'stats', 'tooltip': 'Estadísticas de clientes'},
+            ],
+            'productos': [
+                {'icon': '➕', 'label': 'Nuevo', 'action': 'new', 'tooltip': 'Crear nuevo producto'},
+                {'icon': '🔍', 'label': 'Buscar', 'action': 'search', 'tooltip': 'Buscar productos'},
+                {'icon': '📦', 'label': 'Inventario', 'action': 'inventory', 'tooltip': 'Ver inventario'},
+                {'icon': '🏷️', 'label': 'Categorías', 'action': 'categories', 'tooltip': 'Gestionar categorías'},
+            ],
+            'proyectos': [
+                {'icon': '➕', 'label': 'Nuevo', 'action': 'new', 'tooltip': 'Crear nuevo proyecto'},
+                {'icon': '📊', 'label': 'Dashboard', 'action': 'dashboard', 'tooltip': 'Panel de proyectos'},
+                {'icon': '📅', 'label': 'Planificación', 'action': 'planning', 'tooltip': 'Planificar tareas'},
+                {'icon': '💰', 'label': 'Presupuestos', 'action': 'budgets', 'tooltip': 'Gestionar presupuestos'},
+            ],
+        }
+        
+        # Retornar acciones específicas o genéricas
+        return common_actions.get(module_id, [
+            {'icon': '➕', 'label': 'Nuevo', 'action': 'new'},
+            {'icon': '🔍', 'label': 'Buscar', 'action': 'search'},
+            {'icon': '📋', 'label': 'Listado', 'action': 'list'},
+        ])
+    
+    def on_module_action(self, module_id: str, action: str):
+        """Ejecuta una acción específica de un módulo."""
+        QMessageBox.information(
+            self,
+            f"Acción del módulo",
+            f"Módulo: {module_id}\nAcción: {action}\n\nEsta funcionalidad está en desarrollo."
+        )
+    
+    def close_module(self, module_id: str):
+        """
+        Cierra un módulo abierto y libera su memoria.
+        
+        Esto permite mantener la aplicación ligera incluso con muchos módulos disponibles.
+        """
+        if module_id not in self.module_widgets:
+            return
+        
+        widget = self.module_widgets[module_id]
+        
+        # Remover del stacked widget
+        self.stacked_widget.removeWidget(widget)
+        
+        # Eliminar del diccionario de widgets
+        del self.module_widgets[module_id]
+        
+        # Liberar memoria explícitamente
+        widget.deleteLater()
+        
+        # Volver a la página de bienvenida si no hay módulos abiertos
+        if not self.module_widgets:
+            self.stacked_widget.setCurrentIndex(0)
+        else:
+            # Mostrar el último módulo abierto
+            last_module = list(self.module_widgets.values())[-1]
+            self.stacked_widget.setCurrentWidget(last_module)
+        
+        self.update_shortcuts()
+        self.statusBar().showMessage(f"Módulo {module_id} cerrado", 2000)
+        
+        # Forzar recolección de basura (opcional, Python lo hará automáticamente)
+        import gc
+        gc.collect()
+    
+    def update_shortcuts(self):
+        """Actualiza los botones de shortcuts en la barra superior."""
+        # Limpiar shortcuts existentes
+        while self.shortcut_container.count():
+            item = self.shortcut_container.takeAt(0)
+            if item.widget():
+                item.widget().deleteLater()
+        
+        # Agregar botón por cada módulo abierto
+        for module_id, widget in self.module_widgets.items():
+            module_info = self.module_manager.get_module(module_id)
+            if not module_info:
+                continue
+            
+            btn = QToolButton()
+            btn.setText(module_info.icon)
+            btn.setToolTip(module_info.name)
+            btn.setStyleSheet("""
+                QToolButton {
+                    background-color: rgb(50, 50, 50);
+                    color: white;
+                    border: 1px solid rgb(80, 80, 80);
+                    border-radius: 3px;
+                    padding: 4px 8px;
+                }
+                QToolButton:hover {
+                    background-color: rgb(70, 70, 70);
+                }
+                QToolButton:pressed {
+                    background-color: rgb(90, 90, 90);
+                }
+            """)
+            btn.clicked.connect(lambda checked, w=widget: self.stacked_widget.setCurrentWidget(w))
+            
+            self.shortcut_container.addWidget(btn)
+    
+    def update_user_info(self):
+        """Actualiza la información del usuario en la barra superior."""
+        self.user_label.setText(f"👤 {self.session.user.username}")
+        
+        if self.session.company_context:
+            company_text = self.session.company_context.company.name
+            self.company_button.setText(f"🏢 {company_text}")
+        else:
+            self.company_button.setText("🏢 Sin empresa")
+    
+    def get_status_text(self) -> str:
+        """Genera el texto de la barra de estado."""
+        role_names = {
+            UserRole.ADMIN: "Administrador",
+            UserRole.MANAGER: "Gerente",
+            UserRole.ACCOUNTANT: "Contable",
+            UserRole.SALES: "Ventas",
+            UserRole.PROJECT_MANAGER: "Jefe de Proyecto",
+            UserRole.EMPLOYEE: "Empleado",
+            UserRole.VIEWER: "Visor"
+        }
+        
+        role = role_names.get(self.session.user.role, "Usuario")
+        
+        if self.session.company_context:
+            return (
+                f"Usuario: {self.session.user.username} | "
+                f"Rol: {role} | "
+                f"{self.session.company_context.group.name} - "
+                f"{self.session.company_context.company.name}"
+            )
+        else:
+            return f"Usuario: {self.session.user.username} | Rol: {role}"
+    
+    def change_company(self):
+        """Permite cambiar de empresa (volver al login)."""
+        reply = QMessageBox.question(
+            self,
+            "Cambiar Empresa",
+            "¿Desea cambiar de empresa?\n\nSe cerrará la sesión actual.",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.logout_requested.emit()
+    
+    def on_year_changed(self, date):
+        """Cuando cambia el año/ejercicio."""
+        year = date.year()
+        self.statusBar().showMessage(f"Ejercicio cambiado a: {year}", 3000)
+        # TODO: Actualizar contexto de ejercicio en sesión
+    
+    def lock_or_logout(self):
+        """Bloquear o cerrar sesión."""
+        # Por ahora, simplemente cerrar sesión
+        self.logout_requested.emit()
+    
+    def open_preferences(self):
+        """Abre ventana de preferencias."""
+        QMessageBox.information(self, "Preferencias", "Ventana de preferencias en desarrollo")
+    
+    def show_about(self):
+        """Muestra ventana Acerca de."""
+        QMessageBox.about(
+            self,
+            "Acerca de Creative ERP",
+            "<h2>Creative ERP</h2>"
+            "<p>Sistema de Gestión Empresarial</p>"
+            "<p>Versión 2.0 - Python/Qt6</p>"
+            "<p>© 2025 ArtStudio3D</p>"
+        )

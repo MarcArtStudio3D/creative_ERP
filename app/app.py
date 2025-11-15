@@ -44,10 +44,10 @@ class CreativeERPApp:
         return True
     
     def show_login(self):
-        """Muestra la ventana de login."""
-        from app.views.login_window import LoginWindow
+        """Muestra la ventana de login multi-empresa."""
+        from app.views.login_window_multi import LoginWindowMultiCompany
         
-        self.login_window = LoginWindow(self.auth_manager)
+        self.login_window = LoginWindowMultiCompany(self.auth_manager)
         self.login_window.login_successful.connect(self.on_login_success)
         self.login_window.show()
     
@@ -58,23 +58,26 @@ class CreativeERPApp:
     
     def show_main_window(self):
         """Muestra la ventana principal con los módulos del usuario."""
-        from app.views.main_window import MainWindow
+        from app.views.main_window_v2 import MainWindowV2
         
         session = self.auth_manager.get_current_session()
         if not session:
             self.show_login()
             return
         
-        # Obtener módulos disponibles para el usuario
-        user_permissions = session.user.get_effective_permissions()
-        available_modules = self.module_manager.get_available_modules(user_permissions)
-        
         print(f"\n✓ Usuario: {session.user.full_name}")
         print(f"✓ Rol: {session.user.role.value}")
-        print(f"✓ Módulos disponibles: {len(available_modules)}")
         
-        self.main_window = MainWindow(session, available_modules, self.module_manager)
+        self.main_window = MainWindowV2(session)
+        self.main_window.logout_requested.connect(self.on_logout)
         self.main_window.show()
+    
+    def on_logout(self):
+        """Callback cuando se cierra sesión."""
+        if self.main_window:
+            self.main_window.close()
+        self.auth_manager.logout()
+        self.show_login()
     
     def run(self):
         """Ejecuta la aplicación."""

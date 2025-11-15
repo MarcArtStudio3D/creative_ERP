@@ -5,13 +5,16 @@ Define la estructura de usuarios, roles predefinidos y control de acceso.
 """
 
 from dataclasses import dataclass, field
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, TYPE_CHECKING
 from enum import Enum
 from datetime import datetime
 import hashlib
 import secrets
 
 from core.modules import Permission
+
+if TYPE_CHECKING:
+    from core.business import CompanyContext
 
 
 class UserRole(Enum):
@@ -42,6 +45,10 @@ class User:
     is_active: bool = True             # Si el usuario está activo
     created_at: datetime = field(default_factory=datetime.now)
     last_login: Optional[datetime] = None
+    
+    # Multi-empresa
+    allowed_groups: List[int] = field(default_factory=list)      # IDs de grupos a los que tiene acceso
+    allowed_companies: List[int] = field(default_factory=list)   # IDs de empresas a las que tiene acceso
     
     # Permisos personalizados por módulo (sobrescriben los del rol)
     custom_permissions: Dict[str, List[Permission]] = field(default_factory=dict)
@@ -222,6 +229,7 @@ class Session:
     user: User
     login_time: datetime
     token: str  # Token de sesión para validación
+    company_context: Optional['CompanyContext'] = None  # Contexto multi-empresa
     
     def is_valid(self) -> bool:
         """Verifica si la sesión es válida."""
@@ -230,6 +238,18 @@ class Session:
     def has_permission(self, module_id: str, permission: Permission) -> bool:
         """Shortcut para verificar permisos desde la sesión."""
         return self.user.has_permission(module_id, permission)
+    
+    def get_company_name(self) -> str:
+        """Obtiene el nombre de la empresa activa."""
+        if self.company_context:
+            return self.company_context.company.name
+        return "Sin empresa"
+    
+    def get_group_name(self) -> str:
+        """Obtiene el nombre del grupo activo."""
+        if self.company_context:
+            return self.company_context.group.name
+        return "Sin grupo"
 
 
 class AuthenticationManager:

@@ -1,0 +1,290 @@
+"""
+Sistema de gestión de usuarios, roles y permisos.
+
+Define la estructura de usuarios, roles predefinidos y control de acceso.
+"""
+
+from dataclasses import dataclass, field
+from typing import List, Dict, Optional
+from enum import Enum
+from datetime import datetime
+import hashlib
+import secrets
+
+from core.modules import Permission
+
+
+class UserRole(Enum):
+    """
+    Roles predefinidos del sistema.
+    Cada rol tiene un conjunto de permisos asociados.
+    """
+    ADMIN = "admin"                    # Acceso total al sistema
+    MANAGER = "manager"                # Gestor: acceso a todo excepto configuración
+    ACCOUNTANT = "accountant"          # Contable: acceso a contabilidad y finanzas
+    SALES = "sales"                    # Ventas: clientes, presupuestos, facturas
+    PROJECT_MANAGER = "project_manager" # Gestor de proyectos
+    EMPLOYEE = "employee"              # Empleado básico: solo sus proyectos y tiempo
+    VIEWER = "viewer"                  # Solo lectura
+
+
+@dataclass
+class User:
+    """
+    Representa un usuario del sistema.
+    """
+    id: int
+    username: str                      # Nombre de usuario (login)
+    email: str
+    full_name: str                     # Nombre completo
+    password_hash: str                 # Hash de la contraseña (nunca guardar en texto plano)
+    role: UserRole                     # Rol principal del usuario
+    is_active: bool = True             # Si el usuario está activo
+    created_at: datetime = field(default_factory=datetime.now)
+    last_login: Optional[datetime] = None
+    
+    # Permisos personalizados por módulo (sobrescriben los del rol)
+    custom_permissions: Dict[str, List[Permission]] = field(default_factory=dict)
+    
+    def __post_init__(self):
+        """Inicializa permisos si no existen."""
+        if not self.custom_permissions:
+            self.custom_permissions = {}
+    
+    def get_effective_permissions(self) -> Dict[str, List[Permission]]:
+        """
+        Obtiene los permisos efectivos del usuario.
+        Combina los permisos del rol con los personalizados.
+        """
+        # Permisos base según el rol
+        role_permissions = get_role_permissions(self.role)
+        
+        # Combinar con permisos personalizados
+        effective = role_permissions.copy()
+        for module_id, perms in self.custom_permissions.items():
+            if module_id in effective:
+                # Añadir permisos adicionales sin duplicar
+                effective[module_id] = list(set(effective[module_id] + perms))
+            else:
+                effective[module_id] = perms
+        
+        return effective
+    
+    def has_permission(self, module_id: str, permission: Permission) -> bool:
+        """
+        Verifica si el usuario tiene un permiso específico en un módulo.
+        
+        Args:
+            module_id: ID del módulo
+            permission: Permiso a verificar
+        
+        Returns:
+            True si tiene el permiso
+        """
+        perms = self.get_effective_permissions()
+        module_perms = perms.get(module_id, [])
+        
+        # Admin siempre tiene acceso
+        if Permission.ADMIN in module_perms:
+            return True
+        
+        return permission in module_perms
+    
+    @staticmethod
+    def hash_password(password: str) -> str:
+        """
+        Genera un hash seguro de la contraseña.
+        Usa SHA256 con salt. En producción considera bcrypt o argon2.
+        """
+        salt = secrets.token_hex(16)
+        pwd_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+        return f"{salt}${pwd_hash}"
+    
+    def verify_password(self, password: str) -> bool:
+        """Verifica si la contraseña es correcta."""
+        try:
+            salt, stored_hash = self.password_hash.split('$')
+            pwd_hash = hashlib.sha256((password + salt).encode()).hexdigest()
+            return pwd_hash == stored_hash
+        except:
+            return False
+
+
+def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
+    """
+    Obtiene los permisos predefinidos para cada rol.
+    
+    Returns:
+        Diccionario {module_id: [permissions]}
+    """
+    
+    # ADMIN: Acceso total a todo
+    if role == UserRole.ADMIN:
+        return {
+            "clientes": [Permission.ADMIN],
+            "facturas": [Permission.ADMIN],
+            "albaranes": [Permission.ADMIN],
+            "presupuestos": [Permission.ADMIN],
+            "proveedores": [Permission.ADMIN],
+            "facturas_compra": [Permission.ADMIN],
+            "articulos": [Permission.ADMIN],
+            "almacen": [Permission.ADMIN],
+            "contabilidad": [Permission.ADMIN],
+            "tesoreria": [Permission.ADMIN],
+            "proyectos": [Permission.ADMIN],
+            "tiempo": [Permission.ADMIN],
+            "usuarios": [Permission.ADMIN],
+            "configuracion": [Permission.ADMIN],
+            "informes": [Permission.ADMIN],
+        }
+    
+    # MANAGER: Gestión completa excepto usuarios y configuración
+    elif role == UserRole.MANAGER:
+        return {
+            "clientes": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
+            "facturas": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.EXPORT, Permission.PRINT],
+            "albaranes": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.PRINT],
+            "presupuestos": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.PRINT],
+            "proveedores": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "facturas_compra": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "articulos": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "almacen": [Permission.READ, Permission.UPDATE],
+            "contabilidad": [Permission.READ],
+            "tesoreria": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "proyectos": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
+            "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "informes": [Permission.READ, Permission.EXPORT],
+        }
+    
+    # ACCOUNTANT: Contabilidad y finanzas
+    elif role == UserRole.ACCOUNTANT:
+        return {
+            "clientes": [Permission.READ],
+            "facturas": [Permission.READ, Permission.EXPORT],
+            "proveedores": [Permission.READ],
+            "facturas_compra": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "contabilidad": [Permission.ADMIN],
+            "tesoreria": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "informes": [Permission.READ, Permission.EXPORT],
+        }
+    
+    # SALES: Ventas y clientes
+    elif role == UserRole.SALES:
+        return {
+            "clientes": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "facturas": [Permission.READ, Permission.CREATE, Permission.PRINT],
+            "albaranes": [Permission.READ, Permission.CREATE, Permission.PRINT],
+            "presupuestos": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.PRINT],
+            "articulos": [Permission.READ],
+            "proyectos": [Permission.READ],
+            "informes": [Permission.READ],
+        }
+    
+    # PROJECT_MANAGER: Gestión de proyectos
+    elif role == UserRole.PROJECT_MANAGER:
+        return {
+            "clientes": [Permission.READ],
+            "proyectos": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],
+            "articulos": [Permission.READ],
+            "presupuestos": [Permission.READ, Permission.CREATE],
+            "informes": [Permission.READ],
+        }
+    
+    # EMPLOYEE: Empleado básico
+    elif role == UserRole.EMPLOYEE:
+        return {
+            "proyectos": [Permission.READ],  # Solo sus proyectos
+            "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],  # Su tiempo
+            "clientes": [Permission.READ],
+        }
+    
+    # VIEWER: Solo lectura
+    elif role == UserRole.VIEWER:
+        return {
+            "clientes": [Permission.READ],
+            "facturas": [Permission.READ],
+            "albaranes": [Permission.READ],
+            "presupuestos": [Permission.READ],
+            "articulos": [Permission.READ],
+            "proyectos": [Permission.READ],
+            "informes": [Permission.READ],
+        }
+    
+    return {}
+
+
+@dataclass
+class Session:
+    """
+    Representa una sesión de usuario activa.
+    """
+    user: User
+    login_time: datetime
+    token: str  # Token de sesión para validación
+    
+    def is_valid(self) -> bool:
+        """Verifica si la sesión es válida."""
+        return self.user.is_active
+    
+    def has_permission(self, module_id: str, permission: Permission) -> bool:
+        """Shortcut para verificar permisos desde la sesión."""
+        return self.user.has_permission(module_id, permission)
+
+
+class AuthenticationManager:
+    """
+    Gestor de autenticación y sesiones.
+    """
+    
+    def __init__(self):
+        self._current_session: Optional[Session] = None
+    
+    def login(self, username: str, password: str, user_repository) -> Optional[Session]:
+        """
+        Intenta autenticar un usuario.
+        
+        Args:
+            username: Nombre de usuario
+            password: Contraseña
+            user_repository: Repositorio de usuarios (inyección de dependencia)
+        
+        Returns:
+            Session si el login es exitoso, None en caso contrario
+        """
+        user = user_repository.get_by_username(username)
+        
+        if user and user.is_active and user.verify_password(password):
+            token = secrets.token_urlsafe(32)
+            session = Session(
+                user=user,
+                login_time=datetime.now(),
+                token=token
+            )
+            self._current_session = session
+            user.last_login = datetime.now()
+            user_repository.update(user)
+            return session
+        
+        return None
+    
+    def logout(self):
+        """Cierra la sesión actual."""
+        self._current_session = None
+    
+    def get_current_session(self) -> Optional[Session]:
+        """Obtiene la sesión actual."""
+        return self._current_session
+    
+    def require_permission(self, module_id: str, permission: Permission) -> bool:
+        """
+        Verifica si la sesión actual tiene un permiso.
+        Útil para decoradores o validaciones.
+        
+        Returns:
+            True si tiene permiso, False si no
+        """
+        if not self._current_session:
+            return False
+        
+        return self._current_session.has_permission(module_id, permission)

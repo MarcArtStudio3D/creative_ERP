@@ -38,12 +38,18 @@ class ClientesViewFull(QWidget):
         self.ui = Ui_frmClientes()
         self.ui.setupUi(temp_dialog)
         
-        # Reparentar el stackedWidget a este widget
+        # Mantener el stackedWidget intacto pero reparentarlo
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.setParent(self)
+            self.ui.stackedWidget.setVisible(True)
             layout.addWidget(self.ui.stackedWidget)
+            
+            # Forzar actualización del tabwidget después del reparenting
+            if hasattr(self.ui, 'tabwidget'):
+                self.ui.tabwidget.update()
+                self.ui.tabwidget.repaint()
         
-        # Cerrar el diálogo temporal (ya no se necesita)
+        # Cerrar el diálogo temporal
         temp_dialog.deleteLater()
         
         # Inicializar datos
@@ -521,6 +527,23 @@ class ClientesViewFull(QWidget):
         self.cliente_actual = None
         self.limpiar_formulario()
         self.ui.stackedWidget.setCurrentIndex(0)
+        
+        # Reconstruir pestañas del tabwidget si es necesario
+        if hasattr(self.ui, 'tabwidget') and self.ui.tabwidget.count() == 0:
+            # Las pestañas se perdieron, intentar reconstruirlas
+            tab_names = ['tab_datos', 'tab_direcciones', 'tab_Datos_bancarios_financieros', 
+                        'tab_estadistica', 'tab_deudas', 'tab_coments', 'tab_3']
+            tab_texts = ['', '', '', '', '', '', '']  # Los textos se definen en retranslateUi
+            
+            for i, tab_name in enumerate(tab_names):
+                tab_widget = getattr(self.ui, tab_name, None)
+                if tab_widget:
+                    self.ui.tabwidget.addTab(tab_widget, tab_texts[i])
+        
+        # Forzar actualización del tabwidget
+        if hasattr(self.ui, 'tabwidget'):
+            self.ui.tabwidget.update()
+            self.ui.tabwidget.repaint()
     
     def editar_cliente(self):
         """Edita el cliente seleccionado"""
@@ -597,12 +620,41 @@ class ClientesViewFull(QWidget):
             QMessageBox.critical(self, "Error", f"Error al guardar: {str(e)}")
     
     def limpiar_formulario(self):
-        """Limpia todos los campos del formulario"""
-        # Recorrer todos los widgets y limpiar los QLineEdit
+        """Limpia todos los campos del formulario de datos del cliente"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLabel
+        from PySide6.QtCore import QDate
+
+        # Recorrer todos los widgets y limpiarlos según su tipo
         for widget_name in dir(self.ui):
+            if widget_name.startswith('_'):
+                continue
+
             widget = getattr(self.ui, widget_name)
-            if hasattr(widget, 'clear'):
+
+            # QLineEdit, QTextEdit - limpiar texto
+            if isinstance(widget, (QLineEdit, QTextEdit)):
                 widget.clear()
+
+            # QLabel que empiecen con 'txt' (campos de visualización de datos del cliente)
+            elif isinstance(widget, QLabel) and widget_name.startswith('txt'):
+                widget.setText("")
+
+            # QComboBox - seleccionar primer elemento si existe
+            elif isinstance(widget, QComboBox):
+                if widget.count() > 0:
+                    widget.setCurrentIndex(0)
+
+            # QSpinBox, QDoubleSpinBox - resetear a valor mínimo
+            elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+                widget.setValue(widget.minimum())
+
+            # QDateEdit - resetear a fecha actual
+            elif isinstance(widget, QDateEdit):
+                widget.setDate(QDate.currentDate())
+
+            # QCheckBox - desmarcar
+            elif isinstance(widget, QCheckBox):
+                widget.setChecked(False)
     
     def volver_a_lista(self):
         """Vuelve a la página de búsquedas/lista"""

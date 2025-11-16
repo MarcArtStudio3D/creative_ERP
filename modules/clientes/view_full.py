@@ -3,6 +3,7 @@ Vista del módulo de Clientes - Solo lógica de negocio
 La UI se genera automáticamente desde frmClientes.ui
 """
 
+from logging import disable
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QVBoxLayout, QTableWidget, QTableView
 from PySide6.QtCore import Qt, QDate, Signal, QAbstractTableModel
 from PySide6.QtGui import QStandardItemModel, QStandardItem
@@ -114,13 +115,16 @@ class ClientesViewFull(QWidget):
                     pass
 
         # Botones de navegación en la ficha
-        for name, handler in ("btnSiguiente", self.siguiente_cliente), ("btnAnterior", self.anterior_cliente), ("btnBuscar", self.volver_a_lista):
+        for name, handler in (("btnSiguiente", self.siguiente_cliente), ("btnAnterior", self.anterior_cliente), ("btnBuscar", self.volver_a_lista)):
             w = self._get_widget(name)
             if w is not None and hasattr(w, "clicked"):
                 w.clicked.connect(handler)
 
-        # Estos botones normalmente están en un diálogo modal,
-        # pero como estamos en el stacked widget, los manejamos diferente
+        # Botones de guardar/deshacer en la ficha de edición
+        for name, handler in (("btnGuardar", self.guardar_cliente), ("btnDeshacer", self.deshacer_cambios)):
+            w = self._get_widget(name)
+            if w is not None and hasattr(w, "clicked"):
+                w.clicked.connect(handler)
 
     def _get_widget(self, name, qtype=None):
         """Intento seguro de obtener un widget por nombre (getattr -> findChild)."""
@@ -526,6 +530,7 @@ class ClientesViewFull(QWidget):
         """Crea un nuevo cliente"""
         self.cliente_actual = None
         self.limpiar_formulario()
+        self.desactivar_botones_navegacion()
         self.ui.stackedWidget.setCurrentIndex(0)
         
         # Reconstruir pestañas del tabwidget si es necesario
@@ -615,9 +620,19 @@ class ClientesViewFull(QWidget):
             
             self.cargar_clientes()
             self.ui.stackedWidget.setCurrentIndex(1)
+            self.activar_botones_navegacion()
             
         except Exception as e:
             QMessageBox.critical(self, "Error", f"Error al guardar: {str(e)}")
+    
+    def deshacer_cambios(self):
+        """Deshace los cambios y recarga los datos del cliente actual"""
+        if self.cliente_actual:
+            # Recargar datos del cliente actual
+            self.abrir_ficha_cliente()
+        else:
+            # Si es un cliente nuevo, limpiar el formulario
+            self.limpiar_formulario()
     
     def limpiar_formulario(self):
         """Limpia todos los campos del formulario de datos del cliente"""
@@ -696,3 +711,49 @@ class ClientesViewFull(QWidget):
             prev_index = tabla.model().index(prev_row, 0)
             selection.setCurrentIndex(prev_index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
             self.abrir_ficha_cliente()
+    
+    
+    '''----------------------------------------------------------'''
+    '''Zona activar/desactivar botones navegacion'''
+    '''----------------------------------------------------------'''
+    def activar_botones_navegacion(self):
+        """Activa los botones normales """
+    
+        if hasattr(self.ui, 'btnSiguiente'):
+            self.ui.btnSiguiente.setEnabled(True)
+        if hasattr(self.ui, 'btnAnterior'):
+            self.ui.btnAnterior.setEnabled(True)
+        if hasattr(self.ui, 'btnEditar'):
+            self.ui.btnEditar.setEnabled(True)
+        if hasattr(self.ui, 'btnBorrar'):
+            self.ui.btnBorrar.setEnabled(True)
+        if hasattr(self.ui, 'btnAnadir'):
+            self.ui.btnAnadir.setEnabled(True) 
+        if hasattr(self.ui, 'btnBuscar'):
+            self.ui.btnBuscar.setEnabled(True)
+        """desactiva los botones de guardar/undo..... """
+        if hasattr(self.ui, 'btnGuardar'):
+            self.ui.btnGuardar.setEnabled(False)
+        if hasattr(self.ui, 'btnUndo'):
+            self.ui.btnDeshacer.setEnabled(False)
+
+    def desactivar_botones_navegacion(self):
+        """Desactiva los botones normales..... """
+        if hasattr(self.ui, 'btnSiguiente'):
+            self.ui.btnSiguiente.setEnabled(False)
+        if hasattr(self.ui, 'btnAnterior'):
+            self.ui.btnAnterior.setEnabled(False)
+        if hasattr(self.ui, 'btnEditar'):
+            self.ui.btnEditar.setEnabled(False)
+        if hasattr(self.ui, 'btnBorrar'):
+            self.ui.btnBorrar.setEnabled(False)
+        if hasattr(self.ui, 'btnAnadir'):
+            self.ui.btnAnadir.setEnabled(False) 
+        if hasattr(self.ui, 'btnBuscar'):
+            self.ui.btnBuscar.setEnabled(False)
+        """Activa los botones de guardar/undo..... """
+        if hasattr(self.ui, 'btnGuardar'):
+            self.ui.btnGuardar.setEnabled(True)
+        if hasattr(self.ui, 'btnUndo'):
+            self.ui.btnDeshacer.setEnabled(True)
+        

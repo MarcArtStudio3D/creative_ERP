@@ -210,6 +210,7 @@ invoice.svg
 ```
 
 
+
 ### Ejemplo de uso en Python
 ```python
 from PySide6.QtGui import QIcon
@@ -221,3 +222,48 @@ btn.setIcon(QIcon(":/icons/add.svg"))
 ```bash
 pyside6-rcc resources/icons.qrc -o resources/icons_rc.py
 ```
+
+Alternativas gráficas que puedes usar con Qt6 + Python + Qt Designer
+
+Estas son algunas librerías (o módulos) que puedes integrar para gráficos (charts) y visualización, y que se pueden usar desde Qt Designer:
+
+PyQtGraph
+
+Es muy popular para gráficos interactivos, plots en tiempo real, visualización científica.
+
+Documentación: usar PlotWidget, GraphicsLayoutWidget, GraphicsView, ImageView… 
+PyQtGraph
++1
+
+Cómo integrarlo con Qt Designer:
+
+En Qt Designer, pones un QWidget (o QGraphicsView) donde quieres el gráfico.
+
+Luego haces Promote To… ese widget para que sea un PlotWidget (o el tipo de PyQtGraph que quieras). 
+Python GUIs
++1
+
+En el dialogo de “Promote”, pones como “Promoted class name” por ejemplo PlotWidget, y como “Header file” algo como pyqtgraph. 
+Python GUIs
++1
+
+Ventaja: muy flexible, rápido, buen rendimiento para muchos datos.
+
+PySide6.QtCharts
+
+Es el módulo oficial de Qt para gráficas (líneas, barras, pastel, etc.). 
+Documentation Qt
+
+No es “nativo de Qt Designer” directamente para PySide6 (no tiene plugin que te ponga un “Chart widget” directamente en Designer), pero puedes usar “Promote To …” para usar un QWidget placeholder que luego en tu código se convierta en QChartView u otro componente de QtCharts.
+
+Ejemplo en PyQt (similar para PySide): un usuario sugiere promover un QWidget a QChartView y luego en Python crear el gráfico: 
+Stack Overflow
+
+Ventaja: integración “oficial”, buen soporte, estilos Qt, menos dependencias externas.
+
+Qt DataVisualization / otros módulos de Qt Quick
+
+Si quieres gráficos 3D: PySide6.QtGraphs tiene soporte 2D y 3D. 
+Documentation Qt
+
+Pero estos módulos 3D quizá son más complicados de usar desde Qt Designer tradicional (widgets .ui) porque están más pensados para QML / Qt Quick.

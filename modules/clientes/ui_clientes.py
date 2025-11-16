@@ -23,21 +23,15 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication
     QSpinBox, QStackedWidget, QTabWidget, QTableView,
     QTextEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
     QWidget)
-
-# from blinkink import Blinkink
-# from openchart import OpenChart
-# import maya_rc
+from .. import designer_rc
 
 class Ui_frmClientes(object):
     def setupUi(self, frmClientes):
         if not frmClientes.objectName():
             frmClientes.setObjectName(u"frmClientes")
-        frmClientes.setWindowModality(Qt.WindowModal)
-        frmClientes.resize(1073, 648)
+        frmClientes.setWindowModality(Qt.WindowModality.WindowModal)
+        frmClientes.resize(1073, 732)
         frmClientes.setBaseSize(QSize(1024, 500))
-        # icon = QIcon()
-        # icon.addFile(u":/Icons/PNG/Maya.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        # frmClientes.setWindowIcon(icon)
         frmClientes.setModal(True)
         self.gridLayout_3 = QGridLayout(frmClientes)
         self.gridLayout_3.setObjectName(u"gridLayout_3")
@@ -67,16 +61,16 @@ class Ui_frmClientes(object):
         self.frame_8.setSizePolicy(sizePolicy)
         self.frame_8.setMinimumSize(QSize(135, 374))
         self.frame_8.setMaximumSize(QSize(110, 16777215))
-        self.frame_8.setFrameShape(QFrame.StyledPanel)
-        self.frame_8.setFrameShadow(QFrame.Raised)
+        self.frame_8.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_7 = QGridLayout(self.frame_8)
         self.gridLayout_7.setObjectName(u"gridLayout_7")
         self.btnAnadir = QPushButton(self.frame_8)
         self.btnAnadir.setObjectName(u"btnAnadir")
         self.btnAnadir.setMinimumSize(QSize(0, 45))
-        icon1 = QIcon()
-        icon1.addFile(u":/Icons/PNG/add.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnAnadir.setIcon(icon1)
+        icon = QIcon()
+        icon.addFile(u":/PNG/resources/icons/png/Add.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnAnadir.setIcon(icon)
         self.btnAnadir.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnAnadir, 0, 0, 1, 1)
@@ -84,9 +78,9 @@ class Ui_frmClientes(object):
         self.btnSiguiente = QPushButton(self.frame_8)
         self.btnSiguiente.setObjectName(u"btnSiguiente")
         self.btnSiguiente.setMinimumSize(QSize(0, 45))
-        icon2 = QIcon()
-        icon2.addFile(u":/Icons/PNG/Next.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnSiguiente.setIcon(icon2)
+        icon1 = QIcon()
+        icon1.addFile(u":/PNG/Next.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnSiguiente.setIcon(icon1)
         self.btnSiguiente.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnSiguiente, 1, 0, 1, 1)
@@ -94,9 +88,9 @@ class Ui_frmClientes(object):
         self.btnAnterior = QPushButton(self.frame_8)
         self.btnAnterior.setObjectName(u"btnAnterior")
         self.btnAnterior.setMinimumSize(QSize(0, 45))
-        icon3 = QIcon()
-        icon3.addFile(u":/Icons/PNG/Previous.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnAnterior.setIcon(icon3)
+        icon2 = QIcon()
+        icon2.addFile(u":/PNG/Previous.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnAnterior.setIcon(icon2)
         self.btnAnterior.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnAnterior, 2, 0, 1, 1)
@@ -104,9 +98,9 @@ class Ui_frmClientes(object):
         self.btnBuscar = QPushButton(self.frame_8)
         self.btnBuscar.setObjectName(u"btnBuscar")
         self.btnBuscar.setMinimumSize(QSize(0, 45))
-        icon4 = QIcon()
-        icon4.addFile(u":/Icons/PNG/search.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnBuscar.setIcon(icon4)
+        icon3 = QIcon()
+        icon3.addFile(u":/PNG/search.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnBuscar.setIcon(icon3)
         self.btnBuscar.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnBuscar, 3, 0, 1, 1)
@@ -114,9 +108,9 @@ class Ui_frmClientes(object):
         self.btnEditar = QPushButton(self.frame_8)
         self.btnEditar.setObjectName(u"btnEditar")
         self.btnEditar.setMinimumSize(QSize(0, 45))
-        icon5 = QIcon()
-        icon5.addFile(u":/Icons/PNG/edit.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnEditar.setIcon(icon5)
+        icon4 = QIcon()
+        icon4.addFile(u":/PNG/Edit.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnEditar.setIcon(icon4)
         self.btnEditar.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnEditar, 4, 0, 1, 1)
@@ -125,9 +119,9 @@ class Ui_frmClientes(object):
         self.btnGuardar.setObjectName(u"btnGuardar")
         self.btnGuardar.setEnabled(False)
         self.btnGuardar.setMinimumSize(QSize(0, 45))
-        icon6 = QIcon()
-        icon6.addFile(u":/Icons/PNG/Save.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnGuardar.setIcon(icon6)
+        icon5 = QIcon()
+        icon5.addFile(u"../../resources/icons/png/Save.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnGuardar.setIcon(icon5)
         self.btnGuardar.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnGuardar, 5, 0, 1, 1)
@@ -136,9 +130,9 @@ class Ui_frmClientes(object):
         self.btnDeshacer.setObjectName(u"btnDeshacer")
         self.btnDeshacer.setEnabled(False)
         self.btnDeshacer.setMinimumSize(QSize(0, 45))
-        icon7 = QIcon()
-        icon7.addFile(u":/Icons/PNG/undo.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnDeshacer.setIcon(icon7)
+        icon6 = QIcon()
+        icon6.addFile(u":/PNG/undo.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnDeshacer.setIcon(icon6)
         self.btnDeshacer.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.btnDeshacer, 6, 0, 1, 1)
@@ -147,9 +141,9 @@ class Ui_frmClientes(object):
         self.botListados.setObjectName(u"botListados")
         self.botListados.setMinimumSize(QSize(115, 45))
         self.botListados.setMaximumSize(QSize(118, 16777215))
-        icon8 = QIcon()
-        icon8.addFile(u":/Icons/PNG/List.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.botListados.setIcon(icon8)
+        icon7 = QIcon()
+        icon7.addFile(u":/PNG/List.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.botListados.setIcon(icon7)
         self.botListados.setIconSize(QSize(24, 24))
 
         self.gridLayout_7.addWidget(self.botListados, 7, 0, 1, 1)
@@ -157,9 +151,9 @@ class Ui_frmClientes(object):
         self.btnBorrar = QPushButton(self.frame_8)
         self.btnBorrar.setObjectName(u"btnBorrar")
         self.btnBorrar.setMinimumSize(QSize(0, 45))
-        icon9 = QIcon()
-        icon9.addFile(u":/Icons/PNG/Delete.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnBorrar.setIcon(icon9)
+        icon8 = QIcon()
+        icon8.addFile(u":/PNG/delete.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnBorrar.setIcon(icon8)
         self.btnBorrar.setIconSize(QSize(18, 18))
 
         self.gridLayout_7.addWidget(self.btnBorrar, 8, 0, 1, 1)
@@ -235,14 +229,6 @@ class Ui_frmClientes(object):
 
         self.gridLayout_30.addWidget(self.label_16, 10, 2, 1, 1)
 
-        self.label_21 = QLabel(self.tab_datos)
-        self.label_21.setObjectName(u"label_21")
-        sizePolicy2.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
-        self.label_21.setSizePolicy(sizePolicy2)
-        self.label_21.setMaximumSize(QSize(70, 16777215))
-
-        self.gridLayout_30.addWidget(self.label_21, 16, 4, 1, 1)
-
         self.label_22 = QLabel(self.tab_datos)
         self.label_22.setObjectName(u"label_22")
         sizePolicy2.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
@@ -280,12 +266,6 @@ class Ui_frmClientes(object):
         self.txtnombre_fiscal.setStyleSheet(u"")
 
         self.gridLayout_30.addWidget(self.txtnombre_fiscal, 8, 1, 1, 6)
-
-        self.txtfax = QLineEdit(self.tab_datos)
-        self.txtfax.setObjectName(u"txtfax")
-        self.txtfax.setStyleSheet(u"")
-
-        self.gridLayout_30.addWidget(self.txtfax, 16, 5, 1, 2)
 
         self.txtpoblacion = QLineEdit(self.tab_datos)
         self.txtpoblacion.setObjectName(u"txtpoblacion")
@@ -434,7 +414,7 @@ class Ui_frmClientes(object):
         self.txtnombre = QLineEdit(self.tab_datos)
         self.txtnombre.setObjectName(u"txtnombre")
         self.txtnombre.setStyleSheet(u"")
-        self.txtnombre.setEchoMode(QLineEdit.Normal)
+        self.txtnombre.setEchoMode(QLineEdit.EchoMode.Normal)
 
         self.gridLayout_30.addWidget(self.txtnombre, 3, 1, 1, 6)
 
@@ -464,19 +444,7 @@ class Ui_frmClientes(object):
         self.gridLayout_30.addWidget(self.txtcif_nif, 1, 1, 1, 3)
 
 
-        self.gridLayout_25.addLayout(self.gridLayout_30, 1, 0, 2, 1)
-
-        self.btnFichaPaciente = QPushButton(self.tab_datos)
-        self.btnFichaPaciente.setObjectName(u"btnFichaPaciente")
-        self.btnFichaPaciente.setMinimumSize(QSize(0, 29))
-        self.btnFichaPaciente.setStyleSheet(u"background-color: rgb(255, 85, 0);\n"
-"color: rgb(0, 0, 241);")
-        icon10 = QIcon()
-        icon10.addFile(u":/Icons/PNG/medic.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnFichaPaciente.setIcon(icon10)
-        self.btnFichaPaciente.setIconSize(QSize(21, 21))
-
-        self.gridLayout_25.addWidget(self.btnFichaPaciente, 0, 0, 1, 2)
+        self.gridLayout_25.addLayout(self.gridLayout_30, 0, 0, 2, 1)
 
         self.blink_stack = QStackedWidget(self.tab_datos)
         self.blink_stack.setObjectName(u"blink_stack")
@@ -492,9 +460,9 @@ class Ui_frmClientes(object):
         self.btnVer_OtrosContactos.setEnabled(False)
         self.btnVer_OtrosContactos.setMinimumSize(QSize(145, 0))
         self.btnVer_OtrosContactos.setStyleSheet(u"")
-        icon11 = QIcon()
-        icon11.addFile(u":/Icons/PNG/users.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnVer_OtrosContactos.setIcon(icon11)
+        icon9 = QIcon()
+        icon9.addFile(u":/Icons/PNG/users.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnVer_OtrosContactos.setIcon(icon9)
         self.btnVer_OtrosContactos.setIconSize(QSize(15, 15))
 
         self.gridLayout_2.addWidget(self.btnVer_OtrosContactos, 0, 0, 1, 1)
@@ -503,15 +471,15 @@ class Ui_frmClientes(object):
         self.frame_2.setObjectName(u"frame_2")
         self.frame_2.setMaximumSize(QSize(250, 16777215))
         self.frame_2.setStyleSheet(u"")
-        self.frame_2.setFrameShape(QFrame.StyledPanel)
-        self.frame_2.setFrameShadow(QFrame.Raised)
+        self.frame_2.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_2.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_5 = QGridLayout(self.frame_2)
         self.gridLayout_5.setObjectName(u"gridLayout_5")
         self.label_46 = QLabel(self.frame_2)
         self.label_46.setObjectName(u"label_46")
         self.label_46.setMaximumSize(QSize(16777215, 20))
         self.label_46.setStyleSheet(u"")
-        self.label_46.setAlignment(Qt.AlignCenter)
+        self.label_46.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_5.addWidget(self.label_46, 0, 0, 1, 1)
 
@@ -522,7 +490,7 @@ class Ui_frmClientes(object):
 
         self.lista_tipos = QTreeWidget(self.frame_2)
         self.lista_tipos.setObjectName(u"lista_tipos")
-        self.lista_tipos.setFrameShape(QFrame.StyledPanel)
+        self.lista_tipos.setFrameShape(QFrame.Shape.StyledPanel)
         self.lista_tipos.setProperty(u"showDropIndicator", True)
         self.lista_tipos.setRootIsDecorated(True)
         self.lista_tipos.header().setVisible(False)
@@ -537,19 +505,9 @@ class Ui_frmClientes(object):
         self.page_2.setObjectName(u"page_2")
         self.gridLayout_17 = QGridLayout(self.page_2)
         self.gridLayout_17.setObjectName(u"gridLayout_17")
-        # self.blinkink = Blinkink(self.page_2)
-        # self.blinkink.setObjectName(u"blinkink")
-        # self.blinkink.setStyleSheet(u" background-color: rgba(255, 96, 43, 0.317333);")
-        # self.blinkink.setProperty(u"color", QColor(255, 96, 43))
-        # self.blinkink.setProperty(u"blink", True)
-        # self.blinkink.setProperty(u"blinkDuration", 1500)
-        # self.blinkink.setProperty(u"icon", QPixmap(u":/Icons/PNG/avisos.png"))
-
-        # self.gridLayout_17.addWidget(self.blinkink, 0, 0, 1, 1)
-
         self.blink_stack.addWidget(self.page_2)
 
-        self.gridLayout_25.addWidget(self.blink_stack, 1, 1, 2, 1)
+        self.gridLayout_25.addWidget(self.blink_stack, 0, 1, 2, 1)
 
         self.tabwidget.addTab(self.tab_datos, "")
         self.tab_direcciones = QWidget()
@@ -562,7 +520,7 @@ class Ui_frmClientes(object):
         self.label_7.setMaximumSize(QSize(16777215, 27))
         self.label_7.setStyleSheet(u"background: #304163;\n"
 "color: rgb(255,255,255);")
-        self.label_7.setAlignment(Qt.AlignCenter)
+        self.label_7.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout.addWidget(self.label_7, 0, 0, 1, 1)
 
@@ -580,8 +538,8 @@ class Ui_frmClientes(object):
         self.lista_direccionesAlternativas.setObjectName(u"lista_direccionesAlternativas")
         self.lista_direccionesAlternativas.setMaximumSize(QSize(200, 16777215))
         self.lista_direccionesAlternativas.setAlternatingRowColors(True)
-        self.lista_direccionesAlternativas.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.lista_direccionesAlternativas.setViewMode(QListView.ListMode)
+        self.lista_direccionesAlternativas.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.lista_direccionesAlternativas.setViewMode(QListView.ViewMode.ListMode)
         self.lista_direccionesAlternativas.setModelColumn(0)
 
         self.gridLayout.addWidget(self.lista_direccionesAlternativas, 1, 0, 8, 1)
@@ -687,7 +645,9 @@ class Ui_frmClientes(object):
         self.btnAnadirdireccion = QPushButton(self.tab_direcciones)
         self.btnAnadirdireccion.setObjectName(u"btnAnadirdireccion")
         self.btnAnadirdireccion.setEnabled(False)
-        self.btnAnadirdireccion.setIcon(icon1)
+        icon10 = QIcon()
+        icon10.addFile(u":/PNG/Add.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnAnadirdireccion.setIcon(icon10)
         self.btnAnadirdireccion.setIconSize(QSize(16, 16))
 
         self.horizontalLayout_2.addWidget(self.btnAnadirdireccion)
@@ -695,14 +655,14 @@ class Ui_frmClientes(object):
         self.btnEditardireccionAlternativa = QPushButton(self.tab_direcciones)
         self.btnEditardireccionAlternativa.setObjectName(u"btnEditardireccionAlternativa")
         self.btnEditardireccionAlternativa.setEnabled(False)
-        self.btnEditardireccionAlternativa.setIcon(icon5)
+        self.btnEditardireccionAlternativa.setIcon(icon4)
 
         self.horizontalLayout_2.addWidget(self.btnEditardireccionAlternativa)
 
         self.btnBorrardireccion = QPushButton(self.tab_direcciones)
         self.btnBorrardireccion.setObjectName(u"btnBorrardireccion")
         self.btnBorrardireccion.setEnabled(False)
-        self.btnBorrardireccion.setIcon(icon9)
+        self.btnBorrardireccion.setIcon(icon8)
         self.btnBorrardireccion.setIconSize(QSize(16, 16))
 
         self.horizontalLayout_2.addWidget(self.btnBorrardireccion)
@@ -715,7 +675,9 @@ class Ui_frmClientes(object):
         self.btnGuardardireccionAlternativa = QPushButton(self.tab_direcciones)
         self.btnGuardardireccionAlternativa.setObjectName(u"btnGuardardireccionAlternativa")
         self.btnGuardardireccionAlternativa.setEnabled(False)
-        self.btnGuardardireccionAlternativa.setIcon(icon6)
+        icon11 = QIcon()
+        icon11.addFile(u":/PNG/Save.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnGuardardireccionAlternativa.setIcon(icon11)
 
         self.horizontalLayout_4.addWidget(self.btnGuardardireccionAlternativa)
 
@@ -726,7 +688,7 @@ class Ui_frmClientes(object):
         self.btnDeshacerdireccionAlternativa = QPushButton(self.tab_direcciones)
         self.btnDeshacerdireccionAlternativa.setObjectName(u"btnDeshacerdireccionAlternativa")
         self.btnDeshacerdireccionAlternativa.setEnabled(False)
-        self.btnDeshacerdireccionAlternativa.setIcon(icon7)
+        self.btnDeshacerdireccionAlternativa.setIcon(icon6)
 
         self.horizontalLayout_4.addWidget(self.btnDeshacerdireccionAlternativa)
 
@@ -741,8 +703,8 @@ class Ui_frmClientes(object):
         self.gridLayout_16.setObjectName(u"gridLayout_16")
         self.frame_9 = QFrame(self.tab_Datos_bancarios_financieros)
         self.frame_9.setObjectName(u"frame_9")
-        self.frame_9.setFrameShape(QFrame.StyledPanel)
-        self.frame_9.setFrameShadow(QFrame.Raised)
+        self.frame_9.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_9.setFrameShadow(QFrame.Shadow.Raised)
         self.formLayout_5 = QFormLayout(self.frame_9)
         self.formLayout_5.setObjectName(u"formLayout_5")
         self.label_33 = QLabel(self.frame_9)
@@ -797,13 +759,13 @@ class Ui_frmClientes(object):
 
         self.label_32 = QLabel(self.frame_9)
         self.label_32.setObjectName(u"label_32")
-        self.label_32.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_32.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.formLayout_5.setWidget(5, QFormLayout.ItemRole.LabelRole, self.label_32)
 
         self.txtporc_dto_cliente = QLineEdit(self.frame_9)
         self.txtporc_dto_cliente.setObjectName(u"txtporc_dto_cliente")
-        self.txtporc_dto_cliente.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtporc_dto_cliente.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.formLayout_5.setWidget(5, QFormLayout.ItemRole.FieldRole, self.txtporc_dto_cliente)
 
@@ -812,8 +774,8 @@ class Ui_frmClientes(object):
 
         self.frame_6 = QFrame(self.tab_Datos_bancarios_financieros)
         self.frame_6.setObjectName(u"frame_6")
-        self.frame_6.setFrameShape(QFrame.StyledPanel)
-        self.frame_6.setFrameShadow(QFrame.Raised)
+        self.frame_6.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_6.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_15 = QGridLayout(self.frame_6)
         self.gridLayout_15.setObjectName(u"gridLayout_15")
         self.pushButton = QPushButton(self.frame_6)
@@ -876,8 +838,8 @@ class Ui_frmClientes(object):
 
         self.frame_7 = QFrame(self.tab_Datos_bancarios_financieros)
         self.frame_7.setObjectName(u"frame_7")
-        self.frame_7.setFrameShape(QFrame.StyledPanel)
-        self.frame_7.setFrameShadow(QFrame.Raised)
+        self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_14 = QGridLayout(self.frame_7)
         self.gridLayout_14.setObjectName(u"gridLayout_14")
         self.label_75 = QLabel(self.frame_7)
@@ -910,8 +872,8 @@ class Ui_frmClientes(object):
         self.txtimporte_a_cuenta = QLineEdit(self.frame_7)
         self.txtimporte_a_cuenta.setObjectName(u"txtimporte_a_cuenta")
         self.txtimporte_a_cuenta.setEnabled(False)
-        self.txtimporte_a_cuenta.setFocusPolicy(Qt.NoFocus)
-        self.txtimporte_a_cuenta.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtimporte_a_cuenta.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtimporte_a_cuenta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_31.addWidget(self.txtimporte_a_cuenta, 0, 3, 1, 5)
 
@@ -923,8 +885,8 @@ class Ui_frmClientes(object):
         self.txtvales = QLineEdit(self.frame_7)
         self.txtvales.setObjectName(u"txtvales")
         self.txtvales.setEnabled(False)
-        self.txtvales.setFocusPolicy(Qt.NoFocus)
-        self.txtvales.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtvales.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtvales.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_31.addWidget(self.txtvales, 1, 3, 1, 5)
 
@@ -1109,13 +1071,13 @@ class Ui_frmClientes(object):
         self.gridLayout_23.setObjectName(u"gridLayout_23")
         self.label_49 = QLabel(self.tab_estadistica)
         self.label_49.setObjectName(u"label_49")
-        self.label_49.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_49.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_49, 2, 0, 1, 1)
 
         self.label_48 = QLabel(self.tab_estadistica)
         self.label_48.setObjectName(u"label_48")
-        self.label_48.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_48.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_48, 1, 0, 1, 1)
 
@@ -1123,15 +1085,15 @@ class Ui_frmClientes(object):
         self.txtNoviembre.setObjectName(u"txtNoviembre")
         self.txtNoviembre.setEnabled(True)
         self.txtNoviembre.setMaximumSize(QSize(120, 16777215))
-        self.txtNoviembre.setFocusPolicy(Qt.NoFocus)
-        self.txtNoviembre.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtNoviembre.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtNoviembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtNoviembre.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtNoviembre, 4, 3, 1, 1)
 
         self.label_57 = QLabel(self.tab_estadistica)
         self.label_57.setObjectName(u"label_57")
-        self.label_57.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_57.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_57, 3, 2, 1, 1)
 
@@ -1139,8 +1101,8 @@ class Ui_frmClientes(object):
         self.txtMarzo.setObjectName(u"txtMarzo")
         self.txtMarzo.setEnabled(True)
         self.txtMarzo.setMaximumSize(QSize(120, 16777215))
-        self.txtMarzo.setFocusPolicy(Qt.NoFocus)
-        self.txtMarzo.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtMarzo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtMarzo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtMarzo.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtMarzo, 2, 1, 1, 1)
@@ -1149,8 +1111,8 @@ class Ui_frmClientes(object):
         self.txtFebrero.setObjectName(u"txtFebrero")
         self.txtFebrero.setEnabled(True)
         self.txtFebrero.setMaximumSize(QSize(120, 16777215))
-        self.txtFebrero.setFocusPolicy(Qt.NoFocus)
-        self.txtFebrero.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtFebrero.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtFebrero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtFebrero.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtFebrero, 1, 1, 1, 1)
@@ -1159,21 +1121,21 @@ class Ui_frmClientes(object):
         self.txtEnero.setObjectName(u"txtEnero")
         self.txtEnero.setEnabled(True)
         self.txtEnero.setMaximumSize(QSize(120, 16777215))
-        self.txtEnero.setFocusPolicy(Qt.NoFocus)
-        self.txtEnero.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtEnero.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtEnero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtEnero.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtEnero, 0, 1, 1, 1)
 
         self.label_56 = QLabel(self.tab_estadistica)
         self.label_56.setObjectName(u"label_56")
-        self.label_56.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_56.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_56, 5, 2, 1, 1)
 
         self.label_51 = QLabel(self.tab_estadistica)
         self.label_51.setObjectName(u"label_51")
-        self.label_51.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_51.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_51, 4, 0, 1, 1)
 
@@ -1181,8 +1143,8 @@ class Ui_frmClientes(object):
         self.txtjulio.setObjectName(u"txtjulio")
         self.txtjulio.setEnabled(True)
         self.txtjulio.setMaximumSize(QSize(120, 16777215))
-        self.txtjulio.setFocusPolicy(Qt.NoFocus)
-        self.txtjulio.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtjulio.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtjulio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtjulio.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtjulio, 0, 3, 1, 1)
@@ -1191,8 +1153,8 @@ class Ui_frmClientes(object):
         self.txtDiciembre.setObjectName(u"txtDiciembre")
         self.txtDiciembre.setEnabled(True)
         self.txtDiciembre.setMaximumSize(QSize(120, 16777215))
-        self.txtDiciembre.setFocusPolicy(Qt.NoFocus)
-        self.txtDiciembre.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtDiciembre.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtDiciembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtDiciembre.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtDiciembre, 5, 3, 1, 1)
@@ -1201,21 +1163,21 @@ class Ui_frmClientes(object):
         self.txtJunio.setObjectName(u"txtJunio")
         self.txtJunio.setEnabled(True)
         self.txtJunio.setMaximumSize(QSize(120, 16777215))
-        self.txtJunio.setFocusPolicy(Qt.NoFocus)
-        self.txtJunio.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtJunio.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtJunio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtJunio.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtJunio, 5, 1, 1, 1)
 
         self.label_58 = QLabel(self.tab_estadistica)
         self.label_58.setObjectName(u"label_58")
-        self.label_58.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_58.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_58, 2, 2, 1, 1)
 
         self.label_50 = QLabel(self.tab_estadistica)
         self.label_50.setObjectName(u"label_50")
-        self.label_50.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_50.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_50, 3, 0, 1, 1)
 
@@ -1223,21 +1185,21 @@ class Ui_frmClientes(object):
         self.txtAgosto.setObjectName(u"txtAgosto")
         self.txtAgosto.setEnabled(True)
         self.txtAgosto.setMaximumSize(QSize(120, 16777215))
-        self.txtAgosto.setFocusPolicy(Qt.NoFocus)
-        self.txtAgosto.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtAgosto.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtAgosto.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtAgosto.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtAgosto, 1, 3, 1, 1)
 
         self.label_47 = QLabel(self.tab_estadistica)
         self.label_47.setObjectName(u"label_47")
-        self.label_47.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_47.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_47, 0, 0, 1, 1)
 
         self.label_55 = QLabel(self.tab_estadistica)
         self.label_55.setObjectName(u"label_55")
-        self.label_55.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_55.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_55, 1, 2, 1, 1)
 
@@ -1245,21 +1207,21 @@ class Ui_frmClientes(object):
         self.txtSeptiembre.setObjectName(u"txtSeptiembre")
         self.txtSeptiembre.setEnabled(True)
         self.txtSeptiembre.setMaximumSize(QSize(120, 16777215))
-        self.txtSeptiembre.setFocusPolicy(Qt.NoFocus)
-        self.txtSeptiembre.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtSeptiembre.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtSeptiembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtSeptiembre.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtSeptiembre, 2, 3, 1, 1)
 
         self.label_52 = QLabel(self.tab_estadistica)
         self.label_52.setObjectName(u"label_52")
-        self.label_52.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_52.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_52, 5, 0, 1, 1)
 
         self.label_54 = QLabel(self.tab_estadistica)
         self.label_54.setObjectName(u"label_54")
-        self.label_54.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_54.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_54, 0, 2, 1, 1)
 
@@ -1267,8 +1229,8 @@ class Ui_frmClientes(object):
         self.txtAbril.setObjectName(u"txtAbril")
         self.txtAbril.setEnabled(True)
         self.txtAbril.setMaximumSize(QSize(120, 16777215))
-        self.txtAbril.setFocusPolicy(Qt.NoFocus)
-        self.txtAbril.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtAbril.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtAbril.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtAbril.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtAbril, 3, 1, 1, 1)
@@ -1277,15 +1239,15 @@ class Ui_frmClientes(object):
         self.txtOctubre.setObjectName(u"txtOctubre")
         self.txtOctubre.setEnabled(True)
         self.txtOctubre.setMaximumSize(QSize(120, 16777215))
-        self.txtOctubre.setFocusPolicy(Qt.NoFocus)
-        self.txtOctubre.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtOctubre.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtOctubre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtOctubre.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtOctubre, 3, 3, 1, 1)
 
         self.label_53 = QLabel(self.tab_estadistica)
         self.label_53.setObjectName(u"label_53")
-        self.label_53.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_53.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_23.addWidget(self.label_53, 4, 2, 1, 1)
 
@@ -1293,8 +1255,8 @@ class Ui_frmClientes(object):
         self.txtMayo.setObjectName(u"txtMayo")
         self.txtMayo.setEnabled(True)
         self.txtMayo.setMaximumSize(QSize(120, 16777215))
-        self.txtMayo.setFocusPolicy(Qt.NoFocus)
-        self.txtMayo.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtMayo.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtMayo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtMayo.setReadOnly(True)
 
         self.gridLayout_23.addWidget(self.txtMayo, 4, 1, 1, 1)
@@ -1306,7 +1268,7 @@ class Ui_frmClientes(object):
         self.gridLayout_66.setObjectName(u"gridLayout_66")
         self.label_36 = QLabel(self.tab_estadistica)
         self.label_36.setObjectName(u"label_36")
-        self.label_36.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_36.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_66.addWidget(self.label_36, 0, 0, 1, 1)
 
@@ -1314,8 +1276,8 @@ class Ui_frmClientes(object):
         self.txtdeuda_actual.setObjectName(u"txtdeuda_actual")
         self.txtdeuda_actual.setEnabled(True)
         self.txtdeuda_actual.setMaximumSize(QSize(100, 16777215))
-        self.txtdeuda_actual.setFocusPolicy(Qt.NoFocus)
-        self.txtdeuda_actual.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtdeuda_actual.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtdeuda_actual.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtdeuda_actual.setReadOnly(True)
 
         self.gridLayout_66.addWidget(self.txtdeuda_actual, 2, 1, 1, 1)
@@ -1324,8 +1286,8 @@ class Ui_frmClientes(object):
         self.txtfecha_ultima_compra.setObjectName(u"txtfecha_ultima_compra")
         self.txtfecha_ultima_compra.setEnabled(True)
         self.txtfecha_ultima_compra.setMaximumSize(QSize(100, 16777215))
-        self.txtfecha_ultima_compra.setFocusPolicy(Qt.NoFocus)
-        self.txtfecha_ultima_compra.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtfecha_ultima_compra.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtfecha_ultima_compra.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtfecha_ultima_compra.setCalendarPopup(True)
 
         self.gridLayout_66.addWidget(self.txtfecha_ultima_compra, 1, 1, 1, 1)
@@ -1334,21 +1296,21 @@ class Ui_frmClientes(object):
         self.txtimporteAcumulado.setObjectName(u"txtimporteAcumulado")
         self.txtimporteAcumulado.setEnabled(True)
         self.txtimporteAcumulado.setMaximumSize(QSize(100, 16777215))
-        self.txtimporteAcumulado.setFocusPolicy(Qt.NoFocus)
-        self.txtimporteAcumulado.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtimporteAcumulado.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtimporteAcumulado.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtimporteAcumulado.setReadOnly(True)
 
         self.gridLayout_66.addWidget(self.txtimporteAcumulado, 0, 1, 1, 1)
 
         self.label_38 = QLabel(self.tab_estadistica)
         self.label_38.setObjectName(u"label_38")
-        self.label_38.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_38.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_66.addWidget(self.label_38, 2, 0, 1, 1)
 
         self.label_37 = QLabel(self.tab_estadistica)
         self.label_37.setObjectName(u"label_37")
-        self.label_37.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_37.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_66.addWidget(self.label_37, 1, 0, 1, 1)
 
@@ -1356,15 +1318,15 @@ class Ui_frmClientes(object):
         self.txtventas_ejercicio.setObjectName(u"txtventas_ejercicio")
         self.txtventas_ejercicio.setEnabled(True)
         self.txtventas_ejercicio.setMaximumSize(QSize(100, 16777215))
-        self.txtventas_ejercicio.setFocusPolicy(Qt.NoFocus)
-        self.txtventas_ejercicio.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtventas_ejercicio.setFocusPolicy(Qt.FocusPolicy.NoFocus)
+        self.txtventas_ejercicio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtventas_ejercicio.setReadOnly(True)
 
         self.gridLayout_66.addWidget(self.txtventas_ejercicio, 3, 1, 1, 1)
 
         self.label_39 = QLabel(self.tab_estadistica)
         self.label_39.setObjectName(u"label_39")
-        self.label_39.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.label_39.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_66.addWidget(self.label_39, 3, 0, 1, 1)
 
@@ -1375,14 +1337,10 @@ class Ui_frmClientes(object):
 
         self.gridLayout_24.addLayout(self.gridLayout_66, 0, 1, 1, 1)
 
-        # self.graficaEstadistica = OpenChart(self.tab_estadistica)
-        # self.graficaEstadistica.setObjectName(u"graficaEstadistica")
-        # self.graficaEstadistica.setMinimumSize(QSize(0, 192))
-        # self.graficaEstadistica.setProperty(u"Etiquetas", True)
-        # self.graficaEstadistica.setProperty(u"Valores", True)
-        # self.graficaEstadistica.setProperty(u"Leyenda", False)
+        self.widget = QWidget(self.tab_estadistica)
+        self.widget.setObjectName(u"widget")
 
-        # self.gridLayout_24.addWidget(self.graficaEstadistica, 1, 0, 1, 2)
+        self.gridLayout_24.addWidget(self.widget, 1, 0, 1, 2)
 
         self.tabwidget.addTab(self.tab_estadistica, "")
         self.tab_deudas = QWidget()
@@ -1403,14 +1361,14 @@ class Ui_frmClientes(object):
         self.label_83.setObjectName(u"label_83")
         self.label_83.setStyleSheet(u"background: #304163;\n"
 "color: rgb(255,255,255);")
-        self.label_83.setAlignment(Qt.AlignCenter)
+        self.label_83.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_20.addWidget(self.label_83, 0, 0, 1, 1)
 
         self.frame = QFrame(self.tab_deudas)
         self.frame.setObjectName(u"frame")
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.verticalLayout = QVBoxLayout(self.frame)
         self.verticalLayout.setObjectName(u"verticalLayout")
         self.radPendientes = QRadioButton(self.frame)
@@ -1430,8 +1388,8 @@ class Ui_frmClientes(object):
         self.TablaDeudas = QTableView(self.tab_deudas)
         self.TablaDeudas.setObjectName(u"TablaDeudas")
         self.TablaDeudas.setAlternatingRowColors(True)
-        self.TablaDeudas.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.TablaDeudas.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.TablaDeudas.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.TablaDeudas.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.TablaDeudas.horizontalHeader().setStretchLastSection(True)
 
         self.gridLayout_20.addWidget(self.TablaDeudas, 1, 0, 4, 1)
@@ -1444,7 +1402,7 @@ class Ui_frmClientes(object):
         self.label_84.setObjectName(u"label_84")
         self.label_84.setStyleSheet(u"background: #304163;\n"
 "color: rgb(255,255,255);")
-        self.label_84.setAlignment(Qt.AlignCenter)
+        self.label_84.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_20.addWidget(self.label_84, 5, 0, 1, 2)
 
@@ -1478,8 +1436,8 @@ class Ui_frmClientes(object):
         self.txtfecha_nacimiento = QDateEdit(self.tab_coments)
         self.txtfecha_nacimiento.setObjectName(u"txtfecha_nacimiento")
         self.txtfecha_nacimiento.setMaximumSize(QSize(100, 16777215))
-        self.txtfecha_nacimiento.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
-        self.txtfecha_nacimiento.setButtonSymbols(QAbstractSpinBox.UpDownArrows)
+        self.txtfecha_nacimiento.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.txtfecha_nacimiento.setButtonSymbols(QAbstractSpinBox.ButtonSymbols.UpDownArrows)
         self.txtfecha_nacimiento.setCalendarPopup(True)
 
         self.gridLayout_18.addWidget(self.txtfecha_nacimiento, 3, 1, 1, 1)
@@ -1530,8 +1488,8 @@ class Ui_frmClientes(object):
         self.frame_5 = QFrame(self.tab_coments)
         self.frame_5.setObjectName(u"frame_5")
         self.frame_5.setMinimumSize(QSize(0, 100))
-        self.frame_5.setFrameShape(QFrame.StyledPanel)
-        self.frame_5.setFrameShadow(QFrame.Raised)
+        self.frame_5.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_5.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_9 = QGridLayout(self.frame_5)
         self.gridLayout_9.setObjectName(u"gridLayout_9")
         self.gridLayout_8 = QGridLayout()
@@ -1544,7 +1502,7 @@ class Ui_frmClientes(object):
         self.txtfecha_alta = QDateEdit(self.frame_5)
         self.txtfecha_alta.setObjectName(u"txtfecha_alta")
         self.txtfecha_alta.setMaximumSize(QSize(100, 16777215))
-        self.txtfecha_alta.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtfecha_alta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtfecha_alta.setCalendarPopup(True)
 
         self.gridLayout_8.addWidget(self.txtfecha_alta, 0, 2, 1, 1)
@@ -1553,7 +1511,7 @@ class Ui_frmClientes(object):
         self.txtrRiesgoPermitido.setObjectName(u"txtrRiesgoPermitido")
         self.txtrRiesgoPermitido.setEnabled(True)
         self.txtrRiesgoPermitido.setMaximumSize(QSize(100, 16777215))
-        self.txtrRiesgoPermitido.setAlignment(Qt.AlignRight|Qt.AlignTrailing|Qt.AlignVCenter)
+        self.txtrRiesgoPermitido.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_8.addWidget(self.txtrRiesgoPermitido, 1, 2, 1, 1)
 
@@ -1607,15 +1565,15 @@ class Ui_frmClientes(object):
         self.frame_3.setObjectName(u"frame_3")
         self.frame_3.setMinimumSize(QSize(250, 0))
         self.frame_3.setMaximumSize(QSize(16777215, 16777215))
-        self.frame_3.setFrameShape(QFrame.StyledPanel)
-        self.frame_3.setFrameShadow(QFrame.Raised)
+        self.frame_3.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
         self.horizontalLayout_5 = QHBoxLayout(self.frame_3)
         self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
         self.tabWidget_2 = QTabWidget(self.frame_3)
         self.tabWidget_2.setObjectName(u"tabWidget_2")
         self.tabWidget_2.setAutoFillBackground(False)
-        self.tabWidget_2.setTabPosition(QTabWidget.North)
-        self.tabWidget_2.setTabShape(QTabWidget.Rounded)
+        self.tabWidget_2.setTabPosition(QTabWidget.TabPosition.North)
+        self.tabWidget_2.setTabShape(QTabWidget.TabShape.Rounded)
         self.tabWidget_2.setMovable(True)
         self.tab_13 = QWidget()
         self.tab_13.setObjectName(u"tab_13")
@@ -1624,8 +1582,8 @@ class Ui_frmClientes(object):
         self.tablaPresupuestos = QTableView(self.tab_13)
         self.tablaPresupuestos.setObjectName(u"tablaPresupuestos")
         self.tablaPresupuestos.setAlternatingRowColors(True)
-        self.tablaPresupuestos.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tablaPresupuestos.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tablaPresupuestos.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.tablaPresupuestos.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.tablaPresupuestos.horizontalHeader().setStretchLastSection(True)
 
         self.gridLayout_19.addWidget(self.tablaPresupuestos, 0, 0, 1, 1)
@@ -1638,8 +1596,8 @@ class Ui_frmClientes(object):
         self.tablaPedidos = QTableView(self.tab_9)
         self.tablaPedidos.setObjectName(u"tablaPedidos")
         self.tablaPedidos.setAlternatingRowColors(True)
-        self.tablaPedidos.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tablaPedidos.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tablaPedidos.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.tablaPedidos.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.tablaPedidos.horizontalHeader().setStretchLastSection(True)
 
         self.gridLayout_26.addWidget(self.tablaPedidos, 0, 0, 1, 1)
@@ -1652,7 +1610,7 @@ class Ui_frmClientes(object):
         self.TablaAlbaranes = QTableView(self.tab_7)
         self.TablaAlbaranes.setObjectName(u"TablaAlbaranes")
         self.TablaAlbaranes.setAlternatingRowColors(True)
-        self.TablaAlbaranes.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.TablaAlbaranes.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.TablaAlbaranes.horizontalHeader().setStretchLastSection(True)
 
         self.gridLayout_6.addWidget(self.TablaAlbaranes, 0, 0, 1, 1)
@@ -1665,7 +1623,7 @@ class Ui_frmClientes(object):
         self.tablaFacturas = QTableView(self.tab_Facturas)
         self.tablaFacturas.setObjectName(u"tablaFacturas")
         self.tablaFacturas.setAlternatingRowColors(True)
-        self.tablaFacturas.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tablaFacturas.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tablaFacturas.horizontalHeader().setStretchLastSection(True)
 
         self.gridLayout_11.addWidget(self.tablaFacturas, 0, 0, 1, 1)
@@ -1678,8 +1636,8 @@ class Ui_frmClientes(object):
         self.tablaVales = QTableView(self.tab_12)
         self.tablaVales.setObjectName(u"tablaVales")
         self.tablaVales.setAlternatingRowColors(True)
-        self.tablaVales.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tablaVales.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tablaVales.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.tablaVales.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.tablaVales.horizontalHeader().setStretchLastSection(True)
 
         self.gridLayout_13.addWidget(self.tablaVales, 0, 0, 1, 1)
@@ -1692,8 +1650,8 @@ class Ui_frmClientes(object):
         self.frameConta.setObjectName(u"frameConta")
         self.frameConta.setMinimumSize(QSize(0, 0))
         self.frameConta.setMaximumSize(QSize(373, 16777215))
-        self.frameConta.setFrameShape(QFrame.StyledPanel)
-        self.frameConta.setFrameShadow(QFrame.Raised)
+        self.frameConta.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frameConta.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_21 = QGridLayout(self.frameConta)
         self.gridLayout_21.setObjectName(u"gridLayout_21")
         self.tablaAsientos = QTableView(self.frameConta)
@@ -1705,7 +1663,7 @@ class Ui_frmClientes(object):
         self.label_10.setObjectName(u"label_10")
         self.label_10.setStyleSheet(u"background: #304163;\n"
 "color: rgb(255,255,255);")
-        self.label_10.setAlignment(Qt.AlignCenter)
+        self.label_10.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_21.addWidget(self.label_10, 0, 0, 1, 1)
 
@@ -1728,13 +1686,13 @@ class Ui_frmClientes(object):
         self.tabla_busquedas = QTableView(self.paginaBisquedas)
         self.tabla_busquedas.setObjectName(u"tabla_busquedas")
         self.tabla_busquedas.setAutoFillBackground(True)
-        # Clear hard-coded background colors so dark-mode / unfocused windows
-        # can use the application palette. Styles will be applied from code.
-        self.tabla_busquedas.setStyleSheet(u"")
+        self.tabla_busquedas.setStyleSheet(u"alternate-background-color: rgb(255, 255, 255);\n"
+"background-color: rgb(248, 245, 194);\n"
+"font: 8pt \"Sans\";")
         self.tabla_busquedas.setAlternatingRowColors(True)
-        self.tabla_busquedas.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.tabla_busquedas.setSelectionBehavior(QAbstractItemView.SelectRows)
-        self.tabla_busquedas.setGridStyle(Qt.DotLine)
+        self.tabla_busquedas.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.tabla_busquedas.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
+        self.tabla_busquedas.setGridStyle(Qt.PenStyle.DotLine)
         self.tabla_busquedas.setSortingEnabled(True)
         self.tabla_busquedas.setCornerButtonEnabled(False)
         self.tabla_busquedas.horizontalHeader().setStretchLastSection(True)
@@ -1753,7 +1711,7 @@ class Ui_frmClientes(object):
         self.textoTitulo.setStyleSheet(u"background: #304163;\n"
 "color: rgb(255,255,255);\n"
 "font: 14pt \"Sans Serif\";")
-        self.textoTitulo.setAlignment(Qt.AlignCenter)
+        self.textoTitulo.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_3.addWidget(self.textoTitulo, 0, 0, 1, 5)
 
@@ -1765,8 +1723,7 @@ class Ui_frmClientes(object):
         QWidget.setTabOrder(self.btnGuardar, self.btnDeshacer)
         QWidget.setTabOrder(self.btnDeshacer, self.botListados)
         QWidget.setTabOrder(self.botListados, self.btnBorrar)
-        QWidget.setTabOrder(self.btnBorrar, self.btnFichaPaciente)
-        QWidget.setTabOrder(self.btnFichaPaciente, self.txtcodigo_cliente)
+        QWidget.setTabOrder(self.btnBorrar, self.txtcodigo_cliente)
         QWidget.setTabOrder(self.txtcodigo_cliente, self.txtCifIntracomunitario)
         QWidget.setTabOrder(self.txtCifIntracomunitario, self.btnValidarVIES)
         QWidget.setTabOrder(self.btnValidarVIES, self.txtcif_nif)
@@ -1784,8 +1741,7 @@ class Ui_frmClientes(object):
         QWidget.setTabOrder(self.cboPais, self.txttelefono1)
         QWidget.setTabOrder(self.txttelefono1, self.txttelefono2)
         QWidget.setTabOrder(self.txttelefono2, self.txtmovil)
-        QWidget.setTabOrder(self.txtmovil, self.txtfax)
-        QWidget.setTabOrder(self.txtfax, self.txtemail)
+        QWidget.setTabOrder(self.txtmovil, self.txtemail)
         QWidget.setTabOrder(self.txtemail, self.txtweb)
         QWidget.setTabOrder(self.txtweb, self.txtObservaciones)
         QWidget.setTabOrder(self.txtObservaciones, self.btnVer_OtrosContactos)
@@ -1873,7 +1829,7 @@ class Ui_frmClientes(object):
     # setupUi
 
     def retranslateUi(self, frmClientes):
-        frmClientes.setWindowTitle(QCoreApplication.translate("frmClientes", u"Maya - Gesti\u00f3n de Pacientes", None))
+        frmClientes.setWindowTitle(QCoreApplication.translate("frmClientes", u"Gestion de clientes", None))
         self.label_40.setText(QCoreApplication.translate("frmClientes", u"Cliente:", None))
         self.txtNombreFiscal.setText(QCoreApplication.translate("frmClientes", u"TextLabel", None))
         self.btnAnadir.setText(QCoreApplication.translate("frmClientes", u"&Nuevo", None))
@@ -1897,8 +1853,6 @@ class Ui_frmClientes(object):
         self.label_24.setText(QCoreApplication.translate("frmClientes", u"Mail:", None))
         self.label_16.setStyleSheet("")
         self.label_16.setText(QCoreApplication.translate("frmClientes", u"Poblaci\u00f3n:", None))
-        self.label_21.setStyleSheet("")
-        self.label_21.setText(QCoreApplication.translate("frmClientes", u"Fax:", None))
         self.label_22.setStyleSheet("")
         self.label_22.setText(QCoreApplication.translate("frmClientes", u"M\u00f3vil:", None))
         self.label_19.setStyleSheet("")
@@ -1929,7 +1883,6 @@ class Ui_frmClientes(object):
         self.label_5.setText(QCoreApplication.translate("frmClientes", u"Segundo Apellido:", None))
         self.label_4.setStyleSheet("")
         self.label_4.setText(QCoreApplication.translate("frmClientes", u"Primer Apellido:", None))
-        self.btnFichaPaciente.setText(QCoreApplication.translate("frmClientes", u"Historial Cl\u00ednico del Paciente", None))
 #if QT_CONFIG(tooltip)
         self.btnVer_OtrosContactos.setToolTip(QCoreApplication.translate("frmClientes", u"Otras personas de contacto", None))
 #endif // QT_CONFIG(tooltip)
@@ -1939,8 +1892,6 @@ class Ui_frmClientes(object):
         ___qtreewidgetitem = self.lista_tipos.headerItem()
         ___qtreewidgetitem.setText(0, QCoreApplication.translate("frmClientes", u"Tipo", None));
         self.lista_tipos.setStyleSheet("")
-        # self.blinkink.setProperty(u"topTex", QCoreApplication.translate("frmClientes", u"Tiene campos pendientes de rellenar", None))
-        # self.blinkink.setProperty(u"bottomTex", QCoreApplication.translate("frmClientes", u"nombre, cif, ....", None))
         self.tabwidget.setTabText(self.tabwidget.indexOf(self.tab_datos), QCoreApplication.translate("frmClientes", u"Cliente", None))
         self.label_7.setText(QCoreApplication.translate("frmClientes", u"DIRECCIONES", None))
         self.label_6.setText(QCoreApplication.translate("frmClientes", u"Descripci\u00f3n:", None))
@@ -2033,7 +1984,6 @@ class Ui_frmClientes(object):
         self.label_37.setText(QCoreApplication.translate("frmClientes", u"Fecha ultima compra:", None))
         self.txtventas_ejercicio.setText(QCoreApplication.translate("frmClientes", u"0,00", None))
         self.label_39.setText(QCoreApplication.translate("frmClientes", u"Ventas Ejercicio:", None))
-        # self.graficaEstadistica.setProperty(u"Title", QCoreApplication.translate("frmClientes", u"Consumo por meses.", None))
         self.tabwidget.setTabText(self.tabwidget.indexOf(self.tab_estadistica), QCoreApplication.translate("frmClientes", u"Estadistica", None))
         self.btnCobroTotal.setText(QCoreApplication.translate("frmClientes", u"Cobro ", None))
         self.label_83.setText(QCoreApplication.translate("frmClientes", u"Deudas", None))

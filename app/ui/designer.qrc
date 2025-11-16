@@ -1,0 +1,17 @@
+<RCC>
+  <qresource prefix="PNG">
+    <file>../../resources/icons/png/Add.png</file>
+    <file>../../resources/icons/png/Calendar.png</file>
+    <file>../../resources/icons/png/Next.png</file>
+    <file>../../resources/icons/png/Pay.png</file>
+    <file>../../resources/icons/png/delete.png</file>
+    <file>../../resources/icons/png/Previous.png</file>
+    <file>../../resources/icons/png/undo.png</file>
+    <file>../../resources/icons/png/Edit.png</file>
+    <file>../../resources/icons/png/Exit.png</file>
+    <file>../../resources/icons/png/Print.png</file>
+    <file>../../resources/icons/png/Save.png</file>
+    <file>../../resources/icons/png/List.png</file>
+    <file>../../resources/icons/png/search.png</file>
+  </qresource>
+</RCC>

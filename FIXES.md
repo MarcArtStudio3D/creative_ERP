@@ -95,18 +95,18 @@ class InvoiceLine(Base):
 
 ## Diferencias Python vs C++ (Recordatorio)
 
-| Concepto | C++ | Python |
-|----------|-----|--------|
-| **Bloques** | `{ }` | Indentación (4 espacios) |
-| **Declaración de tipos** | `int x = 5;` | `x = 5` (tipado dinámico) |
-| **Punteros** | `Cliente* c` | `c` (referencias automáticas) |
-| **Includes/Imports** | `#include "header.h"` | `from module import Class` |
-| **Constructor** | `MainWindow()` | `def __init__(self)` |
-| **Herencia** | `: public QMainWindow` | `class A(B):` |
-| **NULL** | `nullptr` | `None` |
-| **Strings** | `QString` | `str` (nativo) |
-| **Listas** | `std::vector<T>` | `list` |
-| **Diccionarios** | `std::map<K,V>` | `dict` |
+| Concepto                      | C++                       | Python                        |
+|-------------------------------|---------------------------|-------------------------------|
+| **Bloques**                   | `{ }`                     | Indentación (4 espacios)      |
+| **Declaración de tipos**      | `int x = 5;`              | `x = 5` (tipado dinámico)     |
+| **Punteros**                  | `Cliente* c`              | `c` (referencias automáticas) |
+| **Includes/Imports**          | `#include "header.h"`     | `from module import Class`    |
+| **Constructor**               | `MainWindow()`            | `def __init__(self)`          |
+| **Herencia**                  | `: public QMainWindow`    | `class A(B):`                 |
+| **NULL**                      | `nullptr`                 | `None`                        |
+| **Strings**                   | `QString`                 | `str` (nativo)                |
+| **Listas**                    | `std::vector<T>`          | `list`                        |
+| **Diccionarios**              | `std::map<K,V>`           | `dict`                        |
 
 ---
 
@@ -182,3 +182,42 @@ python convert_ui.py --watch
 ---
 
 **Nota Importante:** En Python, **la indentación es parte de la sintaxis**. Un error de indentación rompe el código. Usa siempre 4 espacios (configura tu editor para convertir tabs a espacios).
+
+
+## Recursos de iconos (Qt .qrc)
+
+
+### Estructura de carpetas
+```
+resources/
+icons.qrc
+icons/
+add.svg
+delete.svg
+invoice.svg
+```
+
+
+### Archivo icons.qrc
+```xml
+<RCC>
+<qresource prefix="/icons">
+<file>add.svg</file>
+<file>delete.svg</file>
+<file>invoice.svg</file>
+</qresource>
+</RCC>
+```
+
+
+### Ejemplo de uso en Python
+```python
+from PySide6.QtGui import QIcon
+btn.setIcon(QIcon(":/icons/add.svg"))
+```
+
+
+### Compilación del recurso
+```bash
+pyside6-rcc resources/icons.qrc -o resources/icons_rc.py
+```

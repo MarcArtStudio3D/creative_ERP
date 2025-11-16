@@ -116,4 +116,4 @@ if __name__ == "__main__":
     print("\nCreando datos de ejemplo...")
     crear_clientes_demo()
     
-    print("\n¡Listo! La base de datos está inicializada.")
+    print("\n¡Listo! Se han agregado clientes a la tabla clientes.")

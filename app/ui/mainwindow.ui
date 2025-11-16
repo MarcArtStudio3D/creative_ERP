@@ -26,7 +26,7 @@
    <string>MAYA - ERP/GNU para los profesionales de la Salud</string>
   </property>
   <property name="windowIcon">
-   <iconset resource="maya.qrc">
+   <iconset>
     <normaloff>:/Icons/PNG/redfox.png</normaloff>:/Icons/PNG/redfox.png</iconset>
   </property>
   <property name="iconSize">
@@ -208,7 +208,7 @@ background-color: rgb(0,0,0);</string>
           <string/>
          </property>
          <property name="pixmap">
-          <pixmap resource="maya.qrc">:/Icons/PNG/Mail.png</pixmap>
+          <pixmap>:/Icons/PNG/Mail.png</pixmap>
          </property>
          <property name="scaledContents">
           <bool>true</bool>
@@ -490,7 +490,7 @@ background-color: rgb(133, 170, 142);</string>
             <string>Salir</string>
            </property>
            <property name="icon">
-            <iconset resource="maya.qrc">
+            <iconset>
              <normaloff>:/Icons/PNG/Exit.png</normaloff>:/Icons/PNG/Exit.png</iconset>
            </property>
            <property name="iconSize">
@@ -532,7 +532,7 @@ background-color: rgb(133, 170, 142);</string>
             <string>Bloq.</string>
            </property>
            <property name="icon">
-            <iconset resource="maya.qrc">
+            <iconset>
              <normaloff>:/Icons/PNG/cierecaja.png</normaloff>:/Icons/PNG/cierecaja.png</iconset>
            </property>
            <property name="iconSize">
@@ -613,7 +613,7 @@ color: rgb(255, 255, 127);</string>
      <x>0</x>
      <y>0</y>
      <width>1245</width>
-     <height>23</height>
+     <height>30</height>
     </rect>
    </property>
    <property name="defaultUp">
@@ -631,7 +631,7 @@ color: rgb(255, 255, 127);</string>
   </widget>
   <action name="btnClientes">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/clientes.png</normaloff>
      <normalon>:/Icons/PNG/clientes.png</normalon>:/Icons/PNG/clientes.png</iconset>
    </property>
@@ -683,7 +683,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="bttipos_de_Iva">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/iva3.png</normaloff>:/Icons/PNG/iva3.png</iconset>
    </property>
    <property name="text">
@@ -695,7 +695,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="btnAgenda">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/Calendar2.png</normaloff>:/Icons/PNG/Calendar2.png</iconset>
    </property>
    <property name="text">
@@ -707,7 +707,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="btnSalir">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/Exit.png</normaloff>:/Icons/PNG/Exit.png</iconset>
    </property>
    <property name="text">
@@ -719,7 +719,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="actiopresupuestos">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/presupuestos.png</normaloff>:/Icons/PNG/presupuestos.png</iconset>
    </property>
    <property name="text">
@@ -731,7 +731,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="actiopedidos">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/pedidos_cli.png</normaloff>:/Icons/PNG/pedidos_cli.png</iconset>
    </property>
    <property name="text">
@@ -743,7 +743,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="actionFacturas">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/Factura.png</normaloff>:/Icons/PNG/Factura.png</iconset>
    </property>
    <property name="text">
@@ -755,7 +755,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="actionVentas_Contado">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/tpv.png</normaloff>:/Icons/PNG/tpv.png</iconset>
    </property>
    <property name="text">
@@ -1167,7 +1167,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="actionGestion_Pedidos_Pro">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/pedido_pro.png</normaloff>:/Icons/PNG/pedido_pro.png</iconset>
    </property>
    <property name="text">
@@ -1176,7 +1176,7 @@ color: rgb(255, 255, 127);</string>
   </action>
   <action name="actioporc_recepcion_de_pedido_pro">
    <property name="icon">
-    <iconset resource="maya.qrc">
+    <iconset>
      <normaloff>:/Icons/PNG/recepcion_ped.png</normaloff>:/Icons/PNG/recepcion_ped.png</iconset>
    </property>
    <property name="text">
@@ -1184,9 +1184,7 @@ color: rgb(255, 255, 127);</string>
    </property>
   </action>
  </widget>
- <resources>
-  <include location="maya.qrc"/>
- </resources>
+ <resources/>
  <connections>
   <connection>
    <sender>btn_salir</sender>

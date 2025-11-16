@@ -5,6 +5,7 @@
 
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, scoped_session
+from core.models import Base
 import os
 
 # Ruta de la base de datos (por defecto SQLite local)
@@ -22,7 +23,15 @@ SessionLocal = scoped_session(
 )
 
 
+def get_session():
+    """Obtiene una sesión de base de datos."""
+    return SessionLocal()
+
+
 def init_db():
     """Crea todas las tablas en la base de datos."""
     from . import models
+    from modules.clientes import models as clientes_models
+    
     models.Base.metadata.create_all(bind=engine)
+    clientes_models.Base.metadata.create_all(bind=engine)

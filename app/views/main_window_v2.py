@@ -731,19 +731,24 @@ class MainWindowV2(QMainWindow):
         """
         Intenta cargar dinámicamente la vista de un módulo.
         
-        Busca en modules/{module_id}/view.py una clase con nombre {ModuleId}View
-        Por ejemplo: modules/clientes/view.py → ClientesView
+        Busca en modules/{module_id}/view_full.py (o view.py como fallback)
+        Por ejemplo: modules/clientes/view_full.py → ClientesViewFull
         """
         try:
-            # Importar dinámicamente el módulo
-            module_name = f"modules.{module_id}.view"
-            view_class_name = f"{module_id.capitalize()}View"
+            # Intentar primero con view_full (vista completa)
+            if module_id == 'clientes':
+                module_name = f"modules.{module_id}.view_full"
+                view_class_name = f"{module_id.capitalize()}ViewFull"
+            else:
+                # Para otros módulos, usar view normal
+                module_name = f"modules.{module_id}.view"
+                view_class_name = f"{module_id.capitalize()}View"
             
             module = __import__(module_name, fromlist=[view_class_name])
             view_class = getattr(module, view_class_name)
             
             # Crear instancia de la vista
-            view_instance = view_class(self.session)
+            view_instance = view_class()
             return view_instance
             
         except (ImportError, AttributeError) as e:
@@ -879,7 +884,17 @@ class MainWindowV2(QMainWindow):
         search_input = QLineEdit()
         search_input.setPlaceholderText("Buscar...")
         search_input.setMinimumHeight(30)
+        search_input.textChanged.connect(lambda text: self.on_search_changed(module_id, text, order_combo.currentText(), mode_combo.currentText()))
         panel_layout.addWidget(search_input)
+        
+        # Guardar referencias para posterior uso
+        panel.search_input = search_input
+        panel.order_combo = order_combo
+        panel.mode_combo = mode_combo
+        
+        # Conectar combos ahora que todos están definidos
+        order_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))
+        mode_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))
         
         panel_layout.addSpacing(20)
         
@@ -1069,13 +1084,47 @@ class MainWindowV2(QMainWindow):
             {'icon': '📋', 'label': 'Listado', 'action': 'list'},
         ])
     
+    def on_search_changed(self, module_id: str, search_text: str, order_by: str, order_mode: str):
+        """Maneja cambios en los controles de búsqueda y filtrado."""
+        # Obtener el widget activo del módulo
+        if module_id not in self.module_widgets:
+            return
+        
+        module_widget_container = self.module_widgets[module_id]
+        # El módulo real está dentro del contenedor, buscarlo
+        module_view = None
+        for child in module_widget_container.findChildren(QWidget):
+            # Buscar la vista que tenga el método filter_records
+            if hasattr(child, 'filter_records'):
+                module_view = child
+                break
+        
+        if module_view and hasattr(module_view, 'filter_records'):
+            # Si search_text está vacío, obtenerlo del panel
+            if not search_text:
+                panel = module_widget_container.findChild(QFrame, "sidePanel")
+                if panel and hasattr(panel, 'search_input'):
+                    search_text = panel.search_input.text()
+            
+            module_view.filter_records(search_text, order_by, order_mode)
+    
     def on_module_action(self, module_id: str, action: str):
         """Ejecuta una acción específica de un módulo."""
-        QMessageBox.information(
-            self,
-            f"Acción del módulo",
-            f"Módulo: {module_id}\nAcción: {action}\n\nEsta funcionalidad está en desarrollo."
-        )
+        if action == 'refresh':
+            # Limpiar búsqueda y recargar
+            if module_id in self.module_widgets:
+                module_widget_container = self.module_widgets[module_id]
+                panel = module_widget_container.findChild(QFrame, "sidePanel")
+                if panel and hasattr(panel, 'search_input'):
+                    panel.search_input.clear()
+                self.on_search_changed(module_id, "", "Nombre Fiscal", "A-Z")
+            QMessageBox.information(self, "Refrescar", f"Actualizando datos de {module_id}...")
+        else:
+            QMessageBox.information(
+                self,
+                f"Acción del módulo",
+                f"Módulo: {module_id}\nAcción: {action}\n\nEsta funcionalidad está en desarrollo."
+            )
     
     def close_module(self, module_id: str):
         """

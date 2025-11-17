@@ -880,7 +880,13 @@ class ClientesViewFull(QWidget):
         if hasattr(self.ui, 'txtSegundoApellido'):
             self.ui.txtSegundoApellido.setText(self._get_str(cliente, 'apellido2'))
         if hasattr(self.ui, 'txtnombre_fiscal'):
-            self.ui.txtnombre_fiscal.setText(self._get_str(cliente, 'nombre_fiscal'))
+            val_fiscal = self._get_str(cliente, 'nombre_fiscal')
+            self.ui.txtnombre_fiscal.setText(val_fiscal)
+            # If the DB has a non-empty nombre_fiscal, consider it a manual/official value
+            try:
+                self._nombre_fiscal_manual = bool(val_fiscal and val_fiscal.strip())
+            except Exception:
+                self._nombre_fiscal_manual = False
         if hasattr(self.ui, 'txtnombre_comercial'):
             self.ui.txtnombre_comercial.setText(self._get_str(cliente, 'nombre_comercial'))
         

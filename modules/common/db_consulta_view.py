@@ -208,3 +208,10 @@ class DBConsultaView(QDialog):
             self.ui.btn_aceptar.click()
         except Exception:
             self.accept()
+
+    def exec_select(self):
+        """Execute dialog and return (id, record) tuple if accepted else (0, None)."""
+        rv = self.exec()
+        if rv == QDialog.Accepted:
+            return self.get_selected_id(), self.get_selected_record()
+        return 0, None

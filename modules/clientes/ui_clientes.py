@@ -377,7 +377,6 @@ class Ui_frmClientes(object):
         self.txtweb = QLineEdit(self.tab_datos)
         self.txtweb.setObjectName(u"txtweb")
         self.txtweb.setStyleSheet(u"")
-        self.txtweb.setLocale(QLocale(QLocale.Catalan, QLocale.Spain))
 
         self.gridLayout_30.addWidget(self.txtweb, 19, 1, 1, 3)
 

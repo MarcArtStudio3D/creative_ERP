@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QAbstractSpinBox, QApplication
     QSpinBox, QStackedWidget, QTabWidget, QTableView,
     QTextEdit, QTreeWidget, QTreeWidgetItem, QVBoxLayout,
     QWidget)
-from .. import designer_rc
+from modules import designer_rc
 
 class Ui_frmClientes(object):
     def setupUi(self, frmClientes):
@@ -442,6 +442,16 @@ class Ui_frmClientes(object):
         self.txtcif_nif.setStyleSheet(u"")
 
         self.gridLayout_30.addWidget(self.txtcif_nif, 1, 1, 1, 3)
+
+        self.label_21 = QLabel(self.tab_datos)
+        self.label_21.setObjectName(u"label_21")
+
+        self.gridLayout_30.addWidget(self.label_21, 1, 4, 1, 1)
+
+        self.txtSiret = QLineEdit(self.tab_datos)
+        self.txtSiret.setObjectName(u"txtSiret")
+
+        self.gridLayout_30.addWidget(self.txtSiret, 1, 5, 1, 2)
 
 
         self.gridLayout_25.addLayout(self.gridLayout_30, 0, 0, 2, 1)
@@ -1883,6 +1893,7 @@ class Ui_frmClientes(object):
         self.label_5.setText(QCoreApplication.translate("frmClientes", u"Segundo Apellido:", None))
         self.label_4.setStyleSheet("")
         self.label_4.setText(QCoreApplication.translate("frmClientes", u"Primer Apellido:", None))
+        self.label_21.setText(QCoreApplication.translate("frmClientes", u"SIRET", None))
 #if QT_CONFIG(tooltip)
         self.btnVer_OtrosContactos.setToolTip(QCoreApplication.translate("frmClientes", u"Otras personas de contacto", None))
 #endif // QT_CONFIG(tooltip)

@@ -32,7 +32,7 @@ class ClienteRepository:
                     Cliente.codigo_cliente.ilike(filtro_like),
                     Cliente.nombre_fiscal.ilike(filtro_like),
                     Cliente.nombre_comercial.ilike(filtro_like),
-                    Cliente.cif_nif.ilike(filtro_like),
+                    Cliente.cif_nif_siren.ilike(filtro_like),
                     Cliente.email.ilike(filtro_like)
                 )
             )
@@ -49,7 +49,7 @@ class ClienteRepository:
     
     def obtener_por_cif(self, cif: str) -> Optional[Cliente]:
         """Obtiene un cliente por su CIF/NIF"""
-        return self.session.query(Cliente).filter(Cliente.cif_nif == cif).first()
+        return self.session.query(Cliente).filter(Cliente.cif_nif_siren == cif).first()
     
     def crear(self, cliente: Cliente) -> Cliente:
         """Crea un nuevo cliente"""

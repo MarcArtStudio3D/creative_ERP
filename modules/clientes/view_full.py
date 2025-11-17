@@ -6,6 +6,7 @@ La UI se genera automáticamente desde frmClientes.ui
 from logging import disable
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QVBoxLayout, QTableWidget, QTableView
 from PySide6.QtCore import Qt, QDate, Signal, QAbstractTableModel
+from typing import Any
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from datetime import date
 from core.db import get_session
@@ -36,7 +37,7 @@ class ClientesViewFull(QWidget):
         # Crear un widget temporal para cargar el UI
         from PySide6.QtWidgets import QDialog
         temp_dialog = QDialog()
-        self.ui = Ui_frmClientes()
+        self.ui: Any = Ui_frmClientes()
         self.ui.setupUi(temp_dialog)
         
         # Mantener el stackedWidget intacto pero reparentarlo
@@ -53,10 +54,21 @@ class ClientesViewFull(QWidget):
         # Cerrar el diálogo temporal
         temp_dialog.deleteLater()
         
+        # Desactivar campos de edición inmediatamente después de crear la UI
+        self.desactivar_campos_edicion()
+        
+        # Verificar que los campos estén realmente desactivados
+        # self.verificar_estado_campos()  # Deshabilitado en producción
+        
+        # Forzar desactivación después de que la vista se muestre completamente
+        from PySide6.QtCore import QTimer
+        QTimer.singleShot(100, self.forzar_desactivacion_campos)
+        
         # Inicializar datos
         self.session = get_session()
         self.repository = ClienteRepository(self.session)
         self.cliente_actual = None
+        self._modo_edicion = False  # Bandera para controlar el modo de edición
         
         # Conectar señales de botones principales
         self.conectar_senales()
@@ -80,6 +92,10 @@ class ClientesViewFull(QWidget):
             self.apply_palette_styles()
         except Exception:
             pass
+        
+        # CRÍTICO: Re-aplicar desactivación de campos después de apply_palette_styles
+        # ya que setStyleSheet puede resetear propiedades de los widgets
+        self.desactivar_campos_edicion()
     
     def conectar_senales(self):
         """Conecta las señales de los widgets a los métodos"""
@@ -126,6 +142,47 @@ class ClientesViewFull(QWidget):
             if w is not None and hasattr(w, "clicked"):
                 w.clicked.connect(handler)
 
+        # Conectar cambio de página del stackedWidget para activar/desactivar campos
+        if hasattr(self.ui, 'stackedWidget'):
+            self.ui.stackedWidget.currentChanged.connect(self.on_pagina_cambiada)
+
+        # Activar validaciones inline (conectar señales) - se ignoran fuera de modo edición
+        if not hasattr(self, '_validations_connected') or not self._validations_connected:
+            try:
+                from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QDateEdit, QSpinBox, QComboBox, QDoubleSpinBox
+                # Useful fields for validation
+                names = ['txtcodigo_cliente', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido', 'txtnombre_fiscal', 'txtcif_nif', 'txtemail', 'txtdia_pago1', 'txtdia_pago2', 'txtcuenta_corriente', 'txtiban', 'txtCuentaIBAN']
+                for n in names:
+                    w = getattr(self.ui, n, None)
+                    if w is None:
+                        continue
+                    # Connect according to widget type
+                    if isinstance(w, (QLineEdit, QTextEdit, QPlainTextEdit)):
+                        try:
+                            # connect to textChanged and use sender()
+                            w.textChanged.connect(self._on_widget_change)
+                        except Exception:
+                            pass
+                    elif isinstance(w, QComboBox):
+                        try:
+                            w.currentIndexChanged.connect(self._on_widget_change)
+                        except Exception:
+                            pass
+                    elif isinstance(w, (QSpinBox, QDoubleSpinBox)):
+                        try:
+                            w.valueChanged.connect(self._on_widget_change)
+                        except Exception:
+                            pass
+                    elif isinstance(w, QDateEdit):
+                        try:
+                            w.dateChanged.connect(self._on_widget_change)
+                        except Exception:
+                            pass
+                    
+                self._validations_connected = True
+            except Exception:
+                self._validations_connected = False
+
     def _get_widget(self, name, qtype=None):
         """Intento seguro de obtener un widget por nombre (getattr -> findChild)."""
         w = getattr(self.ui, name, None)
@@ -137,6 +194,111 @@ class ClientesViewFull(QWidget):
         except Exception:
             return None
 
+    def on_pagina_cambiada(self, index):
+        """Maneja el cambio de página en el stackedWidget"""
+        if index == 0:  # Página de edición
+            # Solo activar si realmente estamos en modo edición (nuevo o editar)
+            if hasattr(self, '_modo_edicion') and self._modo_edicion:
+                self.activar_campos_edicion()
+        else:  # Página de lista/búsqueda - SIEMPRE desactivar campos
+            self._modo_edicion = False
+            self.desactivar_campos_edicion()
+
+    def desactivar_campos_edicion(self):
+        """Desactiva todos los campos editables relacionados con la base de datos"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
+
+        # Lista de campos que deben estar desactivados cuando no se está editando
+        campos_edicion = [
+            'txtcodigo_cliente', 'txtcif_nif', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido',
+            'txtnombre_fiscal', 'txtnombre_comercial', 'txtdireccion1', 'txtdireccion2', 'txtcp',
+            'txtpoblacion', 'txtprovincia', 'txttelefono1', 'txttelefono2', 'txtmovil', 'txtfax',
+            'txtemail', 'txtweb', 'txtNombreFiscal'
+        ]
+
+        for campo in campos_edicion:
+            widget = self._get_widget(campo)
+            if widget:
+                self._desactivar_widget(widget)
+
+        # Desactivar también otros tipos de widgets editables que puedan existir
+        for widget_name in dir(self.ui):
+            if widget_name.startswith('_'):
+                continue
+
+            widget = getattr(self.ui, widget_name)
+            if isinstance(widget, (QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit)):
+                self._desactivar_widget(widget)
+        # Desactivar validaciones visuales
+        self._set_all_valid_state()
+
+    def _desactivar_widget(self, widget):
+        """Desactiva un widget usando la propiedad correcta según su tipo"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
+        
+        if isinstance(widget, (QLineEdit, QTextEdit, QPlainTextEdit)):
+            # Para campos de texto, usar setReadOnly para impedir edición pero mantener apariencia normal
+            widget.setReadOnly(True)
+        elif isinstance(widget, (QSpinBox, QDoubleSpinBox, QDateEdit)):
+            # Para spinboxes y date edits, usar setReadOnly
+            widget.setReadOnly(True)
+        else:
+            # Para comboboxes y checkboxes, usar setEnabled
+            widget.setEnabled(False)
+
+    def _activar_widget(self, widget):
+        """Activa un widget usando la propiedad correcta según su tipo"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
+        
+        if isinstance(widget, (QLineEdit, QTextEdit, QPlainTextEdit)):
+            # Para campos de texto, quitar readOnly
+            widget.setReadOnly(False)
+        elif isinstance(widget, (QSpinBox, QDoubleSpinBox, QDateEdit)):
+            # Para spinboxes y date edits, quitar readOnly
+            widget.setReadOnly(False)
+        else:
+            # Para comboboxes y checkboxes, usar setEnabled
+            widget.setEnabled(True)
+        # If becoming editable, update validation visuals and enable validation hooks
+        self._update_form_validity()
+
+    def forzar_desactivacion_campos(self):
+        """Fuerza la desactivación de campos después de que la vista se muestre completamente"""
+        # Asegurar que estamos en la página correcta (1 = lista)
+        if hasattr(self.ui, 'stackedWidget'):
+            current_page = self.ui.stackedWidget.currentIndex()
+            if current_page != 1:
+                self.ui.stackedWidget.setCurrentIndex(1)
+            else:
+                # Si ya estamos en página 1, forzar desactivación sin disparar señal
+                self.desactivar_campos_edicion()
+
+    def activar_campos_edicion(self):
+        """Activa todos los campos editables relacionados con la base de datos"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
+
+        # Lista de campos que deben estar activados cuando se está editando
+        campos_edicion = [
+            'txtcodigo_cliente', 'txtcif_nif', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido',
+            'txtnombre_fiscal', 'txtnombre_comercial', 'txtdireccion1', 'txtdireccion2', 'txtcp',
+            'txtpoblacion', 'txtprovincia', 'txttelefono1', 'txttelefono2', 'txtmovil', 'txtfax',
+            'txtemail', 'txtweb', 'txtNombreFiscal'
+        ]
+
+        for campo in campos_edicion:
+            widget = self._get_widget(campo)
+            if widget:
+                self._activar_widget(widget)
+
+        # Activar también otros tipos de widgets editables que puedan existir
+        for widget_name in dir(self.ui):
+            if widget_name.startswith('_'):
+                continue
+
+            widget = getattr(self.ui, widget_name)
+            if isinstance(widget, (QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit)):
+                self._activar_widget(widget)
+
     def _find_table(self):
         """Encuentra la tabla principal probando varios nombres y tipos."""
         for candidate in ("tabla_busquedas", "tabla_clientes", "tableWidget", "tabla_busqueda"):
@@ -145,7 +307,15 @@ class ClientesViewFull(QWidget):
                 return w
         # fallback: buscar primer hijo que sea QTableWidget o QTableView
         try:
-            tables = self.findChildren((QTableWidget, QTableView))
+            tables = []
+            try:
+                tables.extend(self.findChildren(QTableWidget))
+            except Exception:
+                pass
+            try:
+                tables.extend(self.findChildren(QTableView))
+            except Exception:
+                pass
             if tables:
                 return tables[0]
         except Exception:
@@ -166,6 +336,251 @@ class ClientesViewFull(QWidget):
         except Exception:
             pass
         return None
+
+    def _get_str(self, obj, attr: str) -> str:
+        """Devuelve de forma segura el valor de un atributo como string ('' si no existe).
+
+        Usa getattr para evitar que el type checker trate a los atributos de SQLAlchemy
+        como Column[] en tiempo estático.
+        """
+        try:
+            val = getattr(obj, attr, None)
+            return str(val) if val is not None else ""
+        except Exception:
+            return ""
+
+    def _is_valid_dni(self, dni: str) -> bool:
+        """Valida DNI (formato 8 dígitos + letra de control)."""
+        if not dni:
+            return False
+        s = dni.strip().upper().replace('-', '').replace(' ', '')
+        import re
+        if not re.fullmatch(r"\d{8}[A-Z]", s):
+            return False
+        letters = "TRWAGMYFPDXBNJZSQVHLCKE"
+        number = int(s[:8])
+        expected = letters[number % 23]
+        return s[-1] == expected
+
+    def _is_valid_nie(self, nie: str) -> bool:
+        """Valida NIE (X/Y/Z + 7 dígitos + letra)."""
+        if not nie:
+            return False
+        s = nie.strip().upper().replace('-', '').replace(' ', '')
+        import re
+        if not re.fullmatch(r"[XYZ]\d{7}[A-Z]", s):
+            return False
+        mapping = {'X': '0', 'Y': '1', 'Z': '2'}
+        num = mapping[s[0]] + s[1:8]
+        letters = "TRWAGMYFPDXBNJZSQVHLCKE"
+        expected = letters[int(num) % 23]
+        return s[-1] == expected
+
+    def _is_valid_cif(self, cif: str) -> bool:
+        """Validación básica de formato de CIF (no calcula control completo)."""
+        if not cif:
+            return False
+        s = cif.strip().upper().replace('-', '').replace(' ', '')
+        import re
+        # Letra inicial de sociedad + 7 dígitos + dígito/control (letra o número)
+        # Complete CIF check: compute control digit/letter
+        import re
+        if not re.fullmatch(r"[A-HJNP-SUVW]\d{7}[0-9A-J]", s):
+            return False
+        # Compute sums
+        digits = [int(ch) for ch in s[1:8]]  # 7 digits d1..d7
+        # sum of even positions: d2, d4, d6 (index: 1,3,5)
+        s_even = sum(digits[i] for i in [1, 3, 5])
+        # sum of odd positions: d1,d3,d5,d7 doubled
+        def sum_odd(d):
+            acc = 0
+            for val in d[0::2]:
+                prod = val * 2
+                acc += prod // 10 + prod % 10
+            return acc
+        s_odd = sum_odd(digits)
+        total = s_even + s_odd
+        control_digit = (10 - (total % 10)) % 10
+        control_letter_map = 'JABCDEFGHI'  # index by digit
+        provided = s[-1]
+        # Some entity types expect numeric or letter control or both; accept both
+        if provided == str(control_digit) or provided == control_letter_map[control_digit]:
+            return True
+        return False
+
+    def _is_valid_nif_cif(self, value: str) -> bool:
+        """Check combined NIF/NIE/CIF validity."""
+        if not value:
+            return False
+        v = value.strip().upper()
+        # Try DNI
+        if self._is_valid_dni(v):
+            return True
+        # NIE
+        if self._is_valid_nie(v):
+            return True
+        # CIF basic format check
+        if self._is_valid_cif(v):
+            return True
+        # SIRET checks (Francia)
+        if self._is_valid_siret(v):
+            return True
+        return False
+
+    def _luhn_check(self, digits: str) -> bool:
+        """Return True if digits pass Luhn algorithm."""
+        try:
+            total = 0
+            reverse_digits = digits[::-1]
+            for i, ch in enumerate(reverse_digits):
+                d = int(ch)
+                if i % 2 == 1:
+                    d = d * 2
+                    if d > 9:
+                        d -= 9
+                total += d
+            return total % 10 == 0
+        except Exception:
+            return False
+
+    def _is_valid_siret(self, siret: str) -> bool:
+        """Validate SIRET: 14 digits and Luhn check."""
+        if not siret:
+            return False
+        s = siret.strip().replace(' ', '').replace('-', '')
+        if not s.isdigit() or len(s) != 14:
+            return False
+        return self._luhn_check(s)
+
+    def _is_valid_iban(self, iban: str) -> bool:
+        """Generic IBAN validation (mod 97)"""
+        if not iban:
+            return False
+        s = iban.strip().replace(' ', '').upper()
+        import re
+        if not re.fullmatch(r"[A-Z]{2}\d{2}[A-Z0-9]+", s):
+            return False
+        # Move first 4 chars to end
+        rearr = s[4:] + s[:4]
+        # Replace letters with digits: A=10..Z=35
+        conv = ''
+        for ch in rearr:
+            if ch.isalpha():
+                conv += str(ord(ch) - 55)
+            else:
+                conv += ch
+        # Compute int mod 97 (in chunks)
+        try:
+            total = 0
+            for i in range(0, len(conv), 6):
+                chunk = str(total) + conv[i:i+6]
+                total = int(chunk) % 97
+            return total == 1
+        except Exception:
+            return False
+
+    def _is_valid_ccc(self, ccc: str) -> bool:
+        """Validate Spanish CCC (Cuenta Corriente) control digits.
+        ccc: 20 digits long string (bank 4, office 4, dc 2, account 10)
+        """
+        if not ccc:
+            return False
+        s = ccc.strip().replace(' ', '').replace('-', '')
+        if not s.isdigit() or len(s) != 20:
+            return False
+        bank = s[0:4]
+        office = s[4:8]
+        dc = s[8:10]
+        account = s[10:20]
+        weights1 = [4, 8, 5, 10, 9, 7, 3, 6]
+        weights2 = [1, 2, 4, 8, 5, 10, 9, 7, 3, 6]
+        def compute_check(digits, weights):
+            total = sum(int(d)*w for d, w in zip(digits, weights))
+            r = 11 - (total % 11)
+            if r == 11:
+                r = 0
+            elif r == 10:
+                r = 1
+            return r
+        # First control digit computed from bank and office
+        cd1 = compute_check(bank + office, weights1)
+        cd2 = compute_check(account, weights2)
+        return dc == f"{cd1}{cd2}"
+
+    def _validar_campos(self) -> tuple[bool, list]:
+        """Valida campos obligatorios y NIF/CIF. Devuelve (es_valido, lista_errores)."""
+        errores = []
+
+        # Código cliente obligatorio
+        codigo = ''
+        if hasattr(self.ui, 'txtcodigo_cliente'):
+            codigo = (self.ui.txtcodigo_cliente.text() if hasattr(self.ui.txtcodigo_cliente, 'text') else '')
+        elif getattr(self.ui, 'txtcodigo_cliente', None) is not None:
+            # getattr fallback handled above
+            codigo = getattr(self.ui, 'txtcodigo_cliente').text() if hasattr(getattr(self.ui, 'txtcodigo_cliente'), 'text') else ''
+        if not codigo or str(codigo).strip() == '':
+            errores.append('El código de cliente es obligatorio.')
+
+        # Nombre o nombre fiscal obligatorio
+        nombre = getattr(self.ui, 'txtnombre', None)
+        nombre_fiscal = getattr(self.ui, 'txtnombre_fiscal', None)
+        v_nombre = ''
+        if nombre is not None and hasattr(nombre, 'text'):
+            v_nombre = nombre.text()
+        v_nombre_fiscal = ''
+        if nombre_fiscal is not None and hasattr(nombre_fiscal, 'text'):
+            v_nombre_fiscal = nombre_fiscal.text()
+        if not (v_nombre and v_nombre.strip()) and not (v_nombre_fiscal and v_nombre_fiscal.strip()):
+            errores.append('Debe introducir el nombre o el nombre fiscal del cliente.')
+
+        # NIF/CIF/SIRET validation if provided
+        if getattr(self.ui, 'txtcif_nif', None) is not None:
+            txt = None
+            w = getattr(self.ui, 'txtcif_nif')
+            if hasattr(w, 'text'):
+                txt = w.text()
+            if txt and txt.strip():
+                if not self._is_valid_nif_cif(txt):
+                    errores.append('El NIF/CIF introducido no parece válido.')
+
+        # Validar email si está presente
+        if getattr(self.ui, 'txtemail', None) is not None:
+            w = getattr(self.ui, 'txtemail')
+            txt_email = w.text() if hasattr(w, 'text') else ''
+            if txt_email and txt_email.strip():
+                import re
+                # Very simple email validation
+                if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", txt_email.strip()):
+                    errores.append('El email introducido no es válido.')
+
+        # CCC (cuenta bancaria) validation if present
+        if getattr(self.ui, 'txtcuenta_corriente', None) is not None:
+            w = getattr(self.ui, 'txtcuenta_corriente')
+            txtccc = w.text() if hasattr(w, 'text') else ''
+            if txtccc and txtccc.strip():
+                if not self._is_valid_ccc(txtccc):
+                    errores.append('La cuenta bancaria (CCC) no es válida.')
+
+        # IBAN validation if present
+        if getattr(self.ui, 'txtiban', None) is not None or getattr(self.ui, 'txtCuentaIBAN', None) is not None:
+            w = getattr(self.ui, 'txtiban', None) or getattr(self.ui, 'txtCuentaIBAN', None)
+            txtiban = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            if txtiban and txtiban.strip():
+                if not self._is_valid_iban(txtiban):
+                    errores.append('El IBAN introducido no es válido.')
+
+        # Dias de pago (si existen) deben ser 0-31
+        for dname in ('txtdia_pago1', 'txtdia_pago2'):
+            w = getattr(self.ui, dname, None)
+            if w is not None:
+                try:
+                    val = int(w.value()) if hasattr(w, 'value') else int(w.text()) if hasattr(w, 'text') and w.text() else None
+                    if val is not None and not (0 <= int(val) <= 31):
+                        errores.append(f'Día de pago {dname} fuera de rango 0-31.')
+                except Exception:
+                    errores.append(f'Día de pago {dname} no es un número válido.')
+
+        return (len(errores) == 0, errores)
     
     def cargar_clientes(self):
         """Carga los clientes desde la base de datos en la tabla"""
@@ -191,28 +606,29 @@ class ClientesViewFull(QWidget):
             
             for row, cliente in enumerate(clientes):
                 # Código
-                item = QStandardItem(cliente.codigo_cliente or "")
+                item = QStandardItem(self._get_str(cliente, 'codigo_cliente'))
                 item.setData(cliente.id, Qt.ItemDataRole.UserRole)
                 item.setEditable(False)
                 model.setItem(row, 0, item)
                 
                 # CIF/NIF
-                item = QStandardItem(cliente.cif_nif or "")
+                item = QStandardItem(self._get_str(cliente, 'cif_nif_siren'))
                 item.setEditable(False)
                 model.setItem(row, 1, item)
                 
                 # Nombre Fiscal
-                item = QStandardItem(cliente.nombre_fiscal or cliente.nombre_completo())
+                nombre_fiscal = self._get_str(cliente, 'nombre_fiscal') or (cliente.nombre_completo() if hasattr(cliente, 'nombre_completo') else '')
+                item = QStandardItem(str(nombre_fiscal))
                 item.setEditable(False)
                 model.setItem(row, 2, item)
                 
                 # Teléfono
-                item = QStandardItem(cliente.telefono1 or "")
+                item = QStandardItem(self._get_str(cliente, 'telefono1'))
                 item.setEditable(False)
                 model.setItem(row, 3, item)
                 
                 # Email
-                item = QStandardItem(cliente.email or "")
+                item = QStandardItem(self._get_str(cliente, 'email'))
                 item.setEditable(False)
                 model.setItem(row, 4, item)
             
@@ -237,15 +653,17 @@ class ClientesViewFull(QWidget):
             # Filtrar por texto de búsqueda (case-insensitive)
             if search_text:
                 search_lower = search_text.lower()
+                def str_lower(attr_val):
+                    return attr_val.lower() if isinstance(attr_val, str) else str(attr_val).lower()
                 clientes = [c for c in clientes if (
-                    (c.codigo_cliente and search_lower in c.codigo_cliente.lower()) or
-                    (c.cif_nif and search_lower in c.cif_nif.lower()) or
-                    (c.nombre_fiscal and search_lower in c.nombre_fiscal.lower()) or
-                    (c.nombre and search_lower in c.nombre.lower()) or
-                    (c.apellido1 and search_lower in c.apellido1.lower()) or
-                    (c.apellido2 and search_lower in c.apellido2.lower()) or
-                    (c.telefono1 and search_lower in c.telefono1.lower()) or
-                    (c.email and search_lower in c.email.lower())
+                    (search_lower in ((c.codigo_cliente or '')).lower()) or
+                    (search_lower in ((c.cif_nif_siren or '')).lower()) or
+                    (search_lower in ((c.nombre_fiscal or '')).lower()) or
+                    (search_lower in ((c.nombre or '')).lower()) or
+                    (search_lower in ((c.apellido1 or '')).lower()) or
+                    (search_lower in ((c.apellido2 or '')).lower()) or
+                    (search_lower in ((c.telefono1 or '')).lower()) or
+                    (search_lower in ((c.email or '')).lower())
                 )]
             
             # Ordenar según el campo especificado
@@ -266,24 +684,25 @@ class ClientesViewFull(QWidget):
                 tabla.setRowCount(len(clientes))
                 for row, cliente in enumerate(clientes):
                     # Código
-                    item = QTableWidgetItem(cliente.codigo_cliente or "")
+                    item = QTableWidgetItem(self._get_str(cliente, 'codigo_cliente'))
                     item.setData(Qt.ItemDataRole.UserRole, cliente.id)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 0, item)
                     # CIF/NIF
-                    item = QTableWidgetItem(cliente.cif_nif or "")
+                    item = QTableWidgetItem(self._get_str(cliente, 'cif_nif_siren'))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 1, item)
                     # Nombre Fiscal
-                    item = QTableWidgetItem(cliente.nombre_fiscal or cliente.nombre_completo())
+                    nombre_fiscal = self._get_str(cliente, 'nombre_fiscal') or (cliente.nombre_completo() if hasattr(cliente, 'nombre_completo') else '')
+                    item = QTableWidgetItem(str(nombre_fiscal))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 2, item)
                     # Teléfono
-                    item = QTableWidgetItem(cliente.telefono1 or "")
+                    item = QTableWidgetItem(self._get_str(cliente, 'telefono1'))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 3, item)
                     # Email
-                    item = QTableWidgetItem(cliente.email or "")
+                    item = QTableWidgetItem(self._get_str(cliente, 'email'))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 4, item)
             
@@ -293,16 +712,16 @@ class ClientesViewFull(QWidget):
                 model.setHorizontalHeaderLabels(["Código", "NIF/CIF", "Nombre Fiscal", "Teléfono", "Email"])
                 for row, cliente in enumerate(clientes):
                     def std_item(text, cid):
-                        it = QStandardItem(text or "")
+                        it = QStandardItem(str(text or ""))
                         it.setEditable(False)
                         it.setData(cid, Qt.ItemDataRole.UserRole)
                         return it
 
-                    model.setItem(row, 0, std_item(cliente.codigo_cliente, cliente.id))
-                    model.setItem(row, 1, std_item(cliente.cif_nif, cliente.id))
-                    model.setItem(row, 2, std_item(cliente.nombre_fiscal or cliente.nombre_completo(), cliente.id))
-                    model.setItem(row, 3, std_item(cliente.telefono1, cliente.id))
-                    model.setItem(row, 4, std_item(cliente.email, cliente.id))
+                    model.setItem(row, 0, std_item(self._get_str(cliente, 'codigo_cliente'), cliente.id))
+                    model.setItem(row, 1, std_item(self._get_str(cliente, 'cif_nif_siren'), cliente.id))
+                    model.setItem(row, 2, std_item(self._get_str(cliente, 'nombre_fiscal') or (cliente.nombre_completo() if hasattr(cliente, 'nombre_completo') else ''), cliente.id))
+                    model.setItem(row, 3, std_item(self._get_str(cliente, 'telefono1'), cliente.id))
+                    model.setItem(row, 4, std_item(self._get_str(cliente, 'email'), cliente.id))
                 tabla.setModel(model)
                 tabla.resizeColumnsToContents()
                 
@@ -444,54 +863,149 @@ class ClientesViewFull(QWidget):
         """Carga los datos del cliente en los campos del formulario"""
         # Campos principales
         if hasattr(self.ui, 'txtcodigo_cliente'):
-            self.ui.txtcodigo_cliente.setText(cliente.codigo_cliente or "")
+            self.ui.txtcodigo_cliente.setText(self._get_str(cliente, 'codigo_cliente'))
         if hasattr(self.ui, 'txtcif_nif'):
-            self.ui.txtcif_nif.setText(cliente.cif_nif or "")
+            self.ui.txtcif_nif.setText(self._get_str(cliente, 'cif_nif_siren'))
         if hasattr(self.ui, 'txtnombre'):
-            self.ui.txtnombre.setText(cliente.nombre or "")
+            self.ui.txtnombre.setText(self._get_str(cliente, 'nombre'))
         if hasattr(self.ui, 'txtPrimerApellido'):
-            self.ui.txtPrimerApellido.setText(cliente.apellido1 or "")
+            self.ui.txtPrimerApellido.setText(self._get_str(cliente, 'apellido1'))
         if hasattr(self.ui, 'txtSegundoApellido'):
-            self.ui.txtSegundoApellido.setText(cliente.apellido2 or "")
+            self.ui.txtSegundoApellido.setText(self._get_str(cliente, 'apellido2'))
         if hasattr(self.ui, 'txtnombre_fiscal'):
-            self.ui.txtnombre_fiscal.setText(cliente.nombre_fiscal or "")
+            self.ui.txtnombre_fiscal.setText(self._get_str(cliente, 'nombre_fiscal'))
         if hasattr(self.ui, 'txtnombre_comercial'):
-            self.ui.txtnombre_comercial.setText(cliente.nombre_comercial or "")
+            self.ui.txtnombre_comercial.setText(self._get_str(cliente, 'nombre_comercial'))
         
         # Dirección
         if hasattr(self.ui, 'txtdireccion1'):
-            self.ui.txtdireccion1.setText(cliente.direccion1 or "")
+            self.ui.txtdireccion1.setText(self._get_str(cliente, 'direccion1'))
         if hasattr(self.ui, 'txtdireccion2'):
-            self.ui.txtdireccion2.setText(cliente.direccion2 or "")
+            self.ui.txtdireccion2.setText(self._get_str(cliente, 'direccion2'))
         if hasattr(self.ui, 'txtcp'):
-            self.ui.txtcp.setText(cliente.cp or "")
+            self.ui.txtcp.setText(self._get_str(cliente, 'cp'))
         if hasattr(self.ui, 'txtpoblacion'):
-            self.ui.txtpoblacion.setText(cliente.poblacion or "")
+            self.ui.txtpoblacion.setText(self._get_str(cliente, 'poblacion'))
         if hasattr(self.ui, 'txtprovincia'):
-            self.ui.txtprovincia.setText(cliente.provincia or "")
+            self.ui.txtprovincia.setText(self._get_str(cliente, 'provincia'))
+        # Otros campos que pueden no estar definidos en la UI
+        if hasattr(self.ui, 'txtCifIntracomunitario'):
+            self.ui.txtCifIntracomunitario.setText(self._get_str(cliente, 'cif_vies'))
+        w = getattr(self.ui, 'txtSiret', None)
+        if w is not None:
+            w.setText(self._get_str(cliente, 'siret'))
+        w = getattr(self.ui, 'txtpersona_contacto', None)
+        if w is not None:
+            w.setText(self._get_str(cliente, 'persona_contacto'))
         
         # Contacto
         if hasattr(self.ui, 'txttelefono1'):
-            self.ui.txttelefono1.setText(cliente.telefono1 or "")
+            self.ui.txttelefono1.setText(self._get_str(cliente, 'telefono1'))
         if hasattr(self.ui, 'txttelefono2'):
-            self.ui.txttelefono2.setText(cliente.telefono2 or "")
+            self.ui.txttelefono2.setText(self._get_str(cliente, 'telefono2'))
         if hasattr(self.ui, 'txtmovil'):
-            self.ui.txtmovil.setText(cliente.movil or "")
-        if hasattr(self.ui, 'txtfax'):
-            self.ui.txtfax.setText(cliente.fax or "")
+            self.ui.txtmovil.setText(self._get_str(cliente, 'movil'))
+        w = getattr(self.ui, 'txtfax', None)
+        if w is not None:
+            w.setText(self._get_str(cliente, 'fax'))
         if hasattr(self.ui, 'txtemail'):
-            self.ui.txtemail.setText(cliente.email or "")
+            self.ui.txtemail.setText(self._get_str(cliente, 'email'))
         if hasattr(self.ui, 'txtweb'):
-            self.ui.txtweb.setText(cliente.web or "")
+            self.ui.txtweb.setText(self._get_str(cliente, 'web'))
         
         # Actualizar label con nombre del cliente
         if hasattr(self.ui, 'txtNombreFiscal'):
-            self.ui.txtNombreFiscal.setText(cliente.nombre_completo())
+            try:
+                self.ui.txtNombreFiscal.setText(str(cliente.nombre_completo()))
+            except Exception:
+                self.ui.txtNombreFiscal.setText(self._get_str(cliente, 'nombre_fiscal'))
+        # Establecer comboboxes por itemData si existe, else por index
+        try:
+            if hasattr(self.ui, 'cboDivisa'):
+                for i in range(self.ui.cboDivisa.count()):
+                    itemdata = self.ui.cboDivisa.itemData(i)
+                    if itemdata is not None and cliente.id_divisa is not None and int(itemdata) == cliente.id_divisa:
+                        self.ui.cboDivisa.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'cboforma_pago'):
+                for i in range(self.ui.cboforma_pago.count()):
+                    itemdata = self.ui.cboforma_pago.itemData(i)
+                    if itemdata is not None and cliente.id_forma_pago is not None and int(itemdata) == cliente.id_forma_pago:
+                        self.ui.cboforma_pago.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'cbotarifa_cliente'):
+                for i in range(self.ui.cbotarifa_cliente.count()):
+                    itemdata = self.ui.cbotarifa_cliente.itemData(i)
+                    if itemdata is not None and cliente.id_tarifa is not None and int(itemdata) == cliente.id_tarifa:
+                        self.ui.cbotarifa_cliente.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'cboagente'):
+                for i in range(self.ui.cboagente.count()):
+                    itemdata = self.ui.cboagente.itemData(i)
+                    if itemdata is not None and cliente.id_agente is not None and int(itemdata) == cliente.id_agente:
+                        self.ui.cboagente.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'cbotransportista'):
+                for i in range(self.ui.cbotransportista.count()):
+                    itemdata = self.ui.cbotransportista.itemData(i)
+                    if itemdata is not None and cliente.id_transportista is not None and int(itemdata) == cliente.id_transportista:
+                        self.ui.cbotransportista.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'cboidiomaDocumentos'):
+                for i in range(self.ui.cboidiomaDocumentos.count()):
+                    itemdata = self.ui.cboidiomaDocumentos.itemData(i)
+                    if itemdata is not None and cliente.id_idioma_documentos is not None and int(itemdata) == cliente.id_idioma_documentos:
+                        self.ui.cboidiomaDocumentos.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'cboPais'):
+                for i in range(self.ui.cboPais.count()):
+                    itemdata = self.ui.cboPais.itemData(i)
+                    if itemdata is not None and cliente.id_pais is not None and int(itemdata) == cliente.id_pais:
+                        self.ui.cboPais.setCurrentIndex(i)
+                        break
+        except Exception:
+            pass
         
         # Cargar datos adicionales
-        self.cargar_direcciones_alternativas(cliente.id)
-        self.cargar_deudas(cliente.id)
-        self.cargar_estadisticas(cliente.id)
+        cid = cliente.id if cliente is not None else None
+        if cid is not None:
+            try:
+                self.cargar_direcciones_alternativas(int(cid))
+            except Exception:
+                self.cargar_direcciones_alternativas(cid)
+            try:
+                self.cargar_deudas(int(cid))
+            except Exception:
+                self.cargar_deudas(cid)
+            try:
+                self.cargar_estadisticas(int(cid))
+            except Exception:
+                self.cargar_estadisticas(cid)
+        # Validar campos para mostrar iconos al cargar cliente
+        for vn in ('txtcodigo_cliente', 'txtnombre', 'txtnombre_fiscal', 'txtcif_nif', 'txtemail', 'txtcuenta_corriente', 'txtiban', 'txtdia_pago1', 'txtdia_pago2'):
+            try:
+                self._validate_and_apply(vn)
+            except Exception:
+                continue
+        self._update_form_validity()
     
     def cargar_direcciones_alternativas(self, id_cliente: int):
         """Carga direcciones alternativas en la tabla correspondiente"""
@@ -531,7 +1045,12 @@ class ClientesViewFull(QWidget):
         self.cliente_actual = None
         self.limpiar_formulario()
         self.desactivar_botones_navegacion()
+        self._modo_edicion = True  # Activar modo edición
         self.ui.stackedWidget.setCurrentIndex(0)
+        self.activar_campos_edicion()  # Activar campos para edición
+        # Force initial validation state
+        self._set_all_valid_state()
+        self._update_form_validity()
         
         # Reconstruir pestañas del tabwidget si es necesario
         if hasattr(self.ui, 'tabwidget') and self.ui.tabwidget.count() == 0:
@@ -552,7 +1071,26 @@ class ClientesViewFull(QWidget):
     
     def editar_cliente(self):
         """Edita el cliente seleccionado"""
+        tabla = getattr(self.ui, 'tabla_busquedas', None) or getattr(self.ui, 'tabla_clientes', None)
+        if not tabla:
+            return
+        
+        # Verificar que hay un cliente seleccionado
+        selection = tabla.selectionModel()
+        if not selection.hasSelection():
+            QMessageBox.warning(self, "Aviso", "Seleccione un cliente para editar")
+            return
+        self.desactivar_botones_navegacion()
+        self._modo_edicion = True  # Activar modo edición
         self.abrir_ficha_cliente()
+        self.activar_campos_edicion()  # Activar campos para edición
+        # Ensure validation applied to loaded data
+        if hasattr(self, '_on_widget_change'):
+            self._validate_and_apply('txtcodigo_cliente')
+            self._validate_and_apply('txtcif_nif')
+            self._validate_and_apply('txtnombre')
+            self._validate_and_apply('txtnombre_fiscal')
+        self._update_form_validity()
     
     def borrar_cliente(self):
         """Borra el cliente seleccionado"""
@@ -598,28 +1136,183 @@ class ClientesViewFull(QWidget):
     def guardar_cliente(self):
         """Guarda el cliente actual"""
         try:
+            # helper lambdas for conversion (moved here so both branches can use them)
+            def txt(name):
+                w = getattr(self.ui, name, None)
+                if not w:
+                    return ''
+                # QTextEdit has toPlainText, QLineEdit has text
+                if hasattr(w, 'toPlainText'):
+                    return w.toPlainText() or ''
+                if hasattr(w, 'text'):
+                    return w.text() or ''
+                return ''
+            def val_int(name):
+                try:
+                    w = getattr(self.ui, name, None)
+                    if w is None:
+                        return None
+                    v = w.value() if hasattr(w, 'value') else int(w.text()) if w.text() else None
+                    return int(v) if v is not None else None
+                except Exception:
+                    return None
+            def val_float(name):
+                try:
+                    w = getattr(self.ui, name, None)
+                    if w is None:
+                        return None
+                    t = w.text() if hasattr(w, 'text') else None
+                    if t is None or t == '':
+                        return None
+                    return float(t)
+                except Exception:
+                    return None
+            def val_bool(name):
+                try:
+                    w = getattr(self.ui, name, None)
+                    if w is None:
+                        return False
+                    return bool(w.isChecked())
+                except Exception:
+                    return False
+            def val_qdate_to_date(name):
+                try:
+                    w = getattr(self.ui, name, None)
+                    if w is None:
+                        return None
+                    from datetime import date as _date
+                    d = w.date()
+                    return _date(d.year(), d.month(), d.day())
+                except Exception:
+                    return None
+            def get_combo_value(name):
+                w = getattr(self.ui, name, None)
+                if w is None:
+                    return None
+                try:
+                    idx = w.currentIndex()
+                    val = w.itemData(idx)
+                    return val if val is not None else idx
+                except Exception:
+                    return None
+            # Validar campos antes de construir el mapeo (y antes de guardar)
+            ok, errores = self._validar_campos()
+            if not ok:
+                QMessageBox.warning(self, "Validación", "\n".join(errores))
+                return
+            # Declarative mappings for fields (attribute name in model -> widget name)
+            txt_map = [
+                ('codigo_cliente','txtcodigo_cliente'), ('cif_nif_siren','txtcif_nif'), ('nombre','txtnombre'),
+                ('apellido1','txtPrimerApellido'), ('apellido2','txtSegundoApellido'), ('nombre_fiscal','txtnombre_fiscal'),
+                ('nombre_comercial','txtnombre_comercial'), ('direccion1','txtdireccion1'), ('direccion2','txtdireccion2'),
+                ('cp','txtcp'), ('poblacion','txtpoblacion'), ('provincia','txtprovincia'), ('telefono1','txttelefono1'),
+                ('telefono2','txttelefono2'), ('movil','txtmovil'), ('fax','txtfax'), ('email','txtemail'),
+                ('web','txtweb'), ('siret','txtSiret'), ('cif_vies','txtCifIntracomunitario'), ('persona_contacto','txtpersona_contacto'),
+                ('entidad_bancaria','txtentidad_bancaria'), ('oficina_bancaria','txtoficina_bancaria'), ('dc','txtdc'),
+                ('cuenta_corriente','txtcuenta_corriente'), ('acceso_web','txtacceso_web'), ('password_web','txtpassword_web'),
+                ('cuenta_contable','txtcuenta_contable'), ('cuenta_iva_repercutido','txtcuenta_iva_repercutido'),
+                ('cuenta_deudas','txtcuenta_deudas'), ('cuenta_cobros','txtcuenta_cobros'), ('visa_distancia1','txtvisa_distancia1'),
+                ('visa_distancia2','txtvisa_distancia2'), ('comentarios','txtcomentarios'), ('comentario_bloqueo','txtcomentario_bloqueo'),
+                ('observaciones','txtObservaciones')
+            ]
+            date_map = [('fecha_alta','txtfecha_alta'), ('fecha_nacimiento','txtfecha_nacimiento'), ('fecha_ultima_compra','txtfecha_ultima_compra')]
+            int_map = [('dia_pago1','txtdia_pago1'), ('dia_pago2','txtdia_pago2'), ('visa1_caduca_mes','txtvisa1_caduca_mes'),
+                       ('visa2_caduca_mes','txtvisa2_caduca_mes'), ('visa1_caduca_ano','txtvisa1_caduca_ano'), ('visa2_caduca_ano','txtvisa2_caduca_ano'),
+                       ('visa1_cod_valid','txtvisa1_cod_valid'), ('visa2_cod_valid','txtvisa2_cod_valid')]
+            float_map = [('acumulado_ventas','txtimporteAcumulado'), ('ventas_ejercicio','txtventas_ejercicio'), ('riesgo_maximo','txtrRiesgoPermitido'),
+                         ('deuda_actual','txtdeuda_actual'), ('porc_dto_cliente','txtporc_dto_cliente'), ('importe_a_cuenta','txtimporte_a_cuenta'),
+                         ('vales','txtvales')]
+            bool_map = [('recargo_equivalencia','chkrecargo_equivalencia'), ('irpf','chkClienteEmpresa'), ('bloqueado','chklBloqueoCliente')]
+            cbo_map = [('id_idioma_documentos','cboidiomaDocumentos'), ('id_pais','cboPais'), ('id_divisa','cboDivisa'),
+                       ('id_forma_pago','cboforma_pago'), ('id_tarifa','cbotarifa_cliente'), ('id_agente','cboagente'), ('id_transportista','cbotransportista')]
+
             if self.cliente_actual:
-                # Actualizar campos
-                if hasattr(self.ui, 'txtcif_nif'):
-                    self.cliente_actual.cif_nif = self.ui.txtcif_nif.text()
-                if hasattr(self.ui, 'txtnombre'):
-                    self.cliente_actual.nombre = self.ui.txtnombre.text()
-                # ... más campos
+                # Actualizar campos (UI -> Modelo) usando los mapeos
+                for attr, widget_name in txt_map:
+                    w = getattr(self.ui, widget_name, None)
+                    if w is not None:
+                        setattr(self.cliente_actual, attr, txt(widget_name))
+
+                for attr, widget_name in date_map:
+                    v = val_qdate_to_date(widget_name)
+                    if v is not None:
+                        setattr(self.cliente_actual, attr, v)
+
+                for attr, widget_name in int_map:
+                    v = val_int(widget_name)
+                    if v is not None:
+                        setattr(self.cliente_actual, attr, v)
+
+                for attr, widget_name in float_map:
+                    v = val_float(widget_name)
+                    if v is not None:
+                        setattr(self.cliente_actual, attr, v)
+
+                for attr, widget_name in bool_map:
+                    w = getattr(self.ui, widget_name, None)
+                    if w is not None:
+                        setattr(self.cliente_actual, attr, val_bool(widget_name))
+
+                # Comboboxes (IDs)
+                for attr, widget_name in cbo_map:
+                    try:
+                        w = getattr(self.ui, widget_name, None)
+                        if w is not None:
+                            setattr(self.cliente_actual, attr, get_combo_value(widget_name))
+                    except Exception:
+                        continue
                 
-                self.repository.actualizar(self.cliente_actual)
-                QMessageBox.information(self, "Éxito", "Cliente actualizado")
             else:
-                # Crear nuevo
-                cliente = Cliente(
-                    codigo_cliente=self.ui.txtcodigo_cliente.text() if hasattr(self.ui, 'txtcodigo_cliente') else "",
-                    cif_nif=self.ui.txtcif_nif.text() if hasattr(self.ui, 'txtcif_nif') else "",
-                    # ... más campos
-                )
+                # Crear nuevo de forma declarativa con mapping
+                cliente_kwargs = {}
+                for attr, widget_name in txt_map:
+                    w = getattr(self.ui, widget_name, None)
+                    if w is not None:
+                        val = txt(widget_name)
+                        if val != '':
+                            cliente_kwargs[attr] = val
+
+                for attr, widget_name in date_map:
+                    v = val_qdate_to_date(widget_name)
+                    if v is not None:
+                        cliente_kwargs[attr] = v
+
+                for attr, widget_name in int_map:
+                    v = val_int(widget_name)
+                    if v is not None:
+                        cliente_kwargs[attr] = v
+
+                for attr, widget_name in float_map:
+                    v = val_float(widget_name)
+                    if v is not None:
+                        cliente_kwargs[attr] = v
+
+                for attr, widget_name in bool_map:
+                    w = getattr(self.ui, widget_name, None)
+                    if w is not None:
+                        cliente_kwargs[attr] = val_bool(widget_name)
+
+                for attr, widget_name in cbo_map:
+                    v = get_combo_value(widget_name)
+                    if v is not None:
+                        cliente_kwargs[attr] = v
+
+                # Los días de pago a 0 por defecto si no existe
+                if 'dia_pago1' not in cliente_kwargs:
+                    v = val_int('txtdia_pago1')
+                    cliente_kwargs['dia_pago1'] = v if v is not None else 0
+                if 'dia_pago2' not in cliente_kwargs:
+                    v = val_int('txtdia_pago2')
+                    cliente_kwargs['dia_pago2'] = v if v is not None else 0
+
+                cliente = Cliente(**cliente_kwargs)
                 self.repository.crear(cliente)
                 QMessageBox.information(self, "Éxito", "Cliente creado")
             
             self.cargar_clientes()
             self.ui.stackedWidget.setCurrentIndex(1)
+            # Restablecer el modo edición y botones
+            self._modo_edicion = False
             self.activar_botones_navegacion()
             
         except Exception as e:
@@ -661,7 +1354,11 @@ class ClientesViewFull(QWidget):
 
             # QSpinBox, QDoubleSpinBox - resetear a valor mínimo
             elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
-                widget.setValue(widget.minimum())
+                # set minimum using appropriate type
+                if isinstance(widget, QSpinBox):
+                    widget.setValue(int(widget.minimum()))
+                else:
+                    widget.setValue(float(widget.minimum()))
 
             # QDateEdit - resetear a fecha actual
             elif isinstance(widget, QDateEdit):
@@ -670,6 +1367,244 @@ class ClientesViewFull(QWidget):
             # QCheckBox - desmarcar
             elif isinstance(widget, QCheckBox):
                 widget.setChecked(False)
+        # Reset validation visuals
+        self._set_all_valid_state()
+
+    def _set_all_valid_state(self):
+        """Clear validation visuals for all known widgets"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
+        for widget_name in dir(self.ui):
+            if widget_name.startswith('_'):
+                continue
+            w = getattr(self.ui, widget_name)
+            if isinstance(w, (QLineEdit, QTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox)):
+                try:
+                    w.setStyleSheet("")
+                    w.setToolTip("")
+                    # Clear any validation visuals (we removed status labels)
+                except Exception:
+                    continue
+
+    def _ensure_status_label(self, widget):
+        """Placeholder: no-op for historical status label creation.
+
+        This function used to create dynamic QLabel widgets next to inputs to show
+        validation icons; they have been removed (icons caused black artifacts).
+        The function remains as a compatibility no-op for calls elsewhere.
+        """
+        # This project no longer shows status icons via QLabels; return None to keep API-compatible.
+        return None
+        # previously created a QLabel for status icons; icons removed as requested
+        return None
+
+    def _apply_widget_valid_state(self, widget, error_message: str | None):
+        """Apply styling (red border and tooltip) if invalid, clear if None/empty"""
+        if widget is None:
+            return
+        try:
+            if not error_message:
+                # Clear style
+                widget.setStyleSheet("")
+                widget.setToolTip("")
+            else:
+                # Apply invalid style and tooltip (no more icons)
+                widget.setToolTip(error_message)
+                try:
+                    # Use a subtle red border to mark invalid fields
+                    widget.setStyleSheet("border: 1px solid #ff4d4f; border-radius: 2px;")
+                except Exception:
+                    # Be defensive: ignore style errors
+                    pass
+            # If valid, we simply clear visual validation states (no icons)
+            if not error_message:
+                try:
+                    widget.setStyleSheet("")
+                    widget.setToolTip("")
+                except Exception:
+                    pass
+        except Exception:
+            pass
+
+    def _on_widget_change(self, *args, **kwargs):
+        """Slot called when a widget changes; validates the related field and updates the form validity"""
+        if not getattr(self, '_modo_edicion', False):
+            return
+        sender = self.sender()
+        if sender is None:
+            return
+        name = getattr(sender, 'objectName', lambda: None)()
+        if not name:
+            return
+        # After any name/ surname change, attempt to fill nombre_fiscal if it's empty
+        if name in ('txtnombre', 'txtPrimerApellido', 'txtSegundoApellido'):
+            try:
+                self._maybe_fill_nombre_fiscal()
+            except Exception:
+                pass
+        self._validate_and_apply(str(name))
+
+    def _maybe_fill_nombre_fiscal(self):
+        """Compute `nombre_fiscal` from apellidos/nombre and fill if the field is empty.
+
+        Rule: apellido1 + ' ' + apellido2 + ' ' + nombre (all uppercase). If apellido2 empty,
+        omit it. If both surnames empty, use `nombre`. Only fill if the target field is blank.
+        """
+        ui = getattr(self, 'ui', None)
+        if ui is None:
+            return
+        try:
+            w_ap1 = getattr(ui, 'txtPrimerApellido', None)
+            w_ap2 = getattr(ui, 'txtSegundoApellido', None)
+            w_nombre = getattr(ui, 'txtnombre', None)
+            w_nombre_fiscal = getattr(ui, 'txtnombre_fiscal', None)
+            a1 = w_ap1.text().strip() if (w_ap1 is not None and hasattr(w_ap1, 'text')) else ''
+            a2 = w_ap2.text().strip() if (w_ap2 is not None and hasattr(w_ap2, 'text')) else ''
+            nombre = w_nombre.text().strip() if (w_nombre is not None and hasattr(w_nombre, 'text')) else ''
+            # If target field not present, nothing to do
+            if w_nombre_fiscal is None or not hasattr(w_nombre_fiscal, 'text') or not hasattr(w_nombre_fiscal, 'setText'):
+                return
+            # Only change if target is empty
+            current = w_nombre_fiscal.text().strip()
+            if current:
+                return
+            parts = []
+            if a1:
+                parts.append(a1)
+            if a2:
+                parts.append(a2)
+            if (a1 or a2) and nombre:
+                parts.append(nombre)
+            if not parts and nombre:
+                parts = [nombre]
+            computed = ' '.join(parts).strip()
+            if not computed:
+                return
+            # Uppercase result
+            computed = computed.upper()
+            try:
+                w_nombre_fiscal.setText(computed)
+            except Exception:
+                pass
+            # Also update label `txtNombreFiscal` if present (UI read-only label)
+            lbl = getattr(ui, 'txtNombreFiscal', None)
+            if lbl is not None and hasattr(lbl, 'setText'):
+                try:
+                    lbl.setText(computed)
+                except Exception:
+                    pass
+        except Exception:
+            return
+        self._update_form_validity()
+
+    def _validate_and_apply(self, widget_name: str):
+        """Check a single named widget and apply validation state"""
+        if not widget_name:
+            return
+        # Map widget name to validation
+        # Txtcif_nif validation
+        if widget_name == 'txtcif_nif':
+            w = getattr(self.ui, 'txtcif_nif', None)
+            txt = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            if txt and not self._is_valid_nif_cif(txt):
+                self._apply_widget_valid_state(w, 'NIF/CIF/SIRET inválido')
+            else:
+                self._apply_widget_valid_state(w, None)
+
+        # Email
+        elif widget_name == 'txtemail':
+            w = getattr(self.ui, 'txtemail', None)
+            txt = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            if txt and txt.strip():
+                import re
+                if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", txt.strip()):
+                    self._apply_widget_valid_state(w, 'Formato de email inválido')
+                else:
+                    self._apply_widget_valid_state(w, None)
+            else:
+                self._apply_widget_valid_state(w, None)
+
+        # Codigo cliente (required)
+        elif widget_name == 'txtcodigo_cliente':
+            w = getattr(self.ui, 'txtcodigo_cliente', None)
+            txt = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            if not txt or not txt.strip():
+                self._apply_widget_valid_state(w, 'Código obligatorio')
+            else:
+                self._apply_widget_valid_state(w, None)
+
+        # Nombre / Nombre fiscal - both interplay
+        elif widget_name in ('txtnombre', 'txtnombre_fiscal'):
+            w1 = getattr(self.ui, 'txtnombre', None)
+            w2 = getattr(self.ui, 'txtnombre_fiscal', None)
+            v1 = w1.text() if (w1 is not None and hasattr(w1, 'text')) else ''
+            v2 = w2.text() if (w2 is not None and hasattr(w2, 'text')) else ''
+            if (not v1 or not v1.strip()) and (not v2 or not v2.strip()):
+                # mark both invalid
+                self._apply_widget_valid_state(w1, 'Se requiere un nombre o nombre fiscal')
+                self._apply_widget_valid_state(w2, 'Se requiere un nombre o nombre fiscal')
+            else:
+                self._apply_widget_valid_state(w1, None)
+                self._apply_widget_valid_state(w2, None)
+
+        # If any of the name fields changed recompute nombre_fiscal if empty
+        if widget_name in ('txtPrimerApellido', 'txtSegundoApellido', 'txtnombre'):
+            try:
+                self._maybe_fill_nombre_fiscal()
+            except Exception:
+                pass
+
+        # Días de pago
+        elif widget_name in ('txtdia_pago1', 'txtdia_pago2'):
+            w = getattr(self.ui, widget_name, None)
+            try:
+                if w is None:
+                    val = None
+                else:
+                    val = int(w.value()) if hasattr(w, 'value') else int(w.text()) if (hasattr(w, 'text') and w.text()) else None
+                if val is not None and not (0 <= val <= 31):
+                    self._apply_widget_valid_state(w, 'Día fuera de rango 0-31')
+                else:
+                    self._apply_widget_valid_state(w, None)
+            except Exception:
+                self._apply_widget_valid_state(w, 'Día no válido')
+
+        # CCC (cuenta bancaria)
+        elif widget_name == 'txtcuenta_corriente':
+            w = getattr(self.ui, 'txtcuenta_corriente', None)
+            txt = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            if txt and txt.strip():
+                if not self._is_valid_ccc(txt):
+                    self._apply_widget_valid_state(w, 'Cuenta bancaria (CCC) inválida')
+                else:
+                    self._apply_widget_valid_state(w, None)
+            else:
+                self._apply_widget_valid_state(w, None)
+
+        # IBAN if present
+        elif widget_name in ('txtiban', 'txtCuentaIBAN'):
+            w = getattr(self.ui, widget_name, None)
+            txt = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            if txt and txt.strip():
+                if not self._is_valid_iban(txt):
+                    self._apply_widget_valid_state(w, 'IBAN inválido')
+                else:
+                    self._apply_widget_valid_state(w, None)
+            else:
+                self._apply_widget_valid_state(w, None)
+
+        else:
+            # Reset style for unhandled widgets
+            w = getattr(self.ui, widget_name, None)
+            if w is not None:
+                self._apply_widget_valid_state(w, None)
+
+    def _update_form_validity(self):
+        """Enable/disable Save button depending on form validation."""
+        ok, errores = self._validar_campos()
+        btn = getattr(self.ui, 'btnGuardar', None)
+        if btn is None:
+            return
+        btn.setEnabled(bool(ok))
     
     def volver_a_lista(self):
         """Vuelve a la página de búsquedas/lista"""
@@ -734,7 +1669,7 @@ class ClientesViewFull(QWidget):
         """desactiva los botones de guardar/undo..... """
         if hasattr(self.ui, 'btnGuardar'):
             self.ui.btnGuardar.setEnabled(False)
-        if hasattr(self.ui, 'btnUndo'):
+        if hasattr(self.ui, 'btnDeshacer'):
             self.ui.btnDeshacer.setEnabled(False)
 
     def desactivar_botones_navegacion(self):
@@ -754,6 +1689,6 @@ class ClientesViewFull(QWidget):
         """Activa los botones de guardar/undo..... """
         if hasattr(self.ui, 'btnGuardar'):
             self.ui.btnGuardar.setEnabled(True)
-        if hasattr(self.ui, 'btnUndo'):
+        if hasattr(self.ui, 'btnDeshacer'):
             self.ui.btnDeshacer.setEnabled(True)
         

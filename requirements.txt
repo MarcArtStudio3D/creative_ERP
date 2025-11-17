@@ -13,3 +13,4 @@ python-dateutil
 requests
 pytest
 pyinstaller
+pandas>=1.5

@@ -69,6 +69,7 @@ class ClientesViewFull(QWidget):
         self.repository = ClienteRepository(self.session)
         self.cliente_actual = None
         self._modo_edicion = False  # Bandera para controlar el modo de edición
+        self._nombre_fiscal_manual = False  # si el usuario ha editado manualmente txtnombre_fiscal
         
         # Conectar señales de botones principales
         self.conectar_senales()
@@ -161,6 +162,12 @@ class ClientesViewFull(QWidget):
                         try:
                             # connect to textChanged and use sender()
                             w.textChanged.connect(self._on_widget_change)
+                        except Exception:
+                            pass
+                        # Track manual edits for nombre_fiscal so we don't override user's edits (QLineEdit only)
+                        try:
+                            if n == 'txtnombre_fiscal' and isinstance(w, QLineEdit) and hasattr(w, 'textEdited'):
+                                w.textEdited.connect(lambda *a, _self=self: setattr(_self, '_nombre_fiscal_manual', True))
                         except Exception:
                             pass
                     elif isinstance(w, QComboBox):
@@ -1465,7 +1472,8 @@ class ClientesViewFull(QWidget):
                 return
             # Only change if target is empty
             current = w_nombre_fiscal.text().strip()
-            if current:
+            # If the user edited nombre_fiscal manually, don't overwrite it when fields change
+            if current and getattr(self, '_nombre_fiscal_manual', False):
                 return
             parts = []
             if a1:
@@ -1483,6 +1491,8 @@ class ClientesViewFull(QWidget):
             computed = computed.upper()
             try:
                 w_nombre_fiscal.setText(computed)
+                # We just auto-generated this value; mark it as not manually edited
+                self._nombre_fiscal_manual = False
             except Exception:
                 pass
             # Also update label `txtNombreFiscal` if present (UI read-only label)

@@ -69,7 +69,6 @@ class ClientesViewFull(QWidget):
         self.repository = ClienteRepository(self.session)
         self.cliente_actual = None
         self._modo_edicion = False  # Bandera para controlar el modo de edición
-        self._nombre_fiscal_manual = False  # si el usuario ha editado manualmente txtnombre_fiscal
         
         # Conectar señales de botones principales
         self.conectar_senales()
@@ -164,12 +163,7 @@ class ClientesViewFull(QWidget):
                             w.textChanged.connect(self._on_widget_change)
                         except Exception:
                             pass
-                        # Track manual edits for nombre_fiscal so we don't override user's edits (QLineEdit only)
-                        try:
-                            if n == 'txtnombre_fiscal' and isinstance(w, QLineEdit) and hasattr(w, 'textEdited'):
-                                w.textEdited.connect(lambda *a, _self=self: setattr(_self, '_nombre_fiscal_manual', True))
-                        except Exception:
-                            pass
+                        # No manual 'nombre_fiscal' tracking: we only fill when empty
                     elif isinstance(w, QComboBox):
                         try:
                             w.currentIndexChanged.connect(self._on_widget_change)
@@ -882,11 +876,6 @@ class ClientesViewFull(QWidget):
         if hasattr(self.ui, 'txtnombre_fiscal'):
             val_fiscal = self._get_str(cliente, 'nombre_fiscal')
             self.ui.txtnombre_fiscal.setText(val_fiscal)
-            # If the DB has a non-empty nombre_fiscal, consider it a manual/official value
-            try:
-                self._nombre_fiscal_manual = bool(val_fiscal and val_fiscal.strip())
-            except Exception:
-                self._nombre_fiscal_manual = False
         if hasattr(self.ui, 'txtnombre_comercial'):
             self.ui.txtnombre_comercial.setText(self._get_str(cliente, 'nombre_comercial'))
         
@@ -1478,8 +1467,9 @@ class ClientesViewFull(QWidget):
                 return
             # Only change if target is empty
             current = w_nombre_fiscal.text().strip()
-            # If the user edited nombre_fiscal manually, don't overwrite it when fields change
-            if current and getattr(self, '_nombre_fiscal_manual', False):
+            # New policy: only auto-fill nombre_fiscal when empty. If there is any text
+            # (either manual or previously auto-generated), do not change the value.
+            if current:
                 return
             parts = []
             if a1:
@@ -1497,8 +1487,6 @@ class ClientesViewFull(QWidget):
             computed = computed.upper()
             try:
                 w_nombre_fiscal.setText(computed)
-                # We just auto-generated this value; mark it as not manually edited
-                self._nombre_fiscal_manual = False
             except Exception:
                 pass
             # Also update label `txtNombreFiscal` if present (UI read-only label)

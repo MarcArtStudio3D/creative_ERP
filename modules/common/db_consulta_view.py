@@ -12,6 +12,18 @@ class DBConsultaView(QDialog):
 
     It wraps the generated UI `Ui_db_consulta_view` and provides helpers to set
     SQL, headers, column sizes and delegates, and returns the selected row.
+    
+    Example usage:
+        from modules.common.db_consulta_view import DBConsultaView
+        sql = "SELECT id, poblacion, provincia FROM poblaciones WHERE cp = 28001"
+        id, record = DBConsultaView.select_from_sql(parent, sql, db='group', 
+                                                    headers=['id','poblacion','provincia'],
+                                                    campos=['poblacion'])
+        if id:
+            # record is a QSqlRecord, can call record.value('poblacion') or by index
+            poblacion = record.value('poblacion')
+            provincia = record.value('provincia')
+            # put this back to your form
     """
 
     def __init__(self, parent=None):
@@ -215,3 +227,27 @@ class DBConsultaView(QDialog):
         if rv == QDialog.Accepted:
             return self.get_selected_id(), self.get_selected_record()
         return 0, None
+
+    @staticmethod
+    def select_from_sql(parent, sql: str, db: Optional[str | QSqlDatabase] = None, headers: Optional[List[str]] = None, campos: Optional[List[str]] = None, titulo: Optional[str] = None):
+        """Convenience method to show dialog and return (id, record) after user selects.
+
+        Parameters:
+            parent: parent widget
+            sql: SQL string for the model
+            db: either a connection name or a QSqlDatabase
+            headers: optional column headers (strings)
+            campos: optional list of fields for search combobox
+            titulo: optional window title
+        """
+        dlg = DBConsultaView(parent)
+        if db:
+            dlg.set_db(db)
+        if titulo:
+            dlg.set_titulo(titulo)
+        if headers:
+            dlg.set_headers(headers)
+        if campos:
+            dlg.set_campoBusqueda(campos)
+        dlg.set_SQL(sql)
+        return dlg.exec_select()

@@ -5,7 +5,8 @@
 
 from typing import List, Optional, TypeVar, Generic
 from .db import SessionLocal
-from .models import Client, Invoice
+from modules.clientes.models import Cliente
+from .models import Invoice
 
 T = TypeVar('T')
 
@@ -33,29 +34,29 @@ class ClientRepo:
     """Repositorio de clientes."""
     
     @staticmethod
-    def get_all() -> List[Client]:
+    def get_all() -> List[Cliente]:
         """Obtiene todos los clientes."""
         db = SessionLocal()
         try:
-            return db.query(Client).all()
+            return db.query(Cliente).all()
         finally:
             db.close()
     
     @staticmethod
-    def get_by_id(client_id: int) -> Optional[Client]:
+    def get_by_id(client_id: int) -> Optional[Cliente]:
         """Obtiene un cliente por ID."""
         db = SessionLocal()
         try:
-            return db.query(Client).filter(Client.id == client_id).first()
+            return db.query(Cliente).filter(Cliente.id == client_id).first()
         finally:
             db.close()
     
     @staticmethod
-    def create(**kwargs) -> Client:
+    def create(**kwargs) -> Cliente:
         """Crea un nuevo cliente."""
         db = SessionLocal()
         try:
-            c = Client(**kwargs)
+            c = Cliente(**kwargs)
             db.add(c)
             db.commit()
             db.refresh(c)

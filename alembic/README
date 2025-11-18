@@ -1,1 +1,10 @@
-Generic single-database configuration.
+Generic multi-database configuration.
+
+Create migrations:
+    alembic revision --autogenerate -m "cambios"
+
+Make migrations in SQlite:    
+    alembic upgrade head --x batch=true
+
+Make migrations for MariaDB & PostgreSQL:
+    alembic upgrade head

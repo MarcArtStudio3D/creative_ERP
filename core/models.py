@@ -10,29 +10,13 @@ import datetime
 Base = declarative_base()
 
 
-class Client(Base):
-    """Modelo de Cliente."""
-    __tablename__ = 'clients'
-    
-    id = Column(Integer, primary_key=True)
-    name = Column(String, nullable=False)
-    email = Column(String)
-    country = Column(String, nullable=False)  # 'ES' or 'FR'
-    vat_number = Column(String)
-    address = Column(Text)
-    created_at = Column(DateTime, default=datetime.datetime.utcnow)
-    
-    # Relaciones
-    invoices = relationship('Invoice', back_populates='client')
-
-
 class Invoice(Base):
     """Modelo de Factura."""
     __tablename__ = 'invoices'
     
     id = Column(Integer, primary_key=True)
     number = Column(String, nullable=False, unique=True)
-    client_id = Column(Integer, ForeignKey('clients.id'))
+    client_id = Column(Integer, ForeignKey('clientes.id'))
     date = Column(DateTime, default=datetime.datetime.utcnow)
     status = Column(String, default='draft')
     total = Column(Float, default=0.0)
@@ -41,7 +25,7 @@ class Invoice(Base):
     pdf_path = Column(String, nullable=True)
     
     # Relaciones
-    client = relationship('Client', back_populates='invoices')
+    client = relationship('Cliente', back_populates='invoices')
     lines = relationship('InvoiceLine', back_populates='invoice')
 
 

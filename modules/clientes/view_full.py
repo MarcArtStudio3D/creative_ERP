@@ -209,6 +209,136 @@ class ClientesViewFull(QWidget):
             except Exception:
                 self._validations_connected = False
 
+        # Instalar event filter para validación visual en foco
+        self._install_focus_validation()
+
+    def _install_focus_validation(self):
+        """Instala event filter para mostrar bordes verdes/rojos en campos al recibir foco"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit
+        from PySide6.QtCore import QEvent
+
+        # Campos que queremos validar visualmente
+        validation_fields = [
+            'txtcodigo_cliente', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido',
+            'txtnombre_fiscal', 'txtcif_nif', 'txtemail', 'txtdia_pago1', 'txtdia_pago2',
+            'txtcuenta_corriente', 'txtiban', 'txtCuentaIBAN', 'txtcp'
+        ]
+
+        for field_name in validation_fields:
+            widget = getattr(self.ui, field_name, None)
+            if widget is not None:
+                widget.installEventFilter(self)
+
+    def eventFilter(self, obj, event):
+        """Event filter para manejar eventos de foco y aplicar validación visual"""
+        from PySide6.QtCore import QEvent
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit
+
+        if event.type() == QEvent.Type.FocusIn:
+            if isinstance(obj, (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit)):
+                self._validate_field_on_focus(obj)
+        elif event.type() == QEvent.Type.FocusOut:
+            # Limpiar estilos cuando pierde el foco (opcional)
+            if isinstance(obj, (QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit)):
+                # Solo limpiamos si no hay errores de validación pendientes
+                if not self._has_validation_error(obj):
+                    obj.setStyleSheet("")
+
+        return super().eventFilter(obj, event)
+
+    def _validate_field_on_focus(self, widget):
+        """Valida el contenido del campo cuando recibe el foco y aplica borde verde/rojo"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit
+
+        # Obtener el nombre del campo
+        field_name = None
+        for attr_name in dir(self.ui):
+            if getattr(self.ui, attr_name) is widget:
+                field_name = attr_name
+                break
+
+        if not field_name:
+            return
+
+        # Obtener el valor del campo
+        value = ""
+        if isinstance(widget, QLineEdit):
+            value = widget.text().strip()
+        elif isinstance(widget, (QTextEdit, QPlainTextEdit)):
+            value = widget.toPlainText().strip()
+        elif isinstance(widget, QComboBox):
+            value = widget.currentText().strip()
+        elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+            value = str(widget.value())
+        elif isinstance(widget, QDateEdit):
+            value = widget.date().toString("yyyy-MM-dd")
+
+        # Validar según el tipo de campo
+        is_valid = self._validate_field_value(field_name, value)
+
+        # Aplicar borde verde si válido, rojo si inválido
+        if is_valid and value:  # Solo mostrar verde si hay contenido y es válido
+            widget.setStyleSheet("border: 2px solid #52c41a; border-radius: 2px;")
+        elif value and not is_valid:  # Mostrar rojo solo si hay contenido inválido
+            widget.setStyleSheet("border: 2px solid #ff4d4f; border-radius: 2px;")
+        else:
+            # Sin contenido o campo vacío - borde normal
+            widget.setStyleSheet("")
+
+    def _validate_field_value(self, field_name: str, value: str) -> bool:
+        """Valida el valor de un campo específico"""
+        if not value:
+            return True  # Campos vacíos son considerados válidos
+
+        # Validaciones específicas por campo
+        if field_name in ['txtcif_nif']:
+            return self._is_valid_nif_cif(value)
+        elif field_name in ['txtemail']:
+            return self._is_valid_email(value)
+        elif field_name in ['txtcodigo_cliente']:
+            return len(value.strip()) > 0  # Código debe tener contenido
+        elif field_name in ['txtdia_pago1', 'txtdia_pago2']:
+            try:
+                dia = int(value)
+                return 1 <= dia <= 31
+            except ValueError:
+                return False
+        elif field_name in ['txtcp']:
+            return self._is_valid_postal_code(value)
+        elif field_name in ['txtcuenta_corriente', 'txtiban', 'txtCuentaIBAN']:
+            return self._is_valid_iban_focus(value)
+        else:
+            # Para otros campos, cualquier contenido no vacío es válido
+            return True
+
+    def _is_valid_email(self, email: str) -> bool:
+        """Valida formato básico de email"""
+        import re
+        pattern = r'^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$'
+        return re.match(pattern, email) is not None
+
+    def _is_valid_postal_code(self, cp: str) -> bool:
+        """Valida código postal español (5 dígitos)"""
+        return len(cp) == 5 and cp.isdigit()
+
+    def _is_valid_iban_focus(self, iban: str) -> bool:
+        """Valida formato básico de IBAN (versión para validación en foco)"""
+        if not iban:
+            return True
+        # Remover espacios y convertir a mayúsculas
+        iban = iban.replace(' ', '').upper()
+        # IBAN español debe empezar con ES y tener 24 caracteres
+        if len(iban) == 24 and iban.startswith('ES'):
+            return iban[2:].isdigit()
+        return False
+
+    def _has_validation_error(self, widget) -> bool:
+        """Verifica si un widget tiene errores de validación pendientes"""
+        # Esta función puede ser expandida para verificar errores específicos
+        # Por ahora, asumimos que si hay un tooltip de error, hay un error
+        tooltip = widget.toolTip()
+        return bool(tooltip and ("error" in tooltip.lower() or "inválido" in tooltip.lower()))
+
     def _get_widget(self, name, qtype=None):
         """Intento seguro de obtener un widget por nombre (getattr -> findChild)."""
         w = getattr(self.ui, name, None)

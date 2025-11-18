@@ -19,13 +19,13 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDial
     QFrame, QGridLayout, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QTableView, QWidget)
-from . import maya_rc
+from modules import designer_rc
 
 class Ui_db_consulta_view(object):
     def setupUi(self, db_consulta_view):
         if not db_consulta_view.objectName():
             db_consulta_view.setObjectName(u"db_consulta_view")
-        db_consulta_view.setWindowModality(Qt.WindowModal)
+        db_consulta_view.setWindowModality(Qt.WindowModality.WindowModal)
         db_consulta_view.resize(1214, 567)
         db_consulta_view.setModal(False)
         self.gridLayout_2 = QGridLayout(db_consulta_view)
@@ -36,7 +36,7 @@ class Ui_db_consulta_view(object):
         self.lbltabla.setStyleSheet(u"background-color: rgb(0, 0, 57);\n"
 "font: 14pt \"Sans Serif\";\n"
 "color: rgb(255,255,255);")
-        self.lbltabla.setAlignment(Qt.AlignCenter)
+        self.lbltabla.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.lbltabla, 0, 0, 1, 1)
 
@@ -44,8 +44,8 @@ class Ui_db_consulta_view(object):
         self.frame.setObjectName(u"frame")
         self.frame.setMaximumSize(QSize(250, 16777215))
         self.frame.setStyleSheet(u"background-color: rgb(170, 170, 127);")
-        self.frame.setFrameShape(QFrame.StyledPanel)
-        self.frame.setFrameShadow(QFrame.Raised)
+        self.frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout = QGridLayout(self.frame)
         self.gridLayout.setObjectName(u"gridLayout")
         self.label_2 = QLabel(self.frame)
@@ -100,8 +100,8 @@ class Ui_db_consulta_view(object):
 "background-color: rgb(248, 245, 194);\n"
 "font: 8pt \"Sans\";")
         self.resultado_list.setAlternatingRowColors(True)
-        self.resultado_list.setSelectionMode(QAbstractItemView.SingleSelection)
-        self.resultado_list.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.resultado_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
+        self.resultado_list.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)
         self.resultado_list.horizontalHeader().setStretchLastSection(True)
         self.resultado_list.verticalHeader().setVisible(False)
 

@@ -258,3 +258,54 @@ class EstadisticaClienteMes(Base):
     __table_args__ = (
         {'sqlite_autoincrement': True},
     )
+
+
+class Ville(Base):
+    """Modelo para ciudades francesas de la base de datos france.db"""
+    __tablename__ = 'villes'
+
+    # Clave primaria: código INSEE (único para cada comuna en Francia)
+    code_insee: Mapped[str] = mapped_column(String(10), primary_key=True)
+
+    # Identificadores adicionales
+    code_postal: Mapped[Optional[str]] = mapped_column(String(10))
+    codes_postaux: Mapped[Optional[str]] = mapped_column(Text)  # Puede contener múltiples códigos separados
+
+    # Nombres de la ciudad
+    nom_standard: Mapped[Optional[str]] = mapped_column(String(255))
+    nom_standard_majuscule: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Región
+    reg_code: Mapped[Optional[str]] = mapped_column(String(10))
+    reg_nom: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Departamento
+    dep_code: Mapped[Optional[str]] = mapped_column(String(10))
+    dep_nom: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Cantón
+    canton_code: Mapped[Optional[str]] = mapped_column(String(10))
+    canton_nom: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Nombres de la ciudad
+    nom_standard: Mapped[Optional[str]] = mapped_column(String(255))
+    nom_standard_majuscule: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Región
+    reg_code: Mapped[Optional[str]] = mapped_column(String(10))
+    reg_nom: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Departamento
+    dep_code: Mapped[Optional[str]] = mapped_column(String(10))
+    dep_nom: Mapped[Optional[str]] = mapped_column(String(255))
+
+    # Cantón
+    canton_code: Mapped[Optional[str]] = mapped_column(String(10))
+    canton_nom: Mapped[Optional[str]] = mapped_column(String(255))
+
+    def __repr__(self):
+        return f"<Ville(code_postal='{self.code_postal}', nom_standard='{self.nom_standard}')>"
+
+    def nombre_completo(self):
+        """Devuelve el nombre completo de la ciudad"""
+        return self.nom_standard or self.nom_standard_majuscule or "Sin nombre"

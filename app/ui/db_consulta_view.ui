@@ -71,7 +71,7 @@ color: rgb(255,255,255);</string>
          <string/>
         </property>
         <property name="pixmap">
-         <pixmap resource="../maya.qrc">:/Icons/PNG/find2.png</pixmap>
+         <pixmap resource="../ui/designer.qrc">:/Icons/PNG/find2.png</pixmap>
         </property>
        </widget>
       </item>
@@ -171,7 +171,7 @@ font: 8pt &quot;Sans&quot;;</string>
         <string>Aceptar</string>
        </property>
        <property name="icon">
-        <iconset resource="../maya.qrc">
+        <iconset resource="../ui/designer.qrc">
          <normaloff>:/Icons/PNG/OK.png</normaloff>:/Icons/PNG/OK.png</iconset>
        </property>
       </widget>
@@ -182,7 +182,7 @@ font: 8pt &quot;Sans&quot;;</string>
         <string>Cancelar</string>
        </property>
        <property name="icon">
-        <iconset resource="../maya.qrc">
+        <iconset resource="../ui/designer.qrc">
          <normaloff>:/Icons/PNG/Cancel.png</normaloff>:/Icons/PNG/Cancel.png</iconset>
        </property>
       </widget>
@@ -200,7 +200,7 @@ font: 8pt &quot;Sans&quot;;</string>
   <tabstop>btn_cancelar</tabstop>
  </tabstops>
  <resources>
-  <include location="../maya.qrc"/>
+  <include location="../ui/designer.qrc"/>
  </resources>
  <connections>
   <connection>

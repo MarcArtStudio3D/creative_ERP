@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from PySide6.QtWidgets import QDialog
 from PySide6.QtSql import QSqlQueryModel, QSqlDatabase
-from PySide6.QtCore import Qt, QEvent
+from PySide6.QtCore import Qt, QEvent, QAbstractTableModel
 
 from app.views.ui_db_consulta_view import Ui_db_consulta_view
 
@@ -105,11 +105,21 @@ class DBConsultaView(QDialog):
         # Use the current selected field to filter
         campo = self.ui.cboCampoBusqueda.currentText().strip() or ''
         if campo:
-            self.cSQLFiltered += f"{campo} like '%{filtro}%'"
+            # Escape single quotes in filtro to prevent SQL injection
+            filtro_escaped = filtro.replace("'", "''")
+            self.cSQLFiltered += f"{campo} like '%{filtro_escaped}%'"
         else:
             # fallback to generic clause: search across all columns would be needed, but
-            # for now append a LIKE on the first column
-            self.cSQLFiltered += f"like '%{filtro}%'"
+            # for now append a LIKE on the first column (assuming it's not the ID column)
+            # If no columns available, skip filtering
+            if self.headers and len(self.headers) > 1:
+                first_column = self.headers[1]  # Skip ID column (index 0)
+                filtro_escaped = filtro.replace("'", "''")
+                self.cSQLFiltered += f"{first_column} like '%{filtro_escaped}%'"
+            else:
+                # No valid columns to filter, remove the WHERE clause
+                if 'where' not in self.cSQL.lower():
+                    self.cSQLFiltered = self.cSQL
         # extra filters (example from old code for articles)
         if self.ui.lbltabla.text() == 'articulos' and ('vista_art_prov' not in self.cSQL):
             if self.id_tarifa_cliente:
@@ -117,6 +127,8 @@ class DBConsultaView(QDialog):
         # append ordering
         self.cSQLFiltered += ' order by ' + (campo or '1') + f' {sentido}'
         try:
+            if self.modelo is None:
+                return  # No model set, cannot filter
             if isinstance(self.db, QSqlDatabase):
                 self.modelo.setQuery(self.cSQLFiltered, self.db)
             elif isinstance(self.db, str):
@@ -137,7 +149,7 @@ class DBConsultaView(QDialog):
         if self.modelo is None:
             return
         for i, h in enumerate(cabecera):
-            self.modelo.setHeaderData(i, Qt.Horizontal, h)
+            self.modelo.setHeaderData(i, Qt.Orientation.Horizontal, h)
         # hide id column
         self.ui.resultado_list.setColumnHidden(0, True)
         self.headers = list(cabecera)
@@ -186,9 +198,9 @@ class DBConsultaView(QDialog):
 
     # event filter to detect Enter/Tab
     def eventFilter(self, target, event):
-        if event.type() == QEvent.KeyPress and target is self.ui.resultado_list:
+        if event.type() == QEvent.Type.KeyPress and target is self.ui.resultado_list:
             key = event.key()
-            if key in (Qt.Key_Return, Qt.Key_Enter, Qt.Key_Tab):
+            if key in (Qt.Key.Key_Return, Qt.Key.Key_Enter, Qt.Key.Key_Tab):
                 row = self.ui.resultado_list.currentIndex().row()
                 if self.modelo is not None:
                     self.id = int(self.modelo.data(self.modelo.index(row, 0)))
@@ -224,7 +236,7 @@ class DBConsultaView(QDialog):
     def exec_select(self):
         """Execute dialog and return (id, record) tuple if accepted else (0, None)."""
         rv = self.exec()
-        if rv == QDialog.Accepted:
+        if rv == QDialog.DialogCode.Accepted:
             return self.get_selected_id(), self.get_selected_record()
         return 0, None
 

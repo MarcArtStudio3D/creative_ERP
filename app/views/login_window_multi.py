@@ -225,12 +225,12 @@ class LoginWindowMultiCompany(QDialog):
         # Cargar usuarios
         users = UserRepository.get_all_users()
         for user in users:
-            self.user_combo.addItem(user.username, user)
+            self.user_combo.addItem(user.username, user)  # type: ignore
         
         # Cargar grupos empresariales
         groups = BusinessGroupRepository.get_all_groups()
         for group in groups:
-            self.group_combo.addItem(group.name, group)
+            self.group_combo.addItem(group.name, group)  # type: ignore
         
         # Las empresas se cargarán al seleccionar grupo
         if groups:
@@ -247,7 +247,7 @@ class LoginWindowMultiCompany(QDialog):
         # Cargar empresas desde la base de datos
         companies = CompanyRepository.get_companies_by_group(group.id)
         for company in companies:
-            self.company_combo.addItem(company.name, company)
+            self.company_combo.addItem(company.name, company)  # type: ignore
     
     def on_login_clicked(self):
         """Maneja el click en Acceder."""
@@ -273,7 +273,7 @@ class LoginWindowMultiCompany(QDialog):
             context = CompanyContext(group=group, company=company)
             
             # Guardar en la sesión
-            self.auth_manager._current_session.company_context = context
+            self.auth_manager._current_session.company_context = context  # type: ignore
             
             self.login_successful.emit(context)
         else:

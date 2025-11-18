@@ -15,7 +15,7 @@ import os
 from core.db import get_session
 from modules.clientes.models import Cliente, DireccionAlternativa
 from modules.clientes.repository import ClienteRepository
-from modules.clientes.ui_clientes import Ui_frmClientes
+from modules.clientes.ui_frmClientes import Ui_frmClientes
 from modules.common.db_consulta_view import DBConsultaView
 
 

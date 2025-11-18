@@ -8,6 +8,7 @@ from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel,
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QFont, QPixmap
 
+from core.repositories import UserRepository, BusinessGroupRepository, CompanyRepository
 from core.auth import AuthenticationManager, User, UserRole
 from core.business import BusinessGroup, Company, CompanyContext
 
@@ -220,22 +221,20 @@ class LoginWindowMultiCompany(QDialog):
         return panel
     
     def load_demo_data(self):
-        """Carga datos de demostración."""
-        # Usuarios
-        users = ["admin", "manager", "contable", "ventas", "user"]
-        self.user_combo.addItems(users)
+        """Carga datos de usuarios, grupos y empresas desde la base de datos."""
+        # Cargar usuarios
+        users = UserRepository.get_all_users()
+        for user in users:
+            self.user_combo.addItem(user.username, user)
         
-        # Grupos empresariales
-        groups = [
-            BusinessGroup(1, "ArtStudio", "AS", "Grupo ArtStudio"),
-            BusinessGroup(2, "Demo Group", "DEMO", "Grupo de demostración")
-        ]
-        
+        # Cargar grupos empresariales
+        groups = BusinessGroupRepository.get_all_groups()
         for group in groups:
             self.group_combo.addItem(group.name, group)
         
         # Las empresas se cargarán al seleccionar grupo
-        self.on_group_changed(0)
+        if groups:
+            self.on_group_changed(0)
     
     def on_group_changed(self, index: int):
         """Cuando cambia el grupo, cargar las empresas de ese grupo."""
@@ -245,35 +244,8 @@ class LoginWindowMultiCompany(QDialog):
         if not group:
             return
         
-        # Empresas demo según el grupo
-        if group.id == 1:  # ArtStudio
-            companies = [
-                Company(
-                    id=1,
-                    group_id=1,
-                    name="ARTSTUDIOPRUEBAS",
-                    legal_name="ArtStudio Software y Diseño 3D SL",
-                    vat_number="B12345678"
-                ),
-                Company(
-                    id=2,
-                    group_id=1,
-                    name="ArtStudio Music",
-                    legal_name="ArtStudio Sonido y Música SL",
-                    vat_number="B87654321"
-                )
-            ]
-        else:  # Demo Group
-            companies = [
-                Company(
-                    id=3,
-                    group_id=2,
-                    name="Demo Company",
-                    legal_name="Empresa de Demostración SL",
-                    vat_number="B99999999"
-                )
-            ]
-        
+        # Cargar empresas desde la base de datos
+        companies = CompanyRepository.get_companies_by_group(group.id)
         for company in companies:
             self.company_combo.addItem(company.name, company)
     

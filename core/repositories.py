@@ -88,3 +88,58 @@ class InvoiceRepo:
             return inv
         finally:
             db.close()
+
+
+# -----------------------------
+# Repositorios para autenticación y multi-empresa
+# -----------------------------
+
+from .models import User, BusinessGroup, Company
+
+
+class UserRepository:
+    """Repositorio para operaciones con usuarios."""
+    
+    @staticmethod
+    def get_all_users() -> List[User]:
+        """Obtener todos los usuarios."""
+        db = SessionLocal()
+        try:
+            return db.query(User).all()
+        finally:
+            db.close()
+    
+    @staticmethod
+    def get_user_by_username(username: str) -> Optional[User]:
+        """Obtener usuario por nombre de usuario."""
+        db = SessionLocal()
+        try:
+            return db.query(User).filter(User.username == username).first()
+        finally:
+            db.close()
+
+
+class BusinessGroupRepository:
+    """Repositorio para operaciones con grupos empresariales."""
+    
+    @staticmethod
+    def get_all_groups() -> List[BusinessGroup]:
+        """Obtener todos los grupos empresariales."""
+        db = SessionLocal()
+        try:
+            return db.query(BusinessGroup).all()
+        finally:
+            db.close()
+
+
+class CompanyRepository:
+    """Repositorio para operaciones con empresas."""
+    
+    @staticmethod
+    def get_companies_by_group(group_id: int) -> List[Company]:
+        """Obtener empresas de un grupo específico."""
+        db = SessionLocal()
+        try:
+            return db.query(Company).filter(Company.group_id == group_id).all()
+        finally:
+            db.close()

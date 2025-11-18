@@ -20,7 +20,7 @@
       <string>Cancelar</string>
      </property>
      <property name="icon">
-      <iconset resource="../maya.qrc">
+      <iconset resource="../designer.qrc">
        <normaloff>:/Icons/PNG/close.png</normaloff>:/Icons/PNG/close.png</iconset>
      </property>
     </widget>
@@ -44,7 +44,7 @@
       <string>Aceptar</string>
      </property>
      <property name="icon">
-      <iconset resource="../maya.qrc">
+      <iconset resource="../designer.qrc">
        <normaloff>:/Icons/PNG/OK.png</normaloff>:/Icons/PNG/OK.png</iconset>
      </property>
     </widget>
@@ -150,7 +150,7 @@
       <string>Dar aviso por cerrado/Recibido.</string>
      </property>
      <property name="icon">
-      <iconset resource="../maya.qrc">
+      <iconset resource="../designer.qrc">
        <normaloff>:/Icons/PNG/blue.png</normaloff>:/Icons/PNG/blue.png</iconset>
      </property>
     </widget>
@@ -158,7 +158,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../maya.qrc"/>
+  <include location="../designer.qrc"/>
  </resources>
  <connections>
   <connection>

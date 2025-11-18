@@ -135,7 +135,7 @@
   </layout>
  </widget>
  <resources>
-  <include location="../maya.qrc"/>
+  <include location="../designer.qrc"/>
  </resources>
  <connections>
   <connection>

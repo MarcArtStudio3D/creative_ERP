@@ -33,8 +33,8 @@ class CreativeERPApp:
         self.qapp.setOrganizationName("ArtStudio3D")
         self.qapp.setOrganizationDomain("artstudio3d.com")
         
-        # Configurar estilo
-        self.qapp.setStyle("Fusion")
+        # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
+        # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
         
         # Inicializar base de datos
         print("Inicializando base de datos...")

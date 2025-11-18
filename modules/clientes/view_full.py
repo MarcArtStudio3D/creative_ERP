@@ -6,13 +6,17 @@ La UI se genera automáticamente desde frmClientes.ui
 from logging import disable
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QVBoxLayout, QTableWidget, QTableView
 from PySide6.QtCore import Qt, QDate, Signal, QAbstractTableModel
+from PySide6.QtSql import QSqlDatabase
 from typing import Any
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from datetime import date
+import sqlite3
+import os
 from core.db import get_session
 from modules.clientes.models import Cliente, DireccionAlternativa
 from modules.clientes.repository import ClienteRepository
 from modules.clientes.ui_clientes import Ui_frmClientes
+from modules.common.db_consulta_view import DBConsultaView
 
 
 def format_nombre_fiscal(ap1: str, ap2: str, nombre: str) -> str:
@@ -172,7 +176,7 @@ class ClientesViewFull(QWidget):
             try:
                 from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QDateEdit, QSpinBox, QComboBox, QDoubleSpinBox
                 # Useful fields for validation
-                names = ['txtcodigo_cliente', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido', 'txtnombre_fiscal', 'txtcif_nif', 'txtemail', 'txtdia_pago1', 'txtdia_pago2', 'txtcuenta_corriente', 'txtiban', 'txtCuentaIBAN']
+                names = ['txtcodigo_cliente', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido', 'txtnombre_fiscal', 'txtcif_nif', 'txtemail', 'txtdia_pago1', 'txtdia_pago2', 'txtcuenta_corriente', 'txtiban', 'txtCuentaIBAN', 'txtcp']
                 for n in names:
                     w = getattr(self.ui, n, None)
                     if w is None:
@@ -1464,6 +1468,12 @@ class ClientesViewFull(QWidget):
                 self._maybe_fill_nombre_fiscal()
             except Exception:
                 pass
+        # Handle postal code lookup
+        if name == 'txtcp':
+            try:
+                self._handle_postal_code_change()
+            except Exception:
+                pass
         self._validate_and_apply(str(name))
 
     def _maybe_fill_nombre_fiscal(self):
@@ -1717,3 +1727,80 @@ class ClientesViewFull(QWidget):
         if hasattr(self.ui, 'btnDeshacer'):
             self.ui.btnDeshacer.setEnabled(True)
         
+    def _handle_postal_code_change(self):
+        """Handle postal code changes - lookup city and province from france.db"""
+        if not hasattr(self.ui, 'txtcp'):
+            return
+            
+        cp = self.ui.txtcp.text().strip()
+        if not cp or len(cp) < 5:  # French postal codes are 5 digits
+            return
+            
+        try:
+            # Connect to france.db
+            db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', 'france.db')
+            if not os.path.exists(db_path):
+                return
+                
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Query for postal code
+            cursor.execute("""
+                SELECT nom_standard_majuscule, dep_nom 
+                FROM villes 
+                WHERE code_postal = ? 
+                ORDER BY nom_standard_majuscule
+            """, (cp,))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            if len(results) == 1:
+                # Single result - fill fields directly
+                poblacion, provincia = results[0]
+                if hasattr(self.ui, 'txtpoblacion'):
+                    self.ui.txtpoblacion.setText(poblacion or '')
+                if hasattr(self.ui, 'txtprovincia'):
+                    self.ui.txtprovincia.setText(provincia or '')
+                    
+            elif len(results) > 1:
+                # Multiple results - show selection dialog
+                # Create QSqlDatabase connection to france.db
+                db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', 'france.db')
+                france_db = QSqlDatabase.addDatabase("QSQLITE", "france_connection")
+                france_db.setDatabaseName(db_path)
+                
+                if france_db.open():
+                    sql = f"""
+                        SELECT nom_standard_majuscule, dep_nom 
+                        FROM villes 
+                        WHERE code_postal = '{cp}' 
+                        ORDER BY nom_standard_majuscule
+                    """
+                    
+                    id_selected, record = DBConsultaView.select_from_sql(
+                        parent=self,
+                        sql=sql,
+                        db=france_db,
+                        headers=['Población', 'Provincia'],
+                        campos=['nom_standard_majuscule'],
+                        titulo=f'Seleccionar población para CP {cp}'
+                    )
+                    
+                    if id_selected and record:
+                        poblacion = record.value(0)  # nom_standard_majuscule
+                        provincia = record.value(1)  # dep_nom
+                        
+                        if hasattr(self.ui, 'txtpoblacion'):
+                            self.ui.txtpoblacion.setText(poblacion or '')
+                        if hasattr(self.ui, 'txtprovincia'):
+                            self.ui.txtprovincia.setText(provincia or '')
+                    
+                    france_db.close()
+                    QSqlDatabase.removeDatabase("france_connection")
+                        
+        except Exception as e:
+            # Silently ignore errors to not disrupt user experience
+            print(f"Error in postal code lookup: {e}")
+            pass

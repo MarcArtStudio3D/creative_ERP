@@ -691,9 +691,6 @@
                <property name="styleSheet">
                 <string notr="true"/>
                </property>
-               <property name="locale">
-                <locale language="Catalan" country="Spain"/>
-               </property>
               </widget>
              </item>
              <item row="19" column="4">

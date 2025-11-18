@@ -19,11 +19,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QComboBox, QDial
     QFrame, QGridLayout, QHBoxLayout, QHeaderView,
     QLabel, QLineEdit, QPushButton, QSizePolicy,
     QSpacerItem, QTableView, QWidget)
-try:
-    from . import maya_rc  # localized resource import
-except Exception:
-    # Some generated UI files import resources locally; prefer the central modules.designer_rc instead
-    from modules import designer_rc as maya_rc
+from . import maya_rc
 
 class Ui_db_consulta_view(object):
     def setupUi(self, db_consulta_view):

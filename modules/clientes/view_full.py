@@ -15,6 +15,27 @@ from modules.clientes.repository import ClienteRepository
 from modules.clientes.ui_clientes import Ui_frmClientes
 
 
+def format_nombre_fiscal(ap1: str, ap2: str, nombre: str) -> str:
+    """
+    Formats fiscal name from components.
+    ap1: First surname/apellido
+    ap2: Second surname/apellido  
+    nombre: Given name(s)
+    Returns: Formatted string in uppercase, space-separated, or empty string if no parts
+    """
+    parts = []
+    if ap1:
+        parts.append(ap1)
+    if ap2:
+        parts.append(ap2)
+    if (ap1 or ap2) and nombre:
+        parts.append(nombre)
+    if not parts and nombre:
+        parts = [nombre]
+    computed = ' '.join(parts).strip()
+    return computed.upper() if computed else ''
+
+
 class ClientesViewFull(QWidget):
     """Vista completa de clientes - Solo lógica, UI desde archivo .ui"""
     

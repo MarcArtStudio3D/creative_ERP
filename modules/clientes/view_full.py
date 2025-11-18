@@ -1765,7 +1765,6 @@ class ClientesViewFull(QWidget):
                     self.ui.txtprovincia.setText(provincia or '')
                     
             elif len(results) > 1:
-                # Multiple results - show selection dialog
                 # Create QSqlDatabase connection to france.db
                 db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', 'france.db')
                 france_db = QSqlDatabase.addDatabase("QSQLITE", "france_connection")
@@ -1773,7 +1772,7 @@ class ClientesViewFull(QWidget):
                 
                 if france_db.open():
                     sql = f"""
-                        SELECT nom_standard_majuscule, dep_nom 
+                        SELECT ROWID, nom_standard_majuscule, dep_nom 
                         FROM villes 
                         WHERE code_postal = '{cp}' 
                         ORDER BY nom_standard_majuscule
@@ -1783,19 +1782,22 @@ class ClientesViewFull(QWidget):
                         parent=self,
                         sql=sql,
                         db=france_db,
-                        headers=['Población', 'Provincia'],
+                        headers=['ID', 'Población', 'Provincia'],
                         campos=['nom_standard_majuscule'],
                         titulo=f'Seleccionar población para CP {cp}'
                     )
                     
-                    if id_selected and record:
-                        poblacion = record.value(0)  # nom_standard_majuscule
-                        provincia = record.value(1)  # dep_nom
+                    if record and record.count() >= 3:  # Make sure we have all columns
+                        poblacion = record.value(1)  # nom_standard_majuscule (columna 1, ya que 0 es ROWID)
+                        provincia = record.value(2)  # dep_nom (columna 2)
                         
                         if hasattr(self.ui, 'txtpoblacion'):
                             self.ui.txtpoblacion.setText(poblacion or '')
                         if hasattr(self.ui, 'txtprovincia'):
                             self.ui.txtprovincia.setText(provincia or '')
+                    
+                    france_db.close()
+                    QSqlDatabase.removeDatabase("france_connection")
                     
                     france_db.close()
                     QSqlDatabase.removeDatabase("france_connection")

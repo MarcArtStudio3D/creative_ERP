@@ -288,7 +288,7 @@ class Ui_MainWindow(object):
         palette.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Button, brush)
         palette.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Base, brush)
         palette.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.Window, brush)
-        self.frameusuario.setPalette(palette)
+# self.frameusuario.setPalette(palette)
         self.frameusuario.setStyleSheet(u"\n"
 "background-color: rgb(0,0,0);")
         self.frameusuario.setFrameShape(QFrame.Shape.StyledPanel)
@@ -366,7 +366,7 @@ class Ui_MainWindow(object):
 #if QT_VERSION >= QT_VERSION_CHECK(5, 12, 0)
         palette1.setBrush(QPalette.ColorGroup.Disabled, QPalette.ColorRole.PlaceholderText, brush2)
 #endif
-        self.label.setPalette(palette1)
+# self.label.setPalette(palette1)
         self.label.setStyleSheet(u"font: 75 10pt \"Cantarell\";\n"
 "color: rgb(255, 255, 127);")
 

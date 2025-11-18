@@ -33,9 +33,6 @@ class Ui_db_consulta_view(object):
         self.lbltabla = QLabel(db_consulta_view)
         self.lbltabla.setObjectName(u"lbltabla")
         self.lbltabla.setMaximumSize(QSize(16777215, 22))
-        self.lbltabla.setStyleSheet(u"background-color: rgb(0, 0, 57);\n"
-"font: 14pt \"Sans Serif\";\n"
-"color: rgb(255,255,255);")
         self.lbltabla.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         self.gridLayout_2.addWidget(self.lbltabla, 0, 0, 1, 1)
@@ -43,7 +40,6 @@ class Ui_db_consulta_view(object):
         self.frame = QFrame(db_consulta_view)
         self.frame.setObjectName(u"frame")
         self.frame.setMaximumSize(QSize(250, 16777215))
-        self.frame.setStyleSheet(u"background-color: rgb(170, 170, 127);")
         self.frame.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout = QGridLayout(self.frame)
@@ -66,8 +62,6 @@ class Ui_db_consulta_view(object):
 
         self.lineaTextoBuscar = QLineEdit(self.frame)
         self.lineaTextoBuscar.setObjectName(u"lineaTextoBuscar")
-        self.lineaTextoBuscar.setStyleSheet(u"background-color: rgb(255, 255, 255);\n"
-"color: rgb(0, 0, 0);")
 
         self.gridLayout.addWidget(self.lineaTextoBuscar, 4, 1, 1, 1)
 
@@ -96,9 +90,6 @@ class Ui_db_consulta_view(object):
 
         self.resultado_list = QTableView(db_consulta_view)
         self.resultado_list.setObjectName(u"resultado_list")
-        self.resultado_list.setStyleSheet(u"alternate-background-color: rgb(255, 255, 255);\n"
-"background-color: rgb(248, 245, 194);\n"
-"font: 8pt \"Sans\";")
         self.resultado_list.setAlternatingRowColors(True)
         self.resultado_list.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.resultado_list.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)

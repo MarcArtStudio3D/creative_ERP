@@ -1,0 +1,27 @@
+FORMAS_JURIDICAS = [
+    # --- Francia ---
+    {"codigo": "EI",  "nombre": "Entreprise Individuelle", "pais": "FR"},
+    {"codigo": "EIRL", "nombre": "EIRL (Responsabilidad limitada)", "pais": "FR"},
+    {"codigo": "MICRO", "nombre": "Micro-entrepreneur", "pais": "FR"},
+    {"codigo": "SARL", "nombre": "SARL (Sociedad de Responsabilidad Limitada)", "pais": "FR"},
+    {"codigo": "EURL", "nombre": "EURL (SARL unipersonal)", "pais": "FR"},
+    {"codigo": "SAS", "nombre": "SAS (Sociedad por Acciones Simplificada)", "pais": "FR"},
+    {"codigo": "SASU", "nombre": "SASU (SAS unipersonal)", "pais": "FR"},
+    {"codigo": "SC", "nombre": "SC (Sociedad Civil)", "pais": "FR"},
+    {"codigo": "SCI", "nombre": "SCI (Sociedad Civil Inmobiliaria)", "pais": "FR"},
+    {"codigo": "SCP", "nombre": "SCP (Sociedad Civil Profesional)", "pais": "FR"},
+    {"codigo": "SCM", "nombre": "SCM (Sociedad Civil de Medios)", "pais": "FR"},
+    {"codigo": "SA", "nombre": "SA (Sociedad Anónima)", "pais": "FR"},
+    {"codigo": "SCOP", "nombre": "SCOP (Cooperativa de trabajadores)", "pais": "FR"},
+    {"codigo": "SEM", "nombre": "SEM (Sociedad de Economía Mixta)", "pais": "FR"},
+
+    # --- España ---
+    {"codigo": "AUT", "nombre": "Autónomo", "pais": "ES"},
+    {"codigo": "SL",  "nombre": "Sociedad Limitada (SL)", "pais": "ES"},
+    {"codigo": "SLL", "nombre": "Sociedad Limitada Laboral (SLL)", "pais": "ES"},
+    {"codigo": "SA",  "nombre": "Sociedad Anónima (SA)", "pais": "ES"},
+    {"codigo": "SNC", "nombre": "Sociedad en Nombre Colectivo (SNC)", "pais": "ES"},
+    {"codigo": "SC",  "nombre": "Sociedad Civil (SC)", "pais": "ES"},
+    {"codigo": "COOP","nombre": "Cooperativa", "pais": "ES"},
+    {"codigo": "CIV", "nombre": "Comunidad de Bienes (CB / CIV)", "pais": "ES"},
+]

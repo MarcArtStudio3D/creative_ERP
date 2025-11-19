@@ -8,3 +8,10 @@ Make migrations in SQlite:
 
 Make migrations for MariaDB & PostgreSQL:
     alembic upgrade head
+
+
+Conectar con PostgreSQL :SQLALCHEMY_DATABASE_URL = "postgresql://user:password@ip_servidor:5432/nombredb"
+
+Conectar con MariaDB: SQLALCHEMY_DATABASE_URL = "mysql+pymysql://user:password@ip_servidor:3306/nombredb"
+
+Conectar desde alembic: sqlalchemy.url = postgresql://user:password@ip_servidor:5432/nombredb

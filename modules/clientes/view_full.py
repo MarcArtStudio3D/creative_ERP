@@ -1814,48 +1814,67 @@ class ClientesViewFull(QWidget):
     
     
     '''----------------------------------------------------------'''
-    '''Zona activar/desactivar botones navegacion'''
+    '''Zona activar/desactivar botones navegacion                '''
     '''----------------------------------------------------------'''
     def activar_botones_navegacion(self):
         """Activa los botones normales """
-    
-        if hasattr(self.ui, 'btnSiguiente'):
-            self.ui.btnSiguiente.setEnabled(True)
-        if hasattr(self.ui, 'btnAnterior'):
-            self.ui.btnAnterior.setEnabled(True)
-        if hasattr(self.ui, 'btnEditar'):
-            self.ui.btnEditar.setEnabled(True)
-        if hasattr(self.ui, 'btnBorrar'):
-            self.ui.btnBorrar.setEnabled(True)
-        if hasattr(self.ui, 'btnAnadir'):
-            self.ui.btnAnadir.setEnabled(True) 
-        if hasattr(self.ui, 'btnBuscar'):
-            self.ui.btnBuscar.setEnabled(True)
-        """desactiva los botones de guardar/undo..... """
-        if hasattr(self.ui, 'btnGuardar'):
-            self.ui.btnGuardar.setEnabled(False)
-        if hasattr(self.ui, 'btnDeshacer'):
-            self.ui.btnDeshacer.setEnabled(False)
+        get = self._get_widget
+
+        # Activar botones de navegación principales
+        for name in ('btnSiguiente', 'btnAnterior', 'btnEditar', 'btnBorrar', 'btnAnadir', 'btnBuscar'):
+            w = get(name)
+            if w is not None:
+                try:
+                    w.setEnabled(True)
+                except Exception:
+                    pass
+
+        # Asegurarse de que los controles de edición estén deshabilitados
+        for name in ('btnGuardar', 'btnDeshacer'):
+            w = get(name)
+            if w is not None:
+                try:
+                    w.setEnabled(False)
+                except Exception:
+                    pass
+
+        # Restaurar el botón de listados a su estado normal (visible/enabled)
+        bl = get('botListados')
+        if bl is not None:
+            try:
+                bl.setEnabled(True)
+            except Exception:
+                pass
 
     def desactivar_botones_navegacion(self):
         """Desactiva los botones normales..... """
-        if hasattr(self.ui, 'btnSiguiente'):
-            self.ui.btnSiguiente.setEnabled(False)
-        if hasattr(self.ui, 'btnAnterior'):
-            self.ui.btnAnterior.setEnabled(False)
-        if hasattr(self.ui, 'btnEditar'):
-            self.ui.btnEditar.setEnabled(False)
-        if hasattr(self.ui, 'btnBorrar'):
-            self.ui.btnBorrar.setEnabled(False)
-        if hasattr(self.ui, 'btnAnadir'):
-            self.ui.btnAnadir.setEnabled(False) 
-        if hasattr(self.ui, 'btnBuscar'):
-            self.ui.btnBuscar.setEnabled(False)
-        """Activa los botones de guardar/undo..... """
-        if hasattr(self.ui, 'btnGuardar'):
-            self.ui.btnGuardar.setEnabled(True)
-        if hasattr(self.ui, 'btnDeshacer'):
-            self.ui.btnDeshacer.setEnabled(True)
+        get = self._get_widget
+
+        # Desactivar botones de navegación principales
+        for name in ('btnSiguiente', 'btnAnterior', 'btnEditar', 'btnBorrar', 'btnAnadir', 'btnBuscar'):
+            w = get(name)
+            if w is not None:
+                try:
+                    w.setEnabled(False)
+                except Exception:
+                    pass
+
+        # Activar los botones de guardar/undo (modo edición)
+        for name in ('btnGuardar', 'btnDeshacer'):
+            w = get(name)
+            if w is not None:
+                try:
+                    w.setEnabled(True)
+                except Exception:
+                    pass
+
+        # Durante edición no queremos que 'Listados' aparezca como activo
+        bl = get('botListados')
+        if bl is not None:
+            try:
+                bl.setEnabled(False)
+            except Exception:
+                pass
         
     def _handle_postal_code_change(self):
         """Handle postal code changes - lookup city and province from france.db"""

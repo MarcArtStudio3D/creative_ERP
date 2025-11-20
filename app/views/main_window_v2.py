@@ -195,7 +195,7 @@ class MainWindowV2(QMainWindow):
                     border-radius: 6px;
                     font-weight: bold;
                     font-size: 11pt;
-                    color: palette(bright-text);
+                    color: white;
                 }
                 QPushButton:hover {
                     background-color: palette(mid);

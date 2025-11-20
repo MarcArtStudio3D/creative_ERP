@@ -57,7 +57,7 @@ class Module:
     icon: str                                # Nombre del icono (Qt icons o ruta)
     category: ModuleCategory                 # Categoría del módulo
     required_permissions: List[Permission]   # Permisos necesarios para acceder
-    dependencies: List[str] = None           # Módulos de los que depende
+    dependencies: Optional[List[str]] = None           # Módulos de los que depende
     enabled: bool = True                     # Si el módulo está activo en el sistema
     
     def __post_init__(self):
@@ -72,48 +72,52 @@ AVAILABLE_MODULES = {
         id="clientes",
         name="Clientes",
         description="Gestión de clientes y contactos",
-        icon="person",
+        icon="👥",
         category=ModuleCategory.VENTAS,
         required_permissions=[Permission.READ],
         dependencies=[]
+    ),
+
+    "presupuestos": Module(
+        id="presupuestos",
+        name="Presupuestos",
+        description="Creación de presupuestos",
+        icon="📋",
+        category=ModuleCategory.VENTAS,
+        required_permissions=[Permission.READ],
+        dependencies=["clientes", "articulos"]
+    ),
+
+    "albaranes": Module(
+        id="albaranes",
+        name="Albaranes",
+        description="Albaranes de entrega",
+        icon="🚚",
+        category=ModuleCategory.VENTAS,
+        required_permissions=[Permission.READ],
+        dependencies=["clientes", "articulos"]
     ),
     
     "facturas": Module(
         id="facturas",
         name="Facturas",
         description="Emisión y gestión de facturas",
-        icon="receipt",
+        icon="🧾",
         category=ModuleCategory.VENTAS,
         required_permissions=[Permission.READ],
         dependencies=["clientes", "articulos"]
     ),
     
-    "albaranes": Module(
-        id="albaranes",
-        name="Albaranes",
-        description="Albaranes de entrega",
-        icon="local_shipping",
-        category=ModuleCategory.VENTAS,
-        required_permissions=[Permission.READ],
-        dependencies=["clientes", "articulos"]
-    ),
     
-    "presupuestos": Module(
-        id="presupuestos",
-        name="Presupuestos",
-        description="Creación de presupuestos",
-        icon="assignment",
-        category=ModuleCategory.VENTAS,
-        required_permissions=[Permission.READ],
-        dependencies=["clientes", "articulos"]
-    ),
+    
+    
     
     # MÓDULOS DE COMPRAS
     "proveedores": Module(
         id="proveedores",
         name="Proveedores",
         description="Gestión de proveedores",
-        icon="business",
+        icon="🏢",
         category=ModuleCategory.COMPRAS,
         required_permissions=[Permission.READ],
         dependencies=[]
@@ -123,7 +127,7 @@ AVAILABLE_MODULES = {
         id="facturas_compra",
         name="Facturas de Compra",
         description="Registro de facturas de proveedores",
-        icon="receipt_long",
+        icon="📄",
         category=ModuleCategory.COMPRAS,
         required_permissions=[Permission.READ],
         dependencies=["proveedores", "articulos"]
@@ -134,7 +138,7 @@ AVAILABLE_MODULES = {
         id="articulos",
         name="Artículos",
         description="Catálogo de productos y servicios",
-        icon="inventory_2",
+        icon="📦",
         category=ModuleCategory.ALMACEN,
         required_permissions=[Permission.READ],
         dependencies=[]
@@ -144,7 +148,7 @@ AVAILABLE_MODULES = {
         id="almacen",
         name="Almacén",
         description="Control de inventario y stock",
-        icon="warehouse",
+        icon="🏭",
         category=ModuleCategory.ALMACEN,
         required_permissions=[Permission.READ],
         dependencies=["articulos"]
@@ -155,7 +159,7 @@ AVAILABLE_MODULES = {
         id="contabilidad",
         name="Contabilidad",
         description="Asientos contables y balance",
-        icon="account_balance",
+        icon="💰",
         category=ModuleCategory.FINANCIERO,
         required_permissions=[Permission.READ, Permission.ADMIN],
         dependencies=["facturas", "facturas_compra"]
@@ -165,7 +169,7 @@ AVAILABLE_MODULES = {
         id="tesoreria",
         name="Tesorería",
         description="Gestión de cobros y pagos",
-        icon="payments",
+        icon="💳",
         category=ModuleCategory.FINANCIERO,
         required_permissions=[Permission.READ],
         dependencies=["facturas", "facturas_compra"]
@@ -176,7 +180,7 @@ AVAILABLE_MODULES = {
         id="proyectos",
         name="Proyectos",
         description="Gestión de proyectos creativos",
-        icon="folder_open",
+        icon="📁",
         category=ModuleCategory.PROYECTOS,
         required_permissions=[Permission.READ],
         dependencies=["clientes"]
@@ -186,7 +190,7 @@ AVAILABLE_MODULES = {
         id="tiempo",
         name="Control de Tiempo",
         description="Registro de horas trabajadas",
-        icon="schedule",
+        icon="⏱️",
         category=ModuleCategory.PROYECTOS,
         required_permissions=[Permission.READ],
         dependencies=["proyectos"]
@@ -197,7 +201,7 @@ AVAILABLE_MODULES = {
         id="usuarios",
         name="Usuarios",
         description="Gestión de usuarios y permisos",
-        icon="manage_accounts",
+        icon="👤",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.ADMIN],
         dependencies=[]
@@ -207,7 +211,7 @@ AVAILABLE_MODULES = {
         id="configuracion",
         name="Configuración",
         description="Configuración general del sistema",
-        icon="settings",
+        icon="⚙️",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.ADMIN],
         dependencies=[]
@@ -217,7 +221,7 @@ AVAILABLE_MODULES = {
         id="informes",
         name="Informes",
         description="Informes y estadísticas",
-        icon="analytics",
+        icon="📊",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.READ],
         dependencies=[]
@@ -294,7 +298,8 @@ class ModuleManager:
         if not module:
             return False
         
-        return all(dep in available_modules for dep in module.dependencies)
+        # module.dependencies puede ser None en tipos estáticos; usar lista vacía como fallback
+        return all(dep in available_modules for dep in (module.dependencies or []))
     
     def get_module(self, module_id: str) -> Optional[Module]:
         """Obtiene un módulo por su ID."""

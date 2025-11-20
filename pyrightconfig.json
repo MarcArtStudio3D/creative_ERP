@@ -1,0 +1,11 @@
+{
+  "typeCheckingMode": "basic",
+  "reportMissingImports": false,
+  "reportOptionalMemberAccess": false,
+  "exclude": [
+    "**/venv",
+    "**/.venv",
+    "**/node_modules",
+    "**/.pytest_cache"
+  ]
+}

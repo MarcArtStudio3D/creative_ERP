@@ -142,10 +142,7 @@ class MainWindowV2(QMainWindow):
     def update_sidebar_modules(self, category: Optional[ModuleCategory] = None) -> None:
         """
         Actualiza los módulos mostrados en la sidebar.
-        
-        Args:
-            category: Si se especifica, muestra solo módulos de esa categoría.
-                     Si es None, muestra todos los módulos disponibles.
+        Muestra solo las categorías como botones clickeables.
         """
         # Limpiar botones existentes (excepto el stretch final)
         while self.sidebar_modules_container.count() > 1:
@@ -158,10 +155,6 @@ class MainWindowV2(QMainWindow):
         user_permissions = self.session.user.get_effective_permissions()
         available_modules = self.module_manager.get_available_modules(user_permissions)
         
-        # Filtrar por categoría si se especificó
-        if category:
-            available_modules = [m for m in available_modules if m.category == category]
-        
         # Agrupar por categoría
         categories = {}
         for module in available_modules:
@@ -170,16 +163,16 @@ class MainWindowV2(QMainWindow):
                 categories[cat] = []
             categories[cat].append(module)
         
-        category_names = {
-            ModuleCategory.VENTAS: "VENTAS",
-            ModuleCategory.COMPRAS: "COMPRAS",
-            ModuleCategory.ALMACEN: "ALMACÉN",
-            ModuleCategory.FINANCIERO: "FINANCIERO",
-            ModuleCategory.PROYECTOS: "PROYECTOS",
-            ModuleCategory.ADMINISTRACION: "ADMINISTRACIÓN"
+        category_info = {
+            ModuleCategory.VENTAS: {"name": "VENTAS", "icon": "💼"},
+            ModuleCategory.COMPRAS: {"name": "COMPRAS", "icon": "🛒"},
+            ModuleCategory.ALMACEN: {"name": "ALMACÉN", "icon": "📦"},
+            ModuleCategory.FINANCIERO: {"name": "FINANCIERO", "icon": "💰"},
+            ModuleCategory.PROYECTOS: {"name": "PROYECTOS", "icon": "📁"},
+            ModuleCategory.ADMINISTRACION: {"name": "ADMINISTRACIÓN", "icon": "⚙️"}
         }
         
-        # Crear botones agrupados por categoría
+        # Crear botones por categoría
         for cat in [ModuleCategory.VENTAS, ModuleCategory.COMPRAS, 
                    ModuleCategory.ALMACEN, ModuleCategory.FINANCIERO,
                    ModuleCategory.PROYECTOS, ModuleCategory.ADMINISTRACION]:
@@ -187,43 +180,37 @@ class MainWindowV2(QMainWindow):
             if cat not in categories:
                 continue
             
-            # Header de categoría
-            cat_label = QLabel(category_names[cat])
-            cat_font = QFont()
-            cat_font.setPointSize(9)
-            cat_font.setBold(True)
-            cat_label.setFont(cat_font)
-            cat_label.setStyleSheet("""
-                padding: 8px 10px 4px 10px;
-                color: palette(mid);
-            """)
-            self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, cat_label)
+            info = category_info[cat]
             
-            # Botones de módulos
-            for module in categories[cat]:
-                btn = QPushButton(f"{module.icon} {module.name}")
-                btn.setMinimumHeight(40)
-                btn.setCursor(Qt.CursorShape.PointingHandCursor)
-                btn.setStyleSheet("""
-                    QPushButton {
-                        text-align: left;
-                        padding: 8px 15px;
-                        border: none;
-                        background-color: transparent;
-                        border-radius: 4px;
-                    }
-                    QPushButton:hover {
-                        background-color: palette(midlight);
-                    }
-                    QPushButton:pressed {
-                        background-color: palette(mid);
-                    }
-                """)
-                btn.clicked.connect(lambda checked, m=module: self.open_module(m.id))  # type: ignore
-                self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, btn)
+            # Botón de categoría
+            cat_btn = QPushButton(f"{info['icon']} {info['name']}")
+            cat_btn.setMinimumHeight(50)
+            cat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+            cat_btn.setStyleSheet("""
+                QPushButton {
+                    text-align: left;
+                    padding: 12px 15px;
+                    border: none;
+                    background-color: palette(dark);
+                    border-radius: 6px;
+                    font-weight: bold;
+                    font-size: 11pt;
+                    color: palette(bright-text);
+                }
+                QPushButton:hover {
+                    background-color: palette(mid);
+                }
+                QPushButton:pressed {
+                    background-color: palette(midlight);
+                }
+            """)
+            
+            # Al hacer clic, mostrar módulos de la categoría en la barra superior
+            cat_btn.clicked.connect(lambda checked=False, c=cat, mods=categories[cat]: self.show_category_modules(c, mods))  # type: ignore
+            self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, cat_btn)
             
             # Espaciado entre categorías
-            self.sidebar_modules_container.insertSpacing(self.sidebar_modules_container.count() - 1, 5)
+            self.sidebar_modules_container.insertSpacing(self.sidebar_modules_container.count() - 1, 8)
     
     def create_top_bar(self) -> QFrame:
         """Crea la barra superior negra estilo RedFox."""
@@ -656,7 +643,6 @@ class MainWindowV2(QMainWindow):
         if module_id in self.module_widgets:
             widget = self.module_widgets[module_id]
             self.stacked_widget.setCurrentWidget(widget)
-            self.update_shortcuts()
             self.statusBar().showMessage(f"Módulo {module_id} activo")
             return
         
@@ -667,7 +653,6 @@ class MainWindowV2(QMainWindow):
             self.module_widgets[module_id] = module_widget
             self.stacked_widget.addWidget(module_widget)
             self.stacked_widget.setCurrentWidget(module_widget)
-            self.update_shortcuts()
             self.statusBar().showMessage(f"Módulo {module_id} cargado")
         else:
             QMessageBox.information(
@@ -1158,15 +1143,20 @@ class MainWindowV2(QMainWindow):
             last_module = list(self.module_widgets.values())[-1]
             self.stacked_widget.setCurrentWidget(last_module)
         
-        self.update_shortcuts()
         self.statusBar().showMessage(f"Módulo {module_id} cerrado", 2000)
         
         # Forzar recolección de basura (opcional, Python lo hará automáticamente)
         import gc
         gc.collect()
     
-    def update_shortcuts(self) -> None:
-        """Actualiza los botones de shortcuts en la barra superior."""
+    def show_category_modules(self, category: ModuleCategory, modules: list) -> None:
+        """
+        Muestra los módulos de una categoría como botones en la barra superior.
+        
+        Args:
+            category: La categoría seleccionada
+            modules: Lista de módulos de esa categoría
+        """
         # Limpiar shortcuts existentes
         while self.shortcut_container.count():
             item = self.shortcut_container.takeAt(0)
@@ -1174,33 +1164,37 @@ class MainWindowV2(QMainWindow):
             if widget:
                 widget.deleteLater()
         
-        # Agregar botón por cada módulo abierto
-        for module_id, widget in self.module_widgets.items():
-            module_info = self.module_manager.get_module(module_id)
-            if not module_info:
-                continue
-            
-            btn = QToolButton()
-            btn.setText(module_info.icon)
-            btn.setToolTip(module_info.name)
+        # Agregar botón por cada módulo de la categoría
+        for module in modules:
+            btn = QPushButton(f"{module.icon} {module.name}")
+            btn.setMinimumHeight(30)
+            btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet("""
-                QToolButton {
+                QPushButton {
                     background-color: rgb(50, 50, 50);
                     color: white;
                     border: 1px solid rgb(80, 80, 80);
-                    border-radius: 3px;
-                    padding: 4px 8px;
+                    border-radius: 4px;
+                    padding: 5px 12px;
+                    font-weight: bold;
                 }
-                QToolButton:hover {
+                QPushButton:hover {
                     background-color: rgb(70, 70, 70);
                 }
-                QToolButton:pressed {
+                QPushButton:pressed {
                     background-color: rgb(90, 90, 90);
                 }
             """)
-            btn.clicked.connect(lambda checked, w=widget: self.stacked_widget.setCurrentWidget(w))  # type: ignore
+            btn.clicked.connect(lambda checked=False, m_id=module.id: self.open_module(m_id))  # type: ignore
             
             self.shortcut_container.addWidget(btn)
+    
+    def update_shortcuts(self) -> None:
+        """
+        Actualiza los botones de shortcuts en la barra superior.
+        Ya no se usa para módulos abiertos, solo para categorías seleccionadas.
+        """
+        pass
     
     def update_user_info(self) -> None:
         """Actualiza la información del usuario en la barra superior."""

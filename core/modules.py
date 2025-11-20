@@ -235,6 +235,15 @@ AVAILABLE_MODULES = {
         required_permissions=[Permission.READ],
         dependencies=[]
     ),
+    "gestor_modulos": Module(
+        id="gestor_modulos",
+        name="Gestor Módulos",
+        description="Ver módulos y otorgar permisos por rol",
+        icon="🛠️",
+        category=ModuleCategory.ADMINISTRACION,
+        required_permissions=[Permission.ADMIN],
+        dependencies=[]
+    ),
 }
 
 

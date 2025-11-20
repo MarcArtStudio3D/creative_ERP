@@ -1,7 +1,7 @@
 from typing import Dict, List
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
-    QListWidgetItem, QDialog, QComboBox, QMessageBox
+    QListWidgetItem, QDialog, QComboBox, QMessageBox, QCheckBox, QGridLayout, QWidgetItem
 )
 from core.modules import AVAILABLE_MODULES
 from core.auth import UserRole
@@ -51,41 +51,80 @@ class GestorModulosView(QWidget):
             item.setData(1, mid)
             self.list_modules.addItem(item)
         layout.addWidget(self.list_modules)
-
-        hl = QHBoxLayout()
-        hl.addWidget(QLabel('Rol:'))
+        # Controles para seleccionar rol y permisos (checkboxes)
+        controls = QHBoxLayout()
+        controls.addWidget(QLabel('Rol:'))
         self.cbo_role = QComboBox()
         for r in UserRole:
             self.cbo_role.addItem(r.value)
-        hl.addWidget(self.cbo_role)
+        controls.addWidget(self.cbo_role)
 
-        self.cbo_perm = QComboBox()
-        self.cbo_perm.addItems(['none', 'read', 'create', 'update', 'delete', 'admin', 'export', 'import', 'print'])
-        hl.addWidget(QLabel('Permiso:'))
-        hl.addWidget(self.cbo_perm)
+        # Permisos como checkboxes en una cuadrícula
+        perms_widget = QWidget()
+        perms_layout = QGridLayout()
+        perms_widget.setLayout(perms_layout)
+
+        self.perm_checks: Dict[str, QCheckBox] = {}
+        perm_names = ['READ', 'CREATE', 'UPDATE', 'DELETE', 'ADMIN', 'EXPORT', 'IMPORT', 'PRINT']
+        for idx, pname in enumerate(perm_names):
+            cb = QCheckBox(pname.capitalize())
+            self.perm_checks[pname] = cb
+            perms_layout.addWidget(cb, idx // 4, idx % 4)
+
+        controls.addWidget(perms_widget)
 
         btn_set = QPushButton('Asignar')
-        btn_set.clicked.connect(self.asignar_permiso)
-        hl.addWidget(btn_set)
+        btn_set.clicked.connect(self.asignar_permisos)
+        controls.addWidget(btn_set)
 
-        layout.addLayout(hl)
+        layout.addLayout(controls)
 
         btn_save = QPushButton('Guardar cambios')
         btn_save.clicked.connect(self._save_overrides)
         layout.addWidget(btn_save)
 
-    def asignar_permiso(self):
+        # Cuando se cambia el módulo o rol, cargar los checks actuales
+        self.list_modules.currentItemChanged.connect(lambda cur, prev: self._load_checks_from_overrides())
+        self.cbo_role.currentIndexChanged.connect(lambda idx: self._load_checks_from_overrides())
+
+        # Inicializar checks
+        self._load_checks_from_overrides()
+
+    def _load_checks_from_overrides(self):
+        item = self.list_modules.currentItem()
+        role = self.cbo_role.currentText()
+        # Reset
+        for cb in self.perm_checks.values():
+            cb.setChecked(False)
+
+        if not item or not role:
+            return
+        mid = item.data(1)
+        role_map = self.overrides.get(role, {})
+        perms = role_map.get(mid, [])
+        for p in perms:
+            if not isinstance(p, str):
+                continue
+            key = p.strip().upper()
+            cb = self.perm_checks.get(key)
+            if cb:
+                cb.setChecked(True)
+
+    def asignar_permisos(self):
         item = self.list_modules.currentItem()
         if not item:
             QMessageBox.information(self, 'Selecciona', 'Selecciona un módulo primero')
             return
         mid = item.data(1)
         role = self.cbo_role.currentText()
-        perm = self.cbo_perm.currentText()
 
-        # Escribe en overrides
+        selected = []
+        for key, cb in self.perm_checks.items():
+            if cb.isChecked():
+                selected.append(key)
+
         if role not in self.overrides:
             self.overrides[role] = {}
-        # Simplificar: guardar una lista con permisos por módulo
-        self.overrides[role][mid] = [perm]
-        QMessageBox.information(self, 'Asignado', f'Asignado {perm} a {role} en {mid}')
+        # Guardar la lista de permisos como strings
+        self.overrides[role][mid] = selected
+        QMessageBox.information(self, 'Asignado', f'Asignados {selected} a {role} en {mid}')

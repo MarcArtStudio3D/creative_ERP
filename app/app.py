@@ -53,7 +53,11 @@ class CreativeERPApp:
     
     def on_login_success(self):
         """Callback cuando el login es exitoso."""
-        self.login_window.close()
+        if self.login_window is not None:
+            try:
+                self.login_window.close()
+            except Exception:
+                pass
         self.show_main_window()
     
     def show_main_window(self):
@@ -88,7 +92,11 @@ class CreativeERPApp:
         self.show_login()
         
         # Ejecutar loop de eventos Qt
-        return self.qapp.exec()
+        # Asegurar para el analizador de tipos que `qapp` no es None
+        qapp = self.qapp
+        if qapp is None:
+            return 1
+        return qapp.exec()
 
 
 def run_app():

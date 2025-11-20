@@ -37,7 +37,7 @@ class MainWindowV2(QMainWindow):
         self.create_menus()
         self.update_user_info()
     
-    def setup_ui(self):
+    def setup_ui(self) -> None:
         """Configura la interfaz principal."""
         self.setWindowTitle("Creative ERP - Sistema de Gestión Empresarial")
         self.setMinimumSize(1400, 800)
@@ -137,7 +137,7 @@ class MainWindowV2(QMainWindow):
         sidebar.setLayout(layout)
         return sidebar
     
-    def update_sidebar_modules(self, category: ModuleCategory = None):
+    def update_sidebar_modules(self, category: ModuleCategory = None) -> None:
         """
         Actualiza los módulos mostrados en la sidebar.
         
@@ -361,7 +361,7 @@ class MainWindowV2(QMainWindow):
         page.setLayout(layout)
         return page
     
-    def create_menus(self):
+    def create_menus(self) -> None:
         """Crea el menú principal con categorías de módulos."""
         menubar = self.menuBar()
         
@@ -596,7 +596,7 @@ class MainWindowV2(QMainWindow):
         panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
         setattr(container, '_animation', panel_animation)
         
-        def toggle_panel():
+        def toggle_panel() -> None:
             if getattr(panel, '_is_open', False):
                 # Cerrar
                 getattr(container, '_animation').setStartValue(container.pos())
@@ -616,7 +616,7 @@ class MainWindowV2(QMainWindow):
         container.move(-230, 0)
         
         # Actualizar posición al redimensionar ventana
-        def update_position():
+        def update_position() -> None:
             parent = container.parent()
             if parent:
                 y_pos = 0
@@ -635,13 +635,13 @@ class MainWindowV2(QMainWindow):
         
         return container
     
-    def resizeEvent(self, event):
+    def resizeEvent(self, event) -> None:
         """Actualizar posiciones de paneles al redimensionar."""
         super().resizeEvent(event)
         if hasattr(self, 'avisos_panel_widget'):
             self.avisos_panel_widget.update_position()
     
-    def open_module(self, module_id: str):
+    def open_module(self, module_id: str) -> None:
         """
         Abre un módulo en el stacked widget.
         
@@ -697,7 +697,7 @@ class MainWindowV2(QMainWindow):
         actions_panel.setParent(container)
         
         # Función para posicionar elementos
-        def update_positions():
+        def update_positions() -> None:
             # Contenido ocupa todo el espacio
             module_content.setGeometry(0, 0, container.width(), container.height())
             
@@ -718,7 +718,7 @@ class MainWindowV2(QMainWindow):
         
         # Actualizar al redimensionar
         original_resize = container.resizeEvent
-        def on_resize(event):
+        def on_resize(event) -> None:
             update_positions()
             if original_resize:
                 original_resize(event)
@@ -855,7 +855,7 @@ class MainWindowV2(QMainWindow):
         refresh_btn = QPushButton("🔄 Limpiar y Refrescar")
         refresh_btn.setMinimumHeight(35)
         refresh_btn.setStyleSheet(self._get_panel_button_style())
-        refresh_btn.clicked.connect(lambda: self.on_module_action(module_id, 'refresh'))
+        refresh_btn.clicked.connect(lambda: self.on_module_action(module_id, 'refresh'))  # type: ignore
         panel_layout.addWidget(refresh_btn)
         
         # Controles de ordenación y búsqueda
@@ -973,7 +973,7 @@ class MainWindowV2(QMainWindow):
         panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
         setattr(container, '_animation', panel_animation)
         
-        def toggle_panel():
+        def toggle_panel() -> None:
             parent = container.parent()
             if not parent:
                 return
@@ -998,7 +998,7 @@ class MainWindowV2(QMainWindow):
         tab.clicked.connect(toggle_panel)
         
         # Actualizar posición al redimensionar y al mostrar
-        def update_position():
+        def update_position() -> None:
             parent = container.parent()
             if parent and parent.width() > 0:
                 container.setFixedHeight(parent.height())
@@ -1013,7 +1013,7 @@ class MainWindowV2(QMainWindow):
         
         # Sobrescribir showEvent para posicionar al mostrarse
         original_show = container.showEvent
-        def on_show(event):
+        def on_show(event) -> None:
             update_position()
             if original_show:
                 original_show(event)
@@ -1084,7 +1084,7 @@ class MainWindowV2(QMainWindow):
             {'icon': '📋', 'label': 'Listado', 'action': 'list'},
         ])
     
-    def on_search_changed(self, module_id: str, search_text: str, order_by: str, order_mode: str):
+    def on_search_changed(self, module_id: str, search_text: str, order_by: str, order_mode: str) -> None:
         """Maneja cambios en los controles de búsqueda y filtrado."""
         # Obtener el widget activo del módulo
         if module_id not in self.module_widgets:
@@ -1108,7 +1108,7 @@ class MainWindowV2(QMainWindow):
             
             module_view.filter_records(search_text, order_by, order_mode)
     
-    def on_module_action(self, module_id: str, action: str):
+    def on_module_action(self, module_id: str, action: str) -> None:
         """Ejecuta una acción específica de un módulo."""
         if action == 'refresh':
             # Limpiar búsqueda y recargar
@@ -1126,7 +1126,7 @@ class MainWindowV2(QMainWindow):
                 f"Módulo: {module_id}\nAcción: {action}\n\nEsta funcionalidad está en desarrollo."
             )
     
-    def close_module(self, module_id: str):
+    def close_module(self, module_id: str) -> None:
         """
         Cierra un módulo abierto y libera su memoria.
         
@@ -1161,7 +1161,7 @@ class MainWindowV2(QMainWindow):
         import gc
         gc.collect()
     
-    def update_shortcuts(self):
+    def update_shortcuts(self) -> None:
         """Actualiza los botones de shortcuts en la barra superior."""
         # Limpiar shortcuts existentes
         while self.shortcut_container.count():
@@ -1197,7 +1197,7 @@ class MainWindowV2(QMainWindow):
             
             self.shortcut_container.addWidget(btn)
     
-    def update_user_info(self):
+    def update_user_info(self) -> None:
         """Actualiza la información del usuario en la barra superior."""
         self.user_label.setText(f"👤 {self.session.user.username}")
         
@@ -1231,7 +1231,7 @@ class MainWindowV2(QMainWindow):
         else:
             return f"Usuario: {self.session.user.username} | Rol: {role}"
     
-    def change_company(self):
+    def change_company(self) -> None:
         """Permite cambiar de empresa (volver al login)."""
         reply = QMessageBox.question(
             self,
@@ -1243,22 +1243,22 @@ class MainWindowV2(QMainWindow):
         if reply == QMessageBox.StandardButton.Yes:
             self.logout_requested.emit()
     
-    def on_year_changed(self, date):
+    def on_year_changed(self, date) -> None:
         """Cuando cambia el año/ejercicio."""
         year = date.year()
         self.statusBar().showMessage(f"Ejercicio cambiado a: {year}", 3000)
         # TODO: Actualizar contexto de ejercicio en sesión
     
-    def lock_or_logout(self):
+    def lock_or_logout(self) -> None:
         """Bloquear o cerrar sesión."""
         # Por ahora, simplemente cerrar sesión
         self.logout_requested.emit()
     
-    def open_preferences(self):
+    def open_preferences(self) -> None:
         """Abre ventana de preferencias."""
         QMessageBox.information(self, "Preferencias", "Ventana de preferencias en desarrollo")
     
-    def show_about(self):
+    def show_about(self) -> None:
         """Muestra ventana Acerca de."""
         QMessageBox.about(
             self,

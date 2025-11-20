@@ -398,6 +398,18 @@ class MainWindowV2(QMainWindow):
         preferences_action = QAction("⚙️ Preferencias", self)
         preferences_action.triggered.connect(self.open_preferences)
         utils_menu.addAction(preferences_action)
+
+        # Añadir acceso rápido al Gestor de Módulos (si está disponible para el usuario)
+        gestor = None
+        for m in available_modules:
+            if m.id == 'gestor_modulos':
+                gestor = m
+                break
+        if gestor:
+            gestor_action = QAction(gestor.icon + " " + gestor.name, self)
+            gestor_action.setStatusTip(gestor.description)
+            gestor_action.triggered.connect(lambda checked=False: self.open_module('gestor_modulos'))  # type: ignore
+            utils_menu.addAction(gestor_action)
         
         utils_menu.addSeparator()
         
@@ -716,6 +728,20 @@ class MainWindowV2(QMainWindow):
         
         return container
     
+    def _module_id_to_class_name(self, module_id: str, suffix: str = "View") -> str:
+        """
+        Convierte un module_id a nombre de clase en CamelCase.
+        
+        Ejemplos:
+            clientes -> ClientesView
+            gestor_modulos -> GestorModulosView
+            facturas_compra -> FacturasCompraView
+        """
+        # Dividir por guiones bajos y capitalizar cada parte
+        parts = module_id.split('_')
+        camel_case = ''.join(part.capitalize() for part in parts)
+        return f"{camel_case}{suffix}"
+    
     def load_module_view(self, module_id: str) -> Optional[QWidget]:
         """
         Intenta cargar dinámicamente la vista de un módulo.
@@ -727,11 +753,11 @@ class MainWindowV2(QMainWindow):
             # Intentar primero con view_full (vista completa)
             if module_id == 'clientes':
                 module_name = f"modules.{module_id}.view_full"
-                view_class_name = f"{module_id.capitalize()}ViewFull"
+                view_class_name = self._module_id_to_class_name(module_id, "ViewFull")
             else:
                 # Para otros módulos, usar view normal
                 module_name = f"modules.{module_id}.view"
-                view_class_name = f"{module_id.capitalize()}View"
+                view_class_name = self._module_id_to_class_name(module_id, "View")
             
             module = __import__(module_name, fromlist=[view_class_name])
             view_class = getattr(module, view_class_name)
@@ -905,6 +931,17 @@ class MainWindowV2(QMainWindow):
         delete_btn.setStyleSheet(self._get_panel_button_style("#d63031"))
         delete_btn.clicked.connect(lambda: self.on_module_action(module_id, 'delete'))  # type: ignore
         panel_layout.addWidget(delete_btn)
+
+        # Si estamos en un módulo de Administración, añadir acceso directo al Gestor de Módulos
+        try:
+            if getattr(module_info, 'category', None) == ModuleCategory.ADMINISTRACION:
+                gestor_btn = QPushButton("🛠️ Gestor Módulos")
+                gestor_btn.setMinimumHeight(40)
+                gestor_btn.setStyleSheet(self._get_panel_button_style())
+                gestor_btn.clicked.connect(lambda checked=False: self.open_module('gestor_modulos'))  # type: ignore
+                panel_layout.addWidget(gestor_btn)
+        except Exception:
+            pass
         
         panel_layout.addStretch()
         

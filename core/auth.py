@@ -146,6 +146,7 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
                 "configuracion": [Permission.ADMIN],
                 "informes": [Permission.ADMIN],
                 "empresas": [Permission.ADMIN],
+                "gestor_modulos": [Permission.ADMIN],
         }
     
     # MANAGER: Gestión completa excepto usuarios y configuración
@@ -165,6 +166,7 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "informes": [Permission.READ, Permission.EXPORT],
                 "empresas": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
+                "gestor_modulos": [Permission.READ],
         }
     
     # ACCOUNTANT: Contabilidad y finanzas

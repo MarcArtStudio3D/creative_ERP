@@ -2,6 +2,7 @@ Generic multi-database configuration.
 
 Create migrations:
     alembic revision --autogenerate -m "cambios"
+    example :  alembic revision -m "add more fields to empresas table"
 
 Make migrations in SQlite:    
     alembic upgrade head --x batch=true
@@ -9,6 +10,8 @@ Make migrations in SQlite:
 Make migrations for MariaDB & PostgreSQL:
     alembic upgrade head
 
+Make downgrade
+alembic downgrade -1 (revierte la ultima migracion)
 
 Conectar con PostgreSQL :SQLALCHEMY_DATABASE_URL = "postgresql://user:password@ip_servidor:5432/nombredb"
 

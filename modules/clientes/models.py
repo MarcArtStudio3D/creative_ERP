@@ -115,7 +115,7 @@ class Cliente(Base):
     id_transportista: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Transportista predeterminado
     
     # Relaciones
-    invoices = relationship("Invoice", back_populates="client")
+#     # invoices = relationship("Invoice", back_populates="client")  # Deshabilitado por import circular  # Deshabilitado por import circular
     
     def __repr__(self):
         return f"<Cliente(id={self.id}, codigo='{self.codigo_cliente}', nombre='{self.nombre_fiscal}')>"

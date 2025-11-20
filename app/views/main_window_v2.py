@@ -216,7 +216,7 @@ class MainWindowV2(QMainWindow):
                         background-color: palette(mid);
                     }
                 """)
-                btn.clicked.connect(lambda checked, m=module: self.open_module(m.id))
+                btn.clicked.connect(lambda checked, m=module: self.open_module(m.id))  # type: ignore
                 self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, btn)
             
             # Espaciado entre categorías
@@ -399,7 +399,7 @@ class MainWindowV2(QMainWindow):
             for module in categories[category]:
                 action = QAction(module.icon + " " + module.name, self)
                 action.setStatusTip(module.description)
-                action.triggered.connect(lambda checked, m=module: self.open_module(m.id))
+                action.triggered.connect(lambda checked, m=module: self.open_module(m.id))  # type: ignore
                 menu.addAction(action)
         
         # Menú Utilidades
@@ -588,29 +588,29 @@ class MainWindowV2(QMainWindow):
         container.setLayout(layout)
         
         # Estado del panel
-        panel._is_open = False
+        setattr(panel, '_is_open', False)
         
         # Animación
         panel_animation = QPropertyAnimation(container, b"pos")
         panel_animation.setDuration(600)
         panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
-        container._animation = panel_animation
+        setattr(container, '_animation', panel_animation)
         
         def toggle_panel():
-            if panel._is_open:
+            if getattr(panel, '_is_open', False):
                 # Cerrar
-                container._animation.setStartValue(container.pos())
-                container._animation.setEndValue(QPoint(-230, container.pos().y()))
-                container._animation.start()
-                panel._is_open = False
+                getattr(container, '_animation').setStartValue(container.pos())
+                getattr(container, '_animation').setEndValue(QPoint(-230, container.pos().y()))
+                getattr(container, '_animation').start()
+                setattr(panel, '_is_open', False)
             else:
                 # Abrir
-                container._animation.setStartValue(container.pos())
-                container._animation.setEndValue(QPoint(0, container.pos().y()))
-                container._animation.start()
-                panel._is_open = True
+                getattr(container, '_animation').setStartValue(container.pos())
+                getattr(container, '_animation').setEndValue(QPoint(0, container.pos().y()))
+                getattr(container, '_animation').start()
+                setattr(panel, '_is_open', True)
         
-        tab._click_callback = toggle_panel
+        setattr(tab, '_click_callback', toggle_panel)
         
         # Posicionar inicialmente cerrado
         container.move(-230, 0)
@@ -622,7 +622,7 @@ class MainWindowV2(QMainWindow):
                 y_pos = 0
                 container.setFixedHeight(parent.height())
                 panel.setFixedHeight(parent.height())
-                if not panel._is_open:
+                if not getattr(panel, '_is_open', False):
                     container.move(-230, y_pos)
                 else:
                     container.move(0, y_pos)
@@ -884,7 +884,7 @@ class MainWindowV2(QMainWindow):
         search_input = QLineEdit()
         search_input.setPlaceholderText("Buscar...")
         search_input.setMinimumHeight(30)
-        search_input.textChanged.connect(lambda text: self.on_search_changed(module_id, text, order_combo.currentText(), mode_combo.currentText()))
+        search_input.textChanged.connect(lambda text: self.on_search_changed(module_id, text, order_combo.currentText(), mode_combo.currentText()))  # type: ignore
         panel_layout.addWidget(search_input)
         
         # Guardar referencias para posterior uso
@@ -893,8 +893,8 @@ class MainWindowV2(QMainWindow):
         setattr(panel, 'mode_combo', mode_combo)
         
         # Conectar combos ahora que todos están definidos
-        order_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))
-        mode_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))
+        order_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))  # type: ignore
+        mode_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))  # type: ignore
         
         panel_layout.addSpacing(20)
         
@@ -902,19 +902,19 @@ class MainWindowV2(QMainWindow):
         add_btn = QPushButton("➕ Añadir")
         add_btn.setMinimumHeight(40)
         add_btn.setStyleSheet(self._get_panel_button_style())
-        add_btn.clicked.connect(lambda: self.on_module_action(module_id, 'new'))
+        add_btn.clicked.connect(lambda: self.on_module_action(module_id, 'new'))  # type: ignore
         panel_layout.addWidget(add_btn)
         
         edit_btn = QPushButton("📝 Editar")
         edit_btn.setMinimumHeight(40)
         edit_btn.setStyleSheet(self._get_panel_button_style())
-        edit_btn.clicked.connect(lambda: self.on_module_action(module_id, 'edit'))
+        edit_btn.clicked.connect(lambda: self.on_module_action(module_id, 'edit'))  # type: ignore
         panel_layout.addWidget(edit_btn)
         
         delete_btn = QPushButton("🗑️ Borrar")
         delete_btn.setMinimumHeight(40)
         delete_btn.setStyleSheet(self._get_panel_button_style("#d63031"))
-        delete_btn.clicked.connect(lambda: self.on_module_action(module_id, 'delete'))
+        delete_btn.clicked.connect(lambda: self.on_module_action(module_id, 'delete'))  # type: ignore
         panel_layout.addWidget(delete_btn)
         
         panel_layout.addStretch()
@@ -923,7 +923,7 @@ class MainWindowV2(QMainWindow):
         exceptions_btn = QPushButton("📋 Excepciones")
         exceptions_btn.setMinimumHeight(40)
         exceptions_btn.setStyleSheet(self._get_panel_button_style())
-        exceptions_btn.clicked.connect(lambda: self.on_module_action(module_id, 'exceptions'))
+        exceptions_btn.clicked.connect(lambda: self.on_module_action(module_id, 'exceptions'))  # type: ignore
         panel_layout.addWidget(exceptions_btn)
         
         panel.setLayout(panel_layout)
@@ -964,36 +964,36 @@ class MainWindowV2(QMainWindow):
         container.setLayout(layout)
         
         # Estado del panel
-        panel._is_open = False
+        setattr(panel, '_is_open', False)
         container.setFixedWidth(250)
         
         # Animación
         panel_animation = QPropertyAnimation(container, b"pos")
         panel_animation.setDuration(600)
         panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
-        container._animation = panel_animation
+        setattr(container, '_animation', panel_animation)
         
         def toggle_panel():
             parent = container.parent()
             if not parent:
                 return
             
-            if panel._is_open:
+            if getattr(panel, '_is_open', False):
                 # Cerrar - mover hacia la derecha
                 tab.setText("◀")
-                container._animation.setStartValue(container.pos())
+                getattr(container, '_animation').setStartValue(container.pos())
                 # Solo dejar visible la pestaña (20px desde el borde derecho)
-                container._animation.setEndValue(QPoint(parent.width() - 20, container.pos().y()))
-                container._animation.start()
-                panel._is_open = False
+                getattr(container, '_animation').setEndValue(QPoint(getattr(parent, 'width', 800) - 20, container.pos().y()))
+                getattr(container, '_animation').start()
+                setattr(panel, '_is_open', False)
             else:
                 # Abrir - mover hacia la izquierda
                 tab.setText("▶")
-                container._animation.setStartValue(container.pos())
+                getattr(container, '_animation').setStartValue(container.pos())
                 # Mostrar todo: 250px desde el borde derecho
-                container._animation.setEndValue(QPoint(parent.width() - 250, container.pos().y()))
-                container._animation.start()
-                panel._is_open = True
+                getattr(container, '_animation').setEndValue(QPoint(getattr(parent, 'width', 800) - 250, container.pos().y()))
+                getattr(container, '_animation').start()
+                setattr(panel, '_is_open', True)
         
         tab.clicked.connect(toggle_panel)
         
@@ -1004,10 +1004,10 @@ class MainWindowV2(QMainWindow):
                 container.setFixedHeight(parent.height())
                 panel.setFixedHeight(parent.height())
                 # Reposicionar según estado
-                if not panel._is_open:
-                    container.move(parent.width() - 20, 0)
+                if not getattr(panel, '_is_open', False):
+                    container.move(getattr(parent, 'width', 800) - 20, 0)
                 else:
-                    container.move(parent.width() - 250, 0)
+                    container.move(getattr(parent, 'width', 800) - 250, 0)
         
         container.update_position = update_position
         
@@ -1193,7 +1193,7 @@ class MainWindowV2(QMainWindow):
                     background-color: rgb(90, 90, 90);
                 }
             """)
-            btn.clicked.connect(lambda checked, w=widget: self.stacked_widget.setCurrentWidget(w))
+            btn.clicked.connect(lambda checked, w=widget: self.stacked_widget.setCurrentWidget(w))  # type: ignore
             
             self.shortcut_container.addWidget(btn)
     

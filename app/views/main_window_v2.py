@@ -10,6 +10,8 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
 from PySide6.QtCore import Qt, QDate, Signal, QPropertyAnimation, QEasingCurve, Property, QPoint
 from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush
 
+from typing import Optional, Callable
+
 from core.auth import Session, UserRole
 from core.modules import ModuleManager, ModuleCategory
 
@@ -137,7 +139,7 @@ class MainWindowV2(QMainWindow):
         sidebar.setLayout(layout)
         return sidebar
     
-    def update_sidebar_modules(self, category: ModuleCategory = None) -> None:
+    def update_sidebar_modules(self, category: Optional[ModuleCategory] = None) -> None:
         """
         Actualiza los módulos mostrados en la sidebar.
         
@@ -148,8 +150,9 @@ class MainWindowV2(QMainWindow):
         # Limpiar botones existentes (excepto el stretch final)
         while self.sidebar_modules_container.count() > 1:
             item = self.sidebar_modules_container.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
         
         # Obtener módulos disponibles
         user_permissions = self.session.user.get_effective_permissions()
@@ -501,13 +504,14 @@ class MainWindowV2(QMainWindow):
                 self.border_color = border_color
                 self.hover_color = hover_color
                 self.is_hovered = False
+                self._click_callback: Optional[Callable[[], None]] = None
                 # Configurar para que no tenga fondo por defecto
                 self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, False)
                 self.setAutoFillBackground(False)
                 
             def mousePressEvent(self, event):
                 # Emitir señal de click
-                if hasattr(self, '_click_callback'):
+                if self._click_callback:
                     self._click_callback()
                 super().mousePressEvent(event)
                 
@@ -618,7 +622,7 @@ class MainWindowV2(QMainWindow):
         # Actualizar posición al redimensionar ventana
         def update_position() -> None:
             parent = container.parent()
-            if parent:
+            if parent and isinstance(parent, QWidget):
                 y_pos = 0
                 container.setFixedHeight(parent.height())
                 panel.setFixedHeight(parent.height())
@@ -627,7 +631,7 @@ class MainWindowV2(QMainWindow):
                 else:
                     container.move(0, y_pos)
         
-        container.update_position = update_position
+        setattr(container, 'update_position', update_position)
         
         # Llamar update_position con un timer para asegurar que el parent exista
         from PySide6.QtCore import QTimer
@@ -639,7 +643,7 @@ class MainWindowV2(QMainWindow):
         """Actualizar posiciones de paneles al redimensionar."""
         super().resizeEvent(event)
         if hasattr(self, 'avisos_panel_widget'):
-            self.avisos_panel_widget.update_position()
+            self.avisos_panel_widget.update_position()  # type: ignore
     
     def open_module(self, module_id: str) -> None:
         """
@@ -672,7 +676,7 @@ class MainWindowV2(QMainWindow):
                 f"El módulo '{module_id}' aún no está implementado."
             )
     
-    def create_module_widget(self, module_id: str) -> QWidget:
+    def create_module_widget(self, module_id: str) -> Optional[QWidget]:
         """
         Crea el widget para un módulo específico con panel lateral derecho superpuesto.
         - Panel derecho: acciones del módulo (verde) - overlay sobre el contenido
@@ -703,7 +707,7 @@ class MainWindowV2(QMainWindow):
             
             # Panel derecho: actualizar posición
             if hasattr(actions_panel, 'update_position'):
-                actions_panel.update_position()
+                actions_panel.update_position()  # type: ignore
             
             # Elevar panel sobre el contenido
             actions_panel.raise_()
@@ -727,7 +731,7 @@ class MainWindowV2(QMainWindow):
         
         return container
     
-    def load_module_view(self, module_id: str) -> QWidget:
+    def load_module_view(self, module_id: str) -> Optional[QWidget]:
         """
         Intenta cargar dinámicamente la vista de un módulo.
         
@@ -975,7 +979,7 @@ class MainWindowV2(QMainWindow):
         
         def toggle_panel() -> None:
             parent = container.parent()
-            if not parent:
+            if not parent or not isinstance(parent, QWidget):
                 return
             
             if getattr(panel, '_is_open', False):
@@ -983,7 +987,7 @@ class MainWindowV2(QMainWindow):
                 tab.setText("◀")
                 getattr(container, '_animation').setStartValue(container.pos())
                 # Solo dejar visible la pestaña (20px desde el borde derecho)
-                getattr(container, '_animation').setEndValue(QPoint(getattr(parent, 'width', 800) - 20, container.pos().y()))
+                getattr(container, '_animation').setEndValue(QPoint(parent.width() - 20, container.pos().y()))
                 getattr(container, '_animation').start()
                 setattr(panel, '_is_open', False)
             else:
@@ -991,7 +995,7 @@ class MainWindowV2(QMainWindow):
                 tab.setText("▶")
                 getattr(container, '_animation').setStartValue(container.pos())
                 # Mostrar todo: 250px desde el borde derecho
-                getattr(container, '_animation').setEndValue(QPoint(getattr(parent, 'width', 800) - 250, container.pos().y()))
+                getattr(container, '_animation').setEndValue(QPoint(parent.width() - 250, container.pos().y()))
                 getattr(container, '_animation').start()
                 setattr(panel, '_is_open', True)
         
@@ -1000,16 +1004,16 @@ class MainWindowV2(QMainWindow):
         # Actualizar posición al redimensionar y al mostrar
         def update_position() -> None:
             parent = container.parent()
-            if parent and parent.width() > 0:
+            if parent and isinstance(parent, QWidget) and parent.width() > 0:
                 container.setFixedHeight(parent.height())
                 panel.setFixedHeight(parent.height())
                 # Reposicionar según estado
                 if not getattr(panel, '_is_open', False):
-                    container.move(getattr(parent, 'width', 800) - 20, 0)
+                    container.move(parent.width() - 20, 0)
                 else:
-                    container.move(getattr(parent, 'width', 800) - 250, 0)
+                    container.move(parent.width() - 250, 0)
         
-        container.update_position = update_position
+        setattr(container, 'update_position', update_position)
         
         # Sobrescribir showEvent para posicionar al mostrarse
         original_show = container.showEvent
@@ -1166,8 +1170,9 @@ class MainWindowV2(QMainWindow):
         # Limpiar shortcuts existentes
         while self.shortcut_container.count():
             item = self.shortcut_container.takeAt(0)
-            if item.widget():
-                item.widget().deleteLater()
+            widget = item.widget()
+            if widget:
+                widget.deleteLater()
         
         # Agregar botón por cada módulo abierto
         for module_id, widget in self.module_widgets.items():

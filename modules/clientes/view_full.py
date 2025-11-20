@@ -161,6 +161,14 @@ class ClientesViewFull(QWidget):
             if w is not None and hasattr(w, "clicked"):
                 w.clicked.connect(handler)
 
+        # Botón 'Listados' (mostrar la lista completa de clientes)
+        bl = self._get_widget('botListados')
+        if bl is not None and hasattr(bl, 'clicked'):
+            try:
+                bl.clicked.connect(self.volver_a_lista)
+            except Exception:
+                pass
+
         # Botones de guardar/deshacer en la ficha de edición
         for name, handler in (("btnGuardar", self.guardar_cliente), ("btnDeshacer", self.deshacer_cambios)):
             w = self._get_widget(name)
@@ -493,6 +501,62 @@ class ClientesViewFull(QWidget):
             pass
         return None
 
+    def _ajustar_encabezado_tabla(self, tabla, stretch_index: int = 2):
+        """Ajusta el comportamiento de redimensionado del encabezado de `tabla`.
+
+        - `stretch_index`: índice de la columna que debe quedarse en modo Stretch.
+        Intenta aplicar `ResizeToContents` al resto de columnas y `Stretch` a la columna
+        indicada. Funciona para `QTableWidget` y `QTableView`.
+        """
+        try:
+            from PySide6.QtWidgets import QHeaderView
+            # Determinar número de columnas
+            cols = 0
+            try:
+                m = tabla.model()
+                cols = m.columnCount() if m is not None else (tabla.columnCount() if hasattr(tabla, 'columnCount') else 0)
+            except Exception:
+                try:
+                    cols = tabla.columnCount()
+                except Exception:
+                    cols = 0
+
+            header = tabla.horizontalHeader()
+            try:
+                header.setStretchLastSection(True)
+            except Exception:
+                pass
+
+            if cols <= 0:
+                # Si no conocemos el número de columnas, intentar hasta 10 como fallback
+                cols = 10
+
+            for i in range(cols):
+                try:
+                    if i == stretch_index:
+                        try:
+                            header.setSectionResizeMode(i, QHeaderView.ResizeMode.Stretch)
+                        except Exception:
+                            # Fallback: intentar de nuevo con la misma API por compatibilidad
+                            try:
+                                header.setSectionResizeMode(i, QHeaderView.ResizeMode.Stretch)
+                            except Exception:
+                                pass
+                    else:
+                        try:
+                            header.setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
+                        except Exception:
+                            try:
+                                header.setSectionResizeMode(i, QHeaderView.ResizeMode.ResizeToContents)
+                            except Exception:
+                                pass
+                except Exception:
+                    # Ignorar columnas fuera de rango o errores concretos
+                    continue
+        except Exception:
+            # No hacer nada si no se puede ajustar
+            pass
+
     def _get_str(self, obj, attr: str) -> str:
         """Devuelve de forma segura el valor de un atributo como string ('' si no existe).
 
@@ -790,6 +854,11 @@ class ClientesViewFull(QWidget):
             
             tabla.setModel(model)
             tabla.resizeColumnsToContents()
+            # Ajustar comportamiento de redimensionado de columnas mediante helper
+            try:
+                self._ajustar_encabezado_tabla(tabla, stretch_index=2)
+            except Exception:
+                pass
                 
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Error al cargar clientes: {str(e)}")
@@ -861,6 +930,10 @@ class ClientesViewFull(QWidget):
                     item = QTableWidgetItem(self._get_str(cliente, 'email'))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 4, item)
+                try:
+                    self._ajustar_encabezado_tabla(tabla, stretch_index=2)
+                except Exception:
+                    pass
             
             # Si es QTableView
             elif isinstance(tabla, QTableView):
@@ -880,6 +953,11 @@ class ClientesViewFull(QWidget):
                     model.setItem(row, 4, std_item(self._get_str(cliente, 'email'), cliente.id))
                 tabla.setModel(model)
                 tabla.resizeColumnsToContents()
+                # Forzar comportamiento de resize similar al de la lista inicial
+                try:
+                    self._ajustar_encabezado_tabla(tabla, stretch_index=2)
+                except Exception:
+                    pass
                 
         except Exception as e:
             QMessageBox.warning(self, "Error", f"Error al filtrar clientes: {str(e)}")
@@ -1418,6 +1496,29 @@ class ClientesViewFull(QWidget):
                             setattr(self.cliente_actual, attr, get_combo_value(widget_name))
                     except Exception:
                         continue
+                # Persistir cambios en la base de datos usando el repositorio
+                try:
+                    # Debug log: indicate update attempt
+                    try:
+                        cid = getattr(self.cliente_actual, 'id', None)
+                    except Exception:
+                        cid = None
+                    print(f"[DEBUG] guardar_cliente: calling repository.actualizar id={cid}")
+                    # Use repository.actualizar para asegurar commit y registro de historial
+                    self.repository.actualizar(self.cliente_actual)
+                    print(f"[DEBUG] guardar_cliente: repository.actualizar succeeded for id={cid}")
+                except Exception as e:
+                    # Log exception and traceback for debugging
+                    print(f"[ERROR] guardar_cliente: repository.actualizar raised: {e}")
+                    import traceback
+                    traceback.print_exc()
+                    # Fallback: si el repositorio falla, intentar commit directo
+                    try:
+                        print("[DEBUG] guardar_cliente: attempting session.commit() fallback")
+                        self.session.commit()
+                        print("[DEBUG] guardar_cliente: session.commit() fallback succeeded")
+                    except Exception:
+                        print("[ERROR] guardar_cliente: session.commit() fallback failed")
                 
             else:
                 # Crear nuevo de forma declarativa con mapping
@@ -1467,8 +1568,14 @@ class ClientesViewFull(QWidget):
                 QMessageBox.information(self, "Éxito", "Cliente creado")
             
             self.cargar_clientes()
-            self.ui.stackedWidget.setCurrentIndex(1)
-            # Restablecer el modo edición y botones
+            # Mantenerse en la página de edición pero desactivar campos
+            # (no volver a la lista de clientes). El usuario pidió que
+            # tras guardar se queden los campos visibles pero no editables.
+            try:
+                self.desactivar_campos_edicion()
+            except Exception:
+                pass
+            # Restablecer el modo edición y botones de navegación
             self._modo_edicion = False
             self.activar_botones_navegacion()
             
@@ -1765,16 +1872,103 @@ class ClientesViewFull(QWidget):
 
     def _update_form_validity(self):
         """Enable/disable Save button depending on form validation."""
-        ok, errores = self._validar_campos()
         btn = getattr(self.ui, 'btnGuardar', None)
         if btn is None:
             return
-        btn.setEnabled(bool(ok))
+
+        # Only allow saving when in edit mode (new or editing an existing client)
+        if not getattr(self, '_modo_edicion', False):
+            try:
+                btn.setEnabled(False)
+            except Exception:
+                pass
+            return
+
+        ok, errores = self._validar_campos()
+        try:
+            btn.setEnabled(bool(ok))
+        except Exception:
+            pass
     
     def volver_a_lista(self):
         """Vuelve a la página de búsquedas/lista"""
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.setCurrentIndex(1)
+
+        # Asegurar que la lista está actualizada
+        try:
+            self.cargar_clientes()
+        except Exception:
+            pass
+
+        # Si tenemos un cliente seleccionado en la ficha, intentar seleccionarlo en la tabla
+        try:
+            cid = getattr(self, 'cliente_actual', None)
+            cid = getattr(cid, 'id', None) if cid is not None else None
+            if cid is None:
+                return
+
+            tabla = None
+            if hasattr(self.ui, 'tabla_busquedas'):
+                tabla = self.ui.tabla_busquedas
+            elif hasattr(self.ui, 'tabla_clientes'):
+                tabla = self.ui.tabla_clientes
+            elif hasattr(self.ui, 'tableWidget'):
+                tabla = self.ui.tableWidget
+
+            if tabla is None:
+                return
+
+            # Si es QTableWidget
+            if isinstance(tabla, QTableWidget):
+                rows = tabla.rowCount()
+                for r in range(rows):
+                    item = tabla.item(r, 0)
+                    if item is None:
+                        continue
+                    try:
+                        data_get = getattr(item, 'data', None)
+                        val = data_get(Qt.ItemDataRole.UserRole) if callable(data_get) else None
+                    except Exception:
+                        val = None
+                    if val == cid:
+                        selection = tabla.selectionModel()
+                        index = tabla.model().index(r, 0)
+                        selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
+                        break
+
+            # Si es QTableView con QStandardItemModel
+            elif isinstance(tabla, QTableView):
+                model = tabla.model()
+                if model is None:
+                    return
+                row_count = model.rowCount()
+                for r in range(row_count):
+                    val = None
+                    try:
+                        # Prefer QStandardItemModel.item when available
+                        item_get = getattr(model, 'item', None)
+                        if callable(item_get):
+                            it = item_get(r, 0)
+                            if it is not None:
+                                try:
+                                    data_get = getattr(it, 'data', None)
+                                    val = data_get(Qt.ItemDataRole.UserRole) if callable(data_get) else None
+                                except Exception:
+                                    val = None
+                        else:
+                            idx = model.index(r, 0)
+                            val = model.data(idx, Qt.ItemDataRole.UserRole)
+                    except Exception:
+                        val = None
+                    if val == cid:
+                        index = model.index(r, 0)
+                        selection = tabla.selectionModel()
+                        selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
+                        break
+        except Exception:
+            # No crítico; si algo falla no queremos romper la navegación
+            pass
     
     def siguiente_cliente(self):
         """Navega al siguiente cliente en la lista"""

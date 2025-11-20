@@ -888,9 +888,9 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(search_input)
         
         # Guardar referencias para posterior uso
-        panel.search_input = search_input
-        panel.order_combo = order_combo
-        panel.mode_combo = mode_combo
+        setattr(panel, 'search_input', search_input)
+        setattr(panel, 'order_combo', order_combo)
+        setattr(panel, 'mode_combo', mode_combo)
         
         # Conectar combos ahora que todos están definidos
         order_combo.currentTextChanged.connect(lambda: self.on_search_changed(module_id, search_input.text(), order_combo.currentText(), mode_combo.currentText()))
@@ -1104,7 +1104,7 @@ class MainWindowV2(QMainWindow):
             if not search_text:
                 panel = module_widget_container.findChild(QFrame, "sidePanel")
                 if panel and hasattr(panel, 'search_input'):
-                    search_text = panel.search_input.text()
+                    search_text = getattr(panel, 'search_input').text()
             
             module_view.filter_records(search_text, order_by, order_mode)
     
@@ -1116,7 +1116,7 @@ class MainWindowV2(QMainWindow):
                 module_widget_container = self.module_widgets[module_id]
                 panel = module_widget_container.findChild(QFrame, "sidePanel")
                 if panel and hasattr(panel, 'search_input'):
-                    panel.search_input.clear()
+                    getattr(panel, 'search_input').clear()
                 self.on_search_changed(module_id, "", "Nombre Fiscal", "A-Z")
             QMessageBox.information(self, "Refrescar", f"Actualizando datos de {module_id}...")
         else:

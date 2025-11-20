@@ -12,6 +12,8 @@ import hashlib
 import secrets
 
 from core.modules import Permission
+import json
+import os
 
 if TYPE_CHECKING:
     from core.business import CompanyContext
@@ -221,6 +223,79 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
         }
     
     return {}
+
+
+def _load_role_overrides() -> Dict[str, Dict]:
+    """Carga overrides de permisos por rol desde `role_permissions.json` en la raíz del repo."""
+    try:
+        base = os.path.dirname(os.path.dirname(__file__))
+        path = os.path.join(base, 'role_permissions.json')
+        if not os.path.exists(path):
+            return {}
+        with open(path, 'r', encoding='utf-8') as f:
+            data = json.load(f)
+        return data
+    except Exception:
+        return {}
+
+
+# Aplicar overrides al cargar (si existen)
+_ROLE_OVERRIDES = _load_role_overrides()
+
+
+def _perm_from_str(s: str):
+    """Map string to Permission enum if possible, else None."""
+    try:
+        # Normalize common names
+        key = s.strip().upper()
+        mapping = {
+            'READ': Permission.READ,
+            'CREATE': Permission.CREATE,
+            'UPDATE': Permission.UPDATE,
+            'DELETE': Permission.DELETE,
+            'ADMIN': Permission.ADMIN,
+            'EXPORT': Permission.EXPORT,
+            'IMPORT': Permission.IMPORT,
+            'PRINT': Permission.PRINT,
+        }
+        return mapping.get(key)
+    except Exception:
+        return None
+
+
+def _apply_overrides_for_role(role: UserRole, base: Dict[str, List[Permission]]) -> Dict[str, List[Permission]]:
+    """Merge overrides from `_ROLE_OVERRIDES` into the base permission map for `role`.
+
+    Overrides file structure expected: { "admin": { "empresas": ["ADMIN"], ... }, ... }
+    """
+    try:
+        role_key = role.value if isinstance(role, UserRole) else str(role)
+        overrides = _ROLE_OVERRIDES.get(role_key, {})
+        if not overrides:
+            return base
+
+        result = {k: list(v) for k, v in base.items()}
+        for module_id, perm_list in overrides.items():
+            if not isinstance(perm_list, list):
+                continue
+            converted = []
+            for p in perm_list:
+                if not isinstance(p, str):
+                    continue
+                perm = _perm_from_str(p)
+                if perm is not None:
+                    converted.append(perm)
+            if not converted:
+                continue
+            if module_id in result:
+                # union existing and overrides
+                result[module_id] = list(set(result[module_id] + converted))
+            else:
+                result[module_id] = converted
+
+        return result
+    except Exception:
+        return base
 
 
 @dataclass

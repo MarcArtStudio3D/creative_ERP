@@ -197,6 +197,15 @@ AVAILABLE_MODULES = {
     ),
     
     # MÓDULOS DE ADMINISTRACIÓN
+    "empresas": Module(
+        id="empresas",
+        name="Empresas",
+        description="Gestión de empresas y multi-empresa",
+        icon="🏢",
+        category=ModuleCategory.ADMINISTRACION,
+        required_permissions=[Permission.READ],
+        dependencies=[]
+    ),
     "usuarios": Module(
         id="usuarios",
         name="Usuarios",

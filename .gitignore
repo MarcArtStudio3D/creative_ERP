@@ -54,6 +54,7 @@ coverage.xml
 # Translations
 *.mo
 *.pot
+*.qm  # Qt compiled translations (keep only .ts source files)
 
 # Django stuff:
 *.log

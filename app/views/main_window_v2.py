@@ -654,7 +654,7 @@ class MainWindowV2(QMainWindow):
         panel_layout.setSpacing(10)
         
         # Título
-        title_label = QLabel("⚠️ AVISOS" if has_avisos else "✓ Sin Avisos")
+        title_label = QLabel(self.tr("⚠️ AVISOS") if has_avisos else self.tr("✓ Sin Avisos"))
         title_font = QFont()
         title_font.setPointSize(12)
         title_font.setBold(True)
@@ -666,7 +666,7 @@ class MainWindowV2(QMainWindow):
         panel_layout.addSpacing(10)
         
         # Lista de avisos
-        no_avisos = QLabel("No hay avisos pendientes")
+        no_avisos = QLabel(self.tr("No hay avisos pendientes"))
         no_avisos.setStyleSheet("color: white; background: transparent;")
         no_avisos.setAlignment(Qt.AlignmentFlag.AlignCenter)
         panel_layout.addWidget(no_avisos)
@@ -755,7 +755,7 @@ class MainWindowV2(QMainWindow):
                 painter.restore()
         
         tab = VerticalTabButton(
-            "AVISOS",
+            self.tr("AVISOS"),
             bg_color_rgb,
             border_color_rgb,
             hover_color_rgb
@@ -1441,13 +1441,13 @@ class MainWindowV2(QMainWindow):
         
         if self.session.company_context:
             return (
-                f"Usuario: {self.session.user.username} | "
-                f"Rol: {role} | "
+                f"{self.tr('Usuario')}: {self.session.user.username} | "
+                f"{self.tr('Rol')}: {role} | "
                 f"{self.session.company_context.group.name} - "
                 f"{self.session.company_context.company.name}"
             )
         else:
-            return f"Usuario: {self.session.user.username} | Rol: {role}"
+            return f"{self.tr('Usuario')}: {self.session.user.username} | {self.tr('Rol')}: {role}"
     
     def change_company(self) -> None:
         """Permite cambiar de empresa (volver al login)."""

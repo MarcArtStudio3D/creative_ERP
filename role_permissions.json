@@ -1,1 +1,254 @@
-{}
+{
+  "admin": {
+    "clientes": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "usuarios": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "presupuestos": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "albaranes": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "facturas": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "proveedores": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "facturas_compra": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "articulos": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "almacen": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "contabilidad": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "tesoreria": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "proyectos": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "tiempo": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "empresas": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "configuracion": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "informes": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
+    "gestor_modulos": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ]
+  },
+  "employee": {
+    "informes": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "proyectos": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "tiempo": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "clientes": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "presupuestos": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "albaranes": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "facturas": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "proveedores": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "facturas_compra": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "articulos": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ],
+    "almacen": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
+    ]
+  },
+  "manager": {
+    "clientes": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ]
+  }
+}

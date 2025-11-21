@@ -45,6 +45,9 @@ class EmpresasView(QWidget):
         self.table.setModel(self.model)
         self.table.setSelectionBehavior(self.table.SelectionBehavior.SelectRows)
         self.table.setSelectionMode(self.table.SelectionMode.SingleSelection)
+        # Conectar doble clic para abrir la ficha de la empresa seleccionada
+        if hasattr(self.table, 'doubleClicked'):
+            self.table.doubleClicked.connect(self._on_table_double_clicked)
         layout.addWidget(self.table)
 
         # Conexiones
@@ -133,6 +136,31 @@ class EmpresasView(QWidget):
                 self.cargar_empresas()
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Error al borrar: {e}")
+
+    def _on_table_double_clicked(self, index):
+        """Maneja el doble clic en la tabla: abre la ficha de la empresa seleccionada."""
+        try:
+            row = index.row()
+            id_item = self.model.item(row, 0)
+            if id_item is None:
+                return
+            id_ = int(id_item.text())
+        except Exception:
+            return
+
+        empresa = self.repo.obtener_por_id(id_)
+        if not empresa:
+            QMessageBox.warning(self, "Error", "Empresa no encontrada")
+            return
+
+        dlg = EmpresaFormDialog(empresa=empresa, parent=self)
+        if dlg.exec() == QDialog.Accepted:
+            empresa = dlg.get_empresa()
+            try:
+                self.repo.guardar(empresa)
+                self.cargar_empresas()
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Error al guardar: {e}")
 
 
 class EmpresaFormDialog(QDialog):

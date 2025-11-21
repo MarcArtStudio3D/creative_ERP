@@ -39,32 +39,48 @@ class ModuleCategory(Enum):
     ADMINISTRACION = "administracion"
 
 
-@dataclass
 class Module:
     """
     Define un módulo del sistema.
     
     Cada módulo tiene:
     - Identificador único
-    - Nombre visible
+    - Nombre visible (traducible)
     - Icono para el menú
     - Permisos requeridos
     - Categoría
     - Dependencias de otros módulos
     """
-    id: str                                  # Identificador único (ej: "facturas")
-    name: str                                # Nombre visible (ej: "Facturas")
-    description: str                         # Descripción breve
-    icon: str                                # Nombre del icono (Qt icons o ruta)
-    category: ModuleCategory                 # Categoría del módulo
-    required_permissions: List[Permission]   # Permisos necesarios para acceder
-    dependencies: Optional[List[str]] = None           # Módulos de los que depende
-    enabled: bool = True                     # Si el módulo está activo en el sistema
     
-    def __post_init__(self):
-        if self.dependencies is None:
-            self.dependencies = []
-
+    def __init__(
+        self,
+        id: str,
+        name: str,
+        description: str,
+        icon: str,
+        category: ModuleCategory,
+        required_permissions: List[Permission],
+        dependencies: Optional[List[str]] = None,
+        enabled: bool = True
+    ):
+        self.id = id
+        self._name = name
+        self._description = description
+        self.icon = icon
+        self.category = category
+        self.required_permissions = required_permissions
+        self.dependencies = dependencies or []
+        self.enabled = enabled
+    
+    @property
+    def name(self) -> str:
+        """Retorna el nombre traducido del módulo."""
+        return QCoreApplication.translate("Modules", self._name)
+    
+    @property
+    def description(self) -> str:
+        """Retorna la descripción traducida del módulo."""
+        return QCoreApplication.translate("Modules", self._description)
 
 def _tr(text: str) -> str:
     """Helper para traducir strings de módulos."""
@@ -76,8 +92,8 @@ AVAILABLE_MODULES = {
     # MÓDULOS DE VENTAS
     "clientes": Module(
         id="clientes",
-        name=_tr("Clientes"),
-        description=_tr("Gestión de clientes y contactos"),
+        name="Clientes",
+        description="Gestión de clientes y contactos",
         icon="👥",
         category=ModuleCategory.VENTAS,
         required_permissions=[Permission.READ],
@@ -86,8 +102,8 @@ AVAILABLE_MODULES = {
 
     "presupuestos": Module(
         id="presupuestos",
-        name=_tr("Presupuestos"),
-        description=_tr("Creación de presupuestos"),
+        name="Presupuestos",
+        description="Creación de presupuestos",
         icon="📋",
         category=ModuleCategory.VENTAS,
         required_permissions=[Permission.READ],
@@ -96,8 +112,8 @@ AVAILABLE_MODULES = {
 
     "albaranes": Module(
         id="albaranes",
-        name=_tr("Albaranes"),
-        description=_tr("Albaranes de entrega"),
+        name="Albaranes",
+        description="Albaranes de entrega",
         icon="🚚",
         category=ModuleCategory.VENTAS,
         required_permissions=[Permission.READ],
@@ -106,8 +122,8 @@ AVAILABLE_MODULES = {
     
     "facturas": Module(
         id="facturas",
-        name=_tr("Facturas"),
-        description=_tr("Emisión y gestión de facturas"),
+        name="Facturas",
+        description="Emisión y gestión de facturas",
         icon="🧾",
         category=ModuleCategory.VENTAS,
         required_permissions=[Permission.READ],
@@ -121,8 +137,8 @@ AVAILABLE_MODULES = {
     # MÓDULOS DE COMPRAS
     "proveedores": Module(
         id="proveedores",
-        name=_tr("Proveedores"),
-        description=_tr("Gestión de proveedores"),
+        name="Proveedores",
+        description="Gestión de proveedores",
         icon="🏢",
         category=ModuleCategory.COMPRAS,
         required_permissions=[Permission.READ],
@@ -131,8 +147,8 @@ AVAILABLE_MODULES = {
     
     "facturas_compra": Module(
         id="facturas_compra",
-        name=_tr("Facturas de Compra"),
-        description=_tr("Registro de facturas de proveedores"),
+        name="Facturas de Compra",
+        description="Registro de facturas de proveedores",
         icon="📄",
         category=ModuleCategory.COMPRAS,
         required_permissions=[Permission.READ],
@@ -142,8 +158,8 @@ AVAILABLE_MODULES = {
     # MÓDULOS DE ALMACÉN
     "articulos": Module(
         id="articulos",
-        name=_tr("Artículos"),
-        description=_tr("Catálogo de productos y servicios"),
+        name="Artículos",
+        description="Catálogo de productos y servicios",
         icon="📦",
         category=ModuleCategory.ALMACEN,
         required_permissions=[Permission.READ],
@@ -152,8 +168,8 @@ AVAILABLE_MODULES = {
     
     "almacen": Module(
         id="almacen",
-        name=_tr("Almacén"),
-        description=_tr("Control de inventario y stock"),
+        name="Almacén",
+        description="Control de inventario y stock",
         icon="🏭",
         category=ModuleCategory.ALMACEN,
         required_permissions=[Permission.READ],
@@ -163,8 +179,8 @@ AVAILABLE_MODULES = {
     # MÓDULOS FINANCIEROS
     "contabilidad": Module(
         id="contabilidad",
-        name=_tr("Contabilidad"),
-        description=_tr("Asientos contables y balance"),
+        name="Contabilidad",
+        description="Asientos contables y balance",
         icon="💰",
         category=ModuleCategory.FINANCIERO,
         required_permissions=[Permission.READ, Permission.ADMIN],
@@ -173,8 +189,8 @@ AVAILABLE_MODULES = {
     
     "tesoreria": Module(
         id="tesoreria",
-        name=_tr("Tesorería"),
-        description=_tr("Gestión de cobros y pagos"),
+        name="Tesorería",
+        description="Gestión de cobros y pagos",
         icon="💳",
         category=ModuleCategory.FINANCIERO,
         required_permissions=[Permission.READ],
@@ -184,8 +200,8 @@ AVAILABLE_MODULES = {
     # MÓDULOS DE PROYECTOS (específico para creativos)
     "proyectos": Module(
         id="proyectos",
-        name=_tr("Proyectos"),
-        description=_tr("Gestión de proyectos creativos"),
+        name="Proyectos",
+        description="Gestión de proyectos creativos",
         icon="📁",
         category=ModuleCategory.PROYECTOS,
         required_permissions=[Permission.READ],
@@ -194,8 +210,8 @@ AVAILABLE_MODULES = {
     
     "tiempo": Module(
         id="tiempo",
-        name=_tr("Control de Tiempo"),
-        description=_tr("Registro de horas trabajadas"),
+        name="Control de Tiempo",
+        description="Registro de horas trabajadas",
         icon="⏱️",
         category=ModuleCategory.PROYECTOS,
         required_permissions=[Permission.READ],
@@ -205,8 +221,8 @@ AVAILABLE_MODULES = {
     # MÓDULOS DE ADMINISTRACIÓN
     "empresas": Module(
         id="empresas",
-        name=_tr("Empresas"),
-        description=_tr("Gestión de empresas y multi-empresa"),
+        name="Empresas",
+        description="Gestión de empresas y multi-empresa",
         icon="🏢",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.READ],
@@ -214,8 +230,8 @@ AVAILABLE_MODULES = {
     ),
     "usuarios": Module(
         id="usuarios",
-        name=_tr("Usuarios"),
-        description=_tr("Gestión de usuarios y permisos"),
+        name="Usuarios",
+        description="Gestión de usuarios y permisos",
         icon="👤",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.ADMIN],
@@ -224,8 +240,8 @@ AVAILABLE_MODULES = {
     
     "configuracion": Module(
         id="configuracion",
-        name=_tr("Configuración"),
-        description=_tr("Configuración general del sistema"),
+        name="Configuración",
+        description="Configuración general del sistema",
         icon="⚙️",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.ADMIN],
@@ -234,8 +250,8 @@ AVAILABLE_MODULES = {
     
     "informes": Module(
         id="informes",
-        name=_tr("Informes"),
-        description=_tr("Informes y estadísticas"),
+        name="Informes",
+        description="Informes y estadísticas",
         icon="📊",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.READ],
@@ -243,8 +259,8 @@ AVAILABLE_MODULES = {
     ),
     "gestor_modulos": Module(
         id="gestor_modulos",
-        name=_tr("Gestor Módulos"),
-        description=_tr("Ver módulos y otorgar permisos por rol"),
+        name="Gestor Módulos",
+        description="Ver módulos y otorgar permisos por rol",
         icon="🛠️",
         category=ModuleCategory.ADMINISTRACION,
         required_permissions=[Permission.ADMIN],

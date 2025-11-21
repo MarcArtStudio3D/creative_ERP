@@ -33,7 +33,7 @@ class LoginWindowMultiCompany(QDialog):
     
     def setup_ui(self):
         """Configura la interfaz tipo RedFox SGC."""
-        self.setWindowTitle("Creative ERP - Acceso Usuarios")
+        self.setWindowTitle(self.tr("Creative ERP - Acceso Usuarios"))
         self.setFixedSize(700, 520)
         self.setModal(True)
         
@@ -67,7 +67,7 @@ class LoginWindowMultiCompany(QDialog):
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         logo_layout.addWidget(logo_label)
         
-        subtitle = QLabel("Sistema de Gestión Empresarial")
+        subtitle = QLabel(self.tr("Sistema de Gestión Empresarial"))
         subtitle_font = QFont()
         subtitle_font.setPointSize(9)
         subtitle.setFont(subtitle_font)
@@ -84,7 +84,7 @@ class LoginWindowMultiCompany(QDialog):
         form_layout.setContentsMargins(0, 0, 0, 0)
         
         # Usuario
-        user_label = QLabel("Usuario:")
+        user_label = QLabel(self.tr("Usuario:"))
         user_font = QFont()
         user_font.setBold(True)
         user_font.setPointSize(9)
@@ -99,7 +99,7 @@ class LoginWindowMultiCompany(QDialog):
         form_layout.addSpacing(8)
         
         # Contraseña
-        password_label = QLabel("Contraseña:")
+        password_label = QLabel(self.tr("Contraseña:"))
         password_label.setFont(user_font)
         password_label.setMaximumHeight(18)
         form_layout.addWidget(password_label)
@@ -113,7 +113,7 @@ class LoginWindowMultiCompany(QDialog):
         form_layout.addSpacing(8)
         
         # Grupo
-        group_label = QLabel("Grupo:")
+        group_label = QLabel(self.tr("Grupo:"))
         group_label.setFont(user_font)
         group_label.setMaximumHeight(18)
         form_layout.addWidget(group_label)
@@ -126,7 +126,7 @@ class LoginWindowMultiCompany(QDialog):
         form_layout.addSpacing(8)
         
         # Empresa
-        company_label = QLabel("Empresa:")
+        company_label = QLabel(self.tr("Empresa:"))
         company_label.setFont(user_font)
         company_label.setMaximumHeight(18)
         form_layout.addWidget(company_label)
@@ -149,7 +149,7 @@ class LoginWindowMultiCompany(QDialog):
         button_layout = QHBoxLayout()
         button_layout.setSpacing(10)
         
-        self.access_button = QPushButton("Acceder")
+        self.access_button = QPushButton(self.tr("Acceder"))
         self.access_button.setMinimumHeight(40)
         access_font = QFont()
         access_font.setBold(True)
@@ -158,7 +158,7 @@ class LoginWindowMultiCompany(QDialog):
         self.access_button.clicked.connect(self.on_login_clicked)
         button_layout.addWidget(self.access_button)
         
-        self.close_button = QPushButton("Cerrar")
+        self.close_button = QPushButton(self.tr("Cerrar"))
         self.close_button.setMinimumHeight(40)
         self.close_button.setFont(access_font)
         self.close_button.clicked.connect(self.reject)
@@ -185,13 +185,13 @@ class LoginWindowMultiCompany(QDialog):
         layout.setContentsMargins(10, 20, 10, 20)
         
         # Botón Configuración
-        config_btn = QPushButton("⚙️\nConfiguración")
+        config_btn = QPushButton(self.tr("⚙️\nConfiguración"))
         config_btn.setMinimumHeight(80)
         config_btn.clicked.connect(self.open_config)
         layout.addWidget(config_btn)
         
         # Botón Empresas
-        companies_btn = QPushButton("🏢\nEmpresas")
+        companies_btn = QPushButton(self.tr("🏢\nEmpresas"))
         companies_btn.setMinimumHeight(80)
         companies_btn.clicked.connect(self.manage_companies)
         layout.addWidget(companies_btn)
@@ -372,4 +372,4 @@ class LoginWindowMultiCompany(QDialog):
     def manage_companies(self):
         """Gestiona empresas."""
         from PySide6.QtWidgets import QMessageBox
-        QMessageBox.information(self, "Empresas", "Gestión de empresas (próximamente)")
+        QMessageBox.information(self, self.tr("Empresas"), self.tr("Gestión de empresas (próximamente)"))

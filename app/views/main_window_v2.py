@@ -41,7 +41,7 @@ class MainWindowV2(QMainWindow):
     
     def setup_ui(self) -> None:
         """Configura la interfaz principal."""
-        self.setWindowTitle("Creative ERP - Sistema de Gestión Empresarial")
+        self.setWindowTitle(self.tr("Creative ERP - Sistema de Gestión Empresarial"))
         self.setMinimumSize(1400, 800)
         self.resize(1600, 900)  # Tamaño inicial más grande
         
@@ -107,7 +107,7 @@ class MainWindowV2(QMainWindow):
         layout.setContentsMargins(0, 10, 0, 10)
         
         # Título de la sidebar
-        title = QLabel("MÓDULOS")
+        title = QLabel(self.tr("MÓDULOS"))
         title_font = QFont()
         title_font.setPointSize(11)
         title_font.setBold(True)
@@ -166,38 +166,38 @@ class MainWindowV2(QMainWindow):
         # Información de categorías con colores
         category_info = {
             ModuleCategory.VENTAS: {
-                "name": "Ventas",
-                "description": "Gestión de clientes y facturación",
+                "name": self.tr("Ventas"),
+                "description": self.tr("Gestión de clientes y facturación"),
                 "icon": "💼",
                 "color": "#8B5CF6"  # Púrpura
             },
             ModuleCategory.COMPRAS: {
-                "name": "Compras", 
-                "description": "Proveedores y facturas de compra",
+                "name": self.tr("Compras"), 
+                "description": self.tr("Proveedores y facturas de compra"),
                 "icon": "🛒",
                 "color": "#3B82F6"  # Azul
             },
             ModuleCategory.ALMACEN: {
-                "name": "Almacén",
-                "description": "Inventario y control de stock",
+                "name": self.tr("Almacén"),
+                "description": self.tr("Inventario y control de stock"),
                 "icon": "📦",
                 "color": "#F59E0B"  # Ámbar
             },
             ModuleCategory.FINANCIERO: {
-                "name": "Financiero",
-                "description": "Contabilidad y tesorería",
+                "name": self.tr("Financiero"),
+                "description": self.tr("Contabilidad y tesorería"),
                 "icon": "💰",
                 "color": "#10B981"  # Verde
             },
             ModuleCategory.PROYECTOS: {
-                "name": "Proyectos",
-                "description": "Gestión de proyectos creativos",
+                "name": self.tr("Proyectos"),
+                "description": self.tr("Gestión de proyectos creativos"),
                 "icon": "📁",
                 "color": "#EC4899"  # Rosa
             },
             ModuleCategory.ADMINISTRACION: {
-                "name": "Administración",
-                "description": "Configuración y usuarios",
+                "name": self.tr("Administración"),
+                "description": self.tr("Configuración y usuarios"),
                 "icon": "⚙️",
                 "color": "#6B7280"  # Gris
             }
@@ -340,7 +340,7 @@ class MainWindowV2(QMainWindow):
         layout.addWidget(desc_label)
         
         # Botón de acción
-        action_btn = QPushButton("Ver módulos")
+        action_btn = QPushButton(self.tr("Ver módulos"))
         action_btn.setStyleSheet(f"""
             QPushButton {{
                 background-color: {color};
@@ -508,7 +508,7 @@ class MainWindowV2(QMainWindow):
         layout.addSpacing(30)
         
         # Información del usuario
-        user_info = QLabel(f"Bienvenido, {self.session.user.username}")
+        user_info = QLabel(self.tr("Bienvenido, {}").format(self.session.user.username))
         info_font = QFont()
         info_font.setPointSize(12)
         user_info.setFont(info_font)
@@ -526,7 +526,7 @@ class MainWindowV2(QMainWindow):
         
         layout.addSpacing(20)
         
-        instructions = QLabel("Selecciona un módulo del menú superior para comenzar")
+        instructions = QLabel(self.tr("Selecciona un módulo del menú superior para comenzar"))
         instructions.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(instructions)
         
@@ -551,12 +551,12 @@ class MainWindowV2(QMainWindow):
         
         # Crear menús por categoría
         category_names = {
-            ModuleCategory.VENTAS: "Ventas",
-            ModuleCategory.COMPRAS: "Compras",
-            ModuleCategory.ALMACEN: "Almacén",
-            ModuleCategory.FINANCIERO: "Financiero",
-            ModuleCategory.PROYECTOS: "Proyectos",
-            ModuleCategory.ADMINISTRACION: "Administración"
+            ModuleCategory.VENTAS: self.tr("Ventas"),
+            ModuleCategory.COMPRAS: self.tr("Compras"),
+            ModuleCategory.ALMACEN: self.tr("Almacén"),
+            ModuleCategory.FINANCIERO: self.tr("Financiero"),
+            ModuleCategory.PROYECTOS: self.tr("Proyectos"),
+            ModuleCategory.ADMINISTRACION: self.tr("Administración")
         }
         
         for category in [ModuleCategory.VENTAS, ModuleCategory.COMPRAS, 
@@ -575,9 +575,9 @@ class MainWindowV2(QMainWindow):
                 menu.addAction(action)
         
         # Menú Utilidades
-        utils_menu = menubar.addMenu("Utilidades")
+        utils_menu = menubar.addMenu(self.tr("Utilidades"))
         
-        preferences_action = QAction("⚙️ Preferencias", self)
+        preferences_action = QAction(self.tr("⚙️ Preferencias"), self)
         preferences_action.triggered.connect(self.open_preferences)
         utils_menu.addAction(preferences_action)
 
@@ -595,20 +595,20 @@ class MainWindowV2(QMainWindow):
         
         utils_menu.addSeparator()
         
-        about_action = QAction("ℹ️ Acerca de", self)
+        about_action = QAction(self.tr("ℹ️ Acerca de"), self)
         about_action.triggered.connect(self.show_about)
         utils_menu.addAction(about_action)
         
         # Menú Sesión
-        session_menu = menubar.addMenu("Sesión")
+        session_menu = menubar.addMenu(self.tr("Sesión"))
         
-        change_company_action = QAction("🏢 Cambiar Empresa", self)
+        change_company_action = QAction(self.tr("🏢 Cambiar Empresa"), self)
         change_company_action.triggered.connect(self.change_company)
         session_menu.addAction(change_company_action)
         
         session_menu.addSeparator()
         
-        logout_action = QAction("🚪 Cerrar Sesión", self)
+        logout_action = QAction(self.tr("🚺 Cerrar Sesión"), self)
         logout_action.triggered.connect(self.logout_requested.emit)
         session_menu.addAction(logout_action)
     
@@ -1079,7 +1079,7 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(search_label)
         
         search_input = QLineEdit()
-        search_input.setPlaceholderText("Buscar...")
+        search_input.setPlaceholderText(self.tr("Buscar..."))
         search_input.setMinimumHeight(30)
         search_input.textChanged.connect(lambda text: self.on_search_changed(module_id, text, order_combo.currentText(), mode_combo.currentText()))  # type: ignore
         panel_layout.addWidget(search_input)
@@ -1423,7 +1423,7 @@ class MainWindowV2(QMainWindow):
             company_text = self.session.company_context.company.name
             self.company_button.setText(f"🏢 {company_text}")
         else:
-            self.company_button.setText("🏢 Sin empresa")
+            self.company_button.setText(self.tr("🏢 Sin empresa"))
     
     def get_status_text(self) -> str:
         """Genera el texto de la barra de estado."""

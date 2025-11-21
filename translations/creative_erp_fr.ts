@@ -1,5 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
-<!DOCTYPE TS>
+<?xml version='1.0' encoding='utf-8'?>
 <TS version="2.1" language="fr">
 <context>
     <name>FrmEditarAvisos</name>
@@ -539,7 +538,7 @@
         <translation>Chemin SQLite Entreprise</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; color:#ffffff;&quot;&gt;Acceso a SQLite (Para empresas con un solo ordenador)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:700; color:#ffffff;&quot;&gt;&lt;br/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" font-weight:700; color:#ffffff;"&gt;Acceso a SQLite (Para empresas con un solo ordenador)&lt;/span&gt;&lt;/p&gt;&lt;p&gt;&lt;span style=" font-weight:700; color:#ffffff;"&gt;&lt;br/&gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
         <translation>Pays :</translation>
     </message>
     <message>
@@ -853,8 +852,8 @@
         <translation>Compte encaissements :</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#ff0000;&quot;&gt;Contabilidad (P.G.C):&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#ff0000;&quot;&gt;Comptabilité (P.C.G.) :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" font-size:11pt; text-decoration: underline; color:#ff0000;"&gt;Contabilidad (P.G.C):&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" font-size:11pt; text-decoration: underline; color:#ff0000;"&gt;Comptabilité (P.C.G.) :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>Cuenta deudas:</source>
@@ -865,8 +864,8 @@
         <translation>Compte comptable :</translation>
     </message>
     <message>
-        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#ff0000;&quot;&gt;Datos financieros:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
-        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=&quot; font-size:11pt; text-decoration: underline; color:#ff0000;&quot;&gt;Données financières :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
+        <source>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" font-size:11pt; text-decoration: underline; color:#ff0000;"&gt;Datos financieros:&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</source>
+        <translation>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;&lt;span style=" font-size:11pt; text-decoration: underline; color:#ff0000;"&gt;Données financières :&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</translation>
     </message>
     <message>
         <source>Cliente Empresa (Aplicar IRPF)</source>
@@ -1191,4 +1190,8 @@
         <translation>Type d'avis :</translation>
     </message>
 </context>
-</TS>
+<context><name>LoginWindowMultiCompany</name><message><source>Creative ERP - Acceso Usuarios</source><translation>Creative ERP - Accès utilisateurs</translation></message><message><source>Sistema de Gestión Empresarial</source><translation>Système de gestion d'entreprise</translation></message><message><source>Usuario:</source><translation>Utilisateur :</translation></message><message><source>Contraseña:</source><translation>Mot de passe :</translation></message><message><source>Grupo:</source><translation>Groupe :</translation></message><message><source>Empresa:</source><translation>Entreprise :</translation></message><message><source>Acceder</source><translation>Accéder</translation></message><message><source>Cerrar</source><translation>Fermer</translation></message><message><source>⚙️
+Configuración</source><translation>⚙️
+Configuration</translation></message><message><source>🏢
+Empresas</source><translation>🏢
+Entreprises</translation></message><message><source>Empresas</source><translation>Entreprises</translation></message><message><source>Gestión de empresas (próximamente)</source><translation>Gestion des entreprises (prochainement)</translation></message></context><context><name>MainWindowV2</name><message><source>Creative ERP - Sistema de Gestión Empresarial</source><translation>Creative ERP - Système de gestion d'entreprise</translation></message><message><source>Buscar...</source><translation>Rechercher...</translation></message><message><source>🏢 Sin empresa</source><translation>🏢 Sans entreprise</translation></message><message><source>Ventas</source><translation>Ventes</translation></message><message><source>Compras</source><translation>Achats</translation></message><message><source>Almacén</source><translation>Entrepôt</translation></message><message><source>Financiero</source><translation>Financier</translation></message><message><source>Proyectos</source><translation>Projets</translation></message><message><source>Administración</source><translation>Administration</translation></message><message><source>Gestión de clientes y facturación</source><translation>Gestion des clients et facturation</translation></message><message><source>Proveedores y facturas de compra</source><translation>Fournisseurs et factures d'achat</translation></message><message><source>Inventario y control de stock</source><translation>Inventaire et contrôle de stock</translation></message><message><source>Contabilidad y tesorería</source><translation>Comptabilité et trésorerie</translation></message><message><source>Gestión de proyectos creativos</source><translation>Gestion de projets créatifs</translation></message><message><source>Configuración y usuarios</source><translation>Configuration et utilisateurs</translation></message><message><source>MÓDULOS</source><translation>MODULES</translation></message><message><source>Ver módulos</source><translation>Voir modules</translation></message><message><source>Bienvenido, {}</source><translation>Bienvenue, {}</translation></message><message><source>Selecciona un módulo del menú superior para comenzar</source><translation>Sélectionnez un module du menu supérieur pour commencer</translation></message><message><source>Utilidades</source><translation>Utilitaires</translation></message><message><source>⚙️ Preferencias</source><translation>⚙️ Préférences</translation></message><message><source>ℹ️ Acerca de</source><translation>ℹ️ À propos</translation></message><message><source>Sesión</source><translation>Session</translation></message><message><source>🏢 Cambiar Empresa</source><translation>🏢 Changer d'entreprise</translation></message><message><source>🚪 Cerrar Sesión</source><translation>🚪 Fermer la session</translation></message></context></TS>

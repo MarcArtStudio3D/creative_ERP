@@ -142,9 +142,9 @@ class MainWindowV2(QMainWindow):
     def update_sidebar_modules(self, category: Optional[ModuleCategory] = None) -> None:
         """
         Actualiza los módulos mostrados en la sidebar.
-        Muestra solo las categorías como botones clickeables.
+        Muestra categorías como tarjetas estilo Odoo.
         """
-        # Limpiar botones existentes (excepto el stretch final)
+        # Limpiar widgets existentes (excepto el stretch final)
         while self.sidebar_modules_container.count() > 1:
             item = self.sidebar_modules_container.takeAt(0)
             widget = item.widget()
@@ -163,16 +163,47 @@ class MainWindowV2(QMainWindow):
                 categories[cat] = []
             categories[cat].append(module)
         
+        # Información de categorías con colores
         category_info = {
-            ModuleCategory.VENTAS: {"name": "VENTAS", "icon": "💼"},
-            ModuleCategory.COMPRAS: {"name": "COMPRAS", "icon": "🛒"},
-            ModuleCategory.ALMACEN: {"name": "ALMACÉN", "icon": "📦"},
-            ModuleCategory.FINANCIERO: {"name": "FINANCIERO", "icon": "💰"},
-            ModuleCategory.PROYECTOS: {"name": "PROYECTOS", "icon": "📁"},
-            ModuleCategory.ADMINISTRACION: {"name": "ADMINISTRACIÓN", "icon": "⚙️"}
+            ModuleCategory.VENTAS: {
+                "name": "Ventas",
+                "description": "Gestión de clientes y facturación",
+                "icon": "💼",
+                "color": "#8B5CF6"  # Púrpura
+            },
+            ModuleCategory.COMPRAS: {
+                "name": "Compras", 
+                "description": "Proveedores y facturas de compra",
+                "icon": "🛒",
+                "color": "#3B82F6"  # Azul
+            },
+            ModuleCategory.ALMACEN: {
+                "name": "Almacén",
+                "description": "Inventario y control de stock",
+                "icon": "📦",
+                "color": "#F59E0B"  # Ámbar
+            },
+            ModuleCategory.FINANCIERO: {
+                "name": "Financiero",
+                "description": "Contabilidad y tesorería",
+                "icon": "💰",
+                "color": "#10B981"  # Verde
+            },
+            ModuleCategory.PROYECTOS: {
+                "name": "Proyectos",
+                "description": "Gestión de proyectos creativos",
+                "icon": "📁",
+                "color": "#EC4899"  # Rosa
+            },
+            ModuleCategory.ADMINISTRACION: {
+                "name": "Administración",
+                "description": "Configuración y usuarios",
+                "icon": "⚙️",
+                "color": "#6B7280"  # Gris
+            }
         }
         
-        # Crear botones por categoría
+        # Crear tarjetas por categoría
         for cat in [ModuleCategory.VENTAS, ModuleCategory.COMPRAS, 
                    ModuleCategory.ALMACEN, ModuleCategory.FINANCIERO,
                    ModuleCategory.PROYECTOS, ModuleCategory.ADMINISTRACION]:
@@ -181,36 +212,187 @@ class MainWindowV2(QMainWindow):
                 continue
             
             info = category_info[cat]
+            modules_in_cat = categories[cat]
             
-            # Botón de categoría
-            cat_btn = QPushButton(f"{info['icon']} {info['name']}")
-            cat_btn.setMinimumHeight(50)
-            cat_btn.setCursor(Qt.CursorShape.PointingHandCursor)
-            cat_btn.setStyleSheet("""
-                QPushButton {
-                    text-align: left;
-                    padding: 12px 15px;
-                    border: none;
-                    background-color: palette(dark);
-                    border-radius: 6px;
-                    font-weight: bold;
-                    font-size: 11pt;
-                    color: white;
-                }
-                QPushButton:hover {
-                    background-color: palette(mid);
-                }
-                QPushButton:pressed {
-                    background-color: palette(midlight);
-                }
-            """)
+            # Crear tarjeta estilo Odoo
+            card = self._create_category_card(
+                cat, 
+                info['name'],
+                info['description'],
+                info['icon'],
+                info['color'],
+                len(modules_in_cat),
+                modules_in_cat
+            )
             
-            # Al hacer clic, mostrar módulos de la categoría en la barra superior
-            cat_btn.clicked.connect(lambda checked=False, c=cat, mods=categories[cat]: self.show_category_modules(c, mods))  # type: ignore
-            self.sidebar_modules_container.insertWidget(self.sidebar_modules_container.count() - 1, cat_btn)
+            self.sidebar_modules_container.insertWidget(
+                self.sidebar_modules_container.count() - 1, 
+                card
+            )
             
-            # Espaciado entre categorías
-            self.sidebar_modules_container.insertSpacing(self.sidebar_modules_container.count() - 1, 8)
+            # Espaciado entre tarjetas
+            self.sidebar_modules_container.insertSpacing(
+                self.sidebar_modules_container.count() - 1, 
+                12
+            )
+    
+    def _create_category_card(self, category: ModuleCategory, name: str, 
+                             description: str, icon: str, color: str, 
+                             module_count: int, modules: list) -> QWidget:
+        """
+        Crea una tarjeta estilo Odoo para una categoría.
+        
+        Args:
+            category: Categoría del módulo
+            name: Nombre de la categoría
+            description: Descripción breve
+            icon: Emoji del icono
+            color: Color de acento (hex)
+            module_count: Número de módulos en la categoría
+            modules: Lista de módulos
+        """
+        card = QFrame()
+        card.setObjectName("categoryCard")
+        card.setCursor(Qt.CursorShape.PointingHandCursor)
+        
+        # Estilo de la tarjeta compatible con dark mode
+        card.setStyleSheet(f"""
+            QFrame#categoryCard {{
+                background-color: palette(base);
+                border: 1px solid palette(mid);
+                border-radius: 8px;
+                padding: 0px;
+            }}
+            QFrame#categoryCard:hover {{
+                background-color: palette(alternate-base);
+                border: 1px solid {color};
+            }}
+        """)
+        
+        layout = QVBoxLayout(card)
+        layout.setContentsMargins(16, 16, 16, 16)
+        layout.setSpacing(8)
+        
+        # Header: Icono + Título
+        header_layout = QHBoxLayout()
+        header_layout.setSpacing(12)
+        
+        # Icono con fondo de color
+        icon_container = QFrame()
+        icon_container.setFixedSize(48, 48)
+        icon_container.setStyleSheet(f"""
+            QFrame {{
+                background-color: {color};
+                border-radius: 8px;
+            }}
+        """)
+        icon_layout = QVBoxLayout(icon_container)
+        icon_layout.setContentsMargins(0, 0, 0, 0)
+        icon_label = QLabel(icon)
+        icon_label.setStyleSheet("""
+            font-size: 24px;
+            background: transparent;
+            border: none;
+        """)
+        icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        icon_layout.addWidget(icon_label)
+        
+        header_layout.addWidget(icon_container)
+        
+        # Título y contador
+        title_layout = QVBoxLayout()
+        title_layout.setSpacing(2)
+        
+        title_label = QLabel(name)
+        title_label.setStyleSheet("""
+            font-size: 14pt;
+            font-weight: bold;
+            color: palette(text);
+            background: transparent;
+            border: none;
+        """)
+        title_layout.addWidget(title_label)
+        
+        count_label = QLabel(f"{module_count} módulo{'s' if module_count != 1 else ''}")
+        count_label.setStyleSheet("""
+            font-size: 9pt;
+            color: palette(mid);
+            background: transparent;
+            border: none;
+        """)
+        title_layout.addWidget(count_label)
+        
+        header_layout.addLayout(title_layout)
+        header_layout.addStretch()
+        
+        layout.addLayout(header_layout)
+        
+        # Descripción
+        desc_label = QLabel(description)
+        desc_label.setWordWrap(True)
+        desc_label.setStyleSheet("""
+            font-size: 10pt;
+            color: palette(dark);
+            background: transparent;
+            border: none;
+            padding: 4px 0px;
+        """)
+        layout.addWidget(desc_label)
+        
+        # Botón de acción
+        action_btn = QPushButton("Ver módulos")
+        action_btn.setStyleSheet(f"""
+            QPushButton {{
+                background-color: {color};
+                color: white;
+                border: none;
+                border-radius: 4px;
+                padding: 8px 16px;
+                font-weight: bold;
+                font-size: 10pt;
+            }}
+            QPushButton:hover {{
+                background-color: {self._darken_color(color, 0.1)};
+            }}
+            QPushButton:pressed {{
+                background-color: {self._darken_color(color, 0.2)};
+            }}
+        """)
+        action_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        action_btn.clicked.connect(
+            lambda: self.show_category_modules(category, modules)
+        )
+        
+        layout.addWidget(action_btn)
+        
+        # Hacer toda la tarjeta clickeable
+        card.mousePressEvent = lambda event: self.show_category_modules(category, modules)
+        
+        return card
+    
+    def _darken_color(self, hex_color: str, factor: float) -> str:
+        """
+        Oscurece un color hexadecimal.
+        
+        Args:
+            hex_color: Color en formato #RRGGBB
+            factor: Factor de oscurecimiento (0.0 - 1.0)
+        """
+        # Remover #
+        hex_color = hex_color.lstrip('#')
+        
+        # Convertir a RGB
+        r = int(hex_color[0:2], 16)
+        g = int(hex_color[2:4], 16)
+        b = int(hex_color[4:6], 16)
+        
+        # Oscurecer
+        r = int(r * (1 - factor))
+        g = int(g * (1 - factor))
+        b = int(b * (1 - factor))
+        
+        # Convertir de vuelta a hex
+        return f"#{r:02x}{g:02x}{b:02x}"
     
     def create_top_bar(self) -> QFrame:
         """Crea la barra superior negra estilo RedFox."""

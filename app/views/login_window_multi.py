@@ -256,7 +256,7 @@ class LoginWindowMultiCompany(QDialog):
         
         if not username or not password:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Error", "Ingresa usuario y contraseña")
+            QMessageBox.warning(self, self.tr("Error"), self.tr("Ingresa usuario y contraseña"))
             return
         
         group = self.group_combo.currentData()
@@ -264,7 +264,7 @@ class LoginWindowMultiCompany(QDialog):
         
         if not group or not company:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Error", "Selecciona grupo y empresa")
+            QMessageBox.warning(self, self.tr("Error"), self.tr("Selecciona grupo y empresa"))
             return
         
         # Intentar login
@@ -278,7 +278,7 @@ class LoginWindowMultiCompany(QDialog):
             self.login_successful.emit(context)
         else:
             from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, "Error", "Usuario o contraseña incorrectos")
+            QMessageBox.warning(self, self.tr("Error"), self.tr("Usuario o contraseña incorrectos"))
             self.password_input.clear()
     
     def try_login(self, username: str, password: str) -> bool:

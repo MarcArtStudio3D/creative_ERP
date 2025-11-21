@@ -24,6 +24,7 @@ class CreativeERPApp:
         self.module_manager = ModuleManager()
         self.main_window = None
         self.login_window = None
+        self.translator = None  # Guardar referencia al translator
     
     def initialize(self):
         """Inicializa la aplicación."""
@@ -32,6 +33,17 @@ class CreativeERPApp:
         self.qapp.setApplicationName("Creative ERP")
         self.qapp.setOrganizationName("ArtStudio3D")
         self.qapp.setOrganizationDomain("artstudio3d.com")
+        
+        # Cargar traducciones
+        print("Cargando traducciones...")
+        from core.translations import load_translation
+        self.translator = load_translation(self.qapp)
+        if self.translator:
+            settings = QSettings()
+            lang = settings.value("language", "es")
+            print(f"✓ Idioma cargado: {lang}")
+        else:
+            print("⚠ No se pudo cargar el archivo de traducción")
         
         # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
         # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema

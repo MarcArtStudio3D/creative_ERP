@@ -348,8 +348,26 @@ class LoginWindowMultiCompany(QDialog):
     
     def open_config(self):
         """Abre la configuración."""
-        from PySide6.QtWidgets import QMessageBox
-        QMessageBox.information(self, "Configuración", "Gestión de configuración (próximamente)")
+        from app.views.config_dialog import ConfigDialog
+        
+        dialog = ConfigDialog(self)
+        
+        # Conectar señal de cambio de idioma
+        dialog.language_changed.connect(self.on_language_changed)
+        
+        dialog.exec()
+    
+    def on_language_changed(self, language_code: str):
+        """Maneja el cambio de idioma."""
+        from core.translations import change_language
+        from PySide6.QtWidgets import QApplication
+        
+        app = QApplication.instance()
+        if app:
+            # Cambiar el idioma (necesitaremos guardar el translator en algún lugar)
+            # Por ahora solo guardamos la preferencia, el cambio real se hará al reiniciar
+            print(f"Idioma cambiado a: {language_code}")
+            print("La aplicación debe reiniciarse para aplicar todos los cambios")
     
     def manage_companies(self):
         """Gestiona empresas."""

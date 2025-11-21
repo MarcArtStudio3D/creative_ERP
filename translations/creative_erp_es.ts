@@ -1540,6 +1540,33 @@
     </message>
 </context>
 <context>
+    <name>frmConfig</name>
+    <message>
+        <source>Configuración de Creative ERP</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Idioma</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Español</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Française</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>Català</source>
+        <translation type="unfinished"></translation>
+    </message>
+    <message>
+        <source>English</source>
+        <translation type="unfinished"></translation>
+    </message>
+</context>
+<context>
     <name>frmNuevosAvisos</name>
     <message>
         <source>Dialog</source>

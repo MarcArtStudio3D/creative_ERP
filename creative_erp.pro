@@ -22,6 +22,7 @@ SOURCES = app/app.py \
 # Archivos de interfaz de Qt Designer
 FORMS = app/ui/db_consulta_view.ui \
         app/ui/frmClientes.ui \
+        app/ui/frmConfig.ui \
         app/ui/frmeditaravisos.ui \
         app/ui/frmempresas.ui \
         app/ui/frmnuevosavisos.ui

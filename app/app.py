@@ -37,10 +37,14 @@ class CreativeERPApp:
         # Cargar traducciones
         print("Cargando traducciones...")
         from core.translations import load_translation
-        self.translator = load_translation(self.qapp)
+        
+        # Leer idioma guardado en configuración (por defecto español)
+        settings = QSettings()
+        lang = settings.value("language", "es")
+        
+        # Cargar traducción con el idioma configurado
+        self.translator = load_translation(self.qapp, lang)
         if self.translator:
-            settings = QSettings()
-            lang = settings.value("language", "es")
             print(f"✓ Idioma cargado: {lang}")
         else:
             print("⚠ No se pudo cargar el archivo de traducción")

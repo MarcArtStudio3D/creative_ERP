@@ -196,7 +196,14 @@ class ClientesViewFull(QWidget):
                             w.textChanged.connect(self._on_widget_change)
                         except Exception:
                             pass
-                        # No manual 'nombre_fiscal' tracking: we only fill when empty
+                        # Special handling for txtnombre_fiscal to detect manual edits
+                        if n == 'txtnombre_fiscal' and isinstance(w, QLineEdit):
+                            try:
+                                # textEdited is only emitted when user types, not when setText is called
+                                w.textEdited.connect(self._on_nombre_fiscal_manual_edit)
+                            except Exception:
+                                pass
+
                     elif isinstance(w, QComboBox):
                         try:
                             w.currentIndexChanged.connect(self._on_widget_change)
@@ -603,30 +610,53 @@ class ClientesViewFull(QWidget):
         s = cif.strip().upper().replace('-', '').replace(' ', '')
         import re
         # Letra inicial de sociedad + 7 dígitos + dígito/control (letra o número)
-        # Complete CIF check: compute control digit/letter
-        import re
-        if not re.fullmatch(r"[A-HJNP-SUVW]\d{7}[0-9A-J]", s):
+        # Expanded regex to include K, L, M just in case (legacy)
+        if not re.fullmatch(r"[A-Z]\d{7}[0-9A-Z]", s):
             return False
+            
+        # Valid letters check
+        valid_starts = "ABCDEFGHJNPQRSUVWKLM"
+        if s[0] not in valid_starts:
+            return False
+
         # Compute sums
-        digits = [int(ch) for ch in s[1:8]]  # 7 digits d1..d7
-        # sum of even positions: d2, d4, d6 (index: 1,3,5)
-        s_even = sum(digits[i] for i in [1, 3, 5])
-        # sum of odd positions: d1,d3,d5,d7 doubled
-        def sum_odd(d):
-            acc = 0
-            for val in d[0::2]:
-                prod = val * 2
-                acc += prod // 10 + prod % 10
-            return acc
-        s_odd = sum_odd(digits)
-        total = s_even + s_odd
-        control_digit = (10 - (total % 10)) % 10
-        control_letter_map = 'JABCDEFGHI'  # index by digit
-        provided = s[-1]
-        # Some entity types expect numeric or letter control or both; accept both
-        if provided == str(control_digit) or provided == control_letter_map[control_digit]:
-            return True
-        return False
+        try:
+            digits = [int(ch) for ch in s[1:8]]  # 7 digits d1..d7
+            
+            # sum of even positions: d2, d4, d6 (index: 1,3,5)
+            s_even = sum(digits[i] for i in [1, 3, 5])
+            
+            # sum of odd positions: d1,d3,d5,d7 doubled
+            def sum_odd(d):
+                acc = 0
+                for val in d[0::2]:
+                    prod = val * 2
+                    acc += prod // 10 + prod % 10
+                return acc
+                
+            s_odd = sum_odd(digits)
+            total = s_even + s_odd
+            control_digit = (10 - (total % 10)) % 10
+            
+            control_letter_map = 'JABCDEFGHI'  # index by digit (0=J, 1=A, etc.)
+            provided = s[-1]
+            
+            # Tipos de organización y su tipo de control esperado
+            # Numérico: A, B, E, H
+            # Letra: P, Q, S, K, W
+            # Ambos (usualmente número, pero puede ser letra): C, D, F, G, J, N, R, U, V
+            
+            # Check numeric control
+            if provided == str(control_digit):
+                return True
+                
+            # Check letter control
+            if provided == control_letter_map[control_digit]:
+                return True
+                
+            return False
+        except Exception:
+            return False
 
     def _is_valid_nif_cif(self, value: str) -> bool:
         """Check combined NIF/NIE/CIF validity."""
@@ -645,6 +675,9 @@ class ClientesViewFull(QWidget):
         # SIRET checks (Francia)
         if self._is_valid_siret(v):
             return True
+        # SIREN checks (Francia - 9 dígitos)
+        if self._is_valid_siren(v):
+            return True
         return False
 
     def _luhn_check(self, digits: str) -> bool:
@@ -662,6 +695,15 @@ class ClientesViewFull(QWidget):
             return total % 10 == 0
         except Exception:
             return False
+
+    def _is_valid_siren(self, siren: str) -> bool:
+        """Validate SIREN: 9 digits and Luhn check."""
+        if not siren:
+            return False
+        s = siren.strip().replace(' ', '').replace('-', '')
+        if not s.isdigit() or len(s) != 9:
+            return False
+        return self._luhn_check(s)
 
     def _is_valid_siret(self, siret: str) -> bool:
         """Validate SIRET: 14 digits and Luhn check."""
@@ -1282,6 +1324,19 @@ class ClientesViewFull(QWidget):
         self.desactivar_botones_navegacion()
         self._modo_edicion = True  # Activar modo edición
         self.ui.stackedWidget.setCurrentIndex(0)
+        
+        # Generar código único automáticamente
+        try:
+            codigo_generado = self.repository._generar_codigo()
+            if hasattr(self.ui, 'txtcodigo_cliente'):
+                self.ui.txtcodigo_cliente.setText(codigo_generado)
+        except Exception as e:
+            print(f"Error al generar código: {e}")
+        
+        # Asegurar que txtnombre_fiscal esté vacío para que se auto-rellene
+        if hasattr(self.ui, 'txtnombre_fiscal'):
+            self.ui.txtnombre_fiscal.clear()
+        
         self.activar_campos_edicion()  # Activar campos para edición
         # Force initial validation state
         self._set_all_valid_state()
@@ -1306,6 +1361,21 @@ class ClientesViewFull(QWidget):
     
     def editar_cliente(self):
         """Edita el cliente seleccionado"""
+        # Si ya tenemos un cliente cargado y estamos en la ficha (página 0), editar directamente
+        if self.cliente_actual is not None and hasattr(self.ui, 'stackedWidget') and self.ui.stackedWidget.currentIndex() == 0:
+            self.desactivar_botones_navegacion()
+            self._modo_edicion = True  # Activar modo edición
+            self.activar_campos_edicion()  # Activar campos para edición
+            # Ensure validation applied to loaded data
+            if hasattr(self, '_on_widget_change'):
+                self._validate_and_apply('txtcodigo_cliente')
+                self._validate_and_apply('txtcif_nif')
+                self._validate_and_apply('txtnombre')
+                self._validate_and_apply('txtnombre_fiscal')
+            self._update_form_validity()
+            return
+
+        # Si no, buscar en la tabla
         tabla = getattr(self.ui, 'tabla_busquedas', None) or getattr(self.ui, 'tabla_clientes', None)
         if not tabla:
             return
@@ -1713,11 +1783,24 @@ class ClientesViewFull(QWidget):
                 pass
         self._validate_and_apply(str(name))
 
+    def _on_nombre_fiscal_manual_edit(self, text):
+        """Called when user manually edits the txtnombre_fiscal field.
+        
+        Marks the field as manually edited so auto-fill stops overwriting it.
+        """
+        if hasattr(self.ui, 'txtnombre_fiscal'):
+            w = self.ui.txtnombre_fiscal
+            # Mark as manually edited - auto-fill will stop updating
+            w._auto_filled = False
+
     def _maybe_fill_nombre_fiscal(self):
-        """Compute `nombre_fiscal` from apellidos/nombre and fill if the field is empty.
+
+        """Compute `nombre_fiscal` from apellidos/nombre and fill automatically.
 
         Rule: apellido1 + ' ' + apellido2 + ' ' + nombre (all uppercase). If apellido2 empty,
-        omit it. If both surnames empty, use `nombre`. Only fill if the target field is blank.
+        omit it. If both surnames empty, use `nombre`. 
+        
+        Updates automatically unless the user has manually edited the nombre_fiscal field.
         """
         ui = getattr(self, 'ui', None)
         if ui is None:
@@ -1730,15 +1813,12 @@ class ClientesViewFull(QWidget):
             a1 = w_ap1.text().strip() if (w_ap1 is not None and hasattr(w_ap1, 'text')) else ''
             a2 = w_ap2.text().strip() if (w_ap2 is not None and hasattr(w_ap2, 'text')) else ''
             nombre = w_nombre.text().strip() if (w_nombre is not None and hasattr(w_nombre, 'text')) else ''
+            
             # If target field not present, nothing to do
             if w_nombre_fiscal is None or not hasattr(w_nombre_fiscal, 'text') or not hasattr(w_nombre_fiscal, 'setText'):
                 return
-            # Only change if target is empty
-            current = w_nombre_fiscal.text().strip()
-            # New policy: only auto-fill nombre_fiscal when empty. If there is any text
-            # (either manual or previously auto-generated), do not change the value.
-            if current:
-                return
+            
+            # Compute what the nombre_fiscal should be
             parts = []
             if a1:
                 parts.append(a1)
@@ -1748,24 +1828,47 @@ class ClientesViewFull(QWidget):
                 parts.append(nombre)
             if not parts and nombre:
                 parts = [nombre]
-            computed = ' '.join(parts).strip()
-            if not computed:
-                return
-            # Uppercase result
-            computed = computed.upper()
-            try:
-                w_nombre_fiscal.setText(computed)
-            except Exception:
-                pass
+            computed = ' '.join(parts).strip().upper()
+            
+            # Get current value
+            current = w_nombre_fiscal.text().strip().upper()
+            
+            # Check if user has manually edited the field
+            # If the current value doesn't match what we would auto-generate from the last known state,
+            # it means the user edited it manually. In that case, don't auto-update.
+            # We track this with a flag on the widget itself.
+            if not hasattr(w_nombre_fiscal, '_auto_filled'):
+                w_nombre_fiscal._auto_filled = True
+            
+            # If current value matches the computed value, or if it's empty, update it
+            # This allows continuous updates while typing
+            if current == computed or not current:
+                w_nombre_fiscal._auto_filled = True
+                if computed:
+                    try:
+                        w_nombre_fiscal.setText(computed)
+                    except Exception:
+                        pass
+            else:
+                # Current value doesn't match computed - user may have edited manually
+                # Only update if the flag says it was auto-filled before
+                if getattr(w_nombre_fiscal, '_auto_filled', True):
+                    if computed:
+                        try:
+                            w_nombre_fiscal.setText(computed)
+                        except Exception:
+                            pass
+            
             # Also update label `txtNombreFiscal` if present (UI read-only label)
             lbl = getattr(ui, 'txtNombreFiscal', None)
             if lbl is not None and hasattr(lbl, 'setText'):
                 try:
-                    lbl.setText(computed)
+                    if computed:
+                        lbl.setText(computed)
                 except Exception:
                     pass
         except Exception:
-            return
+            pass
         self._update_form_validity()
 
     def _validate_and_apply(self, widget_name: str):
@@ -1777,10 +1880,21 @@ class ClientesViewFull(QWidget):
         if widget_name == 'txtcif_nif':
             w = getattr(self.ui, 'txtcif_nif', None)
             txt = w.text() if (w is not None and hasattr(w, 'text')) else ''
+            
+            # Validar formato
             if txt and not self._is_valid_nif_cif(txt):
                 self._apply_widget_valid_state(w, 'NIF/CIF/SIRET inválido')
             else:
                 self._apply_widget_valid_state(w, None)
+                
+                # Verificar duplicados solo si el formato es válido y estamos en modo edición
+                if txt and txt.strip() and getattr(self, '_modo_edicion', False):
+                    cliente_existente = self._check_duplicate_cif(txt)
+                    if cliente_existente:
+                        # Mostrar diálogo en el siguiente ciclo de eventos para no bloquear la validación
+                        from PySide6.QtCore import QTimer
+                        QTimer.singleShot(100, lambda: self._handle_duplicate_cif(cliente_existente))
+
 
         # Email
         elif widget_name == 'txtemail':
@@ -1870,7 +1984,69 @@ class ClientesViewFull(QWidget):
             if w is not None:
                 self._apply_widget_valid_state(w, None)
 
+    def _check_duplicate_cif(self, cif: str):
+        """Verifica si existe un cliente con el CIF dado (excluyendo el actual)
+        
+        Returns:
+            Cliente existente si hay duplicado, None si no hay duplicado
+        """
+        if not cif or not cif.strip():
+            return None
+        
+        try:
+            cliente_existente = self.repository.obtener_por_cif(cif.strip())
+            
+            # Si existe y NO es el cliente actual
+            if cliente_existente and (
+                self.cliente_actual is None or 
+                cliente_existente.id != self.cliente_actual.id
+            ):
+                return cliente_existente
+        except Exception as e:
+            print(f"Error al verificar CIF duplicado: {e}")
+        
+        return None
+
+    def _handle_duplicate_cif(self, cliente_existente):
+        """Maneja el caso de CIF duplicado con diálogo al usuario"""
+        from PySide6.QtWidgets import QMessageBox
+        
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Warning)
+        msg.setWindowTitle(self.tr("CIF/NIF Duplicado"))
+        msg.setText(
+            self.tr("Ya existe un cliente con el CIF/NIF") + f": {cliente_existente.cif_nif_siren}\n\n" +
+            self.tr("Cliente") + f": {cliente_existente.nombre_fiscal}\n" +
+            self.tr("Código") + f": {cliente_existente.codigo_cliente}"
+        )
+        msg.setInformativeText(self.tr("¿Qué desea hacer?"))
+        
+        btn_cargar = msg.addButton(self.tr("Cargar cliente existente"), QMessageBox.ButtonRole.AcceptRole)
+        btn_deshacer = msg.addButton(self.tr("Deshacer cambios"), QMessageBox.ButtonRole.RejectRole)
+        
+        msg.exec()
+        
+        if msg.clickedButton() == btn_cargar:
+            self._cargar_cliente_existente(cliente_existente)
+        else:
+            # Limpiar campo CIF
+            if hasattr(self.ui, 'txtcif_nif'):
+                self.ui.txtcif_nif.clear()
+                self._apply_widget_valid_state(self.ui.txtcif_nif, None)
+
+    def _cargar_cliente_existente(self, cliente):
+        """Carga un cliente existente en el formulario"""
+        self.cliente_actual = cliente
+        self.cargar_datos_en_formulario(cliente)
+        self._modo_edicion = False
+        self.desactivar_campos_edicion()
+        self.activar_botones_navegacion()
+        # Cambiar a la vista de ficha
+        if hasattr(self.ui, 'stackedWidget'):
+            self.ui.stackedWidget.setCurrentIndex(0)
+
     def _update_form_validity(self):
+
         """Enable/disable Save button depending on form validation."""
         btn = getattr(self.ui, 'btnGuardar', None)
         if btn is None:
@@ -1884,9 +2060,10 @@ class ClientesViewFull(QWidget):
                 pass
             return
 
-        ok, errores = self._validar_campos()
+        # En modo edición, siempre habilitar el botón Guardar
+        # La validación se hará al intentar guardar, mostrando errores al usuario
         try:
-            btn.setEnabled(bool(ok))
+            btn.setEnabled(True)
         except Exception:
             pass
     
@@ -2149,3 +2326,13 @@ class ClientesViewFull(QWidget):
             # Silently ignore errors to not disrupt user experience
             print(f"Error in postal code lookup: {e}")
             pass
+
+    def has_unsaved_changes(self) -> bool:
+        """Retorna True si hay cambios sin guardar (modo edición activo)."""
+        return getattr(self, '_modo_edicion', False)
+
+    def _save_changes(self) -> bool:
+        """Intenta guardar los cambios. Retorna True si tuvo éxito."""
+        self.guardar_cliente()
+        # Si el guardado fue exitoso, _modo_edicion se habrá puesto a False
+        return not getattr(self, '_modo_edicion', False)

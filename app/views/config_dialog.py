@@ -64,16 +64,8 @@ class ConfigDialog(QDialog):
             settings.setValue("language", selected_lang)
             
             # Emitir señal de cambio de idioma
+            # El diálogo se mostrará en el manejador de la señal (login_window_multi.py)
             self.language_changed.emit(selected_lang)
-            
-            # Informar al usuario
-            lang_name = self.ui.cboIdioma.currentText()
-            QMessageBox.information(
-                self,
-                "Idioma cambiado",
-                f"El idioma se ha cambiado a {lang_name}.\n\n"
-                "Reinicia la aplicación para ver todos los cambios."
-            )
         
         self.accept()
     

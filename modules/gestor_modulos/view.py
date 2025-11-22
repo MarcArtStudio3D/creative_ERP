@@ -31,6 +31,9 @@ class GestorModulosView(QWidget):
         # Modelo de negocio
         self.manager = RolePermissionsManager()
         
+        # Flag para cambios sin guardar
+        self._has_unsaved_changes = False
+        
         # Construir interfaz
         self._build_ui()
 
@@ -103,9 +106,10 @@ class GestorModulosView(QWidget):
         layout.addLayout(controls)
 
         # Botón guardar cambios
-        btn_save = QPushButton('Guardar cambios')
-        btn_save.clicked.connect(self._save_changes)
-        layout.addWidget(btn_save)
+        self.btn_save = QPushButton('Guardar cambios')
+        self.btn_save.clicked.connect(self._save_changes)
+        self.btn_save.setEnabled(False)  # Deshabilitado inicialmente
+        layout.addWidget(self.btn_save)
 
         # Conectar eventos
         self.list_modules.itemSelectionChanged.connect(self._on_selection_changed)
@@ -193,6 +197,10 @@ class GestorModulosView(QWidget):
         module_ids = [item.data(1) for item in selected_items]
         count = self.manager.set_multiple_modules_permissions(role, module_ids, perms)
         
+        # Marcar como cambios sin guardar
+        self._has_unsaved_changes = True
+        self.btn_save.setEnabled(True)
+        
         # Mensaje informativo
         if count == 1:
             QMessageBox.information(
@@ -211,9 +219,17 @@ class GestorModulosView(QWidget):
                 f'Asignados {perms} a {role} en {count} módulos:\n{modules_preview}'
             )
 
-    def _save_changes(self):
+    def _save_changes(self) -> bool:
         """Guarda los cambios en el archivo JSON."""
         if self.manager.save():
+            self._has_unsaved_changes = False
+            self.btn_save.setEnabled(False)
             QMessageBox.information(self, 'Guardado', 'Permisos guardados correctamente.')
+            return True
         else:
             QMessageBox.warning(self, 'Error', 'No se pudo guardar los permisos.')
+            return False
+    
+    def has_unsaved_changes(self) -> bool:
+        """Retorna True si hay cambios sin guardar."""
+        return self._has_unsaved_changes

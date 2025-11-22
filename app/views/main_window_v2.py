@@ -1049,32 +1049,32 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(logo_container)
         
         # Botón "Limpiar y Refrescar"
-        refresh_btn = QPushButton("🔄 Limpiar y Refrescar")
+        refresh_btn = QPushButton(self.tr("🔄 Limpiar y Refrescar"))
         refresh_btn.setMinimumHeight(35)
         refresh_btn.setStyleSheet(self._get_panel_button_style())
         refresh_btn.clicked.connect(lambda: self.on_module_action(module_id, 'refresh'))  # type: ignore
         panel_layout.addWidget(refresh_btn)
         
         # Controles de ordenación y búsqueda
-        order_label = QLabel("Ordenar por:")
+        order_label = QLabel(self.tr("Ordenar por:"))
         order_label.setStyleSheet("color: white; font-weight: bold; background: transparent;")
         panel_layout.addWidget(order_label)
         
         order_combo = QComboBox()
-        order_combo.addItems(["Nombre Fiscal", "Código", "Fecha"])
+        order_combo.addItems([self.tr("Nombre Fiscal"), self.tr("Código"), self.tr("Fecha")])
         order_combo.setMinimumHeight(30)
         panel_layout.addWidget(order_combo)
         
-        mode_label = QLabel("Modo:")
+        mode_label = QLabel(self.tr("Modo:"))
         mode_label.setStyleSheet("color: white; font-weight: bold; background: transparent;")
         panel_layout.addWidget(mode_label)
         
         mode_combo = QComboBox()
-        mode_combo.addItems(["A-Z", "Z-A"])
+        mode_combo.addItems([self.tr("A-Z"), self.tr("Z-A")])
         mode_combo.setMinimumHeight(30)
         panel_layout.addWidget(mode_combo)
         
-        search_label = QLabel("Búsqueda:")
+        search_label = QLabel(self.tr("Búsqueda:"))
         search_label.setStyleSheet("color: white; font-weight: bold; background: transparent;")
         panel_layout.addWidget(search_label)
         
@@ -1096,19 +1096,19 @@ class MainWindowV2(QMainWindow):
         panel_layout.addSpacing(20)
         
         # Botones de acción principales
-        add_btn = QPushButton("➕ Añadir")
+        add_btn = QPushButton(self.tr("➕ Añadir"))
         add_btn.setMinimumHeight(40)
         add_btn.setStyleSheet(self._get_panel_button_style())
         add_btn.clicked.connect(lambda: self.on_module_action(module_id, 'new'))  # type: ignore
         panel_layout.addWidget(add_btn)
         
-        edit_btn = QPushButton("📝 Editar")
+        edit_btn = QPushButton(self.tr("📝 Editar"))
         edit_btn.setMinimumHeight(40)
         edit_btn.setStyleSheet(self._get_panel_button_style())
         edit_btn.clicked.connect(lambda: self.on_module_action(module_id, 'edit'))  # type: ignore
         panel_layout.addWidget(edit_btn)
         
-        delete_btn = QPushButton("🗑️ Borrar")
+        delete_btn = QPushButton(self.tr("🗑️ Borrar"))
         delete_btn.setMinimumHeight(40)
         delete_btn.setStyleSheet(self._get_panel_button_style("#d63031"))
         delete_btn.clicked.connect(lambda: self.on_module_action(module_id, 'delete'))  # type: ignore
@@ -1117,7 +1117,7 @@ class MainWindowV2(QMainWindow):
         # Si estamos en un módulo de Administración, añadir acceso directo al Gestor de Módulos
         try:
             if getattr(module_info, 'category', None) == ModuleCategory.ADMINISTRACION:
-                gestor_btn = QPushButton("🛠️ Gestor Módulos")
+                gestor_btn = QPushButton(self.tr("🛠️ Gestor Módulos"))
                 gestor_btn.setMinimumHeight(40)
                 gestor_btn.setStyleSheet(self._get_panel_button_style())
                 gestor_btn.clicked.connect(lambda checked=False: self.open_module('gestor_modulos'))  # type: ignore
@@ -1128,7 +1128,7 @@ class MainWindowV2(QMainWindow):
         panel_layout.addStretch()
         
         # Botón Excepciones (abajo)
-        exceptions_btn = QPushButton("📋 Excepciones")
+        exceptions_btn = QPushButton(self.tr("📋 Excepciones"))
         exceptions_btn.setMinimumHeight(40)
         exceptions_btn.setStyleSheet(self._get_panel_button_style())
         exceptions_btn.clicked.connect(lambda: self.on_module_action(module_id, 'exceptions'))  # type: ignore
@@ -1292,6 +1292,58 @@ class MainWindowV2(QMainWindow):
             {'icon': '📋', 'label': 'Listado', 'action': 'list'},
         ])
     
+    def _find_module_view(self, container: QWidget) -> Optional[QWidget]:
+        """
+        Encuentra la vista real del módulo dentro del contenedor.
+        
+        El contenedor tiene:
+        - module_content: La vista del módulo (lo que buscamos)
+        - actions_panel: El panel lateral verde
+        """
+        # Buscar entre los hijos del contenedor
+        for child in container.findChildren(QWidget):
+            # Buscar widgets que tengan métodos típicos de módulos
+            if hasattr(child, 'nuevo_cliente') or hasattr(child, 'nuevo') or \
+               hasattr(child, 'editar_cliente') or hasattr(child, 'editar') or \
+               hasattr(child, 'borrar_cliente') or hasattr(child, 'borrar'):
+                return child
+        
+        return None
+    
+    def _call_module_method(self, module_view: QWidget, method_names: list) -> bool:
+        """
+        Intenta llamar a uno de los métodos de la lista en el módulo.
+        
+        Args:
+            module_view: La vista del módulo
+            method_names: Lista de nombres de métodos a intentar (en orden de prioridad)
+        
+        Returns:
+            True si se llamó algún método, False si no
+        """
+        for method_name in method_names:
+            if hasattr(module_view, method_name):
+                method = getattr(module_view, method_name)
+                if callable(method):
+                    try:
+                        method()
+                        return True
+                    except Exception as e:
+                        QMessageBox.critical(
+                            self,
+                            self.tr("Error"),
+                            f"{self.tr('Error al ejecutar')} {method_name}: {str(e)}"
+                        )
+                        return False
+        
+        # Si no se encontró ningún método
+        QMessageBox.information(
+            self,
+            self.tr("No implementado"),
+            self.tr("Esta acción aún no está implementada para este módulo")
+        )
+        return False
+    
     def on_search_changed(self, module_id: str, search_text: str, order_by: str, order_mode: str) -> None:
         """Maneja cambios en los controles de búsqueda y filtrado."""
         # Obtener el widget activo del módulo
@@ -1326,12 +1378,38 @@ class MainWindowV2(QMainWindow):
                 if panel and hasattr(panel, 'search_input'):
                     getattr(panel, 'search_input').clear()
                 self.on_search_changed(module_id, "", "Nombre Fiscal", "A-Z")
-            QMessageBox.information(self, "Refrescar", f"Actualizando datos de {module_id}...")
+            QMessageBox.information(self, self.tr("Refrescar"), f"{self.tr('Actualizando datos de')} {module_id}...")
+        
+        elif action in ['new', 'edit', 'delete', 'exceptions']:
+            # Obtener el widget del módulo
+            if module_id not in self.module_widgets:
+                return
+            
+            module_widget_container = self.module_widgets[module_id]
+            
+            # Buscar la vista del módulo (el widget real, no el contenedor)
+            module_view = self._find_module_view(module_widget_container)
+            
+            if not module_view:
+                QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo encontrar la vista del módulo"))
+                return
+            
+            # Llamar al método correspondiente según la acción
+            if action == 'new':
+                self._call_module_method(module_view, ['nuevo_cliente', 'nuevo', 'nuevo_registro', 'on_nuevo_cliente'])
+            elif action == 'edit':
+                self._call_module_method(module_view, ['editar_cliente', 'editar', 'editar_registro', 'on_edit_cliente'])
+            elif action == 'delete':
+                self._call_module_method(module_view, ['borrar_cliente', 'borrar', 'eliminar', 'borrar_registro', 'on_eliminar_cliente'])
+            elif action == 'exceptions':
+                # Funcionalidad futura
+                QMessageBox.information(self, self.tr("Excepciones"), self.tr("Funcionalidad en desarrollo"))
+        
         else:
             QMessageBox.information(
                 self,
-                f"Acción del módulo",
-                f"Módulo: {module_id}\nAcción: {action}\n\nEsta funcionalidad está en desarrollo."
+                self.tr("Acción del módulo"),
+                f"{self.tr('Módulo')}: {module_id}\n{self.tr('Acción')}: {action}\n\n{self.tr('Esta funcionalidad está en desarrollo.')}"
             )
     
     def close_module(self, module_id: str) -> None:
@@ -1486,3 +1564,95 @@ class MainWindowV2(QMainWindow):
             "<p>Versión 2.0 - Python/Qt6</p>"
             "<p>© 2025 ArtStudio3D</p>"
         )
+    
+    def closeEvent(self, event) -> None:
+        """
+        Maneja el evento de cierre de la ventana.
+        Verifica si hay cambios sin guardar y solicita confirmación al usuario.
+        """
+        # Verificar si hay módulos con cambios sin guardar
+        modules_with_changes = []
+        
+        for module_id, widget in self.module_widgets.items():
+            # Verificar si el widget tiene el método has_unsaved_changes
+            if hasattr(widget, 'has_unsaved_changes') and callable(getattr(widget, 'has_unsaved_changes')):
+                if widget.has_unsaved_changes():
+                    modules_with_changes.append(module_id)
+            # Para módulos que están en un contenedor, buscar el widget interno
+            elif hasattr(widget, 'findChildren'):
+                # Buscar widgets hijos que tengan el método has_unsaved_changes
+                for child in widget.findChildren(QWidget):
+                    if hasattr(child, 'has_unsaved_changes') and callable(getattr(child, 'has_unsaved_changes')):
+                        if child.has_unsaved_changes():
+                            modules_with_changes.append(module_id)
+                            break
+        
+        # Si hay cambios sin guardar, mostrar diálogo de confirmación
+        if modules_with_changes:
+            msg = QMessageBox(self)
+            msg.setIcon(QMessageBox.Icon.Warning)
+            msg.setWindowTitle(self.tr("Cambios sin guardar"))
+            
+            if len(modules_with_changes) == 1:
+                msg.setText(self.tr("Hay cambios sin guardar en el módulo: {}").format(modules_with_changes[0]))
+            else:
+                msg.setText(self.tr("Hay cambios sin guardar en {} módulos").format(len(modules_with_changes)))
+            
+            msg.setInformativeText(self.tr("¿Qué desea hacer con los cambios?"))
+            
+            # Botones personalizados
+            save_btn = msg.addButton(self.tr("Guardar"), QMessageBox.ButtonRole.AcceptRole)
+            discard_btn = msg.addButton(self.tr("Descartar"), QMessageBox.ButtonRole.DestructiveRole)
+            cancel_btn = msg.addButton(self.tr("Cancelar"), QMessageBox.ButtonRole.RejectRole)
+            
+            msg.setDefaultButton(save_btn)
+            msg.exec()
+            
+            clicked_button = msg.clickedButton()
+            
+            if clicked_button == save_btn:
+                # Guardar cambios en todos los módulos afectados
+                all_saved = True
+                for module_id in modules_with_changes:
+                    widget = self.module_widgets[module_id]
+                    success = False
+                    
+                    try:
+                        # Intentar guardar directamente si el widget tiene el método
+                        if hasattr(widget, '_save_changes') and callable(getattr(widget, '_save_changes')):
+                            result = widget._save_changes()
+                            # Si retorna None, asumimos True por compatibilidad, si retorna bool usamos el valor
+                            success = result if result is not None else True
+                        # Buscar en widgets hijos
+                        elif hasattr(widget, 'findChildren'):
+                            for child in widget.findChildren(QWidget):
+                                if hasattr(child, '_save_changes') and callable(getattr(child, '_save_changes')):
+                                    result = child._save_changes()
+                                    success = result if result is not None else True
+                                    break
+                    except Exception as e:
+                        print(f"Error al guardar módulo {module_id}: {e}")
+                        success = False
+                    
+                    if not success:
+                        all_saved = False
+                        break
+                
+                if all_saved:
+                    # Aceptar el cierre
+                    event.accept()
+                else:
+                    # Cancelar el cierre si hubo error al guardar
+                    event.ignore()
+                
+            elif clicked_button == discard_btn:
+                # Descartar cambios y cerrar
+                event.accept()
+                
+            else:  # cancel_btn
+                # Cancelar el cierre
+                event.ignore()
+        else:
+            # No hay cambios sin guardar, cerrar normalmente
+            event.accept()
+

@@ -26,63 +26,49 @@ class Ui_FrmEmpresas(object):
     def setupUi(self, FrmEmpresas):
         if not FrmEmpresas.objectName():
             FrmEmpresas.setObjectName(u"FrmEmpresas")
-        FrmEmpresas.resize(1104, 743)
+        FrmEmpresas.resize(1261, 751)
         icon = QIcon()
         icon.addFile(u":/Icons/PNG/NeuX.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         FrmEmpresas.setWindowIcon(icon)
         self.gridLayout_2 = QGridLayout(FrmEmpresas)
         self.gridLayout_2.setObjectName(u"gridLayout_2")
-        self.label = QLabel(FrmEmpresas)
-        self.label.setObjectName(u"label")
-        self.label.setStyleSheet(u"background-color: #304163;\n"
-"font: 14pt \"Sans Serif\";\n"
-"color: rgb(255, 255, 255);")
-        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
-
         self.stackedWidget = QStackedWidget(FrmEmpresas)
         self.stackedWidget.setObjectName(u"stackedWidget")
         self.create_page_empresa = QWidget()
         self.create_page_empresa.setObjectName(u"create_page_empresa")
         self.gridLayout_14 = QGridLayout(self.create_page_empresa)
         self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.btn_guardar_nuevo = QPushButton(self.create_page_empresa)
+        self.btn_guardar_nuevo.setObjectName(u"btn_guardar_nuevo")
+        icon1 = QIcon()
+        icon1.addFile(u":/Icons/PNG/Save.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btn_guardar_nuevo.setIcon(icon1)
+
+        self.gridLayout_14.addWidget(self.btn_guardar_nuevo, 3, 0, 1, 1)
+
+        self.pushButton = QPushButton(self.create_page_empresa)
+        self.pushButton.setObjectName(u"pushButton")
+
+        self.gridLayout_14.addWidget(self.pushButton, 4, 0, 1, 1)
+
         self.tabWidget = QTabWidget(self.create_page_empresa)
         self.tabWidget.setObjectName(u"tabWidget")
-        self.tabWidget.setMaximumSize(QSize(1080, 16777215))
+        self.tabWidget.setMaximumSize(QSize(1216, 16777215))
         self.tabWidget.setStyleSheet(u"")
         self.tabWidgetPage1 = QWidget()
         self.tabWidgetPage1.setObjectName(u"tabWidgetPage1")
         self.gridLayout_12 = QGridLayout(self.tabWidgetPage1)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
-        self.txtdireccion1 = QLineEdit(self.tabWidgetPage1)
-        self.txtdireccion1.setObjectName(u"txtdireccion1")
-        self.txtdireccion1.setClearButtonEnabled(True)
-
-        self.gridLayout_12.addWidget(self.txtdireccion1, 3, 2, 1, 1)
-
-        self.label_21 = QLabel(self.tabWidgetPage1)
-        self.label_21.setObjectName(u"label_21")
+        self.label_22 = QLabel(self.tabWidgetPage1)
+        self.label_22.setObjectName(u"label_22")
         sizePolicy = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Preferred)
         sizePolicy.setHorizontalStretch(0)
         sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
-        self.label_21.setSizePolicy(sizePolicy)
-        self.label_21.setMinimumSize(QSize(80, 0))
+        sizePolicy.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
+        self.label_22.setSizePolicy(sizePolicy)
+        self.label_22.setMinimumSize(QSize(66, 0))
 
-        self.gridLayout_12.addWidget(self.label_21, 14, 0, 1, 2)
-
-        self.txtNombreComercial = QLineEdit(self.tabWidgetPage1)
-        self.txtNombreComercial.setObjectName(u"txtNombreComercial")
-
-        self.gridLayout_12.addWidget(self.txtNombreComercial, 1, 2, 1, 1)
-
-        self.label_23 = QLabel(self.tabWidgetPage1)
-        self.label_23.setObjectName(u"label_23")
-        sizePolicy.setHeightForWidth(self.label_23.sizePolicy().hasHeightForWidth())
-        self.label_23.setSizePolicy(sizePolicy)
-
-        self.gridLayout_12.addWidget(self.label_23, 9, 0, 1, 2)
+        self.gridLayout_12.addWidget(self.label_22, 6, 0, 1, 1)
 
         self.label_17 = QLabel(self.tabWidgetPage1)
         self.label_17.setObjectName(u"label_17")
@@ -92,47 +78,27 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_12.addWidget(self.label_17, 10, 0, 1, 2)
 
-        self.verticalSpacer_9 = QSpacerItem(20, 136, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.txtcMail = QLineEdit(self.tabWidgetPage1)
+        self.txtcMail.setObjectName(u"txtcMail")
 
-        self.gridLayout_12.addItem(self.verticalSpacer_9, 15, 1, 1, 1)
+        self.gridLayout_12.addWidget(self.txtcMail, 15, 3, 1, 1)
 
-        self.label_14 = QLabel(self.tabWidgetPage1)
-        self.label_14.setObjectName(u"label_14")
-        sizePolicy.setHeightForWidth(self.label_14.sizePolicy().hasHeightForWidth())
-        self.label_14.setSizePolicy(sizePolicy)
+        self.label_53 = QLabel(self.tabWidgetPage1)
+        self.label_53.setObjectName(u"label_53")
 
-        self.gridLayout_12.addWidget(self.label_14, 2, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.label_53, 7, 0, 1, 1)
 
-        self.txtcInscripcion = QLineEdit(self.tabWidgetPage1)
-        self.txtcInscripcion.setObjectName(u"txtcInscripcion")
-        self.txtcInscripcion.setClearButtonEnabled(True)
+        self.label_74 = QLabel(self.tabWidgetPage1)
+        self.label_74.setObjectName(u"label_74")
 
-        self.gridLayout_12.addWidget(self.txtcInscripcion, 9, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.label_74, 0, 0, 1, 1)
 
-        self.horizontalLayout_2 = QHBoxLayout()
-        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
-        self.txtprovincia = QLineEdit(self.tabWidgetPage1)
-        self.txtprovincia.setObjectName(u"txtprovincia")
-        self.txtprovincia.setMaximumSize(QSize(200, 16777215))
-        self.txtprovincia.setClearButtonEnabled(True)
+        self.txttelefono1 = QLineEdit(self.tabWidgetPage1)
+        self.txttelefono1.setObjectName(u"txttelefono1")
+        self.txttelefono1.setMaximumSize(QSize(150, 16777215))
+        self.txttelefono1.setClearButtonEnabled(True)
 
-        self.horizontalLayout_2.addWidget(self.txtprovincia)
-
-        self.label_16 = QLabel(self.tabWidgetPage1)
-        self.label_16.setObjectName(u"label_16")
-        sizePolicy.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
-        self.label_16.setSizePolicy(sizePolicy)
-
-        self.horizontalLayout_2.addWidget(self.label_16)
-
-        self.cboPais_create = QComboBox(self.tabWidgetPage1)
-        self.cboPais_create.setObjectName(u"cboPais_create")
-        self.cboPais_create.setMaximumSize(QSize(250, 16777215))
-
-        self.horizontalLayout_2.addWidget(self.cboPais_create)
-
-
-        self.gridLayout_12.addLayout(self.horizontalLayout_2, 5, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.txttelefono1, 10, 3, 1, 1)
 
         self.label_15 = QLabel(self.tabWidgetPage1)
         self.label_15.setObjectName(u"label_15")
@@ -140,6 +106,50 @@ class Ui_FrmEmpresas(object):
         self.label_15.setSizePolicy(sizePolicy)
 
         self.gridLayout_12.addWidget(self.label_15, 5, 0, 1, 2)
+
+        self.txtcInscripcion = QLineEdit(self.tabWidgetPage1)
+        self.txtcInscripcion.setObjectName(u"txtcInscripcion")
+        self.txtcInscripcion.setClearButtonEnabled(True)
+
+        self.gridLayout_12.addWidget(self.txtcInscripcion, 9, 3, 1, 1)
+
+        self.txtMovil = QLineEdit(self.tabWidgetPage1)
+        self.txtMovil.setObjectName(u"txtMovil")
+        self.txtMovil.setMaximumSize(QSize(150, 16777215))
+
+        self.gridLayout_12.addWidget(self.txtMovil, 13, 3, 1, 1)
+
+        self.txttelefono2 = QLineEdit(self.tabWidgetPage1)
+        self.txttelefono2.setObjectName(u"txttelefono2")
+        self.txttelefono2.setMaximumSize(QSize(150, 16777215))
+        self.txttelefono2.setClearButtonEnabled(True)
+
+        self.gridLayout_12.addWidget(self.txttelefono2, 11, 3, 1, 1)
+
+        self.txtweb = QLineEdit(self.tabWidgetPage1)
+        self.txtweb.setObjectName(u"txtweb")
+
+        self.gridLayout_12.addWidget(self.txtweb, 16, 3, 1, 1)
+
+        self.label_19 = QLabel(self.tabWidgetPage1)
+        self.label_19.setObjectName(u"label_19")
+        sizePolicy.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
+        self.label_19.setSizePolicy(sizePolicy)
+        self.label_19.setMinimumSize(QSize(80, 0))
+
+        self.gridLayout_12.addWidget(self.label_19, 13, 0, 1, 1)
+
+        self.txtNombreComercial = QLineEdit(self.tabWidgetPage1)
+        self.txtNombreComercial.setObjectName(u"txtNombreComercial")
+
+        self.gridLayout_12.addWidget(self.txtNombreComercial, 1, 3, 1, 1)
+
+        self.label_23 = QLabel(self.tabWidgetPage1)
+        self.label_23.setObjectName(u"label_23")
+        sizePolicy.setHeightForWidth(self.label_23.sizePolicy().hasHeightForWidth())
+        self.label_23.setSizePolicy(sizePolicy)
+
+        self.gridLayout_12.addWidget(self.label_23, 9, 0, 1, 2)
 
         self.label_13 = QLabel(self.tabWidgetPage1)
         self.label_13.setObjectName(u"label_13")
@@ -176,7 +186,119 @@ class Ui_FrmEmpresas(object):
         self.horizontalLayout_7.addWidget(self.lineEdit_6)
 
 
-        self.gridLayout_12.addLayout(self.horizontalLayout_7, 7, 2, 1, 1)
+        self.gridLayout_12.addLayout(self.horizontalLayout_7, 7, 3, 1, 1)
+
+        self.label_20 = QLabel(self.tabWidgetPage1)
+        self.label_20.setObjectName(u"label_20")
+        sizePolicy.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
+        self.label_20.setSizePolicy(sizePolicy)
+        self.label_20.setMinimumSize(QSize(80, 0))
+
+        self.gridLayout_12.addWidget(self.label_20, 15, 0, 1, 1)
+
+        self.horizontalLayout_2 = QHBoxLayout()
+        self.horizontalLayout_2.setObjectName(u"horizontalLayout_2")
+        self.txtprovincia = QLineEdit(self.tabWidgetPage1)
+        self.txtprovincia.setObjectName(u"txtprovincia")
+        self.txtprovincia.setClearButtonEnabled(True)
+
+        self.horizontalLayout_2.addWidget(self.txtprovincia)
+
+        self.label_16 = QLabel(self.tabWidgetPage1)
+        self.label_16.setObjectName(u"label_16")
+        sizePolicy.setHeightForWidth(self.label_16.sizePolicy().hasHeightForWidth())
+        self.label_16.setSizePolicy(sizePolicy)
+
+        self.horizontalLayout_2.addWidget(self.label_16)
+
+        self.cboPais_create = QComboBox(self.tabWidgetPage1)
+        self.cboPais_create.setObjectName(u"cboPais_create")
+        self.cboPais_create.setMinimumSize(QSize(168, 0))
+        self.cboPais_create.setMaximumSize(QSize(250, 16777215))
+
+        self.horizontalLayout_2.addWidget(self.cboPais_create)
+
+
+        self.gridLayout_12.addLayout(self.horizontalLayout_2, 5, 3, 1, 1)
+
+        self.label_18 = QLabel(self.tabWidgetPage1)
+        self.label_18.setObjectName(u"label_18")
+        sizePolicy.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
+        self.label_18.setSizePolicy(sizePolicy)
+        self.label_18.setMinimumSize(QSize(80, 0))
+
+        self.gridLayout_12.addWidget(self.label_18, 11, 0, 1, 2)
+
+        self.label_21 = QLabel(self.tabWidgetPage1)
+        self.label_21.setObjectName(u"label_21")
+        sizePolicy.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
+        self.label_21.setSizePolicy(sizePolicy)
+        self.label_21.setMinimumSize(QSize(80, 0))
+
+        self.gridLayout_12.addWidget(self.label_21, 16, 0, 1, 2)
+
+        self.horizontalLayout_4 = QHBoxLayout()
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.txtcodigo = QLineEdit(self.tabWidgetPage1)
+        self.txtcodigo.setObjectName(u"txtcodigo")
+        self.txtcodigo.setMaximumSize(QSize(100, 16777215))
+        self.txtcodigo.setReadOnly(False)
+        self.txtcodigo.setClearButtonEnabled(True)
+
+        self.horizontalLayout_4.addWidget(self.txtcodigo)
+
+        self.label_75 = QLabel(self.tabWidgetPage1)
+        self.label_75.setObjectName(u"label_75")
+
+        self.horizontalLayout_4.addWidget(self.label_75)
+
+        self.txtEmpresa = QLineEdit(self.tabWidgetPage1)
+        self.txtEmpresa.setObjectName(u"txtEmpresa")
+        self.txtEmpresa.setMinimumSize(QSize(332, 0))
+        self.txtEmpresa.setMaximumSize(QSize(16777215, 16777215))
+        self.txtEmpresa.setReadOnly(False)
+        self.txtEmpresa.setClearButtonEnabled(True)
+
+        self.horizontalLayout_4.addWidget(self.txtEmpresa)
+
+        self.label_24 = QLabel(self.tabWidgetPage1)
+        self.label_24.setObjectName(u"label_24")
+
+        self.horizontalLayout_4.addWidget(self.label_24)
+
+        self.cboFormajuridica = QComboBox(self.tabWidgetPage1)
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.addItem("")
+        self.cboFormajuridica.setObjectName(u"cboFormajuridica")
+        self.cboFormajuridica.setMaximumSize(QSize(205, 16777215))
+        self.cboFormajuridica.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
+        self.cboFormajuridica.setMinimumContentsLength(150)
+
+        self.horizontalLayout_4.addWidget(self.cboFormajuridica)
+
+        self.label_6 = QLabel(self.tabWidgetPage1)
+        self.label_6.setObjectName(u"label_6")
+
+        self.horizontalLayout_4.addWidget(self.label_6)
+
+        self.cboGrupoEmpresa = QComboBox(self.tabWidgetPage1)
+        self.cboGrupoEmpresa.setObjectName(u"cboGrupoEmpresa")
+        self.cboGrupoEmpresa.setMinimumSize(QSize(152, 0))
+        self.cboGrupoEmpresa.setEditable(False)
+
+        self.horizontalLayout_4.addWidget(self.cboGrupoEmpresa)
+
+
+        self.gridLayout_12.addLayout(self.horizontalLayout_4, 0, 3, 1, 1)
 
         self.horizontalLayout_6 = QHBoxLayout()
         self.horizontalLayout_6.setObjectName(u"horizontalLayout_6")
@@ -217,129 +339,19 @@ class Ui_FrmEmpresas(object):
         self.horizontalLayout_6.addItem(self.horizontalSpacer_9)
 
 
-        self.gridLayout_12.addLayout(self.horizontalLayout_6, 6, 2, 1, 1)
+        self.gridLayout_12.addLayout(self.horizontalLayout_6, 6, 3, 1, 1)
 
-        self.txttelefono1 = QLineEdit(self.tabWidgetPage1)
-        self.txttelefono1.setObjectName(u"txttelefono1")
-        self.txttelefono1.setMaximumSize(QSize(150, 16777215))
-        self.txttelefono1.setClearButtonEnabled(True)
+        self.label_14 = QLabel(self.tabWidgetPage1)
+        self.label_14.setObjectName(u"label_14")
+        sizePolicy.setHeightForWidth(self.label_14.sizePolicy().hasHeightForWidth())
+        self.label_14.setSizePolicy(sizePolicy)
 
-        self.gridLayout_12.addWidget(self.txttelefono1, 10, 2, 1, 1)
-
-        self.label_74 = QLabel(self.tabWidgetPage1)
-        self.label_74.setObjectName(u"label_74")
-
-        self.gridLayout_12.addWidget(self.label_74, 0, 0, 1, 1)
-
-        self.label_18 = QLabel(self.tabWidgetPage1)
-        self.label_18.setObjectName(u"label_18")
-        sizePolicy.setHeightForWidth(self.label_18.sizePolicy().hasHeightForWidth())
-        self.label_18.setSizePolicy(sizePolicy)
-        self.label_18.setMinimumSize(QSize(80, 0))
-
-        self.gridLayout_12.addWidget(self.label_18, 11, 0, 1, 2)
-
-        self.txtcMail = QLineEdit(self.tabWidgetPage1)
-        self.txtcMail.setObjectName(u"txtcMail")
-        self.txtcMail.setMaximumSize(QSize(150, 16777215))
-        self.txtcMail.setStyleSheet(u"background-color: rgb(255, 255, 255);")
-        self.txtcMail.setClearButtonEnabled(True)
-
-        self.gridLayout_12.addWidget(self.txtcMail, 13, 2, 1, 1)
-
-        self.label_22 = QLabel(self.tabWidgetPage1)
-        self.label_22.setObjectName(u"label_22")
-        sizePolicy.setHeightForWidth(self.label_22.sizePolicy().hasHeightForWidth())
-        self.label_22.setSizePolicy(sizePolicy)
-        self.label_22.setMinimumSize(QSize(66, 0))
-
-        self.gridLayout_12.addWidget(self.label_22, 6, 0, 1, 1)
-
-        self.horizontalLayout_4 = QHBoxLayout()
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.txtcodigo = QLineEdit(self.tabWidgetPage1)
-        self.txtcodigo.setObjectName(u"txtcodigo")
-        self.txtcodigo.setMaximumSize(QSize(100, 16777215))
-        self.txtcodigo.setReadOnly(False)
-        self.txtcodigo.setClearButtonEnabled(True)
-
-        self.horizontalLayout_4.addWidget(self.txtcodigo)
-
-        self.label_75 = QLabel(self.tabWidgetPage1)
-        self.label_75.setObjectName(u"label_75")
-
-        self.horizontalLayout_4.addWidget(self.label_75)
-
-        self.txtEmpresa = QLineEdit(self.tabWidgetPage1)
-        self.txtEmpresa.setObjectName(u"txtEmpresa")
-        self.txtEmpresa.setMinimumSize(QSize(380, 0))
-        self.txtEmpresa.setReadOnly(False)
-        self.txtEmpresa.setClearButtonEnabled(True)
-
-        self.horizontalLayout_4.addWidget(self.txtEmpresa)
-
-        self.label_24 = QLabel(self.tabWidgetPage1)
-        self.label_24.setObjectName(u"label_24")
-
-        self.horizontalLayout_4.addWidget(self.label_24)
-
-        self.cboFormajuridica = QComboBox(self.tabWidgetPage1)
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.addItem("")
-        self.cboFormajuridica.setObjectName(u"cboFormajuridica")
-        self.cboFormajuridica.setSizeAdjustPolicy(QComboBox.SizeAdjustPolicy.AdjustToContents)
-        self.cboFormajuridica.setMinimumContentsLength(150)
-
-        self.horizontalLayout_4.addWidget(self.cboFormajuridica)
-
-        self.label_6 = QLabel(self.tabWidgetPage1)
-        self.label_6.setObjectName(u"label_6")
-
-        self.horizontalLayout_4.addWidget(self.label_6)
-
-        self.cboGrupoEmpresa = QComboBox(self.tabWidgetPage1)
-        self.cboGrupoEmpresa.setObjectName(u"cboGrupoEmpresa")
-        self.cboGrupoEmpresa.setEditable(False)
-
-        self.horizontalLayout_4.addWidget(self.cboGrupoEmpresa)
-
-
-        self.gridLayout_12.addLayout(self.horizontalLayout_4, 0, 2, 1, 1)
-
-        self.label_20 = QLabel(self.tabWidgetPage1)
-        self.label_20.setObjectName(u"label_20")
-        sizePolicy.setHeightForWidth(self.label_20.sizePolicy().hasHeightForWidth())
-        self.label_20.setSizePolicy(sizePolicy)
-        self.label_20.setMinimumSize(QSize(80, 0))
-
-        self.gridLayout_12.addWidget(self.label_20, 13, 0, 1, 2)
-
-        self.txtweb = QLineEdit(self.tabWidgetPage1)
-        self.txtweb.setObjectName(u"txtweb")
-        self.txtweb.setMaximumSize(QSize(150, 16777215))
-        self.txtweb.setStyleSheet(u"background-color: rgb(255, 255, 255);")
-        self.txtweb.setClearButtonEnabled(True)
-
-        self.gridLayout_12.addWidget(self.txtweb, 14, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.label_14, 2, 0, 1, 1)
 
         self.label_43 = QLabel(self.tabWidgetPage1)
         self.label_43.setObjectName(u"label_43")
 
         self.gridLayout_12.addWidget(self.label_43, 1, 0, 1, 1)
-
-        self.label_53 = QLabel(self.tabWidgetPage1)
-        self.label_53.setObjectName(u"label_53")
-
-        self.gridLayout_12.addWidget(self.label_53, 7, 0, 1, 1)
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName(u"horizontalLayout")
@@ -362,30 +374,13 @@ class Ui_FrmEmpresas(object):
         self.horizontalLayout.addWidget(self.txtpoblacion)
 
 
-        self.gridLayout_12.addLayout(self.horizontalLayout, 2, 2, 1, 1)
+        self.gridLayout_12.addLayout(self.horizontalLayout, 2, 3, 1, 1)
 
-        self.txttelefono2 = QLineEdit(self.tabWidgetPage1)
-        self.txttelefono2.setObjectName(u"txttelefono2")
-        self.txttelefono2.setMaximumSize(QSize(150, 16777215))
-        self.txttelefono2.setClearButtonEnabled(True)
+        self.txtdireccion1 = QLineEdit(self.tabWidgetPage1)
+        self.txtdireccion1.setObjectName(u"txtdireccion1")
+        self.txtdireccion1.setClearButtonEnabled(True)
 
-        self.gridLayout_12.addWidget(self.txttelefono2, 11, 2, 1, 1)
-
-        self.label_19 = QLabel(self.tabWidgetPage1)
-        self.label_19.setObjectName(u"label_19")
-        sizePolicy.setHeightForWidth(self.label_19.sizePolicy().hasHeightForWidth())
-        self.label_19.setSizePolicy(sizePolicy)
-        self.label_19.setMinimumSize(QSize(80, 0))
-
-        self.gridLayout_12.addWidget(self.label_19, 12, 0, 1, 2)
-
-        self.txtMovil = QLineEdit(self.tabWidgetPage1)
-        self.txtMovil.setObjectName(u"txtMovil")
-        self.txtMovil.setMaximumSize(QSize(150, 16777215))
-        self.txtMovil.setStyleSheet(u"background-color: rgb(255, 255, 255);")
-        self.txtMovil.setClearButtonEnabled(True)
-
-        self.gridLayout_12.addWidget(self.txtMovil, 12, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.txtdireccion1, 3, 3, 1, 1)
 
         self.tabWidget.addTab(self.tabWidgetPage1, "")
         self.tab = QWidget()
@@ -400,41 +395,6 @@ class Ui_FrmEmpresas(object):
         self.tab_12.setObjectName(u"tab_12")
         self.gridLayout_21 = QGridLayout(self.tab_12)
         self.gridLayout_21.setObjectName(u"gridLayout_21")
-        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
-
-        self.gridLayout_21.addItem(self.horizontalSpacer, 0, 3, 1, 1)
-
-        self.groupBox_3 = QGroupBox(self.tab_12)
-        self.groupBox_3.setObjectName(u"groupBox_3")
-        sizePolicy.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
-        self.groupBox_3.setSizePolicy(sizePolicy)
-        self.gridLayout_11 = QGridLayout(self.groupBox_3)
-        self.gridLayout_11.setObjectName(u"gridLayout_11")
-        self.label_25 = QLabel(self.groupBox_3)
-        self.label_25.setObjectName(u"label_25")
-
-        self.gridLayout_11.addWidget(self.label_25, 0, 0, 1, 1)
-
-        self.spinDigitos = QSpinBox(self.groupBox_3)
-        self.spinDigitos.setObjectName(u"spinDigitos")
-        self.spinDigitos.setMaximum(45)
-        self.spinDigitos.setValue(7)
-
-        self.gridLayout_11.addWidget(self.spinDigitos, 0, 1, 1, 1)
-
-        self.cboSerie = QComboBox(self.groupBox_3)
-        self.cboSerie.setObjectName(u"cboSerie")
-
-        self.gridLayout_11.addWidget(self.cboSerie, 1, 1, 1, 1)
-
-        self.label_26 = QLabel(self.groupBox_3)
-        self.label_26.setObjectName(u"label_26")
-
-        self.gridLayout_11.addWidget(self.label_26, 1, 0, 1, 1)
-
-
-        self.gridLayout_21.addWidget(self.groupBox_3, 3, 1, 1, 1)
-
         self.groupBox_14 = QGroupBox(self.tab_12)
         self.groupBox_14.setObjectName(u"groupBox_14")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
@@ -464,32 +424,36 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_21.addWidget(self.groupBox_14, 2, 1, 1, 1)
 
-        self.groupBox_2 = QGroupBox(self.tab_12)
-        self.groupBox_2.setObjectName(u"groupBox_2")
-        self.gridLayout_10 = QGridLayout(self.groupBox_2)
-        self.gridLayout_10.setObjectName(u"gridLayout_10")
-        self.chkAutocodificiar = QCheckBox(self.groupBox_2)
-        self.chkAutocodificiar.setObjectName(u"chkAutocodificiar")
-        self.chkAutocodificiar.setChecked(True)
+        self.groupBox_4 = QGroupBox(self.tab_12)
+        self.groupBox_4.setObjectName(u"groupBox_4")
+        self.gridLayout_17 = QGridLayout(self.groupBox_4)
+        self.gridLayout_17.setObjectName(u"gridLayout_17")
+        self.chkIRPF = QCheckBox(self.groupBox_4)
+        self.chkIRPF.setObjectName(u"chkIRPF")
+        self.chkIRPF.setMaximumSize(QSize(135, 16777215))
 
-        self.gridLayout_10.addWidget(self.chkAutocodificiar, 0, 0, 1, 1)
+        self.gridLayout_17.addWidget(self.chkIRPF, 1, 0, 1, 1)
 
-        self.txttamano_codigoart = QSpinBox(self.groupBox_2)
-        self.txttamano_codigoart.setObjectName(u"txttamano_codigoart")
-        self.txttamano_codigoart.setMaximumSize(QSize(60, 16777215))
-        self.txttamano_codigoart.setValue(15)
+        self.horizontalLayout_5 = QHBoxLayout()
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.label_71 = QLabel(self.groupBox_4)
+        self.label_71.setObjectName(u"label_71")
 
-        self.gridLayout_10.addWidget(self.txttamano_codigoart, 1, 1, 1, 1)
+        self.horizontalLayout_5.addWidget(self.label_71)
 
-        self.label_41 = QLabel(self.groupBox_2)
-        self.label_41.setObjectName(u"label_41")
-        sizePolicy.setHeightForWidth(self.label_41.sizePolicy().hasHeightForWidth())
-        self.label_41.setSizePolicy(sizePolicy)
+        self.spinPorc_irpf = QDoubleSpinBox(self.groupBox_4)
+        self.spinPorc_irpf.setObjectName(u"spinPorc_irpf")
+        self.spinPorc_irpf.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.spinPorc_irpf.setMinimum(-999999.000000000000000)
+        self.spinPorc_irpf.setMaximum(9999999.000000000000000)
 
-        self.gridLayout_10.addWidget(self.label_41, 1, 0, 1, 1)
+        self.horizontalLayout_5.addWidget(self.spinPorc_irpf)
 
 
-        self.gridLayout_21.addWidget(self.groupBox_2, 2, 0, 1, 1)
+        self.gridLayout_17.addLayout(self.horizontalLayout_5, 2, 0, 1, 1)
+
+
+        self.gridLayout_21.addWidget(self.groupBox_4, 3, 0, 1, 1)
 
         self.groupBox_12 = QGroupBox(self.tab_12)
         self.groupBox_12.setObjectName(u"groupBox_12")
@@ -525,36 +489,100 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_21.addWidget(self.groupBox_12, 0, 2, 1, 1)
 
-        self.groupBox_4 = QGroupBox(self.tab_12)
-        self.groupBox_4.setObjectName(u"groupBox_4")
-        self.gridLayout_17 = QGridLayout(self.groupBox_4)
-        self.gridLayout_17.setObjectName(u"gridLayout_17")
-        self.chkIRPF = QCheckBox(self.groupBox_4)
-        self.chkIRPF.setObjectName(u"chkIRPF")
-        self.chkIRPF.setMaximumSize(QSize(135, 16777215))
+        self.groupBox_3 = QGroupBox(self.tab_12)
+        self.groupBox_3.setObjectName(u"groupBox_3")
+        sizePolicy.setHeightForWidth(self.groupBox_3.sizePolicy().hasHeightForWidth())
+        self.groupBox_3.setSizePolicy(sizePolicy)
+        self.gridLayout_11 = QGridLayout(self.groupBox_3)
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.label_25 = QLabel(self.groupBox_3)
+        self.label_25.setObjectName(u"label_25")
 
-        self.gridLayout_17.addWidget(self.chkIRPF, 1, 0, 1, 1)
+        self.gridLayout_11.addWidget(self.label_25, 0, 0, 1, 1)
 
-        self.horizontalLayout_5 = QHBoxLayout()
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.label_71 = QLabel(self.groupBox_4)
-        self.label_71.setObjectName(u"label_71")
+        self.spinDigitos = QSpinBox(self.groupBox_3)
+        self.spinDigitos.setObjectName(u"spinDigitos")
+        self.spinDigitos.setMaximum(45)
+        self.spinDigitos.setValue(7)
 
-        self.horizontalLayout_5.addWidget(self.label_71)
+        self.gridLayout_11.addWidget(self.spinDigitos, 0, 1, 1, 1)
 
-        self.spinPorc_irpf = QDoubleSpinBox(self.groupBox_4)
-        self.spinPorc_irpf.setObjectName(u"spinPorc_irpf")
-        self.spinPorc_irpf.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-        self.spinPorc_irpf.setMinimum(-999999.000000000000000)
-        self.spinPorc_irpf.setMaximum(9999999.000000000000000)
+        self.cboSerie = QComboBox(self.groupBox_3)
+        self.cboSerie.setObjectName(u"cboSerie")
 
-        self.horizontalLayout_5.addWidget(self.spinPorc_irpf)
+        self.gridLayout_11.addWidget(self.cboSerie, 1, 1, 1, 1)
+
+        self.label_26 = QLabel(self.groupBox_3)
+        self.label_26.setObjectName(u"label_26")
+
+        self.gridLayout_11.addWidget(self.label_26, 1, 0, 1, 1)
 
 
-        self.gridLayout_17.addLayout(self.horizontalLayout_5, 2, 0, 1, 1)
+        self.gridLayout_21.addWidget(self.groupBox_3, 3, 1, 1, 1)
+
+        self.horizontalLayout_8 = QHBoxLayout()
+        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
+        self.label_68 = QLabel(self.tab_12)
+        self.label_68.setObjectName(u"label_68")
+
+        self.horizontalLayout_8.addWidget(self.label_68)
+
+        self.txtDiaCierre = QSpinBox(self.tab_12)
+        self.txtDiaCierre.setObjectName(u"txtDiaCierre")
+        self.txtDiaCierre.setMinimum(1)
+        self.txtDiaCierre.setMaximum(31)
+        self.txtDiaCierre.setValue(31)
+
+        self.horizontalLayout_8.addWidget(self.txtDiaCierre)
+
+        self.tstMesCierre = QSpinBox(self.tab_12)
+        self.tstMesCierre.setObjectName(u"tstMesCierre")
+        self.tstMesCierre.setMinimum(1)
+        self.tstMesCierre.setMaximum(12)
+        self.tstMesCierre.setValue(12)
+
+        self.horizontalLayout_8.addWidget(self.tstMesCierre)
 
 
-        self.gridLayout_21.addWidget(self.groupBox_4, 3, 0, 1, 1)
+        self.gridLayout_21.addLayout(self.horizontalLayout_8, 1, 0, 1, 1)
+
+        self.groupBox_5 = QGroupBox(self.tab_12)
+        self.groupBox_5.setObjectName(u"groupBox_5")
+        self.chkEnlace_web = QCheckBox(self.groupBox_5)
+        self.chkEnlace_web.setObjectName(u"chkEnlace_web")
+        self.chkEnlace_web.setGeometry(QRect(0, 50, 307, 22))
+        self.chkInternacional = QCheckBox(self.groupBox_5)
+        self.chkInternacional.setObjectName(u"chkInternacional")
+        self.chkInternacional.setGeometry(QRect(0, 80, 307, 22))
+
+        self.gridLayout_21.addWidget(self.groupBox_5, 0, 0, 1, 1)
+
+        self.groupBox_2 = QGroupBox(self.tab_12)
+        self.groupBox_2.setObjectName(u"groupBox_2")
+        self.gridLayout_10 = QGridLayout(self.groupBox_2)
+        self.gridLayout_10.setObjectName(u"gridLayout_10")
+        self.chkAutocodificiar = QCheckBox(self.groupBox_2)
+        self.chkAutocodificiar.setObjectName(u"chkAutocodificiar")
+        self.chkAutocodificiar.setChecked(True)
+
+        self.gridLayout_10.addWidget(self.chkAutocodificiar, 0, 0, 1, 1)
+
+        self.txttamano_codigoart = QSpinBox(self.groupBox_2)
+        self.txttamano_codigoart.setObjectName(u"txttamano_codigoart")
+        self.txttamano_codigoart.setMaximumSize(QSize(60, 16777215))
+        self.txttamano_codigoart.setValue(15)
+
+        self.gridLayout_10.addWidget(self.txttamano_codigoart, 1, 1, 1, 1)
+
+        self.label_41 = QLabel(self.groupBox_2)
+        self.label_41.setObjectName(u"label_41")
+        sizePolicy.setHeightForWidth(self.label_41.sizePolicy().hasHeightForWidth())
+        self.label_41.setSizePolicy(sizePolicy)
+
+        self.gridLayout_10.addWidget(self.label_41, 1, 0, 1, 1)
+
+
+        self.gridLayout_21.addWidget(self.groupBox_2, 2, 0, 1, 1)
 
         self.groupBox = QGroupBox(self.tab_12)
         self.groupBox.setObjectName(u"groupBox")
@@ -593,61 +621,29 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_21.addWidget(self.groupBox, 0, 1, 2, 1)
 
-        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+        self.gridLayout = QGridLayout()
+        self.gridLayout.setObjectName(u"gridLayout")
+        self.btnDeleteLogo = QPushButton(self.tab_12)
+        self.btnDeleteLogo.setObjectName(u"btnDeleteLogo")
 
-        self.gridLayout_21.addItem(self.verticalSpacer_5, 4, 0, 1, 1)
+        self.gridLayout.addWidget(self.btnDeleteLogo, 2, 0, 1, 1)
 
-        self.groupBox_5 = QGroupBox(self.tab_12)
-        self.groupBox_5.setObjectName(u"groupBox_5")
-        self.chkEnlace_web = QCheckBox(self.groupBox_5)
-        self.chkEnlace_web.setObjectName(u"chkEnlace_web")
-        self.chkEnlace_web.setGeometry(QRect(0, 50, 307, 22))
-        self.chkInternacional = QCheckBox(self.groupBox_5)
-        self.chkInternacional.setObjectName(u"chkInternacional")
-        self.chkInternacional.setGeometry(QRect(0, 80, 307, 22))
+        self.btnAddLogo = QPushButton(self.tab_12)
+        self.btnAddLogo.setObjectName(u"btnAddLogo")
 
-        self.gridLayout_21.addWidget(self.groupBox_5, 0, 0, 1, 1)
-
-        self.horizontalLayout_8 = QHBoxLayout()
-        self.horizontalLayout_8.setObjectName(u"horizontalLayout_8")
-        self.label_68 = QLabel(self.tab_12)
-        self.label_68.setObjectName(u"label_68")
-
-        self.horizontalLayout_8.addWidget(self.label_68)
-
-        self.txtDiaCierre = QSpinBox(self.tab_12)
-        self.txtDiaCierre.setObjectName(u"txtDiaCierre")
-        self.txtDiaCierre.setMinimum(1)
-        self.txtDiaCierre.setMaximum(31)
-        self.txtDiaCierre.setValue(31)
-
-        self.horizontalLayout_8.addWidget(self.txtDiaCierre)
-
-        self.tstMesCierre = QSpinBox(self.tab_12)
-        self.tstMesCierre.setObjectName(u"tstMesCierre")
-        self.tstMesCierre.setMinimum(1)
-        self.tstMesCierre.setMaximum(12)
-        self.tstMesCierre.setValue(12)
-
-        self.horizontalLayout_8.addWidget(self.tstMesCierre)
+        self.gridLayout.addWidget(self.btnAddLogo, 1, 0, 1, 1)
 
 
-        self.gridLayout_21.addLayout(self.horizontalLayout_8, 1, 0, 1, 1)
+        self.gridLayout_21.addLayout(self.gridLayout, 4, 2, 1, 1)
 
         self.groupBox_6 = QGroupBox(self.tab_12)
         self.groupBox_6.setObjectName(u"groupBox_6")
         self.imgLogo = QLabel(self.groupBox_6)
         self.imgLogo.setObjectName(u"imgLogo")
-        self.imgLogo.setGeometry(QRect(10, 40, 601, 221))
+        self.imgLogo.setGeometry(QRect(20, 40, 431, 221))
         self.imgLogo.setMaximumSize(QSize(1211, 348))
         self.imgLogo.setPixmap(QPixmap(u":/Icons/PNG/Neux_red_fox.png"))
         self.imgLogo.setScaledContents(True)
-        self.btnAddLogo = QPushButton(self.groupBox_6)
-        self.btnAddLogo.setObjectName(u"btnAddLogo")
-        self.btnAddLogo.setGeometry(QRect(430, 270, 88, 34))
-        self.btnDeleteLogo = QPushButton(self.groupBox_6)
-        self.btnDeleteLogo.setObjectName(u"btnDeleteLogo")
-        self.btnDeleteLogo.setGeometry(QRect(530, 270, 88, 34))
 
         self.gridLayout_21.addWidget(self.groupBox_6, 1, 2, 3, 1)
 
@@ -1127,64 +1123,64 @@ class Ui_FrmEmpresas(object):
         self.groupBox_8.setObjectName(u"groupBox_8")
         self.gridLayoutWidget_2 = QWidget(self.groupBox_8)
         self.gridLayoutWidget_2.setObjectName(u"gridLayoutWidget_2")
-        self.gridLayoutWidget_2.setGeometry(QRect(0, 70, 471, 188))
+        self.gridLayoutWidget_2.setGeometry(QRect(100, 50, 367, 188))
         self.gridLayout_19 = QGridLayout(self.gridLayoutWidget_2)
         self.gridLayout_19.setObjectName(u"gridLayout_19")
         self.gridLayout_19.setContentsMargins(0, 0, 0, 0)
+        self.label_84 = QLabel(self.gridLayoutWidget_2)
+        self.label_84.setObjectName(u"label_84")
+
+        self.gridLayout_19.addWidget(self.label_84, 0, 3, 1, 1)
+
+        self.pushButton_5 = QPushButton(self.gridLayoutWidget_2)
+        self.pushButton_5.setObjectName(u"pushButton_5")
+
+        self.gridLayout_19.addWidget(self.pushButton_5, 4, 0, 1, 5)
+
         self.txtUsuarioMariaDB_2 = QLineEdit(self.gridLayoutWidget_2)
         self.txtUsuarioMariaDB_2.setObjectName(u"txtUsuarioMariaDB_2")
 
         self.gridLayout_19.addWidget(self.txtUsuarioMariaDB_2, 2, 3, 1, 2)
-
-        self.lineEdit_16 = QLineEdit(self.gridLayoutWidget_2)
-        self.lineEdit_16.setObjectName(u"lineEdit_16")
-
-        self.gridLayout_19.addWidget(self.lineEdit_16, 1, 3, 1, 2)
-
-        self.lineEdit_17 = QLineEdit(self.gridLayoutWidget_2)
-        self.lineEdit_17.setObjectName(u"lineEdit_17")
-
-        self.gridLayout_19.addWidget(self.lineEdit_17, 0, 4, 1, 1)
 
         self.label_82 = QLabel(self.gridLayoutWidget_2)
         self.label_82.setObjectName(u"label_82")
 
         self.gridLayout_19.addWidget(self.label_82, 1, 0, 1, 2)
 
-        self.label_83 = QLabel(self.gridLayoutWidget_2)
-        self.label_83.setObjectName(u"label_83")
+        self.label_86 = QLabel(self.gridLayoutWidget_2)
+        self.label_86.setObjectName(u"label_86")
 
-        self.gridLayout_19.addWidget(self.label_83, 3, 0, 1, 2)
+        self.gridLayout_19.addWidget(self.label_86, 0, 0, 1, 1)
 
         self.txtHostMariaDB_2 = QLineEdit(self.gridLayoutWidget_2)
         self.txtHostMariaDB_2.setObjectName(u"txtHostMariaDB_2")
 
         self.gridLayout_19.addWidget(self.txtHostMariaDB_2, 0, 1, 1, 1)
 
+        self.lineEdit_17 = QLineEdit(self.gridLayoutWidget_2)
+        self.lineEdit_17.setObjectName(u"lineEdit_17")
+
+        self.gridLayout_19.addWidget(self.lineEdit_17, 0, 4, 1, 1)
+
         self.txtPasswordMariaDB_2 = QLineEdit(self.gridLayoutWidget_2)
         self.txtPasswordMariaDB_2.setObjectName(u"txtPasswordMariaDB_2")
 
         self.gridLayout_19.addWidget(self.txtPasswordMariaDB_2, 3, 3, 1, 2)
-
-        self.label_84 = QLabel(self.gridLayoutWidget_2)
-        self.label_84.setObjectName(u"label_84")
-
-        self.gridLayout_19.addWidget(self.label_84, 0, 3, 1, 1)
-
-        self.label_86 = QLabel(self.gridLayoutWidget_2)
-        self.label_86.setObjectName(u"label_86")
-
-        self.gridLayout_19.addWidget(self.label_86, 0, 0, 1, 1)
 
         self.label_87 = QLabel(self.gridLayoutWidget_2)
         self.label_87.setObjectName(u"label_87")
 
         self.gridLayout_19.addWidget(self.label_87, 2, 0, 1, 2)
 
-        self.pushButton_5 = QPushButton(self.gridLayoutWidget_2)
-        self.pushButton_5.setObjectName(u"pushButton_5")
+        self.lineEdit_16 = QLineEdit(self.gridLayoutWidget_2)
+        self.lineEdit_16.setObjectName(u"lineEdit_16")
 
-        self.gridLayout_19.addWidget(self.pushButton_5, 4, 0, 1, 5)
+        self.gridLayout_19.addWidget(self.lineEdit_16, 1, 3, 1, 2)
+
+        self.label_83 = QLabel(self.gridLayoutWidget_2)
+        self.label_83.setObjectName(u"label_83")
+
+        self.gridLayout_19.addWidget(self.label_83, 3, 0, 1, 2)
 
 
         self.gridLayout_5.addWidget(self.groupBox_8, 2, 0, 4, 1)
@@ -1198,11 +1194,67 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_5.addWidget(self.comboBox, 0, 1, 1, 2)
 
+        self.sqlite_frame = QFrame(self.tabWidgetPage2)
+        self.sqlite_frame.setObjectName(u"sqlite_frame")
+        self.sqlite_frame.setEnabled(True)
+        sizePolicy4.setHeightForWidth(self.sqlite_frame.sizePolicy().hasHeightForWidth())
+        self.sqlite_frame.setSizePolicy(sizePolicy4)
+        self.sqlite_frame.setFrameShape(QFrame.Shape.StyledPanel)
+        self.sqlite_frame.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_3 = QGridLayout(self.sqlite_frame)
+        self.gridLayout_3.setObjectName(u"gridLayout_3")
+        self.label_55 = QLabel(self.sqlite_frame)
+        self.label_55.setObjectName(u"label_55")
+
+        self.gridLayout_3.addWidget(self.label_55, 2, 0, 1, 1)
+
+        self.btnSeleccionarBDSQLiteConta = QPushButton(self.sqlite_frame)
+        self.btnSeleccionarBDSQLiteConta.setObjectName(u"btnSeleccionarBDSQLiteConta")
+
+        self.gridLayout_3.addWidget(self.btnSeleccionarBDSQLiteConta, 2, 2, 1, 1)
+
+        self.btn_migrar = QPushButton(self.sqlite_frame)
+        self.btn_migrar.setObjectName(u"btn_migrar")
+
+        self.gridLayout_3.addWidget(self.btn_migrar, 3, 0, 1, 1)
+
+        self.btnSelecionarBDSQLite = QPushButton(self.sqlite_frame)
+        self.btnSelecionarBDSQLite.setObjectName(u"btnSelecionarBDSQLite")
+
+        self.gridLayout_3.addWidget(self.btnSelecionarBDSQLite, 1, 2, 1, 1)
+
+        self.label_3 = QLabel(self.sqlite_frame)
+        self.label_3.setObjectName(u"label_3")
+
+        self.gridLayout_3.addWidget(self.label_3, 1, 0, 1, 1)
+
+        self.label_4 = QLabel(self.sqlite_frame)
+        self.label_4.setObjectName(u"label_4")
+
+        self.gridLayout_3.addWidget(self.label_4, 0, 0, 1, 2)
+
+        self.txtRutaBd = QLineEdit(self.sqlite_frame)
+        self.txtRutaBd.setObjectName(u"txtRutaBd")
+        self.txtRutaBd.setEnabled(False)
+        self.txtRutaBd.setMaximumSize(QSize(16777215, 20))
+
+        self.gridLayout_3.addWidget(self.txtRutaBd, 1, 1, 1, 1)
+
+        self.txtruta_bd_conta = QLineEdit(self.sqlite_frame)
+        self.txtruta_bd_conta.setObjectName(u"txtruta_bd_conta")
+        self.txtruta_bd_conta.setEnabled(False)
+        self.txtruta_bd_conta.setMaximumSize(QSize(16777215, 20))
+
+        self.gridLayout_3.addWidget(self.txtruta_bd_conta, 2, 1, 1, 1)
+
+
+        self.gridLayout_5.addWidget(self.sqlite_frame, 1, 0, 1, 3)
+
         self.groupBox_9 = QGroupBox(self.tabWidgetPage2)
         self.groupBox_9.setObjectName(u"groupBox_9")
         self.gridLayoutWidget = QWidget(self.groupBox_9)
         self.gridLayoutWidget.setObjectName(u"gridLayoutWidget")
-        self.gridLayoutWidget.setGeometry(QRect(0, 70, 471, 188))
+        self.gridLayoutWidget.setGeometry(QRect(90, 50, 471, 188))
         self.gridLayout_18 = QGridLayout(self.gridLayoutWidget)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
         self.gridLayout_18.setContentsMargins(0, 0, 0, 0)
@@ -1262,86 +1314,17 @@ class Ui_FrmEmpresas(object):
         self.gridLayout_18.addWidget(self.pushButton_4, 4, 0, 1, 5)
 
 
-        self.gridLayout_5.addWidget(self.groupBox_9, 2, 1, 4, 1)
-
-        self.sqlite_frame = QFrame(self.tabWidgetPage2)
-        self.sqlite_frame.setObjectName(u"sqlite_frame")
-        self.sqlite_frame.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.sqlite_frame.sizePolicy().hasHeightForWidth())
-        self.sqlite_frame.setSizePolicy(sizePolicy4)
-        self.sqlite_frame.setFrameShape(QFrame.Shape.StyledPanel)
-        self.sqlite_frame.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_3 = QGridLayout(self.sqlite_frame)
-        self.gridLayout_3.setObjectName(u"gridLayout_3")
-        self.label_55 = QLabel(self.sqlite_frame)
-        self.label_55.setObjectName(u"label_55")
-
-        self.gridLayout_3.addWidget(self.label_55, 2, 0, 1, 1)
-
-        self.btnSeleccionarBDSQLiteConta = QPushButton(self.sqlite_frame)
-        self.btnSeleccionarBDSQLiteConta.setObjectName(u"btnSeleccionarBDSQLiteConta")
-
-        self.gridLayout_3.addWidget(self.btnSeleccionarBDSQLiteConta, 2, 2, 1, 1)
-
-        self.btn_migrar = QPushButton(self.sqlite_frame)
-        self.btn_migrar.setObjectName(u"btn_migrar")
-
-        self.gridLayout_3.addWidget(self.btn_migrar, 3, 0, 1, 1)
-
-        self.btnSelecionarBDSQLite = QPushButton(self.sqlite_frame)
-        self.btnSelecionarBDSQLite.setObjectName(u"btnSelecionarBDSQLite")
-
-        self.gridLayout_3.addWidget(self.btnSelecionarBDSQLite, 1, 2, 1, 1)
-
-        self.label_3 = QLabel(self.sqlite_frame)
-        self.label_3.setObjectName(u"label_3")
-
-        self.gridLayout_3.addWidget(self.label_3, 1, 0, 1, 1)
-
-        self.label_4 = QLabel(self.sqlite_frame)
-        self.label_4.setObjectName(u"label_4")
-
-        self.gridLayout_3.addWidget(self.label_4, 0, 0, 1, 2)
-
-        self.txtRutaBd = QLineEdit(self.sqlite_frame)
-        self.txtRutaBd.setObjectName(u"txtRutaBd")
-        self.txtRutaBd.setEnabled(False)
-        self.txtRutaBd.setMaximumSize(QSize(16777215, 20))
-
-        self.gridLayout_3.addWidget(self.txtRutaBd, 1, 1, 1, 1)
-
-        self.txtruta_bd_conta = QLineEdit(self.sqlite_frame)
-        self.txtruta_bd_conta.setObjectName(u"txtruta_bd_conta")
-        self.txtruta_bd_conta.setEnabled(False)
-        self.txtruta_bd_conta.setMaximumSize(QSize(16777215, 20))
-
-        self.gridLayout_3.addWidget(self.txtruta_bd_conta, 2, 1, 1, 1)
-
-
-        self.gridLayout_5.addWidget(self.sqlite_frame, 1, 0, 1, 3)
-
-        self.pushButton = QPushButton(self.tabWidgetPage2)
-        self.pushButton.setObjectName(u"pushButton")
-
-        self.gridLayout_5.addWidget(self.pushButton, 4, 2, 1, 1)
-
-        self.btn_guardar_nuevo = QPushButton(self.tabWidgetPage2)
-        self.btn_guardar_nuevo.setObjectName(u"btn_guardar_nuevo")
-        icon1 = QIcon()
-        icon1.addFile(u":/Icons/PNG/Save.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btn_guardar_nuevo.setIcon(icon1)
-
-        self.gridLayout_5.addWidget(self.btn_guardar_nuevo, 3, 2, 1, 1)
-
-        self.btn_salir = QPushButton(self.tabWidgetPage2)
-        self.btn_salir.setObjectName(u"btn_salir")
-        self.btn_salir.setMaximumSize(QSize(80, 16777215))
-
-        self.gridLayout_5.addWidget(self.btn_salir, 5, 2, 1, 1)
+        self.gridLayout_5.addWidget(self.groupBox_9, 2, 1, 4, 4)
 
         self.tabWidget.addTab(self.tabWidgetPage2, "")
 
         self.gridLayout_14.addWidget(self.tabWidget, 2, 0, 1, 1)
+
+        self.btn_salir = QPushButton(self.create_page_empresa)
+        self.btn_salir.setObjectName(u"btn_salir")
+        self.btn_salir.setMaximumSize(QSize(16777215, 16777215))
+
+        self.gridLayout_14.addWidget(self.btn_salir, 5, 0, 1, 1)
 
         self.stackedWidget.addWidget(self.create_page_empresa)
         self.page = QWidget()
@@ -1353,18 +1336,42 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_2.addWidget(self.stackedWidget, 1, 0, 1, 1)
 
-        QWidget.setTabOrder(self.tabWidget, self.txtdireccion1)
-        QWidget.setTabOrder(self.txtdireccion1, self.txtcp)
+        self.label = QLabel(FrmEmpresas)
+        self.label.setObjectName(u"label")
+        self.label.setStyleSheet(u"background-color: #304163;\n"
+"font: 14pt \"Sans Serif\";\n"
+"color: rgb(255, 255, 255);")
+        self.label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.label, 0, 0, 1, 1)
+
+        QWidget.setTabOrder(self.txtcodigo, self.txtEmpresa)
+        QWidget.setTabOrder(self.txtEmpresa, self.cboFormajuridica)
+        QWidget.setTabOrder(self.cboFormajuridica, self.cboGrupoEmpresa)
+        QWidget.setTabOrder(self.cboGrupoEmpresa, self.txtNombreComercial)
+        QWidget.setTabOrder(self.txtNombreComercial, self.txtcp)
         QWidget.setTabOrder(self.txtcp, self.txtpoblacion)
-        QWidget.setTabOrder(self.txtpoblacion, self.txtprovincia)
+        QWidget.setTabOrder(self.txtpoblacion, self.txtdireccion1)
+        QWidget.setTabOrder(self.txtdireccion1, self.txtprovincia)
         QWidget.setTabOrder(self.txtprovincia, self.cboPais_create)
-        QWidget.setTabOrder(self.cboPais_create, self.txtcInscripcion)
+        QWidget.setTabOrder(self.cboPais_create, self.txtcif)
+        QWidget.setTabOrder(self.txtcif, self.lineEdit_2)
+        QWidget.setTabOrder(self.lineEdit_2, self.lineEdit_3)
+        QWidget.setTabOrder(self.lineEdit_3, self.chkTVA)
+        QWidget.setTabOrder(self.chkTVA, self.lineEdit_4)
+        QWidget.setTabOrder(self.lineEdit_4, self.lineEdit_5)
+        QWidget.setTabOrder(self.lineEdit_5, self.lineEdit_6)
+        QWidget.setTabOrder(self.lineEdit_6, self.txtcInscripcion)
         QWidget.setTabOrder(self.txtcInscripcion, self.txttelefono1)
         QWidget.setTabOrder(self.txttelefono1, self.txttelefono2)
         QWidget.setTabOrder(self.txttelefono2, self.txtMovil)
         QWidget.setTabOrder(self.txtMovil, self.txtcMail)
         QWidget.setTabOrder(self.txtcMail, self.txtweb)
-        QWidget.setTabOrder(self.txtweb, self.chkAutocodificiar)
+        QWidget.setTabOrder(self.txtweb, self.chkEnlace_web)
+        QWidget.setTabOrder(self.chkEnlace_web, self.chkInternacional)
+        QWidget.setTabOrder(self.chkInternacional, self.txtDiaCierre)
+        QWidget.setTabOrder(self.txtDiaCierre, self.tstMesCierre)
+        QWidget.setTabOrder(self.tstMesCierre, self.chkAutocodificiar)
         QWidget.setTabOrder(self.chkAutocodificiar, self.txttamano_codigoart)
         QWidget.setTabOrder(self.txttamano_codigoart, self.chkIRPF)
         QWidget.setTabOrder(self.chkIRPF, self.spinPorc_irpf)
@@ -1377,13 +1384,22 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.spinDigitos, self.cboSerie)
         QWidget.setTabOrder(self.cboSerie, self.spinDecimales_create)
         QWidget.setTabOrder(self.spinDecimales_create, self.spinDecimales_precios_create)
-        QWidget.setTabOrder(self.spinDecimales_precios_create, self.txtcCometarioAlbaran)
+        QWidget.setTabOrder(self.spinDecimales_precios_create, self.btnAddLogo)
+        QWidget.setTabOrder(self.btnAddLogo, self.btnDeleteLogo)
+        QWidget.setTabOrder(self.btnDeleteLogo, self.txtcCometarioAlbaran)
         QWidget.setTabOrder(self.txtcCometarioAlbaran, self.txtccomentario_factura)
         QWidget.setTabOrder(self.txtccomentario_factura, self.txt_horario_primer_dia)
         QWidget.setTabOrder(self.txt_horario_primer_dia, self.txt_horario_dia_normal)
         QWidget.setTabOrder(self.txt_horario_dia_normal, self.txt_horario_ultimo_dia)
-        QWidget.setTabOrder(self.txt_horario_ultimo_dia, self.chkContabilidad)
-        QWidget.setTabOrder(self.chkContabilidad, self.txtdigitos_cuentas)
+        QWidget.setTabOrder(self.txt_horario_ultimo_dia, self.lineEdit_7)
+        QWidget.setTabOrder(self.lineEdit_7, self.lineEdit_8)
+        QWidget.setTabOrder(self.lineEdit_8, self.lineEdit_9)
+        QWidget.setTabOrder(self.lineEdit_9, self.lineEdit_10)
+        QWidget.setTabOrder(self.lineEdit_10, self.lineEdit_11)
+        QWidget.setTabOrder(self.lineEdit_11, self.lineEdit_12)
+        QWidget.setTabOrder(self.lineEdit_12, self.lineEdit_13)
+        QWidget.setTabOrder(self.lineEdit_13, self.lineEdit_14)
+        QWidget.setTabOrder(self.lineEdit_14, self.txtdigitos_cuentas)
         QWidget.setTabOrder(self.txtdigitos_cuentas, self.txtcuentaCliente)
         QWidget.setTabOrder(self.txtcuentaCliente, self.txtcuenta_proveedores)
         QWidget.setTabOrder(self.txtcuenta_proveedores, self.txtcuenta_acreedores)
@@ -1397,7 +1413,8 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.ivasoportadore1, self.ivasoportadore2)
         QWidget.setTabOrder(self.ivasoportadore2, self.ivasoportadore3)
         QWidget.setTabOrder(self.ivasoportadore3, self.ivasoportadore4)
-        QWidget.setTabOrder(self.ivasoportadore4, self.ivarepercutido1)
+        QWidget.setTabOrder(self.ivasoportadore4, self.txtcuenta_cobros)
+        QWidget.setTabOrder(self.txtcuenta_cobros, self.ivarepercutido1)
         QWidget.setTabOrder(self.ivarepercutido1, self.ivarepercutido2)
         QWidget.setTabOrder(self.ivarepercutido2, self.ivarepercutido3)
         QWidget.setTabOrder(self.ivarepercutido3, self.ivarepercutido4)
@@ -1405,11 +1422,32 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.ivarepercutidore1, self.ivarepercutidore2)
         QWidget.setTabOrder(self.ivarepercutidore2, self.ivarepercutidore3)
         QWidget.setTabOrder(self.ivarepercutidore3, self.ivarepercutidore4)
-        QWidget.setTabOrder(self.ivarepercutidore4, self.txtcuenta_cobros)
-        QWidget.setTabOrder(self.txtcuenta_cobros, self.txtcuenta_pagos)
-        QWidget.setTabOrder(self.txtcuenta_pagos, self.txtRutaBd)
-        QWidget.setTabOrder(self.txtRutaBd, self.txtruta_bd_conta)
-        QWidget.setTabOrder(self.txtruta_bd_conta, self.btn_migrar)
+        QWidget.setTabOrder(self.ivarepercutidore4, self.txtcuenta_pagos)
+        QWidget.setTabOrder(self.txtcuenta_pagos, self.comboBox)
+        QWidget.setTabOrder(self.comboBox, self.txtRutaBd)
+        QWidget.setTabOrder(self.txtRutaBd, self.btnSelecionarBDSQLite)
+        QWidget.setTabOrder(self.btnSelecionarBDSQLite, self.txtruta_bd_conta)
+        QWidget.setTabOrder(self.txtruta_bd_conta, self.btnSeleccionarBDSQLiteConta)
+        QWidget.setTabOrder(self.btnSeleccionarBDSQLiteConta, self.btn_migrar)
+        QWidget.setTabOrder(self.btn_migrar, self.txtHostMariaDB_2)
+        QWidget.setTabOrder(self.txtHostMariaDB_2, self.lineEdit_17)
+        QWidget.setTabOrder(self.lineEdit_17, self.lineEdit_16)
+        QWidget.setTabOrder(self.lineEdit_16, self.txtUsuarioMariaDB_2)
+        QWidget.setTabOrder(self.txtUsuarioMariaDB_2, self.txtPasswordMariaDB_2)
+        QWidget.setTabOrder(self.txtPasswordMariaDB_2, self.pushButton_5)
+        QWidget.setTabOrder(self.pushButton_5, self.txtHostMariaDB)
+        QWidget.setTabOrder(self.txtHostMariaDB, self.lineEdit)
+        QWidget.setTabOrder(self.lineEdit, self.lineEdit_15)
+        QWidget.setTabOrder(self.lineEdit_15, self.txtUsuarioMariaDB)
+        QWidget.setTabOrder(self.txtUsuarioMariaDB, self.txtPasswordMariaDB)
+        QWidget.setTabOrder(self.txtPasswordMariaDB, self.pushButton_4)
+        QWidget.setTabOrder(self.pushButton_4, self.btn_guardar_nuevo)
+        QWidget.setTabOrder(self.btn_guardar_nuevo, self.pushButton)
+        QWidget.setTabOrder(self.pushButton, self.btn_salir)
+        QWidget.setTabOrder(self.btn_salir, self.tableView)
+        QWidget.setTabOrder(self.tableView, self.tabWidget)
+        QWidget.setTabOrder(self.tabWidget, self.tabWidget_2)
+        QWidget.setTabOrder(self.tabWidget_2, self.chkContabilidad)
 
         self.retranslateUi(FrmEmpresas)
         self.btn_salir.clicked.connect(FrmEmpresas.accept)
@@ -1424,24 +1462,24 @@ class Ui_FrmEmpresas(object):
 
     def retranslateUi(self, FrmEmpresas):
         FrmEmpresas.setWindowTitle(QCoreApplication.translate("FrmEmpresas", u"Gesti\u00f3n de empresas", None))
-        self.label.setText(QCoreApplication.translate("FrmEmpresas", u"Gesti\u00f3n de Empresas", None))
-        self.label_21.setText(QCoreApplication.translate("FrmEmpresas", u"Web:", None))
-        self.label_23.setText(QCoreApplication.translate("FrmEmpresas", u"Inscripci\u00f3n:", None))
+        self.btn_guardar_nuevo.setText(QCoreApplication.translate("FrmEmpresas", u"Guardar", None))
+        self.pushButton.setText(QCoreApplication.translate("FrmEmpresas", u"Descartar", None))
+        self.label_22.setText(QCoreApplication.translate("FrmEmpresas", u"Cif:", None))
         self.label_17.setText(QCoreApplication.translate("FrmEmpresas", u"Tel\u00e9fono 1:", None))
-        self.label_14.setText(QCoreApplication.translate("FrmEmpresas", u"C.P.:", None))
-        self.label_16.setText(QCoreApplication.translate("FrmEmpresas", u"Pais:", None))
+        self.label_53.setText(QCoreApplication.translate("FrmEmpresas", u"N\u00ba RCS:", None))
+        self.label_74.setText(QCoreApplication.translate("FrmEmpresas", u"Codigo:", None))
+        self.txttelefono1.setText("")
         self.label_15.setText(QCoreApplication.translate("FrmEmpresas", u"Provincia:", None))
+        self.txttelefono2.setText("")
+        self.label_19.setText(QCoreApplication.translate("FrmEmpresas", u"Movil:", None))
+        self.label_23.setText(QCoreApplication.translate("FrmEmpresas", u"Inscripci\u00f3n:", None))
         self.label_13.setText(QCoreApplication.translate("FrmEmpresas", u"Direcci\u00f3n:", None))
         self.label_54.setText(QCoreApplication.translate("FrmEmpresas", u"Ciudad RCS:", None))
         self.label_57.setText(QCoreApplication.translate("FrmEmpresas", u"N\u00ba RM:", None))
-        self.label_32.setText(QCoreApplication.translate("FrmEmpresas", u"SIRET:", None))
-        self.label_34.setText(QCoreApplication.translate("FrmEmpresas", u"APE/NAF:", None))
-        self.chkTVA.setText(QCoreApplication.translate("FrmEmpresas", u"TVA non applicable", None))
-        self.txttelefono1.setText("")
-        self.label_74.setText(QCoreApplication.translate("FrmEmpresas", u"Codigo:", None))
+        self.label_20.setText(QCoreApplication.translate("FrmEmpresas", u"Mail:", None))
+        self.label_16.setText(QCoreApplication.translate("FrmEmpresas", u"Pais:", None))
         self.label_18.setText(QCoreApplication.translate("FrmEmpresas", u"Telefono 2:", None))
-        self.txtcMail.setText("")
-        self.label_22.setText(QCoreApplication.translate("FrmEmpresas", u"Cif:", None))
+        self.label_21.setText(QCoreApplication.translate("FrmEmpresas", u"Web:", None))
         self.label_75.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre:", None))
         self.label_24.setText(QCoreApplication.translate("FrmEmpresas", u"Forma juridica:", None))
         self.cboFormajuridica.setItemText(0, QCoreApplication.translate("FrmEmpresas", u"EI (Entreprise Individuelle)", None))
@@ -1457,42 +1495,40 @@ class Ui_FrmEmpresas(object):
         self.cboFormajuridica.setItemText(10, QCoreApplication.translate("FrmEmpresas", u"RM", None))
 
         self.label_6.setText(QCoreApplication.translate("FrmEmpresas", u"Grupo", None))
-        self.label_20.setText(QCoreApplication.translate("FrmEmpresas", u"Mail:", None))
-        self.txtweb.setText("")
+        self.label_32.setText(QCoreApplication.translate("FrmEmpresas", u"SIRET:", None))
+        self.label_34.setText(QCoreApplication.translate("FrmEmpresas", u"APE/NAF:", None))
+        self.chkTVA.setText(QCoreApplication.translate("FrmEmpresas", u"TVA non applicable", None))
+        self.label_14.setText(QCoreApplication.translate("FrmEmpresas", u"C.P.:", None))
         self.label_43.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre comercial:", None))
-        self.label_53.setText(QCoreApplication.translate("FrmEmpresas", u"N\u00ba RCS:", None))
         self.label_50.setText(QCoreApplication.translate("FrmEmpresas", u"Poblaci\u00f3n:", None))
-        self.txttelefono2.setText("")
-        self.label_19.setText(QCoreApplication.translate("FrmEmpresas", u"Movil:", None))
-        self.txtMovil.setText("")
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabWidgetPage1), QCoreApplication.translate("FrmEmpresas", u"Datos Fiscales y de Gesti\u00f3n", None))
-        self.groupBox_3.setTitle(QCoreApplication.translate("FrmEmpresas", u"Facturas", None))
-        self.label_25.setText(QCoreApplication.translate("FrmEmpresas", u"Digitos Factura:", None))
-        self.label_26.setText(QCoreApplication.translate("FrmEmpresas", u"Serie Factura:", None))
         self.groupBox_14.setTitle(QCoreApplication.translate("FrmEmpresas", u"Divisas", None))
         self.chk_upate_divisas.setText(QCoreApplication.translate("FrmEmpresas", u"Actualizar divisas al entrar", None))
         self.label_42.setText(QCoreApplication.translate("FrmEmpresas", u"Divisa: ", None))
-        self.groupBox_2.setTitle(QCoreApplication.translate("FrmEmpresas", u"Articulos", None))
-        self.chkAutocodificiar.setText(QCoreApplication.translate("FrmEmpresas", u"Auto codificar los nuevos art\u00edculos", None))
-        self.label_41.setText(QCoreApplication.translate("FrmEmpresas", u"Tama\u00f1o del c\u00f3digo en caracteres:", None))
-        self.groupBox_12.setTitle(QCoreApplication.translate("FrmEmpresas", u"Decimales", None))
-        self.label_222.setText(QCoreApplication.translate("FrmEmpresas", u"Decimales en totales", None))
-        self.label_85.setText(QCoreApplication.translate("FrmEmpresas", u"Decimales precios:", None))
         self.groupBox_4.setTitle(QCoreApplication.translate("FrmEmpresas", u"IRPF", None))
         self.chkIRPF.setText(QCoreApplication.translate("FrmEmpresas", u"Autonomo / IRPF", None))
         self.label_71.setText(QCoreApplication.translate("FrmEmpresas", u"%IRPF:", None))
+        self.groupBox_12.setTitle(QCoreApplication.translate("FrmEmpresas", u"Decimales", None))
+        self.label_222.setText(QCoreApplication.translate("FrmEmpresas", u"Decimales en totales", None))
+        self.label_85.setText(QCoreApplication.translate("FrmEmpresas", u"Decimales precios:", None))
+        self.groupBox_3.setTitle(QCoreApplication.translate("FrmEmpresas", u"Facturas", None))
+        self.label_25.setText(QCoreApplication.translate("FrmEmpresas", u"Digitos Factura:", None))
+        self.label_26.setText(QCoreApplication.translate("FrmEmpresas", u"Serie Factura:", None))
+        self.label_68.setText(QCoreApplication.translate("FrmEmpresas", u"Cierre ejercicio fiscal:", None))
+        self.groupBox_5.setTitle(QCoreApplication.translate("FrmEmpresas", u"Varios", None))
+        self.chkEnlace_web.setText(QCoreApplication.translate("FrmEmpresas", u"Enlace Web.", None))
+        self.chkInternacional.setText(QCoreApplication.translate("FrmEmpresas", u"Gesti\u00f3n Internacional", None))
+        self.groupBox_2.setTitle(QCoreApplication.translate("FrmEmpresas", u"Articulos", None))
+        self.chkAutocodificiar.setText(QCoreApplication.translate("FrmEmpresas", u"Auto codificar los nuevos art\u00edculos", None))
+        self.label_41.setText(QCoreApplication.translate("FrmEmpresas", u"Tama\u00f1o del c\u00f3digo en caracteres:", None))
         self.groupBox.setTitle(QCoreApplication.translate("FrmEmpresas", u"Tarifas", None))
         self.label_33.setText(QCoreApplication.translate("FrmEmpresas", u"Margen M\u00ednimo:", None))
         self.label_31.setText(QCoreApplication.translate("FrmEmpresas", u"Margen:", None))
         self.label_58.setText(QCoreApplication.translate("FrmEmpresas", u"Tarifa predeterminada:", None))
-        self.groupBox_5.setTitle(QCoreApplication.translate("FrmEmpresas", u"Varios", None))
-        self.chkEnlace_web.setText(QCoreApplication.translate("FrmEmpresas", u"Enlace Web.", None))
-        self.chkInternacional.setText(QCoreApplication.translate("FrmEmpresas", u"Gesti\u00f3n Internacional", None))
-        self.label_68.setText(QCoreApplication.translate("FrmEmpresas", u"Cierre ejercicio fiscal:", None))
+        self.btnDeleteLogo.setText(QCoreApplication.translate("FrmEmpresas", u"Borrar", None))
+        self.btnAddLogo.setText(QCoreApplication.translate("FrmEmpresas", u"Cambiar", None))
         self.groupBox_6.setTitle(QCoreApplication.translate("FrmEmpresas", u"Logotipo", None))
         self.imgLogo.setText("")
-        self.btnAddLogo.setText(QCoreApplication.translate("FrmEmpresas", u"Cambiar", None))
-        self.btnDeleteLogo.setText(QCoreApplication.translate("FrmEmpresas", u"Borrar", None))
         self.tabWidget_2.setTabText(self.tabWidget_2.indexOf(self.tab_12), QCoreApplication.translate("FrmEmpresas", u"Otros", None))
         self.label_36.setText(QCoreApplication.translate("FrmEmpresas", u"Comentarios en Albaranes", None))
         self.label_35.setText(QCoreApplication.translate("FrmEmpresas", u"Comentarios en Facturas:", None))
@@ -1563,17 +1599,23 @@ class Ui_FrmEmpresas(object):
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tab), QCoreApplication.translate("FrmEmpresas", u"Otros datos", None))
         self.label_2.setText(QCoreApplication.translate("FrmEmpresas", u"Motor Activo de Base de Datos", None))
         self.groupBox_8.setTitle(QCoreApplication.translate("FrmEmpresas", u"Datos Acceso MariaDB / MySQL ( Recomendado para empresas entre 2 y 10 ordenadores)", None))
-        self.label_82.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre Base de Datos:", None))
-        self.label_83.setText(QCoreApplication.translate("FrmEmpresas", u"Password:", None))
         self.label_84.setText(QCoreApplication.translate("FrmEmpresas", u"Puerto:", None))
+        self.pushButton_5.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
+        self.label_82.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre Base de Datos:", None))
         self.label_86.setText(QCoreApplication.translate("FrmEmpresas", u"Host:", None))
         self.label_87.setText(QCoreApplication.translate("FrmEmpresas", u"Usuario:", None))
-        self.pushButton_5.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
+        self.label_83.setText(QCoreApplication.translate("FrmEmpresas", u"Password:", None))
         self.comboBox.setItemText(0, QCoreApplication.translate("FrmEmpresas", u"SQLite", None))
         self.comboBox.setItemText(1, QCoreApplication.translate("FrmEmpresas", u"MariaDB", None))
         self.comboBox.setItemText(2, QCoreApplication.translate("FrmEmpresas", u"PostgreSQL", None))
         self.comboBox.setItemText(3, QCoreApplication.translate("FrmEmpresas", u"MySQL", None))
 
+        self.label_55.setText(QCoreApplication.translate("FrmEmpresas", u"Ruta BD: Contabilidad:", None))
+        self.btnSeleccionarBDSQLiteConta.setText(QCoreApplication.translate("FrmEmpresas", u"...", None))
+        self.btn_migrar.setText(QCoreApplication.translate("FrmEmpresas", u"Migrar a BD Multipuesto", None))
+        self.btnSelecionarBDSQLite.setText(QCoreApplication.translate("FrmEmpresas", u"...", None))
+        self.label_3.setText(QCoreApplication.translate("FrmEmpresas", u"Ruta SQLite Empresa", None))
+        self.label_4.setText(QCoreApplication.translate("FrmEmpresas", u"<html><head/><body><p><span style=\" font-weight:700; color:#ffffff;\">Acceso a SQLite (Para empresas con un solo ordenador)</span></p><p><span style=\" font-weight:700; color:#ffffff;\"><br/></span></p></body></html>", None))
         self.groupBox_9.setTitle(QCoreApplication.translate("FrmEmpresas", u"Datos Acceso Postgre SQL(Recomendado para empresas con m\u00e1s de 10 ordenadores)", None))
         self.label_79.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre Base de Datos:", None))
         self.label_81.setText(QCoreApplication.translate("FrmEmpresas", u"Password:", None))
@@ -1581,15 +1623,8 @@ class Ui_FrmEmpresas(object):
         self.label_56.setText(QCoreApplication.translate("FrmEmpresas", u"Host:", None))
         self.label_80.setText(QCoreApplication.translate("FrmEmpresas", u"Usuario:", None))
         self.pushButton_4.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
-        self.label_55.setText(QCoreApplication.translate("FrmEmpresas", u"Ruta BD: Contabilidad:", None))
-        self.btnSeleccionarBDSQLiteConta.setText(QCoreApplication.translate("FrmEmpresas", u"...", None))
-        self.btn_migrar.setText(QCoreApplication.translate("FrmEmpresas", u"Migrar a BD Multipuesto", None))
-        self.btnSelecionarBDSQLite.setText(QCoreApplication.translate("FrmEmpresas", u"...", None))
-        self.label_3.setText(QCoreApplication.translate("FrmEmpresas", u"Ruta SQLite Empresa", None))
-        self.label_4.setText(QCoreApplication.translate("FrmEmpresas", u"<html><head/><body><p><span style=\" font-weight:700; color:#ffffff;\">Acceso a SQLite (Para empresas con un solo ordenador)</span></p><p><span style=\" font-weight:700; color:#ffffff;\"><br/></span></p></body></html>", None))
-        self.pushButton.setText(QCoreApplication.translate("FrmEmpresas", u"Descartar", None))
-        self.btn_guardar_nuevo.setText(QCoreApplication.translate("FrmEmpresas", u"Guardar", None))
-        self.btn_salir.setText(QCoreApplication.translate("FrmEmpresas", u"Salir", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabWidgetPage2), QCoreApplication.translate("FrmEmpresas", u"Datos conexi\u00f3n Base de datos", None))
+        self.btn_salir.setText(QCoreApplication.translate("FrmEmpresas", u"Salir", None))
+        self.label.setText(QCoreApplication.translate("FrmEmpresas", u"Gesti\u00f3n de Empresas", None))
     # retranslateUi
 

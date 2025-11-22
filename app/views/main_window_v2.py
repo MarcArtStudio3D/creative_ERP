@@ -936,6 +936,9 @@ class MainWindowV2(QMainWindow):
             if module_id == 'clientes':
                 module_name = f"modules.{module_id}.view_full"
                 view_class_name = self._module_id_to_class_name(module_id, "ViewFull")
+            elif module_id == 'empresas':
+                module_name = f"modules.{module_id}.view"
+                view_class_name = "EmpresasView"
             else:
                 # Para otros módulos, usar view normal
                 module_name = f"modules.{module_id}.view"

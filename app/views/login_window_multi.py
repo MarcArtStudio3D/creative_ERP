@@ -190,11 +190,7 @@ class LoginWindowMultiCompany(QDialog):
         config_btn.clicked.connect(self.open_config)
         layout.addWidget(config_btn)
         
-        # Botón Empresas
-        companies_btn = QPushButton(self.tr("🏢\nEmpresas"))
-        companies_btn.setMinimumHeight(80)
-        companies_btn.clicked.connect(self.manage_companies)
-        layout.addWidget(companies_btn)
+
         
         layout.addStretch()
         
@@ -374,7 +370,4 @@ class LoginWindowMultiCompany(QDialog):
             )
 
     
-    def manage_companies(self):
-        """Gestiona empresas."""
-        from PySide6.QtWidgets import QMessageBox
-        QMessageBox.information(self, self.tr("Empresas"), self.tr("Gestión de empresas (próximamente)"))
+

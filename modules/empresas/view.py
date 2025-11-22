@@ -1,243 +1,200 @@
 from typing import Optional
-from PySide6.QtWidgets import (
-    QWidget, QVBoxLayout, QHBoxLayout, QPushButton, QTableView, QDialog,
-    QDialogButtonBox, QMessageBox
-)
-from PySide6.QtGui import QStandardItemModel, QStandardItem
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableView, QHeaderView
 from PySide6.QtCore import Qt
 
 from app.views.ui_frmempresas import Ui_FrmEmpresas
-from modules.empresas.repository import EmpresaRepository
+from modules.empresas.controller import EmpresasController
 from core.models import Empresa
 
 
 class EmpresasView(QWidget):
-    """Vista mínima para listar y editar empresas."""
+    """Vista de empresas integrada en la ventana principal."""
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.repo = EmpresaRepository()
-        self._build_ui()
-        self.cargar_empresas()
+        
+        # Instanciar controlador
+        self.controller = EmpresasController(self)
+        
+        # Configurar UI
+        self.ui = Ui_FrmEmpresas()
+        self.ui.setupUi(self)
+        
+        # Configurar tabla
+        self.ui.tableView.setModel(self.controller.model)
+        self.ui.tableView.setSelectionBehavior(QTableView.SelectionBehavior.SelectRows)
+        self.ui.tableView.setSelectionMode(QTableView.SelectionMode.SingleSelection)
+        self.ui.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
+        
+        # Conectar señales de UI
+        self.ui.tableView.doubleClicked.connect(self.editar)
+        self.ui.btn_guardar_nuevo.clicked.connect(self.guardar)
+        self.ui.btn_salir.clicked.connect(self.cancelar)
+        # Conectar botón Descartar/Deshacer
+        if hasattr(self.ui, 'pushButton'):
+            self.ui.pushButton.clicked.connect(self.deshacer)
+        
+        # Conectar señales del controlador
+        self.controller.error_occurred.connect(self.mostrar_error)
+        self.controller.operation_success.connect(self.mostrar_exito)
+        
+        # Cargar datos y mostrar lista
+        self.controller.cargar_empresas()
+        self.ui.stackedWidget.setCurrentIndex(1)  # Mostrar lista por defecto
 
-    def _build_ui(self):
-        layout = QVBoxLayout(self)
+    def mostrar_error(self, mensaje: str):
+        QMessageBox.warning(self, "Error", mensaje)
 
-        # Botones de acciones
-        btn_layout = QHBoxLayout()
-        self.btn_nuevo = QPushButton("Nuevo")
-        self.btn_editar = QPushButton("Editar")
-        self.btn_borrar = QPushButton("Borrar")
-        self.btn_refrescar = QPushButton("Refrescar")
-
-        btn_layout.addWidget(self.btn_nuevo)
-        btn_layout.addWidget(self.btn_editar)
-        btn_layout.addWidget(self.btn_borrar)
-        btn_layout.addStretch()
-        btn_layout.addWidget(self.btn_refrescar)
-
-        layout.addLayout(btn_layout)
-
-        # Tabla
-        self.table = QTableView()
-        self.model = QStandardItemModel(0, 5, self)
-        self.model.setHorizontalHeaderLabels(["ID", "Código", "Nombre Fiscal", "CIF/NIF", "Población"])
-        self.table.setModel(self.model)
-        self.table.setSelectionBehavior(self.table.SelectionBehavior.SelectRows)
-        self.table.setSelectionMode(self.table.SelectionMode.SingleSelection)
-        # Conectar doble clic para abrir la ficha de la empresa seleccionada
-        if hasattr(self.table, 'doubleClicked'):
-            self.table.doubleClicked.connect(self._on_table_double_clicked)
-        layout.addWidget(self.table)
-
-        # Conexiones
-        self.btn_nuevo.clicked.connect(self.nuevo)
-        self.btn_editar.clicked.connect(self.editar)
-        self.btn_borrar.clicked.connect(self.borrar)
-        self.btn_refrescar.clicked.connect(self.cargar_empresas)
-
-    def cargar_empresas(self):
-        self.model.removeRows(0, self.model.rowCount())
-        try:
-            empresas = self.repo.obtener_todos()
-        except Exception as e:
-            QMessageBox.warning(self, "Error", f"No se pudieron cargar empresas: {e}")
-            return
-
-        for row, e in enumerate(empresas):
-            items = [
-                QStandardItem(str(e.id)),
-                QStandardItem(getattr(e, 'codigo_empresa', '') or ''),
-                QStandardItem(getattr(e, 'nombre_fiscal', '') or ''),
-                QStandardItem(getattr(e, 'cif_nif', '') or ''),
-                QStandardItem(getattr(e, 'poblacion', '') or ''),
-            ]
-            for it in items:
-                it.setEditable(False)
-            self.model.appendRow(items)
-
-        # Ajustar ancho
-        try:
-            self.table.resizeColumnsToContents()
-        except Exception:
-            pass
+    def mostrar_exito(self, mensaje: str):
+        QMessageBox.information(self, "Éxito", mensaje)
 
     def _get_selected_id(self) -> Optional[int]:
-        sel = self.table.selectionModel()
+        sel = self.ui.tableView.selectionModel()
         if not sel.hasSelection():
             return None
         idx = sel.currentIndex()
         try:
-            return int(self.model.item(idx.row(), 0).text())
+            # Usar el modelo del controlador
+            return int(self.controller.model.item(idx.row(), 0).text())
         except Exception:
             return None
 
     def nuevo(self):
-        dlg = EmpresaFormDialog(parent=self)
-        if dlg.exec() == QDialog.Accepted:
-            empresa = dlg.get_empresa()
-            try:
-                self.repo.guardar(empresa)
-                self.cargar_empresas()
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Error al guardar: {e}")
+        """Prepara el formulario para una nueva empresa."""
+        self.controller.nueva_empresa()
+        self._limpiar_formulario()
+        self.ui.stackedWidget.setCurrentIndex(0)  # Ir al formulario
 
     def editar(self):
+        """Carga la empresa seleccionada en el formulario."""
         id_ = self._get_selected_id()
         if id_ is None:
             QMessageBox.information(self, "Selecciona", "Selecciona una empresa primero.")
             return
-        empresa = self.repo.obtener_por_id(id_)
-        if not empresa:
-            QMessageBox.warning(self, "Error", "Empresa no encontrada")
-            return
-        dlg = EmpresaFormDialog(empresa=empresa, parent=self)
-        if dlg.exec() == QDialog.Accepted:
-            empresa = dlg.get_empresa()
-            try:
-                self.repo.guardar(empresa)
-                self.cargar_empresas()
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Error al guardar: {e}")
+            
+        empresa = self.controller.obtener_empresa(id_)
+        if empresa:
+            self._map_to_form(empresa)
+            self.ui.stackedWidget.setCurrentIndex(0)  # Ir al formulario
 
     def borrar(self):
+        """Borra la empresa seleccionada."""
         id_ = self._get_selected_id()
         if id_ is None:
             QMessageBox.information(self, "Selecciona", "Selecciona una empresa primero.")
             return
-        empresa = self.repo.obtener_por_id(id_)
-        if not empresa:
-            QMessageBox.warning(self, "Error", "Empresa no encontrada")
-            return
-        reply = QMessageBox.question(self, "Confirmar", f"Borrar empresa {empresa.nombre_fiscal}?", QMessageBox.Yes | QMessageBox.No)
-        if reply == QMessageBox.Yes:
-            try:
-                self.repo.borrar(empresa)
-                self.cargar_empresas()
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Error al borrar: {e}")
+            
+        # Obtener nombre para confirmación (opcional, requiere acceso al objeto)
+        # Por simplicidad, preguntamos genéricamente o accedemos al modelo
+        idx = self.ui.tableView.selectionModel().currentIndex()
+        nombre = self.controller.model.item(idx.row(), 2).text()
+        
+        reply = QMessageBox.question(
+            self, 
+            "Confirmar", 
+            f"¿Borrar empresa {nombre}?", 
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply == QMessageBox.StandardButton.Yes:
+            self.controller.borrar_empresa(id_)
 
-    def _on_table_double_clicked(self, index):
-        """Maneja el doble clic en la tabla: abre la ficha de la empresa seleccionada."""
-        try:
-            row = index.row()
-            id_item = self.model.item(row, 0)
-            if id_item is None:
-                return
-            id_ = int(id_item.text())
-        except Exception:
-            return
+    def guardar(self):
+        """Guarda los cambios del formulario."""
+        empresa = self._map_from_form()
+        self.controller.guardar_empresa(empresa)
+        # No volvemos al listado, nos quedamos en la ficha
 
-        empresa = self.repo.obtener_por_id(id_)
-        if not empresa:
-            QMessageBox.warning(self, "Error", "Empresa no encontrada")
-            return
+    def deshacer(self):
+        """Deshace los cambios recargando los datos de la empresa actual."""
+        if self.controller.empresa_actual:
+            self._map_to_form(self.controller.empresa_actual)
+            QMessageBox.information(self, "Deshacer", "Cambios descartados. Datos recargados.")
+        else:
+            # Si es una nueva empresa, limpiamos el formulario
+            self._limpiar_formulario()
 
-        dlg = EmpresaFormDialog(empresa=empresa, parent=self)
-        if dlg.exec() == QDialog.Accepted:
-            empresa = dlg.get_empresa()
-            try:
-                self.repo.guardar(empresa)
-                self.cargar_empresas()
-            except Exception as e:
-                QMessageBox.warning(self, "Error", f"Error al guardar: {e}")
+    def cancelar(self):
+        """Cancela la edición y vuelve a la lista."""
+        self.ui.stackedWidget.setCurrentIndex(1)
 
+    def accept(self):
+        """Método requerido por Ui_FrmEmpresas (generado para QDialog)."""
+        self.cancelar()
 
-class EmpresaFormDialog(QDialog):
-    """Dialogo que utiliza Ui_FrmEmpresas para crear/editar una Empresa."""
+    def _limpiar_formulario(self):
+        """Limpia los campos del formulario."""
+        w = self.ui
+        # Limpiar QLineEdits
+        for widget_name in dir(w):
+            widget = getattr(w, widget_name)
+            if hasattr(widget, 'clear') and callable(widget.clear):
+                if "txt" in widget_name or "lineEdit" in widget_name:
+                    widget.clear()
 
-    def __init__(self, empresa: Empresa = None, parent=None):
-        super().__init__(parent)
-        self.ui = Ui_FrmEmpresas()
-        self.ui.setupUi(self)
-        self.empresa = empresa
-        self._map_from_model()
-
-        # Botones estándar
-        self.buttons = QDialogButtonBox(QDialogButtonBox.Ok | QDialogButtonBox.Cancel)
-        self.ui.gridLayout_14.addWidget(self.buttons)
-        self.buttons.accepted.connect(self.accept)
-        self.buttons.rejected.connect(self.reject)
-
-    def _map_from_model(self):
-        if not self.empresa:
-            return
-        # Mapear campos existentes del modelo a los widgets del UI
-        try:
-            w = self.ui
-            if hasattr(w, 'txtcodigo') and getattr(self.empresa, 'codigo_empresa', None) is not None:
-                w.txtcodigo.setText(str(self.empresa.codigo_empresa))
-            if hasattr(w, 'txtEmpresa'):
-                w.txtEmpresa.setText(getattr(self.empresa, 'nombre_fiscal', '') or '')
-            if hasattr(w, 'txtNombreComercial'):
-                w.txtNombreComercial.setText(getattr(self.empresa, 'nombre_comercial', '') or '')
-            if hasattr(w, 'txtcif'):
-                w.txtcif.setText(getattr(self.empresa, 'cif_nif', '') or '')
-            if hasattr(w, 'txtdireccion1'):
-                w.txtdireccion1.setText(getattr(self.empresa, 'direccion', '') or '')
-            if hasattr(w, 'txtcp'):
-                w.txtcp.setText(getattr(self.empresa, 'cp', '') or '')
-            if hasattr(w, 'txtpoblacion'):
-                w.txtpoblacion.setText(getattr(self.empresa, 'poblacion', '') or '')
-            if hasattr(w, 'txtprovincia'):
-                w.txtprovincia.setText(getattr(self.empresa, 'provincia', '') or '')
-            if hasattr(w, 'txttelefono1'):
-                w.txttelefono1.setText(getattr(self.empresa, 'telefono', '') or '')
-            if hasattr(w, 'txtcMail'):
-                w.txtcMail.setText(getattr(self.empresa, 'email', '') or '')
-            if hasattr(w, 'txtweb'):
-                w.txtweb.setText(getattr(self.empresa, 'web', '') or '')
-        except Exception:
-            pass
-
-    def get_empresa(self) -> Empresa:
-        """Construye/actualiza un objeto Empresa desde el formulario."""
-        if self.empresa is None:
-            self.empresa = Empresa()
+    def _map_to_form(self, empresa: Empresa):
+        """Rellena el formulario con los datos de la empresa."""
         w = self.ui
         try:
-            if hasattr(w, 'txtcodigo'):
-                self.empresa.codigo_empresa = w.txtcodigo.text()
+            if hasattr(w, 'txtcodigo') and getattr(empresa, 'codigo_empresa', None) is not None:
+                w.txtcodigo.setText(str(empresa.codigo_empresa))
             if hasattr(w, 'txtEmpresa'):
-                self.empresa.nombre_fiscal = w.txtEmpresa.text()
+                w.txtEmpresa.setText(getattr(empresa, 'nombre_fiscal', '') or '')
             if hasattr(w, 'txtNombreComercial'):
-                self.empresa.nombre_comercial = w.txtNombreComercial.text()
+                w.txtNombreComercial.setText(getattr(empresa, 'nombre_comercial', '') or '')
             if hasattr(w, 'txtcif'):
-                self.empresa.cif_nif = w.txtcif.text()
+                w.txtcif.setText(getattr(empresa, 'cif_nif', '') or '')
             if hasattr(w, 'txtdireccion1'):
-                self.empresa.direccion = w.txtdireccion1.text()
+                w.txtdireccion1.setText(getattr(empresa, 'direccion', '') or '')
             if hasattr(w, 'txtcp'):
-                self.empresa.cp = w.txtcp.text()
+                w.txtcp.setText(getattr(empresa, 'cp', '') or '')
             if hasattr(w, 'txtpoblacion'):
-                self.empresa.poblacion = w.txtpoblacion.text()
+                w.txtpoblacion.setText(getattr(empresa, 'poblacion', '') or '')
             if hasattr(w, 'txtprovincia'):
-                self.empresa.provincia = w.txtprovincia.text()
+                w.txtprovincia.setText(getattr(empresa, 'provincia', '') or '')
             if hasattr(w, 'txttelefono1'):
-                self.empresa.telefono = w.txttelefono1.text()
+                w.txttelefono1.setText(getattr(empresa, 'telefono', '') or '')
             if hasattr(w, 'txtcMail'):
-                self.empresa.email = w.txtcMail.text()
+                w.txtcMail.setText(getattr(empresa, 'email', '') or '')
             if hasattr(w, 'txtweb'):
-                self.empresa.web = w.txtweb.text()
+                w.txtweb.setText(getattr(empresa, 'web', '') or '')
         except Exception:
             pass
-        return self.empresa
+
+    def _map_from_form(self) -> Empresa:
+        """Crea/Actualiza el objeto Empresa con los datos del formulario."""
+        # Usar la empresa actual del controlador o crear una nueva
+        if self.controller.empresa_actual is None:
+            empresa = Empresa()
+        else:
+            empresa = self.controller.empresa_actual
+            
+        w = self.ui
+        
+        try:
+            if hasattr(w, 'txtcodigo'):
+                empresa.codigo_empresa = w.txtcodigo.text()
+            if hasattr(w, 'txtEmpresa'):
+                empresa.nombre_fiscal = w.txtEmpresa.text()
+            if hasattr(w, 'txtNombreComercial'):
+                empresa.nombre_comercial = w.txtNombreComercial.text()
+            if hasattr(w, 'txtcif'):
+                empresa.cif_nif = w.txtcif.text()
+            if hasattr(w, 'txtdireccion1'):
+                empresa.direccion = w.txtdireccion1.text()
+            if hasattr(w, 'txtcp'):
+                empresa.cp = w.txtcp.text()
+            if hasattr(w, 'txtpoblacion'):
+                empresa.poblacion = w.txtpoblacion.text()
+            if hasattr(w, 'txtprovincia'):
+                empresa.provincia = w.txtprovincia.text()
+            if hasattr(w, 'txttelefono1'):
+                empresa.telefono = w.txttelefono1.text()
+            if hasattr(w, 'txtcMail'):
+                empresa.email = w.txtcMail.text()
+            if hasattr(w, 'txtweb'):
+                empresa.web = w.txtweb.text()
+        except Exception:
+            pass
+            
+        return empresa

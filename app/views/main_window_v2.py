@@ -51,18 +51,24 @@ class MainWindowV2(QMainWindow):
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(18, 0, 18, 0)
         
-        # ========== BARRA SUPERIOR ==========
-        top_bar = self.create_top_bar()
-        main_layout.addWidget(top_bar)
-        
-        # ========== CONTENEDOR HORIZONTAL: Sidebar + StackedWidget ==========
+        # ========== CONTENEDOR HORIZONTAL: Sidebar + Área de Contenido ==========
         content_layout = QHBoxLayout()
         content_layout.setSpacing(0)
         content_layout.setContentsMargins(0, 0, 0, 0)
         
-        # Sidebar izquierda con módulos
+        # Sidebar izquierda con módulos (llega hasta arriba)
         self.sidebar = self.create_sidebar()
         content_layout.addWidget(self.sidebar)
+        
+        # ========== ÁREA DE CONTENIDO (derecha): Top Bar + Botones + StackedWidget ==========
+        content_area = QWidget()
+        content_area_layout = QVBoxLayout()
+        content_area_layout.setSpacing(0)
+        content_area_layout.setContentsMargins(0, 0, 0, 0)
+        
+        # Top bar (barra negra) - solo en el área de contenido
+        top_bar = self.create_top_bar()
+        content_area_layout.addWidget(top_bar)
         
         # StackedWidget para contenido
         self.stacked_widget = QStackedWidget()
@@ -72,7 +78,10 @@ class MainWindowV2(QMainWindow):
         welcome_page = self.create_welcome_page()
         self.stacked_widget.addWidget(welcome_page)
         
-        content_layout.addWidget(self.stacked_widget, 1)  # stretch=1 para que ocupe el espacio restante
+        content_area_layout.addWidget(self.stacked_widget, 1)  # stretch=1 para que ocupe el espacio restante
+        
+        content_area.setLayout(content_area_layout)
+        content_layout.addWidget(content_area, 1)  # stretch=1 para que ocupe el espacio restante
         
         content_container = QWidget()
         content_container.setLayout(content_layout)
@@ -421,13 +430,10 @@ class MainWindowV2(QMainWindow):
         # TODO: Cargar ícono de mail/avisos
         layout.addWidget(avisos_label)
         
-        # Pequeño espaciador
-        layout.addSpacing(10)
-        
-        # Contenedor de shortcuts dinámicos (botones de módulos activos)
-        self.shortcut_container = QHBoxLayout()
-        self.shortcut_container.setSpacing(3)
-        layout.addLayout(self.shortcut_container)
+        # Contenedor de botones de módulos
+        self.module_buttons_container = QHBoxLayout()
+        self.module_buttons_container.setSpacing(3)
+        layout.addLayout(self.module_buttons_container)
         
         # Espaciador expansible
         layout.addStretch()
@@ -1455,15 +1461,15 @@ class MainWindowV2(QMainWindow):
     
     def show_category_modules(self, category: ModuleCategory, modules: list) -> None:
         """
-        Muestra los módulos de una categoría como botones en la barra superior.
+        Muestra los módulos de una categoría como botones en la barra de módulos.
         
         Args:
             category: La categoría seleccionada
             modules: Lista de módulos de esa categoría
         """
-        # Limpiar shortcuts existentes
-        while self.shortcut_container.count():
-            item = self.shortcut_container.takeAt(0)
+        # Limpiar botones existentes
+        while self.module_buttons_container.count():
+            item = self.module_buttons_container.takeAt(0)
             widget = item.widget()
             if widget:
                 widget.deleteLater()
@@ -1471,27 +1477,29 @@ class MainWindowV2(QMainWindow):
         # Agregar botón por cada módulo de la categoría
         for module in modules:
             btn = QPushButton(f"{module.icon} {module.name}")
-            btn.setMinimumHeight(30)
+            btn.setMinimumHeight(40)
             btn.setCursor(Qt.CursorShape.PointingHandCursor)
             btn.setStyleSheet("""
                 QPushButton {
-                    background-color: rgb(50, 50, 50);
-                    color: white;
-                    border: 1px solid rgb(80, 80, 80);
-                    border-radius: 4px;
-                    padding: 5px 12px;
+                    background-color: palette(button);
+                    color: palette(button-text);
+                    border: 1px solid palette(mid);
+                    border-radius: 6px;
+                    padding: 8px 16px;
                     font-weight: bold;
+                    font-size: 11pt;
                 }
                 QPushButton:hover {
-                    background-color: rgb(70, 70, 70);
+                    background-color: palette(light);
+                    border: 1px solid palette(highlight);
                 }
                 QPushButton:pressed {
-                    background-color: rgb(90, 90, 90);
+                    background-color: palette(dark);
                 }
             """)
             btn.clicked.connect(lambda checked=False, m_id=module.id: self.open_module(m_id))  # type: ignore
             
-            self.shortcut_container.addWidget(btn)
+            self.module_buttons_container.addWidget(btn)
     
     def update_shortcuts(self) -> None:
         """

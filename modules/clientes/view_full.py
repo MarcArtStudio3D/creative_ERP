@@ -195,7 +195,7 @@ class ClientesViewFull(QWidget):
             if hasattr(self.ui, 'txtSegundoApellido'):
                 self.ui.txtSegundoApellido.setVisible(False)
                 self.ui.lblSegundoApellido.setVisible(False)
-                self.ui.txtProvincia.setVisible(False)
+                self.ui.txtprovincia.setVisible(False)
                 self.ui.lblProvincia.setVisible(False)
 
 
@@ -2101,75 +2101,6 @@ class ClientesViewFull(QWidget):
         try:
             btn.setEnabled(True)
         except Exception:
-            pass
-    
-    def _reseleccionar_cliente_en_tabla(self, cliente_id: int):
-        """Re-selecciona un cliente en la tabla por su ID.
-        
-        Args:
-            cliente_id: ID del cliente a seleccionar
-        """
-        try:
-            tabla = None
-            if hasattr(self.ui, 'tabla_busquedas'):
-                tabla = self.ui.tabla_busquedas
-            elif hasattr(self.ui, 'tabla_clientes'):
-                tabla = self.ui.tabla_clientes
-            elif hasattr(self.ui, 'tableWidget'):
-                tabla = self.ui.tableWidget
-
-            if tabla is None:
-                return
-
-            # Si es QTableWidget
-            if isinstance(tabla, QTableWidget):
-                rows = tabla.rowCount()
-                for r in range(rows):
-                    item = tabla.item(r, 0)
-                    if item is None:
-                        continue
-                    try:
-                        data_get = getattr(item, 'data', None)
-                        val = data_get(Qt.ItemDataRole.UserRole) if callable(data_get) else None
-                    except Exception:
-                        val = None
-                    if val == cliente_id:
-                        selection = tabla.selectionModel()
-                        index = tabla.model().index(r, 0)
-                        selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
-                        break
-
-            # Si es QTableView con QStandardItemModel
-            elif isinstance(tabla, QTableView):
-                model = tabla.model()
-                if model is None:
-                    return
-                row_count = model.rowCount()
-                for r in range(row_count):
-                    val = None
-                    try:
-                        # Prefer QStandardItemModel.item when available
-                        item_get = getattr(model, 'item', None)
-                        if callable(item_get):
-                            it = item_get(r, 0)
-                            if it is not None:
-                                try:
-                                    data_get = getattr(it, 'data', None)
-                                    val = data_get(Qt.ItemDataRole.UserRole) if callable(data_get) else None
-                                except Exception:
-                                    val = None
-                        else:
-                            idx = model.index(r, 0)
-                            val = model.data(idx, Qt.ItemDataRole.UserRole)
-                    except Exception:
-                        val = None
-                    if val == cliente_id:
-                        index = model.index(r, 0)
-                        selection = tabla.selectionModel()
-                        selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
-                        break
-        except Exception:
-            # No crítico; si algo falla no queremos romper la navegación
             pass
     
     def volver_a_lista(self):

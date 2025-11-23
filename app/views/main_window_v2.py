@@ -102,7 +102,7 @@ class MainWindowV2(QMainWindow):
         """Crea la barra lateral izquierda con módulos disponibles."""
         sidebar = QFrame()
         sidebar.setMinimumWidth(200)
-        sidebar.setMaximumWidth(250)
+        sidebar.setMaximumWidth(280)
         sidebar.setFrameShape(QFrame.Shape.StyledPanel)
         sidebar.setStyleSheet("""
             QFrame {
@@ -113,7 +113,7 @@ class MainWindowV2(QMainWindow):
         
         layout = QVBoxLayout()
         layout.setSpacing(0)
-        layout.setContentsMargins(0, 10, 0, 10)
+        layout.setContentsMargins(0, 0, 0, 10)
         
         # Título de la sidebar
         title = QLabel(self.tr("MÓDULOS"))
@@ -129,13 +129,39 @@ class MainWindowV2(QMainWindow):
         scroll = QScrollArea()
         scroll.setWidgetResizable(True)
         scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        scroll.setStyleSheet("QScrollArea { border: none; background-color: transparent; }")
+        # Estilo con scrollbar superpuesta y más estrecha
+        scroll.setStyleSheet("""
+            QScrollArea { 
+                border: none; 
+                background-color: transparent; 
+            }
+            QScrollBar:vertical {
+                border: none;
+                background: transparent;
+                width: 8px;
+                margin: 0px;
+            }
+            QScrollBar::handle:vertical {
+                background: palette(mid);
+                border-radius: 4px;
+                min-height: 20px;
+            }
+            QScrollBar::handle:vertical:hover {
+                background: palette(dark);
+            }
+            QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+                height: 0px;
+            }
+            QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+                background: none;
+            }
+        """)
         
         # Widget contenedor de módulos
         modules_widget = QWidget()
         self.sidebar_modules_container = QVBoxLayout()
         self.sidebar_modules_container.setSpacing(2)
-        self.sidebar_modules_container.setContentsMargins(5, 10, 5, 5)
+        self.sidebar_modules_container.setContentsMargins(8, 10, 12, 5)  # Más margen derecho para scrollbar
         self.sidebar_modules_container.addStretch()  # Push todo hacia arriba
         modules_widget.setLayout(self.sidebar_modules_container)
         
@@ -279,8 +305,8 @@ class MainWindowV2(QMainWindow):
         """)
         
         layout = QVBoxLayout(card)
-        layout.setContentsMargins(16, 16, 16, 16)
-        layout.setSpacing(8)
+        layout.setContentsMargins(10, 12, 10, 12)
+        layout.setSpacing(6)
         
         # Header: Icono + Título
         header_layout = QHBoxLayout()
@@ -288,7 +314,7 @@ class MainWindowV2(QMainWindow):
         
         # Icono con fondo de color
         icon_container = QFrame()
-        icon_container.setFixedSize(48, 48)
+        icon_container.setFixedSize(40, 40)
         icon_container.setStyleSheet(f"""
             QFrame {{
                 background-color: {color};
@@ -299,7 +325,7 @@ class MainWindowV2(QMainWindow):
         icon_layout.setContentsMargins(0, 0, 0, 0)
         icon_label = QLabel(icon)
         icon_label.setStyleSheet("""
-            font-size: 24px;
+            font-size: 20px;
             background: transparent;
             border: none;
         """)

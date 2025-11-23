@@ -104,8 +104,8 @@ font: 14pt &quot;Sans Serif&quot;;</string>
           <enum>QFrame::Shadow::Raised</enum>
          </property>
          <layout class="QGridLayout" name="gridLayout_7">
-          <item row="0" column="0">
-           <widget class="QPushButton" name="btnAnadir">
+          <item row="8" column="0">
+           <widget class="QPushButton" name="btnBorrar">
             <property name="minimumSize">
              <size>
               <width>0</width>
@@ -113,108 +113,16 @@ font: 14pt &quot;Sans Serif&quot;;</string>
              </size>
             </property>
             <property name="text">
-             <string>&amp;Nuevo</string>
+             <string>B&amp;orrar</string>
             </property>
             <property name="icon">
              <iconset resource="designer.qrc">
-              <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
+              <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
             </property>
             <property name="iconSize">
              <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="1" column="0">
-           <widget class="QPushButton" name="btnSiguiente">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>45</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&amp;Siguiente</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/Next.png</normaloff>:/PNG/Next.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="2" column="0">
-           <widget class="QPushButton" name="btnAnterior">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>45</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&amp;Anterior</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/Previous.png</normaloff>:/PNG/Previous.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="3" column="0">
-           <widget class="QPushButton" name="btnBuscar">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>45</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&amp;Buscar</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/search.png</normaloff>:/PNG/search.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="4" column="0">
-           <widget class="QPushButton" name="btnEditar">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>45</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>&amp;Editar</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/Edit.png</normaloff>:/PNG/Edit.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
+              <width>18</width>
+              <height>18</height>
              </size>
             </property>
            </widget>
@@ -234,8 +142,31 @@ font: 14pt &quot;Sans Serif&quot;;</string>
              <string>&amp;Guardar</string>
             </property>
             <property name="icon">
-             <iconset>
-              <normaloff>../../resources/icons/png/Save.png</normaloff>../../resources/icons/png/Save.png</iconset>
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/Save.png</normaloff>:/PNG/resources/icons/png/Save.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="0" column="0">
+           <widget class="QPushButton" name="btnAnadir">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>45</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&amp;Nuevo</string>
+            </property>
+            <property name="icon">
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -260,8 +191,100 @@ font: 14pt &quot;Sans Serif&quot;;</string>
              <string>&amp;Deshacer</string>
             </property>
             <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/undo.png</normaloff>:/PNG/undo.png</iconset>
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/undo.png</normaloff>:/PNG/resources/icons/png/undo.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="4" column="0">
+           <widget class="QPushButton" name="btnEditar">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>45</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&amp;Editar</string>
+            </property>
+            <property name="icon">
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/Edit.png</normaloff>:/PNG/resources/icons/png/Edit.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="3" column="0">
+           <widget class="QPushButton" name="btnBuscar">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>45</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&amp;Buscar</string>
+            </property>
+            <property name="icon">
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/search.png</normaloff>:/PNG/resources/icons/png/search.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="0">
+           <widget class="QPushButton" name="btnAnterior">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>45</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&amp;Anterior</string>
+            </property>
+            <property name="icon">
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/Previous.png</normaloff>:/PNG/resources/icons/png/Previous.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="0">
+           <widget class="QPushButton" name="btnSiguiente">
+            <property name="minimumSize">
+             <size>
+              <width>0</width>
+              <height>45</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>&amp;Siguiente</string>
+            </property>
+            <property name="icon">
+             <iconset resource="designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/Next.png</normaloff>:/PNG/resources/icons/png/Next.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -272,56 +295,17 @@ font: 14pt &quot;Sans Serif&quot;;</string>
            </widget>
           </item>
           <item row="7" column="0">
-           <widget class="QPushButton" name="botListados">
-            <property name="minimumSize">
+           <spacer name="verticalSpacer_3">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
              <size>
-              <width>115</width>
-              <height>45</height>
+              <width>20</width>
+              <height>40</height>
              </size>
             </property>
-            <property name="maximumSize">
-             <size>
-              <width>118</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Listados</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/List.png</normaloff>:/PNG/List.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item row="8" column="0">
-           <widget class="QPushButton" name="btnBorrar">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>45</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>B&amp;orrar</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/PNG/delete.png</normaloff>:/PNG/delete.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>18</width>
-              <height>18</height>
-             </size>
-            </property>
-           </widget>
+           </spacer>
           </item>
          </layout>
         </widget>
@@ -2902,7 +2886,6 @@ font: 8pt &quot;Sans&quot;;</string>
   <tabstop>btnEditar</tabstop>
   <tabstop>btnGuardar</tabstop>
   <tabstop>btnDeshacer</tabstop>
-  <tabstop>botListados</tabstop>
   <tabstop>btnBorrar</tabstop>
   <tabstop>txtcodigo_cliente</tabstop>
   <tabstop>txtCifIntracomunitario</tabstop>

@@ -423,6 +423,12 @@ class ClientesViewFull(QWidget):
                 self._desactivar_widget(widget)
         # Desactivar validaciones visuales
         self._set_all_valid_state()
+        
+        # Deshabilitar botones de acción (Guardar y Deshacer)
+        if hasattr(self.ui, 'btnGuardar'):
+            self.ui.btnGuardar.setEnabled(False)
+        if hasattr(self.ui, 'btnDeshacer'):
+            self.ui.btnDeshacer.setEnabled(False)
 
     def _desactivar_widget(self, widget):
         """Desactiva un widget usando la propiedad correcta según su tipo"""
@@ -490,6 +496,12 @@ class ClientesViewFull(QWidget):
             widget = getattr(self.ui, widget_name)
             if isinstance(widget, (QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit)):
                 self._activar_widget(widget)
+        
+        # Habilitar botones de acción (Guardar y Deshacer)
+        if hasattr(self.ui, 'btnGuardar'):
+            self.ui.btnGuardar.setEnabled(True)
+        if hasattr(self.ui, 'btnDeshacer'):
+            self.ui.btnDeshacer.setEnabled(True)
 
     def _find_table(self):
         """Encuentra la tabla principal probando varios nombres y tipos."""
@@ -1461,6 +1473,11 @@ class ClientesViewFull(QWidget):
                 self.repository.eliminar(id_cliente)
                 QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente borrado correctamente"))
                 self.cargar_clientes()
+                # Volver a la vista de lista después de borrar
+                if hasattr(self.ui, 'stackedWidget'):
+                    self.ui.stackedWidget.setCurrentIndex(1)
+                # Limpiar cliente actual
+                self.cliente_actual = None
             except ValueError as e:
                 QMessageBox.warning(self, self.tr("No se puede borrar"), str(e))
             except Exception as e:
@@ -1696,6 +1713,16 @@ class ClientesViewFull(QWidget):
         else:
             # Si es un cliente nuevo, limpiar el formulario
             self.limpiar_formulario()
+        
+        # Desactivar modo edición y campos (igual que al guardar)
+        try:
+            self.desactivar_campos_edicion()
+        except Exception:
+            pass
+        
+        # Restablecer el modo edición y botones de navegación
+        self._modo_edicion = False
+        self.activar_botones_navegacion()
     
     def limpiar_formulario(self):
         """Limpia todos los campos del formulario de datos del cliente"""

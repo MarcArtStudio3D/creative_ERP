@@ -432,13 +432,13 @@ class MainWindowV2(QMainWindow):
     def create_top_bar(self) -> QFrame:
         """Crea la barra superior negra estilo RedFox."""
         frame = QFrame()
-        frame.setMinimumHeight(38)
-        frame.setMaximumHeight(38)
+        frame.setMinimumHeight(50)
+        frame.setMaximumHeight(50)
         frame.setStyleSheet("background-color: rgb(0, 0, 0);")
         frame.setFrameShape(QFrame.Shape.StyledPanel)
         
         layout = QHBoxLayout()
-        layout.setContentsMargins(9, 1, 9, 1)
+        layout.setContentsMargins(9, 4, 9, 4)
         layout.setSpacing(5)
         
         # Logo pequeño

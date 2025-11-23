@@ -195,6 +195,9 @@ class ClientesViewFull(QWidget):
             if hasattr(self.ui, 'txtSegundoApellido'):
                 self.ui.txtSegundoApellido.setVisible(False)
                 self.ui.lblSegundoApellido.setVisible(False)
+                self.ui.txtProvincia.setVisible(False)
+                self.ui.lblProvincia.setVisible(False)
+
 
         
         # Activar validaciones inline (conectar señales) - se ignoran fuera de modo edición

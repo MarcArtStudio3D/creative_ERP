@@ -77,16 +77,42 @@ def load_translation(app: QCoreApplication, language: Optional[str] = None) -> O
         print("Ejecuta: python scripts/compile_translations.py")
         return None
     
-    # Crear y cargar traductor
+    # Crear y cargar traductor para la aplicación
     translator = QTranslator()
     
     if translator.load(str(qm_file)):
         app.installTranslator(translator)
         print(f"✓ Traducción cargada: {AVAILABLE_LANGUAGES[language]} ({language})")
-        return translator
     else:
         print(f"Error: No se pudo cargar la traducción desde {qm_file}")
         return None
+    
+    # Cargar traducciones de Qt para botones estándar (Yes/No, OK/Cancel, etc.)
+    qt_translator = QTranslator()
+    qt_base_path = QLocale.system().name()
+    
+    # Intentar cargar desde la ubicación estándar de Qt
+    if qt_translator.load(f"qt_{language}", ":/qt-project.org/translations"):
+        app.installTranslator(qt_translator)
+        print(f"✓ Traducciones de Qt cargadas para {language}")
+    elif qt_translator.load(f"qtbase_{language}", ":/qt-project.org/translations"):
+        app.installTranslator(qt_translator)
+        print(f"✓ Traducciones base de Qt cargadas para {language}")
+    else:
+        # Intentar desde la instalación del sistema
+        import sys
+        from PySide6 import QtCore
+        qt_translations_path = Path(QtCore.__file__).parent / "Qt" / "translations"
+        
+        if qt_translations_path.exists():
+            if qt_translator.load(f"qtbase_{language}", str(qt_translations_path)):
+                app.installTranslator(qt_translator)
+                print(f"✓ Traducciones base de Qt cargadas desde {qt_translations_path}")
+            elif qt_translator.load(f"qt_{language}", str(qt_translations_path)):
+                app.installTranslator(qt_translator)
+                print(f"✓ Traducciones de Qt cargadas desde {qt_translations_path}")
+    
+    return translator
 
 
 def change_language(app: QCoreApplication, old_translator: Optional[QTranslator], 

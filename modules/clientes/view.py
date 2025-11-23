@@ -38,7 +38,7 @@ class ClientesView(QWidget):
         # Header
         header_layout = QHBoxLayout()
         
-        title = QLabel("📋 Gestión de Clientes")
+        title = QLabel(self.tr("📋 Gestión de Clientes"))
         title_font = QFont()
         title_font.setPointSize(16)
         title_font.setBold(True)
@@ -48,11 +48,11 @@ class ClientesView(QWidget):
         header_layout.addStretch()
         
         # Campo de búsqueda rápida
-        search_label = QLabel("Buscar:")
+        search_label = QLabel(self.tr("Buscar:"))
         header_layout.addWidget(search_label)
         
         self.search_input = QLineEdit()
-        self.search_input.setPlaceholderText("Nombre, CIF, teléfono...")
+        self.search_input.setPlaceholderText(self.tr("Nombre, CIF, teléfono..."))
         self.search_input.setMinimumWidth(250)
         self.search_input.textChanged.connect(self.filter_table)
         header_layout.addWidget(self.search_input)
@@ -63,8 +63,8 @@ class ClientesView(QWidget):
         self.table = QTableWidget()
         self.table.setColumnCount(7)
         self.table.setHorizontalHeaderLabels([
-            "ID", "Código", "Nombre Fiscal", "CIF/NIF", 
-            "Teléfono", "Email", "Población"
+            self.tr("ID"), self.tr("Código"), self.tr("Nombre Fiscal"), self.tr("CIF/NIF"), 
+            self.tr("Teléfono"), self.tr("Email"), self.tr("Población")
         ])
         
         # Configurar tabla
@@ -88,7 +88,7 @@ class ClientesView(QWidget):
         layout.addWidget(self.table)
         
         # Info footer
-        self.info_label = QLabel("0 clientes")
+        self.info_label = QLabel(self.tr("0 clientes"))
         self.info_label.setStyleSheet("color: gray; font-size: 10px;")
         layout.addWidget(self.info_label)
         
@@ -139,9 +139,9 @@ class ClientesView(QWidget):
         total_count = self.table.rowCount()
         
         if visible_count == total_count:
-            self.info_label.setText(f"{total_count} clientes")
+            self.info_label.setText(self.tr("{} clientes").format(total_count))
         else:
-            self.info_label.setText(f"{visible_count} de {total_count} clientes")
+            self.info_label.setText(self.tr("{} de {} clientes").format(visible_count, total_count))
     
     def on_edit_cliente(self):
         """Abre el formulario de edición del cliente seleccionado."""
@@ -154,24 +154,23 @@ class ClientesView(QWidget):
         
         QMessageBox.information(
             self,
-            "Editar Cliente",
-            f"Editar cliente #{cliente_id}: {nombre}\n\n"
-            "El formulario de edición completo se implementará próximamente."
+            self.tr("Editar Cliente"),
+            self.tr("Editar cliente #{}: {}\n\nEl formulario de edición completo se implementará próximamente.").format(cliente_id, nombre)
         )
     
     def on_nuevo_cliente(self):
         """Abre el formulario para crear un nuevo cliente."""
         QMessageBox.information(
             self,
-            "Nuevo Cliente",
-            "El formulario de creación de clientes se implementará próximamente."
+            self.tr("Nuevo Cliente"),
+            self.tr("El formulario de creación de clientes se implementará próximamente.")
         )
     
     def on_eliminar_cliente(self):
         """Elimina el cliente seleccionado."""
         current_row = self.table.currentRow()
         if current_row < 0:
-            QMessageBox.warning(self, "Atención", "Selecciona un cliente primero.")
+            QMessageBox.warning(self, self.tr("Atención"), self.tr("Selecciona un cliente primero."))
             return
         
         cliente_id = self.table.item(current_row, 0).text()
@@ -179,8 +178,8 @@ class ClientesView(QWidget):
         
         reply = QMessageBox.question(
             self,
-            "Confirmar eliminación",
-            f"¿Seguro que deseas eliminar al cliente #{cliente_id}: {nombre}?",
+            self.tr("Confirmar eliminación"),
+            self.tr("¿Seguro que deseas eliminar al cliente #{}: {}?").format(cliente_id, nombre),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
@@ -188,4 +187,4 @@ class ClientesView(QWidget):
             # TODO: Eliminar de BD
             self.table.removeRow(current_row)
             self.update_info_label()
-            QMessageBox.information(self, "Éxito", "Cliente eliminado correctamente.")
+            QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente eliminado correctamente."))

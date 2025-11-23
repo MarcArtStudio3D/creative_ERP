@@ -10,9 +10,9 @@ echo "==================================="
 # Crear directorio de traducciones si no existe
 mkdir -p translations
 
-# Verificar si pylupdate6 está disponible
-if ! command -v pylupdate6 &> /dev/null; then
-    echo "ERROR: pylupdate6 no está instalado."
+# Verificar si pyside6-lupdate está disponible
+if ! command -v pyside6-lupdate &> /dev/null; then
+    echo "ERROR: pyside6-lupdate no está instalado."
     echo "Instálalo con: pip install PySide6"
     exit 1
 fi
@@ -20,7 +20,14 @@ fi
 # Generar archivos .ts desde el código fuente
 echo ""
 echo "Extrayendo textos traducibles..."
-pylupdate6 creative_erp.pro
+# Generar archivos .ts desde el código fuente
+echo ""
+echo "Extrayendo textos traducibles..."
+# Generar lista de archivos a escanear (excluyendo designer_rc.py que causa crash)
+FILES=$(find app core modules main.py -name "*.py" -o -name "*.ui" | grep -v "designer_rc.py")
+
+# Escanear archivos
+pyside6-lupdate $FILES -ts translations/creative_erp_fr.ts -no-obsolete
 
 echo ""
 echo "==================================="

@@ -70,3 +70,20 @@ Extensiones que se pueden añadir
 Contacto
 --------
 Si quieres que integre esto en el flujo del proyecto (Makefile, CI o validaciones adicionales), dímelo y lo implemento.
+
+
+Para el futuro, cuando modifiques archivos 
+.ui
+, usa este flujo:
+
+# 1. Compilar UI
+./scripts/compile_ui.sh
+
+# 2. Regenerar traducciones (TODO el proyecto)
+.venv/bin/pyside6-lupdate . -ts translations/creative_erp_fr.ts -no-obsolete
+
+# 3. Traducir automáticamente
+.venv/bin/python scripts/translate_to_french.py translations/creative_erp_fr.ts
+
+# 4. Compilar traducciones
+lrelease translations/creative_erp_fr.ts -qm translations/creative_erp_fr.qm

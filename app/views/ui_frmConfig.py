@@ -3,7 +3,7 @@
 ################################################################################
 ## Form generated from reading UI file 'frmConfig.ui'
 ##
-## Created manually for PySide6
+## Created by: Qt User Interface Compiler version 6.10.0
 ##
 ## WARNING! All changes made in this file will be lost when recompiling UI file!
 ################################################################################
@@ -38,6 +38,14 @@ class Ui_frmConfig(object):
         self.cboIdioma.addItem("")
         self.cboIdioma.setObjectName(u"cboIdioma")
         self.cboIdioma.setGeometry(QRect(10, 40, 241, 32))
+        self.groupBox_2 = QGroupBox(frmConfig)
+        self.groupBox_2.setObjectName(u"groupBox_2")
+        self.groupBox_2.setGeometry(QRect(300, 20, 241, 111))
+        self.cboValoresFiscales = QComboBox(self.groupBox_2)
+        self.cboValoresFiscales.addItem("")
+        self.cboValoresFiscales.addItem("")
+        self.cboValoresFiscales.setObjectName(u"cboValoresFiscales")
+        self.cboValoresFiscales.setGeometry(QRect(20, 40, 201, 32))
 
         self.retranslateUi(frmConfig)
         self.buttonBox.accepted.connect(frmConfig.accept)
@@ -53,4 +61,10 @@ class Ui_frmConfig(object):
         self.cboIdioma.setItemText(1, QCoreApplication.translate("frmConfig", u"Fran\u00e7aise", None))
         self.cboIdioma.setItemText(2, QCoreApplication.translate("frmConfig", u"Catal\u00e0", None))
         self.cboIdioma.setItemText(3, QCoreApplication.translate("frmConfig", u"English", None))
+
+        self.groupBox_2.setTitle(QCoreApplication.translate("frmConfig", u"Normativa Pais", None))
+        self.cboValoresFiscales.setItemText(0, QCoreApplication.translate("frmConfig", u"Francia", None))
+        self.cboValoresFiscales.setItemText(1, QCoreApplication.translate("frmConfig", u"Espa\u00f1a", None))
+
     # retranslateUi
+

@@ -344,3 +344,44 @@ class ModuleManager:
     def get_module(self, module_id: str) -> Optional[Module]:
         """Obtiene un módulo por su ID."""
         return AVAILABLE_MODULES.get(module_id)
+
+# Bloque dummy para que lupdate detecte las cadenas traducibles
+# Bloque dummy para que lupdate detecte las cadenas traducibles
+def _dummy_translations():
+    # Nombres de módulos
+    QCoreApplication.translate("Modules", "Clientes")
+    QCoreApplication.translate("Modules", "Presupuestos")
+    QCoreApplication.translate("Modules", "Albaranes")
+    QCoreApplication.translate("Modules", "Facturas")
+    QCoreApplication.translate("Modules", "Proveedores")
+    QCoreApplication.translate("Modules", "Facturas de Compra")
+    QCoreApplication.translate("Modules", "Artículos")
+    QCoreApplication.translate("Modules", "Almacén")
+    QCoreApplication.translate("Modules", "Contabilidad")
+    QCoreApplication.translate("Modules", "Tesorería")
+    QCoreApplication.translate("Modules", "Proyectos")
+    QCoreApplication.translate("Modules", "Control de Tiempo")
+    QCoreApplication.translate("Modules", "Empresas")
+    QCoreApplication.translate("Modules", "Usuarios")
+    QCoreApplication.translate("Modules", "Configuración")
+    QCoreApplication.translate("Modules", "Informes")
+    QCoreApplication.translate("Modules", "Gestor Módulos")
+    
+    # Descripciones
+    QCoreApplication.translate("Modules", "Gestión de clientes y contactos")
+    QCoreApplication.translate("Modules", "Creación de presupuestos")
+    QCoreApplication.translate("Modules", "Albaranes de entrega")
+    QCoreApplication.translate("Modules", "Emisión y gestión de facturas")
+    QCoreApplication.translate("Modules", "Gestión de proveedores")
+    QCoreApplication.translate("Modules", "Registro de facturas de proveedores")
+    QCoreApplication.translate("Modules", "Catálogo de productos y servicios")
+    QCoreApplication.translate("Modules", "Control de inventario y stock")
+    QCoreApplication.translate("Modules", "Asientos contables y balance")
+    QCoreApplication.translate("Modules", "Gestión de cobros y pagos")
+    QCoreApplication.translate("Modules", "Gestión de proyectos creativos")
+    QCoreApplication.translate("Modules", "Registro de horas trabajadas")
+    QCoreApplication.translate("Modules", "Gestión de empresas y multi-empresa")
+    QCoreApplication.translate("Modules", "Gestión de usuarios y permisos")
+    QCoreApplication.translate("Modules", "Configuración general del sistema")
+    QCoreApplication.translate("Modules", "Informes y estadísticas")
+    QCoreApplication.translate("Modules", "Ver módulos y otorgar permisos por rol")

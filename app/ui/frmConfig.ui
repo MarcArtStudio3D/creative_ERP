@@ -72,6 +72,39 @@
     </item>
    </widget>
   </widget>
+  <widget class="QGroupBox" name="groupBox_2">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>20</y>
+     <width>241</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="title">
+    <string>Normativa Pais</string>
+   </property>
+   <widget class="QComboBox" name="cboValoresFiscales">
+    <property name="geometry">
+     <rect>
+      <x>20</x>
+      <y>40</y>
+      <width>201</width>
+      <height>32</height>
+     </rect>
+    </property>
+    <item>
+     <property name="text">
+      <string>Francia</string>
+     </property>
+    </item>
+    <item>
+     <property name="text">
+      <string>España</string>
+     </property>
+    </item>
+   </widget>
+  </widget>
  </widget>
  <resources/>
  <connections>

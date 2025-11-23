@@ -178,7 +178,25 @@ class ClientesViewFull(QWidget):
         # Conectar cambio de página del stackedWidget para activar/desactivar campos
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.currentChanged.connect(self.on_pagina_cambiada)
+        
+        # Obtener el país fiscal desde la configuración global
+        from PySide6.QtCore import QSettings
+        settings = QSettings()
+        fiscal_country = settings.value("fiscal_country", "fr")  # Default: Francia
+        
+        # ESPAÑA (desactivar campos no necesarios)
+        if fiscal_country == 'es':
+            if hasattr(self.ui, 'txtSiret'):
+                self.ui.txtSiret.setVisible(False)
+                self.ui.lblSiret.setVisible(False)
+        
+        # FRANCIA (desactivar campos no necesarios)
+        if fiscal_country == 'fr':
+            if hasattr(self.ui, 'txtSegundoApellido'):
+                self.ui.txtSegundoApellido.setVisible(False)
+                self.ui.lblSegundoApellido.setVisible(False)
 
+        
         # Activar validaciones inline (conectar señales) - se ignoran fuera de modo edición
         if not hasattr(self, '_validations_connected') or not self._validations_connected:
             try:
@@ -781,7 +799,7 @@ class ClientesViewFull(QWidget):
             # getattr fallback handled above
             codigo = getattr(self.ui, 'txtcodigo_cliente').text() if hasattr(getattr(self.ui, 'txtcodigo_cliente'), 'text') else ''
         if not codigo or str(codigo).strip() == '':
-            errores.append('El código de cliente es obligatorio.')
+            errores.append(self.tr('El código de cliente es obligatorio.'))
 
         # Nombre o nombre fiscal obligatorio
         nombre = getattr(self.ui, 'txtnombre', None)
@@ -793,7 +811,7 @@ class ClientesViewFull(QWidget):
         if nombre_fiscal is not None and hasattr(nombre_fiscal, 'text'):
             v_nombre_fiscal = nombre_fiscal.text()
         if not (v_nombre and v_nombre.strip()) and not (v_nombre_fiscal and v_nombre_fiscal.strip()):
-            errores.append('Debe introducir el nombre o el nombre fiscal del cliente.')
+            errores.append(self.tr('Debe introducir el nombre o el nombre fiscal del cliente.'))
 
         # NIF/CIF/SIRET validation if provided
         if getattr(self.ui, 'txtcif_nif', None) is not None:
@@ -803,7 +821,7 @@ class ClientesViewFull(QWidget):
                 txt = w.text()
             if txt and txt.strip():
                 if not self._is_valid_nif_cif(txt):
-                    errores.append('El NIF/CIF introducido no parece válido.')
+                    errores.append(self.tr('El NIF/CIF introducido no parece válido.'))
 
         # Validar email si está presente
         if getattr(self.ui, 'txtemail', None) is not None:
@@ -813,7 +831,7 @@ class ClientesViewFull(QWidget):
                 import re
                 # Very simple email validation
                 if not re.fullmatch(r"[^@\s]+@[^@\s]+\.[^@\s]+", txt_email.strip()):
-                    errores.append('El email introducido no es válido.')
+                    errores.append(self.tr('El email introducido no es válido.'))
 
         # CCC (cuenta bancaria) validation if present
         if getattr(self.ui, 'txtcuenta_corriente', None) is not None:
@@ -821,7 +839,7 @@ class ClientesViewFull(QWidget):
             txtccc = w.text() if hasattr(w, 'text') else ''
             if txtccc and txtccc.strip():
                 if not self._is_valid_ccc(txtccc):
-                    errores.append('La cuenta bancaria (CCC) no es válida.')
+                    errores.append(self.tr('La cuenta bancaria (CCC) no es válida.'))
 
         # IBAN validation if present
         if getattr(self.ui, 'txtiban', None) is not None or getattr(self.ui, 'txtCuentaIBAN', None) is not None:
@@ -829,7 +847,7 @@ class ClientesViewFull(QWidget):
             txtiban = w.text() if (w is not None and hasattr(w, 'text')) else ''
             if txtiban and txtiban.strip():
                 if not self._is_valid_iban(txtiban):
-                    errores.append('El IBAN introducido no es válido.')
+                    errores.append(self.tr('El IBAN introducido no es válido.'))
 
         # Dias de pago (si existen) deben ser 0-31
         for dname in ('txtdia_pago1', 'txtdia_pago2'):
@@ -838,9 +856,9 @@ class ClientesViewFull(QWidget):
                 try:
                     val = int(w.value()) if hasattr(w, 'value') else int(w.text()) if hasattr(w, 'text') and w.text() else None
                     if val is not None and not (0 <= int(val) <= 31):
-                        errores.append(f'Día de pago {dname} fuera de rango 0-31.')
+                        errores.append(self.tr('Día de pago {} fuera de rango 0-31.').format(dname))
                 except Exception:
-                    errores.append(f'Día de pago {dname} no es un número válido.')
+                    errores.append(self.tr('Día de pago {} no es un número válido.').format(dname))
 
         return (len(errores) == 0, errores)
     
@@ -864,7 +882,7 @@ class ClientesViewFull(QWidget):
             
             # Crear modelo para QTableView
             model = QStandardItemModel(len(clientes), 5)
-            model.setHorizontalHeaderLabels(["Código", "NIF/CIF", "Nombre Fiscal", "Teléfono", "Email"])
+            model.setHorizontalHeaderLabels([self.tr("Código"), self.tr("NIF/CIF"), self.tr("Nombre Fiscal"), self.tr("Teléfono"), self.tr("Email")])
             
             for row, cliente in enumerate(clientes):
                 # Código
@@ -903,7 +921,7 @@ class ClientesViewFull(QWidget):
                 pass
                 
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Error al cargar clientes: {str(e)}")
+            QMessageBox.warning(self, self.tr("Error"), self.tr("Error al cargar clientes: {}").format(str(e)))
     
     def filter_records(self, search_text: str, order_by: str, order_mode: str):
         """Filtra y ordena los registros de clientes según los criterios especificados.
@@ -980,7 +998,7 @@ class ClientesViewFull(QWidget):
             # Si es QTableView
             elif isinstance(tabla, QTableView):
                 model = QStandardItemModel(len(clientes), 5, self)
-                model.setHorizontalHeaderLabels(["Código", "NIF/CIF", "Nombre Fiscal", "Teléfono", "Email"])
+                model.setHorizontalHeaderLabels([self.tr("Código"), self.tr("NIF/CIF"), self.tr("Nombre Fiscal"), self.tr("Teléfono"), self.tr("Email")])
                 for row, cliente in enumerate(clientes):
                     def std_item(text, cid):
                         it = QStandardItem(str(text or ""))
@@ -1002,7 +1020,7 @@ class ClientesViewFull(QWidget):
                     pass
                 
         except Exception as e:
-            QMessageBox.warning(self, "Error", f"Error al filtrar clientes: {str(e)}")
+            QMessageBox.warning(self, self.tr("Error"), self.tr("Error al filtrar clientes: {}").format(str(e)))
 
     def apply_palette_styles(self):
         """Quita estilos forzados de colores para que el sistema use sus valores por defecto.
@@ -1126,7 +1144,7 @@ class ClientesViewFull(QWidget):
         # Cargar cliente
         self.cliente_actual = self.repository.obtener_por_id(id_cliente)
         if not self.cliente_actual:
-            QMessageBox.warning(self, "Error", "No se pudo cargar el cliente")
+            QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo cargar el cliente"))
             return
         
         # Cargar datos en formulario
@@ -1383,7 +1401,7 @@ class ClientesViewFull(QWidget):
         # Verificar que hay un cliente seleccionado
         selection = tabla.selectionModel()
         if not selection.hasSelection():
-            QMessageBox.warning(self, "Aviso", "Seleccione un cliente para editar")
+            QMessageBox.warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para editar"))
             return
         self.desactivar_botones_navegacion()
         self._modo_edicion = True  # Activar modo edición
@@ -1406,7 +1424,7 @@ class ClientesViewFull(QWidget):
         # Obtener fila seleccionada
         selection = tabla.selectionModel()
         if not selection.hasSelection():
-            QMessageBox.warning(self, "Aviso", "Seleccione un cliente para borrar")
+            QMessageBox.warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para borrar"))
             return
         
         index = selection.currentIndex()
@@ -1423,20 +1441,20 @@ class ClientesViewFull(QWidget):
         
         respuesta = QMessageBox.question(
             self,
-            "Confirmar borrado",
-            f"¿Está seguro de que desea borrar el cliente '{cliente.nombre_completo()}'?",
+            self.tr("Confirmar borrado"),
+            self.tr("¿Está seguro de que desea borrar el cliente '{}'?").format(cliente.nombre_completo()),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
         )
         
         if respuesta == QMessageBox.StandardButton.Yes:
             try:
                 self.repository.eliminar(id_cliente)
-                QMessageBox.information(self, "Éxito", "Cliente borrado correctamente")
+                QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente borrado correctamente"))
                 self.cargar_clientes()
             except ValueError as e:
-                QMessageBox.warning(self, "No se puede borrar", str(e))
+                QMessageBox.warning(self, self.tr("No se puede borrar"), str(e))
             except Exception as e:
-                QMessageBox.critical(self, "Error", f"Error al borrar: {str(e)}")
+                QMessageBox.critical(self, self.tr("Error"), self.tr("Error al borrar: {}").format(str(e)))
     
     def guardar_cliente(self):
         """Guarda el cliente actual"""
@@ -1503,7 +1521,7 @@ class ClientesViewFull(QWidget):
             # Validar campos antes de construir el mapeo (y antes de guardar)
             ok, errores = self._validar_campos()
             if not ok:
-                QMessageBox.warning(self, "Validación", "\n".join(errores))
+                QMessageBox.warning(self, self.tr("Validación"), "\n".join(errores))
                 return
             # Declarative mappings for fields (attribute name in model -> widget name)
             txt_map = [
@@ -1635,7 +1653,7 @@ class ClientesViewFull(QWidget):
 
                 cliente = Cliente(**cliente_kwargs)
                 self.repository.crear(cliente)
-                QMessageBox.information(self, "Éxito", "Cliente creado")
+                QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente creado"))
             
             self.cargar_clientes()
             # Mantenerse en la página de edición pero desactivar campos
@@ -1650,7 +1668,7 @@ class ClientesViewFull(QWidget):
             self.activar_botones_navegacion()
             
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al guardar: {str(e)}")
+            QMessageBox.critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(str(e)))
     
     def deshacer_cambios(self):
         """Deshace los cambios y recarga los datos del cliente actual"""

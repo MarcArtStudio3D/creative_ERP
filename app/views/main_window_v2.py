@@ -837,7 +837,9 @@ class MainWindowV2(QMainWindow):
         if module_id in self.module_widgets:
             widget = self.module_widgets[module_id]
             self.stacked_widget.setCurrentWidget(widget)
-            self.statusBar().showMessage(f"Módulo {module_id} activo")
+            
+            msg = self.tr("Módulo {} activo").format(module_id)
+            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
             return
         
         # Crear el widget del módulo (carga bajo demanda)
@@ -847,7 +849,9 @@ class MainWindowV2(QMainWindow):
             self.module_widgets[module_id] = module_widget
             self.stacked_widget.addWidget(module_widget)
             self.stacked_widget.setCurrentWidget(module_widget)
-            self.statusBar().showMessage(f"Módulo {module_id} cargado")
+            
+            msg = self.tr("Módulo {} cargado").format(module_id)
+            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
         else:
             QMessageBox.information(
                 self,
@@ -1262,37 +1266,37 @@ class MainWindowV2(QMainWindow):
         # Acciones comunes para módulos de gestión
         common_actions = {
             'facturas': [
-                {'icon': '➕', 'label': 'Nueva', 'action': 'new', 'tooltip': 'Crear nueva factura'},
-                {'icon': '🔍', 'label': 'Buscar', 'action': 'search', 'tooltip': 'Buscar facturas'},
-                {'icon': '📄', 'label': 'Listado', 'action': 'list', 'tooltip': 'Ver listado completo'},
-                {'icon': '🖨️', 'label': 'Imprimir', 'action': 'print', 'tooltip': 'Imprimir factura'},
-                {'icon': '📤', 'label': 'Exportar', 'action': 'export', 'tooltip': 'Exportar XML/PDF'},
+                {'icon': '➕', 'label': self.tr('Nueva'), 'action': 'new', 'tooltip': self.tr('Crear nueva factura')},
+                {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar facturas')},
+                {'icon': '📄', 'label': self.tr('Listado'), 'action': 'list', 'tooltip': self.tr('Ver listado completo')},
+                {'icon': '🖨️', 'label': self.tr('Imprimir'), 'action': 'print', 'tooltip': self.tr('Imprimir factura')},
+                {'icon': '📤', 'label': self.tr('Exportar'), 'action': 'export', 'tooltip': self.tr('Exportar XML/PDF')},
             ],
             'clientes': [
-                {'icon': '➕', 'label': 'Nuevo', 'action': 'new', 'tooltip': 'Crear nuevo cliente'},
-                {'icon': '🔍', 'label': 'Buscar', 'action': 'search', 'tooltip': 'Buscar clientes'},
-                {'icon': '📋', 'label': 'Listado', 'action': 'list', 'tooltip': 'Ver todos los clientes'},
-                {'icon': '📊', 'label': 'Estadísticas', 'action': 'stats', 'tooltip': 'Estadísticas de clientes'},
+                {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo cliente')},
+                {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar clientes')},
+                {'icon': '📋', 'label': self.tr('Listado'), 'action': 'list', 'tooltip': self.tr('Ver todos los clientes')},
+                {'icon': '📊', 'label': self.tr('Estadísticas'), 'action': 'stats', 'tooltip': self.tr('Estadísticas de clientes')},
             ],
             'productos': [
-                {'icon': '➕', 'label': 'Nuevo', 'action': 'new', 'tooltip': 'Crear nuevo producto'},
-                {'icon': '🔍', 'label': 'Buscar', 'action': 'search', 'tooltip': 'Buscar productos'},
-                {'icon': '📦', 'label': 'Inventario', 'action': 'inventory', 'tooltip': 'Ver inventario'},
-                {'icon': '🏷️', 'label': 'Categorías', 'action': 'categories', 'tooltip': 'Gestionar categorías'},
+                {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo producto')},
+                {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar productos')},
+                {'icon': '📦', 'label': self.tr('Inventario'), 'action': 'inventory', 'tooltip': self.tr('Ver inventario')},
+                {'icon': '🏷️', 'label': self.tr('Categorías'), 'action': 'categories', 'tooltip': self.tr('Gestionar categorías')},
             ],
             'proyectos': [
-                {'icon': '➕', 'label': 'Nuevo', 'action': 'new', 'tooltip': 'Crear nuevo proyecto'},
-                {'icon': '📊', 'label': 'Dashboard', 'action': 'dashboard', 'tooltip': 'Panel de proyectos'},
-                {'icon': '📅', 'label': 'Planificación', 'action': 'planning', 'tooltip': 'Planificar tareas'},
-                {'icon': '💰', 'label': 'Presupuestos', 'action': 'budgets', 'tooltip': 'Gestionar presupuestos'},
+                {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo proyecto')},
+                {'icon': '📊', 'label': self.tr('Dashboard'), 'action': 'dashboard', 'tooltip': self.tr('Panel de proyectos')},
+                {'icon': '📅', 'label': self.tr('Planificación'), 'action': 'planning', 'tooltip': self.tr('Planificar tareas')},
+                {'icon': '💰', 'label': self.tr('Presupuestos'), 'action': 'budgets', 'tooltip': self.tr('Gestionar presupuestos')},
             ],
         }
         
         # Retornar acciones específicas o genéricas
         return common_actions.get(module_id, [
-            {'icon': '➕', 'label': 'Nuevo', 'action': 'new'},
-            {'icon': '🔍', 'label': 'Buscar', 'action': 'search'},
-            {'icon': '📋', 'label': 'Listado', 'action': 'list'},
+            {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new'},
+            {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search'},
+            {'icon': '📋', 'label': self.tr('Listado'), 'action': 'list'},
         ])
     
     def _find_module_view(self, container: QWidget) -> Optional[QWidget]:
@@ -1509,26 +1513,33 @@ class MainWindowV2(QMainWindow):
     def get_status_text(self) -> str:
         """Genera el texto de la barra de estado."""
         role_names = {
-            UserRole.ADMIN: "Administrador",
-            UserRole.MANAGER: "Gerente",
-            UserRole.ACCOUNTANT: "Contable",
-            UserRole.SALES: "Ventas",
-            UserRole.PROJECT_MANAGER: "Jefe de Proyecto",
-            UserRole.EMPLOYEE: "Empleado",
-            UserRole.VIEWER: "Visor"
+            UserRole.ADMIN: self.tr("Administrador"),
+            UserRole.MANAGER: self.tr("Gerente"),
+            UserRole.ACCOUNTANT: self.tr("Contable"),
+            UserRole.SALES: self.tr("Ventas"),
+            UserRole.PROJECT_MANAGER: self.tr("Jefe de Proyecto"),
+            UserRole.EMPLOYEE: self.tr("Empleado"),
+            UserRole.VIEWER: self.tr("Visor")
         }
         
-        role = role_names.get(self.session.user.role, "Usuario")
+        role = role_names.get(self.session.user.role, self.tr("Usuario"))
+        
+        # Obtener normativa fiscal
+        from PySide6.QtCore import QSettings
+        settings = QSettings()
+        fiscal = settings.value("fiscal_country", "fr")
+        fiscal_text = self.tr("Francia") if fiscal == "fr" else self.tr("España")
         
         if self.session.company_context:
             return (
                 f"{self.tr('Usuario')}: {self.session.user.username} | "
                 f"{self.tr('Rol')}: {role} | "
                 f"{self.session.company_context.group.name} - "
-                f"{self.session.company_context.company.name}"
+                f"{self.session.company_context.company.name} | "
+                f"{self.tr('Normativa')}: {fiscal_text}"
             )
         else:
-            return f"{self.tr('Usuario')}: {self.session.user.username} | {self.tr('Rol')}: {role}"
+            return f"{self.tr('Usuario')}: {self.session.user.username} | {self.tr('Rol')}: {role} | {self.tr('Normativa')}: {fiscal_text}"
     
     def change_company(self) -> None:
         """Permite cambiar de empresa (volver al login)."""

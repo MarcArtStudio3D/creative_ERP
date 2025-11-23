@@ -17,6 +17,7 @@ from modules.clientes.models import Cliente, DireccionAlternativa
 from modules.clientes.repository import ClienteRepository
 from modules.clientes.ui_frmClientes import Ui_frmClientes
 from modules.common.db_consulta_view import DBConsultaView
+from modules.tipo_cliente.view import TipoClienteView
 
 
 def format_nombre_fiscal(ap1: str, ap2: str, nombre: str) -> str:
@@ -175,6 +176,14 @@ class ClientesViewFull(QWidget):
             if w is not None and hasattr(w, "clicked"):
                 w.clicked.connect(handler)
 
+        # Botón editar tipo cliente
+        btn_tipo = self._get_widget("btnEdita_tipoCliente")
+        if btn_tipo is not None:
+            try:
+                btn_tipo.clicked.connect(self.abrir_tipo_cliente)
+            except Exception:
+                pass
+
         # Conectar cambio de página del stackedWidget para activar/desactivar campos
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.currentChanged.connect(self.on_pagina_cambiada)
@@ -247,6 +256,16 @@ class ClientesViewFull(QWidget):
 
         # Instalar event filter para validación visual en foco
         self._install_focus_validation()
+
+    def abrir_tipo_cliente(self):
+        """Abre el formulario de gestión de tipos de cliente"""
+        try:
+            dialog = TipoClienteView(self.session, self)
+            dialog.exec()
+            # Opcional: Recargar comboboxes de tipos si es necesario
+            # self.cargar_tipos_cliente()
+        except Exception as e:
+            QMessageBox.critical(self, self.tr("Error"), str(e))
 
     def _install_focus_validation(self):
         """Instala event filter para mostrar bordes verdes/rojos en campos al recibir foco"""

@@ -311,6 +311,16 @@ translations = {
     "Validación": "Validation",
     "Cliente creado": "Client créé",
     "Error al guardar: {}": "Erreur lors de l'enregistrement : {}",
+    
+    # ========== BOTONES DE DIÁLOGO ==========
+    "Sí": "Oui",
+    "No": "Non",
+    
+    # ========== DIÁLOGOS ADICIONALES ==========
+    "Confirmar": "Confirmer",
+    "¿Borrar empresa {}?": "Supprimer l'entreprise {} ?",
+    "Cambiar Empresa": "Changer d'entreprise",
+    "¿Desea cambiar de empresa?\n\nSe cerrará la sesión actual.": "Voulez-vous changer d'entreprise ?\n\nLa session actuelle sera fermée.",
 }
 
 def translate_ts_file(ts_file_path):

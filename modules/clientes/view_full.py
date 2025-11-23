@@ -1439,14 +1439,21 @@ class ClientesViewFull(QWidget):
         if not cliente:
             return
         
-        respuesta = QMessageBox.question(
-            self,
-            self.tr("Confirmar borrado"),
-            self.tr("¿Está seguro de que desea borrar el cliente '{}'?").format(cliente.nombre_completo()),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
         
-        if respuesta == QMessageBox.StandardButton.Yes:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Question)
+        msg.setWindowTitle(self.tr("Confirmar borrado"))
+        msg.setText(self.tr("¿Está seguro de que desea borrar el cliente '{}'?").format(cliente.nombre_completo()))
+        
+        # Usar botones personalizados con texto traducible
+        btn_yes = msg.addButton(self.tr("Sí"), QMessageBox.ButtonRole.YesRole)
+        btn_no = msg.addButton(self.tr("No"), QMessageBox.ButtonRole.NoRole)
+        msg.setDefaultButton(btn_no)
+        
+        msg.exec()
+        respuesta = msg.clickedButton()
+        
+        if respuesta == btn_yes:
             try:
                 self.repository.eliminar(id_cliente)
                 QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente borrado correctamente"))
@@ -1656,6 +1663,14 @@ class ClientesViewFull(QWidget):
                 QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente creado"))
             
             self.cargar_clientes()
+            
+            # Re-seleccionar el cliente actual en la tabla para que los botones de navegación funcionen
+            try:
+                if self.cliente_actual and hasattr(self.cliente_actual, 'id'):
+                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
+            except Exception:
+                pass
+            
             # Mantenerse en la página de edición pero desactivar campos
             # (no volver a la lista de clientes). El usuario pidió que
             # tras guardar se queden los campos visibles pero no editables.
@@ -2083,6 +2098,75 @@ class ClientesViewFull(QWidget):
         try:
             btn.setEnabled(True)
         except Exception:
+            pass
+    
+    def _reseleccionar_cliente_en_tabla(self, cliente_id: int):
+        """Re-selecciona un cliente en la tabla por su ID.
+        
+        Args:
+            cliente_id: ID del cliente a seleccionar
+        """
+        try:
+            tabla = None
+            if hasattr(self.ui, 'tabla_busquedas'):
+                tabla = self.ui.tabla_busquedas
+            elif hasattr(self.ui, 'tabla_clientes'):
+                tabla = self.ui.tabla_clientes
+            elif hasattr(self.ui, 'tableWidget'):
+                tabla = self.ui.tableWidget
+
+            if tabla is None:
+                return
+
+            # Si es QTableWidget
+            if isinstance(tabla, QTableWidget):
+                rows = tabla.rowCount()
+                for r in range(rows):
+                    item = tabla.item(r, 0)
+                    if item is None:
+                        continue
+                    try:
+                        data_get = getattr(item, 'data', None)
+                        val = data_get(Qt.ItemDataRole.UserRole) if callable(data_get) else None
+                    except Exception:
+                        val = None
+                    if val == cliente_id:
+                        selection = tabla.selectionModel()
+                        index = tabla.model().index(r, 0)
+                        selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
+                        break
+
+            # Si es QTableView con QStandardItemModel
+            elif isinstance(tabla, QTableView):
+                model = tabla.model()
+                if model is None:
+                    return
+                row_count = model.rowCount()
+                for r in range(row_count):
+                    val = None
+                    try:
+                        # Prefer QStandardItemModel.item when available
+                        item_get = getattr(model, 'item', None)
+                        if callable(item_get):
+                            it = item_get(r, 0)
+                            if it is not None:
+                                try:
+                                    data_get = getattr(it, 'data', None)
+                                    val = data_get(Qt.ItemDataRole.UserRole) if callable(data_get) else None
+                                except Exception:
+                                    val = None
+                        else:
+                            idx = model.index(r, 0)
+                            val = model.data(idx, Qt.ItemDataRole.UserRole)
+                    except Exception:
+                        val = None
+                    if val == cliente_id:
+                        index = model.index(r, 0)
+                        selection = tabla.selectionModel()
+                        selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
+                        break
+        except Exception:
+            # No crítico; si algo falla no queremos romper la navegación
             pass
     
     def volver_a_lista(self):

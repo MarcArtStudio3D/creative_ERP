@@ -1543,14 +1543,19 @@ class MainWindowV2(QMainWindow):
     
     def change_company(self) -> None:
         """Permite cambiar de empresa (volver al login)."""
-        reply = QMessageBox.question(
-            self,
-            "Cambiar Empresa",
-            "¿Desea cambiar de empresa?\n\nSe cerrará la sesión actual.",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Question)
+        msg.setWindowTitle(self.tr("Cambiar Empresa"))
+        msg.setText(self.tr("¿Desea cambiar de empresa?\n\nSe cerrará la sesión actual."))
         
-        if reply == QMessageBox.StandardButton.Yes:
+        btn_yes = msg.addButton(self.tr("Sí"), QMessageBox.ButtonRole.YesRole)
+        btn_no = msg.addButton(self.tr("No"), QMessageBox.ButtonRole.NoRole)
+        msg.setDefaultButton(btn_no)
+        
+        msg.exec()
+        reply = msg.clickedButton()
+        
+        if reply == btn_yes:
             self.logout_requested.emit()
     
     def on_year_changed(self, date) -> None:

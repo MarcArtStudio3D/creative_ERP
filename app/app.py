@@ -28,6 +28,15 @@ class CreativeERPApp:
     
     def initialize(self):
         """Inicializa la aplicación."""
+        # Leer idioma guardado en configuración ANTES de crear QApplication
+        from PySide6.QtCore import QSettings, QLocale
+        settings = QSettings("ArtStudio3D", "Creative ERP")
+        lang = settings.value("language", "es")
+        
+        # Establecer el locale ANTES de crear QApplication
+        locale = QLocale(lang)
+        QLocale.setDefault(locale)
+        
         # Crear aplicación Qt
         self.qapp = QApplication(sys.argv)
         self.qapp.setApplicationName("Creative ERP")
@@ -37,10 +46,6 @@ class CreativeERPApp:
         # Cargar traducciones
         print("Cargando traducciones...")
         from core.translations import load_translation
-        
-        # Leer idioma guardado en configuración (por defecto español)
-        settings = QSettings()
-        lang = settings.value("language", "es")
         
         # Cargar traducción con el idioma configurado
         self.translator = load_translation(self.qapp, lang)

@@ -89,14 +89,20 @@ class EmpresasView(QWidget):
         idx = self.ui.tableView.selectionModel().currentIndex()
         nombre = self.controller.model.item(idx.row(), 2).text()
         
-        reply = QMessageBox.question(
-            self, 
-            "Confirmar", 
-            f"¿Borrar empresa {nombre}?", 
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
         
-        if reply == QMessageBox.StandardButton.Yes:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Question)
+        msg.setWindowTitle(self.tr("Confirmar"))
+        msg.setText(self.tr("¿Borrar empresa {}?").format(nombre))
+        
+        btn_yes = msg.addButton(self.tr("Sí"), QMessageBox.ButtonRole.YesRole)
+        btn_no = msg.addButton(self.tr("No"), QMessageBox.ButtonRole.NoRole)
+        msg.setDefaultButton(btn_no)
+        
+        msg.exec()
+        reply = msg.clickedButton()
+        
+        if reply == btn_yes:
             self.controller.borrar_empresa(id_)
 
     def guardar(self):

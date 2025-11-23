@@ -176,14 +176,20 @@ class ClientesView(QWidget):
         cliente_id = self.table.item(current_row, 0).text()
         nombre = self.table.item(current_row, 2).text()
         
-        reply = QMessageBox.question(
-            self,
-            self.tr("Confirmar eliminación"),
-            self.tr("¿Seguro que deseas eliminar al cliente #{}: {}?").format(cliente_id, nombre),
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        )
         
-        if reply == QMessageBox.StandardButton.Yes:
+        msg = QMessageBox(self)
+        msg.setIcon(QMessageBox.Icon.Question)
+        msg.setWindowTitle(self.tr("Confirmar eliminación"))
+        msg.setText(self.tr("¿Seguro que deseas eliminar al cliente #{}: {}?").format(cliente_id, nombre))
+        
+        btn_yes = msg.addButton(self.tr("Sí"), QMessageBox.ButtonRole.YesRole)
+        btn_no = msg.addButton(self.tr("No"), QMessageBox.ButtonRole.NoRole)
+        msg.setDefaultButton(btn_no)
+        
+        msg.exec()
+        reply = msg.clickedButton()
+        
+        if reply == btn_yes:
             # TODO: Eliminar de BD
             self.table.removeRow(current_row)
             self.update_info_label()

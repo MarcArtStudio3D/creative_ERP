@@ -160,3 +160,25 @@ class Empresa(Base):
     # Metadatos
     fecha_modificacion = Column(DateTime, default=datetime.datetime.utcnow)
     usuario_modificacion = Column(String(100))
+
+
+class DireccionAlternativaEmpresa(Base):
+    """Direcciones alternativas de entrega/facturación para empresas"""
+    __tablename__ = 'direcciones_alternativas_empresas'
+    
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    id_empresa = Column(Integer, ForeignKey('empresas.id'), nullable=False)
+    
+    descripcion = Column(String(100))  # Ej: "Almacén principal", "Oficina central"
+    direccion1 = Column(String(255))
+    direccion2 = Column(String(255))
+    cp = Column(String(10))
+    poblacion = Column(String(100))
+    provincia = Column(String(100))
+    id_pais = Column(Integer, default=1)
+    email = Column(String(200))
+    comentarios = Column(Text)
+    
+    # Metadatos
+    fecha_creacion = Column(DateTime, default=datetime.datetime.utcnow)
+    fecha_modificacion = Column(DateTime, default=datetime.datetime.utcnow)

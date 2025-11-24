@@ -3,9 +3,9 @@ Modelos de datos para el módulo de Clientes
 Basado en la estructura original de RedFox SGC (clientes.cpp)
 """
 
-from sqlalchemy import Integer, String, Float, Date, Boolean, Text, ForeignKey
+from sqlalchemy import Integer, String, Float, Date, Boolean, Text, ForeignKey, DateTime
 from sqlalchemy.orm import relationship, Mapped, mapped_column
-from datetime import date
+from datetime import date, datetime
 from typing import Optional
 from core.db import Base
 from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
@@ -197,12 +197,13 @@ class DireccionAlternativa(Base):
     cp: Mapped[Optional[str]] = mapped_column(String(10))
     poblacion: Mapped[Optional[str]] = mapped_column(String(100))
     provincia: Mapped[Optional[str]] = mapped_column(String(100))
-    id_pais: Mapped[int] = mapped_column(Integer, default=1)
+    id_pais: Mapped[Optional[str]] = mapped_column(String(100), default='Francia')  # Nombre del país
     email: Mapped[Optional[str]] = mapped_column(String(200))
     comentarios: Mapped[Optional[str]] = mapped_column(Text)
     
-    # Relación con cliente
-    # cliente = relationship("Cliente", back_populates="direcciones")
+    # Fechas
+    fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
+    fecha_modificacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
 
 
 class DeudaCliente(Base):

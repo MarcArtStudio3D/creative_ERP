@@ -138,9 +138,27 @@ class ClienteRepository:
             DireccionAlternativa.id_cliente == id_cliente
         ).all()
     
+    def obtener_direccion_por_id(self, id_direccion: int) -> Optional[DireccionAlternativa]:
+        """Obtiene una dirección alternativa por su ID"""
+        return self.session.query(DireccionAlternativa).filter(
+            DireccionAlternativa.id == id_direccion
+        ).first()
+    
     def crear_direccion(self, direccion: DireccionAlternativa) -> DireccionAlternativa:
         """Crea una nueva dirección alternativa"""
         self.session.add(direccion)
+        self.session.commit()
+        self.session.refresh(direccion)
+        return direccion
+    
+    def guardar_direccion(self, direccion: DireccionAlternativa) -> DireccionAlternativa:
+        """Guarda (crea o actualiza) una dirección alternativa"""
+        if direccion.id:
+            # Es una actualización
+            self.session.merge(direccion)
+        else:
+            # Es nueva
+            self.session.add(direccion)
         self.session.commit()
         self.session.refresh(direccion)
         return direccion

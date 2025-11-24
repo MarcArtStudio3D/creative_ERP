@@ -96,6 +96,10 @@ class ClientesViewFull(QWidget):
         self.cliente_actual = None
         self._modo_edicion = False  # Bandera para controlar el modo de edición
         
+        # Variables para edición de direcciones alternativas
+        self._modo_edicion_direccion = False
+        self._direccion_actual = None
+        
         # Conectar señales de botones principales
         self.conectar_senales()
         
@@ -188,6 +192,28 @@ class ClientesViewFull(QWidget):
         if btn_tipo is not None:
             try:
                 btn_tipo.clicked.connect(self.abrir_tipo_cliente)
+            except Exception:
+                pass
+
+        # Botones de direcciones alternativas
+        for name, handler in (
+            ("btnAnadirdireccion", self.anadir_direccion_alternativa),
+            ("btnEditardireccionAlternativa", self.editar_direccion_alternativa),
+            ("btnBorrardireccion", self.borrar_direccion_alternativa),
+            ("btnGuardardireccionAlternativa", self.guardar_direccion_alternativa),
+            ("btnDeshacerdireccionAlternativa", self.deshacer_direccion_alternativa)
+        ):
+            w = self._get_widget(name)
+            if w is not None and hasattr(w, "clicked"):
+                w.clicked.connect(handler)
+
+        # Conectar doble clic en lista de direcciones para editar
+        lista_direcciones = self._get_widget("lista_direccionesAlternativas")
+        if lista_direcciones is not None:
+            try:
+                lista_direcciones.doubleClicked.connect(self.editar_direccion_alternativa)
+                # Conectar cambio de selección para mostrar datos (solo en modo no edición)
+                lista_direcciones.currentChanged.connect(self.mostrar_direccion_alternativa)
             except Exception:
                 pass
 
@@ -1478,8 +1504,45 @@ class ClientesViewFull(QWidget):
         if not hasattr(self.ui, 'lista_direccionesAlternativas'):
             return
         
+        # Limpiar campos de dirección alternativa antes de cargar
+        self.limpiar_campos_direccion_alternativa()
+        
+        from PySide6.QtGui import QStandardItemModel, QStandardItem
+        
         direcciones = self.repository.obtener_direcciones(id_cliente)
-        # Implementar carga en lista/tabla
+        
+        # Crear modelo para la lista
+        model = QStandardItemModel()
+        
+        for direccion in direcciones:
+            # Crear item con descripción
+            descripcion = direccion.descripcion or f"Dirección {direccion.id}"
+            item = QStandardItem(descripcion)
+            
+            # Almacenar el ID en el data del item
+            item.setData(direccion.id, Qt.ItemDataRole.UserRole)
+            
+            # Tooltip con información completa
+            tooltip = f"Descripción: {direccion.descripcion or 'N/A'}\n"
+            tooltip += f"Dirección: {direccion.direccion1 or ''} {direccion.direccion2 or ''}\n"
+            tooltip += f"CP: {direccion.cp or 'N/A'} - {direccion.poblacion or 'N/A'}\n"
+            tooltip += f"Provincia: {direccion.provincia or 'N/A'}\n"
+            tooltip += f"Email: {direccion.email or 'N/A'}"
+            item.setToolTip(tooltip)
+            
+            model.appendRow(item)
+        
+        # Asignar modelo a la lista
+        self.ui.lista_direccionesAlternativas.setModel(model)
+        
+        # Si hay direcciones, seleccionar automáticamente la primera y mostrar sus datos
+        if direcciones and len(direcciones) > 0 and not getattr(self, '_modo_edicion_direccion', False):
+            # Seleccionar el primer elemento
+            first_index = model.index(0, 0)
+            self.ui.lista_direccionesAlternativas.setCurrentIndex(first_index)
+            
+            # Cargar los datos de la primera dirección en los campos
+            self.cargar_direccion_en_campos_solo_lectura(direcciones[0])
     
     def cargar_deudas(self, id_cliente: int):
         """Carga las deudas del cliente"""
@@ -1684,22 +1747,6 @@ class ClientesViewFull(QWidget):
                     return _date(d.year(), d.month(), d.day())
                 except Exception:
                     return None
-            def get_combo_value(name):
-                w = getattr(self.ui, name, None)
-                if w is None:
-                    return None
-                try:
-                    idx = w.currentIndex()
-                    val = w.itemData(idx)
-                    # Caso especial para combos de país: extraer el nombre en el idioma de la aplicación
-                    if name in ('cboPais', 'cbopaisAlternativa') and isinstance(val, dict):
-                        from PySide6.QtCore import QCoreApplication
-                        locale = QCoreApplication.instance().property("current_locale")
-                        lang_key = 'fr' if locale == 'fr' else 'es'
-                        return val.get(lang_key)  # Guardar en el idioma actual
-                    return val if val is not None else idx
-                except Exception:
-                    return None
             # Validar campos antes de construir el mapeo (y antes de guardar)
             ok, errores = self._validar_campos()
             if not ok:
@@ -1763,7 +1810,7 @@ class ClientesViewFull(QWidget):
                     try:
                         w = getattr(self.ui, widget_name, None)
                         if w is not None:
-                            setattr(self.cliente_actual, attr, get_combo_value(widget_name))
+                            setattr(self.cliente_actual, attr, self.get_combo_value(widget_name))
                     except Exception:
                         continue
                 # Persistir cambios en la base de datos usando el repositorio
@@ -1833,7 +1880,7 @@ class ClientesViewFull(QWidget):
                         cliente_kwargs[attr] = val_bool(widget_name)
 
                 for attr, widget_name in cbo_map:
-                    v = get_combo_value(widget_name)
+                    v = self.get_combo_value(widget_name)
                     if v is not None:
                         cliente_kwargs[attr] = v
 
@@ -1865,6 +1912,24 @@ class ClientesViewFull(QWidget):
             
         except Exception as e:
             QMessageBox.critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(str(e)))
+    
+    def get_combo_value(self, name):
+        """Helper method to get combo box value, handling special cases like countries"""
+        w = getattr(self.ui, name, None)
+        if w is None:
+            return None
+        try:
+            idx = w.currentIndex()
+            val = w.itemData(idx)
+            # Caso especial para combos de país: extraer el nombre en el idioma de la aplicación
+            if name in ('cboPais', 'cbopaisAlternativa') and isinstance(val, dict):
+                from PySide6.QtCore import QCoreApplication
+                locale = QCoreApplication.instance().property("current_locale")
+                lang_key = 'fr' if locale == 'fr' else 'es'
+                return val.get(lang_key)  # Guardar en el idioma actual
+            return val if val is not None else idx
+        except Exception:
+            return None
     
     def deshacer_cambios(self):
         """Deshace los cambios y recarga los datos del cliente actual"""
@@ -2283,17 +2348,6 @@ class ClientesViewFull(QWidget):
         except Exception:
             pass
     
-    def volver_a_lista(self):
-        """Vuelve a la página de búsquedas/lista"""
-        if hasattr(self.ui, 'stackedWidget'):
-            self.ui.stackedWidget.setCurrentIndex(1)
-
-        # Asegurar que la lista está actualizada
-        try:
-            self.cargar_clientes()
-        except Exception:
-            pass
-    
     def _reseleccionar_cliente_en_tabla(self, cid):
         """Re-selecciona un cliente en la tabla por su ID"""
         try:
@@ -2494,9 +2548,408 @@ class ClientesViewFull(QWidget):
             print(f"Error in postal code lookup: {e}")
             pass
 
-    def has_unsaved_changes(self) -> bool:
-        """Retorna True si hay cambios sin guardar (modo edición activo)."""
-        return getattr(self, '_modo_edicion', False)
+    # ========== MÉTODOS PARA DIRECCIONES ALTERNATIVAS ==========
+
+    def anadir_direccion_alternativa(self):
+        """Añade una nueva dirección alternativa"""
+        if not self.cliente_actual:
+            QMessageBox.warning(self, "Error", "Primero debe seleccionar un cliente.")
+            return
+
+        # Limpiar campos de dirección
+        self.limpiar_campos_direccion_alternativa()
+        
+        # Establecer modo edición de dirección
+        self._modo_edicion_direccion = True
+        self._direccion_actual = None
+        
+        # Activar campos de dirección
+        self.activar_campos_direccion_alternativa()
+        
+        # Desactivar lista y botones de acción
+        self.desactivar_lista_direcciones()
+
+    def editar_direccion_alternativa(self):
+        """Edita la dirección alternativa seleccionada"""
+        if not hasattr(self.ui, 'lista_direccionesAlternativas'):
+            return
+            
+        # Obtener la dirección seleccionada
+        current_index = self.ui.lista_direccionesAlternativas.currentIndex()
+        if not current_index.isValid():
+            QMessageBox.information(self, "Seleccionar dirección", "Por favor, seleccione una dirección de la lista.")
+            return
+            
+        # Obtener el ID de la dirección desde el modelo
+        model = self.ui.lista_direccionesAlternativas.model()
+        if not model:
+            return
+            
+        # El ID debería estar en el data del item
+        item = model.itemFromIndex(current_index)
+        if not item:
+            return
+            
+        id_direccion = item.data(Qt.ItemDataRole.UserRole)
+        if not id_direccion:
+            return
+            
+        # Obtener la dirección desde el repositorio
+        direccion = self.repository.obtener_direccion_por_id(id_direccion)
+        if not direccion:
+            QMessageBox.warning(self, "Error", "No se pudo cargar la dirección.")
+            return
+            
+        # Cargar datos en los campos
+        self.cargar_direccion_en_campos(direccion)
+        
+        # Establecer modo edición
+        self._modo_edicion_direccion = True
+        self._direccion_actual = direccion
+        
+        # Activar campos
+        self.activar_campos_direccion_alternativa()
+        
+        # Desactivar lista
+        self.desactivar_lista_direcciones()
+
+    def borrar_direccion_alternativa(self):
+        """Borra la dirección alternativa seleccionada"""
+        if not hasattr(self.ui, 'lista_direccionesAlternativas'):
+            return
+            
+        current_index = self.ui.lista_direccionesAlternativas.currentIndex()
+        if not current_index.isValid():
+            QMessageBox.information(self, "Seleccionar dirección", "Por favor, seleccione una dirección de la lista para borrar.")
+            return
+            
+        # Confirmar eliminación
+        reply = QMessageBox.question(
+            self, "Confirmar eliminación",
+            "¿Está seguro de que desea eliminar esta dirección alternativa?",
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+        )
+        
+        if reply != QMessageBox.StandardButton.Yes:
+            return
+            
+        # Obtener ID de la dirección
+        model = self.ui.lista_direccionesAlternativas.model()
+        item = model.itemFromIndex(current_index)
+        id_direccion = item.data(Qt.ItemDataRole.UserRole)
+        
+        # Eliminar desde repositorio
+        try:
+            if self.repository.eliminar_direccion(id_direccion):
+                QMessageBox.information(self, "Éxito", "Dirección eliminada correctamente.")
+                # Recargar lista
+                if self.cliente_actual:
+                    self.cargar_direcciones_alternativas(self.cliente_actual.id)
+            else:
+                QMessageBox.warning(self, "Error", "No se pudo eliminar la dirección.")
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al eliminar la dirección: {str(e)}")
+
+    def guardar_direccion_alternativa(self):
+        """Guarda la dirección alternativa actual"""
+        if not self.cliente_actual:
+            return
+            
+        try:
+            # Crear o actualizar dirección
+            if self._direccion_actual:
+                # Actualizar existente
+                self.actualizar_direccion_desde_campos(self._direccion_actual)
+                self.repository.guardar_direccion(self._direccion_actual)
+                QMessageBox.information(self, "Éxito", "Dirección actualizada correctamente.")
+            else:
+                # Crear nueva
+                nueva_direccion = self.crear_direccion_desde_campos()
+                self.repository.crear_direccion(nueva_direccion)
+                QMessageBox.information(self, "Éxito", "Dirección creada correctamente.")
+                
+            # Recargar lista
+            self.cargar_direcciones_alternativas(self.cliente_actual.id)
+            
+            # Salir del modo edición
+            self.deshacer_direccion_alternativa()
+            
+        except Exception as e:
+            QMessageBox.critical(self, "Error", f"Error al guardar la dirección: {str(e)}")
+
+    def deshacer_direccion_alternativa(self):
+        """Cancela la edición de dirección alternativa"""
+        # Limpiar campos
+        self.limpiar_campos_direccion_alternativa()
+        
+        # Desactivar campos
+        self.desactivar_campos_direccion_alternativa()
+        
+        # Activar lista y botones
+        self.activar_lista_direcciones()
+        
+        # Salir del modo edición
+        self._modo_edicion_direccion = False
+        self._direccion_actual = None
+
+    def limpiar_campos_direccion_alternativa(self):
+        """Limpia los campos de dirección alternativa"""
+        campos = [
+            'txtdescripcion_direccion', 'txtcpPoblacionAlternativa', 'txtpoblacionAlternativa',
+            'txtdireccion1Alternativa1', 'txtdireccion1Alternativa2', 'txtprovinciaAlternativa',
+            'txtemail_alternativa', 'txtcomentarios_alternativa'
+        ]
+        
+        for campo in campos:
+            widget = getattr(self.ui, campo, None)
+            if widget:
+                if hasattr(widget, 'clear'):
+                    widget.clear()
+                elif hasattr(widget, 'setCurrentIndex'):
+                    widget.setCurrentIndex(0)
+
+    def activar_campos_direccion_alternativa(self):
+        """Activa los campos de dirección alternativa para edición"""
+        campos = [
+            'txtdescripcion_direccion', 'txtcpPoblacionAlternativa', 'txtpoblacionAlternativa',
+            'txtdireccion1Alternativa1', 'txtdireccion1Alternativa2', 'txtprovinciaAlternativa',
+            'cbopaisAlternativa', 'txtemail_alternativa', 'txtcomentarios_alternativa'
+        ]
+        
+        for campo in campos:
+            widget = getattr(self.ui, campo, None)
+            if widget:
+                widget.setEnabled(True)
+                
+        # Activar botones de guardar/deshacer
+        botones = ['btnGuardardireccionAlternativa', 'btnDeshacerdireccionAlternativa']
+        for btn in botones:
+            widget = getattr(self.ui, btn, None)
+            if widget:
+                widget.setEnabled(True)
+
+    def desactivar_campos_direccion_alternativa(self):
+        """Desactiva los campos de dirección alternativa"""
+        campos = [
+            'txtdescripcion_direccion', 'txtcpPoblacionAlternativa', 'txtpoblacionAlternativa',
+            'txtdireccion1Alternativa1', 'txtdireccion1Alternativa2', 'txtprovinciaAlternativa',
+            'cbopaisAlternativa', 'txtemail_alternativa', 'txtcomentarios_alternativa'
+        ]
+        
+        for campo in campos:
+            widget = getattr(self.ui, campo, None)
+            if widget:
+                widget.setEnabled(False)
+                
+        # Desactivar botones de guardar/deshacer
+        botones = ['btnGuardardireccionAlternativa', 'btnDeshacerdireccionAlternativa']
+        for btn in botones:
+            widget = getattr(self.ui, btn, None)
+            if widget:
+                widget.setEnabled(False)
+
+    def activar_lista_direcciones(self):
+        """Activa la lista de direcciones y botones de acción"""
+        if hasattr(self.ui, 'lista_direccionesAlternativas'):
+            self.ui.lista_direccionesAlternativas.setEnabled(True)
+            
+        botones = ['btnAnadirdireccion', 'btnEditardireccionAlternativa', 'btnBorrardireccion']
+        for btn in botones:
+            widget = getattr(self.ui, btn, None)
+            if widget:
+                widget.setEnabled(True)
+
+    def desactivar_lista_direcciones(self):
+        """Desactiva la lista de direcciones y botones de acción"""
+        if hasattr(self.ui, 'lista_direccionesAlternativas'):
+            self.ui.lista_direccionesAlternativas.setEnabled(False)
+            
+        botones = ['btnAnadirdireccion', 'btnEditardireccionAlternativa', 'btnBorrardireccion']
+        for btn in botones:
+            widget = getattr(self.ui, btn, None)
+            if widget:
+                widget.setEnabled(False)
+
+    def cargar_direccion_en_campos(self, direccion):
+        """Carga los datos de una dirección en los campos del formulario"""
+        campos_map = {
+            'txtdescripcion_direccion': direccion.descripcion,
+            'txtcpPoblacionAlternativa': direccion.cp,
+            'txtpoblacionAlternativa': direccion.poblacion,
+            'txtdireccion1Alternativa1': direccion.direccion1,
+            'txtdireccion1Alternativa2': direccion.direccion2,
+            'txtprovinciaAlternativa': direccion.provincia,
+            'txtemail_alternativa': direccion.email,
+            'txtcomentarios_alternativa': direccion.comentarios
+        }
+        
+        for campo, valor in campos_map.items():
+            widget = getattr(self.ui, campo, None)
+            if widget and valor is not None:
+                if hasattr(widget, 'setText'):
+                    widget.setText(str(valor))
+                elif hasattr(widget, 'setPlainText'):
+                    widget.setPlainText(str(valor))
+                    
+        # País
+        if hasattr(self.ui, 'cbopaisAlternativa') and direccion.id_pais:
+            # Intentar buscar por nombre (en ambos idiomas)
+            for i in range(self.ui.cbopaisAlternativa.count()):
+                itemdata = self.ui.cbopaisAlternativa.itemData(i)
+                if itemdata is not None and isinstance(itemdata, dict):
+                    # itemdata es {'es': pais_es, 'fr': pais_fr}
+                    if (itemdata.get('es') == direccion.id_pais or itemdata.get('fr') == direccion.id_pais):
+                        self.ui.cbopaisAlternativa.setCurrentIndex(i)
+                        break
+
+    def crear_direccion_desde_campos(self):
+        """Crea una nueva instancia de DireccionAlternativa desde los campos"""
+        from modules.clientes.models import DireccionAlternativa
+        from datetime import datetime
+        
+        direccion = DireccionAlternativa()
+        direccion.id_cliente = self.cliente_actual.id
+        
+        campos_map = {
+            'descripcion': 'txtdescripcion_direccion',
+            'cp': 'txtcpPoblacionAlternativa', 
+            'poblacion': 'txtpoblacionAlternativa',
+            'direccion1': 'txtdireccion1Alternativa1',
+            'direccion2': 'txtdireccion1Alternativa2',
+            'provincia': 'txtprovinciaAlternativa',
+            'email': 'txtemail_alternativa',
+            'comentarios': 'txtcomentarios_alternativa'
+        }
+        
+        for attr, campo in campos_map.items():
+            widget = getattr(self.ui, campo, None)
+            if widget:
+                if hasattr(widget, 'text'):
+                    valor = widget.text().strip()
+                elif hasattr(widget, 'toPlainText'):
+                    valor = widget.toPlainText().strip()
+                else:
+                    valor = ""
+                setattr(direccion, attr, valor if valor else None)
+                
+        # País
+        if hasattr(self.ui, 'cbopaisAlternativa'):
+            pais_valor = self.get_combo_value('cbopaisAlternativa')
+            direccion.id_pais = pais_valor if pais_valor else 'Francia'
+            
+        # Fechas
+        now = datetime.now()
+        direccion.fecha_creacion = now
+        direccion.fecha_modificacion = now
+        
+        return direccion
+
+    def actualizar_direccion_desde_campos(self, direccion):
+        """Actualiza una dirección existente desde los campos"""
+        from datetime import datetime
+        
+        campos_map = {
+            'descripcion': 'txtdescripcion_direccion',
+            'cp': 'txtcpPoblacionAlternativa',
+            'poblacion': 'txtpoblacionAlternativa', 
+            'direccion1': 'txtdireccion1Alternativa1',
+            'direccion2': 'txtdireccion1Alternativa2',
+            'provincia': 'txtprovinciaAlternativa',
+            'email': 'txtemail_alternativa',
+            'comentarios': 'txtcomentarios_alternativa'
+        }
+        
+        for attr, campo in campos_map.items():
+            widget = getattr(self.ui, campo, None)
+            if widget:
+                if hasattr(widget, 'text'):
+                    valor = widget.text().strip()
+                elif hasattr(widget, 'toPlainText'):
+                    valor = widget.toPlainText().strip()
+                else:
+                    valor = ""
+                setattr(direccion, attr, valor if valor else None)
+                
+        # País
+        if hasattr(self.ui, 'cbopaisAlternativa'):
+            pais_valor = self.get_combo_value('cbopaisAlternativa')
+            direccion.id_pais = pais_valor if pais_valor else 'Francia'
+            
+        # Fecha de modificación
+        direccion.fecha_modificacion = datetime.now()
+
+    def mostrar_direccion_alternativa(self):
+        """Muestra los datos de la dirección alternativa seleccionada en los campos (solo en modo no edición)"""
+        # Solo mostrar datos si NO estamos en modo edición de dirección
+        if getattr(self, '_modo_edicion_direccion', False):
+            return
+            
+        if not hasattr(self.ui, 'lista_direccionesAlternativas'):
+            return
+            
+        # Obtener la dirección seleccionada
+        current_index = self.ui.lista_direccionesAlternativas.currentIndex()
+        if not current_index.isValid():
+            # No hay selección, limpiar campos
+            self.limpiar_campos_direccion_alternativa()
+            return
+            
+        # Obtener el ID de la dirección desde el modelo
+        model = self.ui.lista_direccionesAlternativas.model()
+        if not model:
+            self.limpiar_campos_direccion_alternativa()
+            return
+            
+        item = model.itemFromIndex(current_index)
+        if not item:
+            self.limpiar_campos_direccion_alternativa()
+            return
+            
+        id_direccion = item.data(Qt.ItemDataRole.UserRole)
+        if not id_direccion:
+            self.limpiar_campos_direccion_alternativa()
+            return
+            
+        # Obtener la dirección desde el repositorio
+        direccion = self.repository.obtener_direccion_por_id(id_direccion)
+        if not direccion:
+            self.limpiar_campos_direccion_alternativa()
+            return
+            
+        # Cargar datos en los campos (sin activar modo edición)
+        self.cargar_direccion_en_campos_solo_lectura(direccion)
+
+    def cargar_direccion_en_campos_solo_lectura(self, direccion):
+        """Carga los datos de una dirección en los campos para solo lectura"""
+        campos_map = {
+            'txtdescripcion_direccion': direccion.descripcion,
+            'txtcpPoblacionAlternativa': direccion.cp,
+            'txtpoblacionAlternativa': direccion.poblacion,
+            'txtdireccion1Alternativa1': direccion.direccion1,
+            'txtdireccion1Alternativa2': direccion.direccion2,
+            'txtprovinciaAlternativa': direccion.provincia,
+            'txtemail_alternativa': direccion.email,
+            'txtcomentarios_alternativa': direccion.comentarios
+        }
+        
+        for campo, valor in campos_map.items():
+            widget = getattr(self.ui, campo, None)
+            if widget and valor is not None:
+                if hasattr(widget, 'setText'):
+                    widget.setText(str(valor))
+                elif hasattr(widget, 'setPlainText'):
+                    widget.setPlainText(str(valor))
+                    
+        # País
+        if hasattr(self.ui, 'cbopaisAlternativa') and direccion.id_pais:
+            # Intentar buscar por nombre (en ambos idiomas)
+            for i in range(self.ui.cbopaisAlternativa.count()):
+                itemdata = self.ui.cbopaisAlternativa.itemData(i)
+                if itemdata is not None and isinstance(itemdata, dict):
+                    # itemdata es {'es': pais_es, 'fr': pais_fr}
+                    if (itemdata.get('es') == direccion.id_pais or itemdata.get('fr') == direccion.id_pais):
+                        self.ui.cbopaisAlternativa.setCurrentIndex(i)
+                        break
 
     def _save_changes(self) -> bool:
         """Intenta guardar los cambios. Retorna True si tuvo éxito."""

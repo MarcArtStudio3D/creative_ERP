@@ -321,7 +321,7 @@ class Session:
     def get_company_name(self) -> str:
         """Obtiene el nombre de la empresa activa."""
         if self.company_context:
-            return self.company_context.company.name
+            return self.company_context.company.nombre_comercial or self.company_context.company.nombre_fiscal
         return "Sin empresa"
     
     def get_group_name(self) -> str:

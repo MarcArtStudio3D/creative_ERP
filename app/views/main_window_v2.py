@@ -550,7 +550,7 @@ class MainWindowV2(QMainWindow):
         if self.session.company_context:
             company_info = QLabel(
                 f"{self.session.company_context.group.name} - "
-                f"{self.session.company_context.company.name}"
+                f"{self.session.company_context.company.nombre_comercial or self.session.company_context.company.nombre_fiscal}"
             )
             company_info.setFont(info_font)
             company_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -1539,7 +1539,7 @@ class MainWindowV2(QMainWindow):
         self.user_label.setText(f"👤 {self.session.user.username}")
         
         if self.session.company_context:
-            company_text = self.session.company_context.company.name
+            company_text = self.session.company_context.company.nombre_comercial or self.session.company_context.company.nombre_fiscal
             self.company_button.setText(f"🏢 {company_text}")
         else:
             self.company_button.setText(self.tr("🏢 Sin empresa"))
@@ -1569,7 +1569,7 @@ class MainWindowV2(QMainWindow):
                 f"{self.tr('Usuario')}: {self.session.user.username} | "
                 f"{self.tr('Rol')}: {role} | "
                 f"{self.session.company_context.group.name} - "
-                f"{self.session.company_context.company.name} | "
+                f"{self.session.company_context.company.nombre_comercial or self.session.company_context.company.nombre_fiscal} | "
                 f"{self.tr('Normativa')}: {fiscal_text}"
             )
         else:

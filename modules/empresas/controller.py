@@ -4,7 +4,8 @@ from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QMessageBox
 
 from modules.empresas.repository import EmpresaRepository
-from core.models import Empresa
+from core.models import Empresa, BusinessGroup
+from core.db import get_session
 
 
 class EmpresasController(QObject):
@@ -95,3 +96,20 @@ class EmpresasController(QObject):
         except Exception as e:
             self.error_occurred.emit(f"Error al borrar: {e}")
             return False
+    def cargar_grupos(self) -> List[BusinessGroup]:
+        """Carga todos los grupos empresariales."""
+        session = get_session()
+        try:
+            return session.query(BusinessGroup).all()
+        except Exception as e:
+            self.error_occurred.emit(f"Error al cargar grupos: {e}")
+            return []
+        finally:
+            session.close()
+
+    def llenar_combo_grupos(self, combo):
+        """Llena un QComboBox con los grupos empresariales."""
+        grupos = self.cargar_grupos()
+        combo.clear()
+        for grupo in grupos:
+            combo.addItem(grupo.name, grupo.id)

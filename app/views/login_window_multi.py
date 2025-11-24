@@ -241,9 +241,10 @@ class LoginWindowMultiCompany(QDialog):
             return
         
         # Cargar empresas desde la base de datos
-        companies = CompanyRepository.get_companies_by_group(group.id)
+        companies = CompanyRepository.get_empresas_by_group(group.id)
         for company in companies:
-            self.company_combo.addItem(company.name, company)  # type: ignore
+            name = getattr(company, 'nombre_comercial', '') or getattr(company, 'nombre_fiscal', 'Empresa')
+            self.company_combo.addItem(name, company)  # type: ignore
     
     def on_login_clicked(self):
         """Maneja el click en Acceder."""

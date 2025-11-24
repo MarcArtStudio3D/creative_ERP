@@ -10,8 +10,8 @@ import os
 from sqlalchemy import inspect, text
 from sqlalchemy.sql.sqltypes import Integer, String, DateTime, Date, Float, Text
 
-# Ruta de la base de datos (por defecto SQLite local)
-DB_PATH = os.environ.get('CREATIVE_ERP_DB', 'sqlite:///creative_erp.db')
+# Ruta de la base de datos (por defecto MariaDB local)
+DB_PATH = os.environ.get('CREATIVE_ERP_DB', 'mysql+pymysql://admin:admin123@127.0.0.1:3306/creative_erp')
 
 # Motor de base de datos
 engine = create_engine(

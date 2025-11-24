@@ -39,7 +39,13 @@ class EmpresasView(QWidget):
         self.controller.operation_success.connect(self.mostrar_exito)
         
         # Cargar datos y mostrar lista
+        # Cargar datos y mostrar lista
         self.controller.cargar_empresas()
+        
+        # Cargar grupos en el combo si existe
+        if hasattr(self.ui, 'cboGrupoEmpresa'):
+            self.controller.llenar_combo_grupos(self.ui.cboGrupoEmpresa)
+            
         self.ui.stackedWidget.setCurrentIndex(1)  # Mostrar lista por defecto
 
     def mostrar_error(self, mensaje: str):
@@ -164,6 +170,13 @@ class EmpresasView(QWidget):
                 w.txtcMail.setText(getattr(empresa, 'email', '') or '')
             if hasattr(w, 'txtweb'):
                 w.txtweb.setText(getattr(empresa, 'web', '') or '')
+            
+            # Mapear grupo empresarial
+            if hasattr(w, 'cboGrupoEmpresa') and hasattr(empresa, 'group_id'):
+                idx = w.cboGrupoEmpresa.findData(empresa.group_id)
+                if idx >= 0:
+                    w.cboGrupoEmpresa.setCurrentIndex(idx)
+
         except Exception:
             pass
 
@@ -200,6 +213,13 @@ class EmpresasView(QWidget):
                 empresa.email = w.txtcMail.text()
             if hasattr(w, 'txtweb'):
                 empresa.web = w.txtweb.text()
+            
+            # Mapear grupo empresarial
+            if hasattr(w, 'cboGrupoEmpresa'):
+                group_id = w.cboGrupoEmpresa.currentData()
+                if group_id:
+                    empresa.group_id = int(group_id)
+
         except Exception:
             pass
             

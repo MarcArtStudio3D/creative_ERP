@@ -39,7 +39,7 @@ class Cliente(Base):
     cp: Mapped[Optional[str]] = mapped_column(String(10))
     poblacion: Mapped[Optional[str]] = mapped_column(String(100))
     provincia: Mapped[Optional[str]] = mapped_column(String(100))
-    id_pais: Mapped[int] = mapped_column(Integer, default=1)
+    id_pais: Mapped[str] = mapped_column(String(100), default='España')
     
     # Contacto
     telefono1: Mapped[Optional[str]] = mapped_column(String(50))
@@ -264,21 +264,6 @@ class EstadisticaClienteMes(Base):
         {'sqlite_autoincrement': True},
     )
 
-
-class Ville(Base):
-    """Modelo para ciudades francesas de la base de datos france.db"""
-    __tablename__ = 'villes'
-
-    # Clave primaria: código INSEE (único para cada comuna en Francia)
-    code_insee: Mapped[str] = mapped_column(String(10), primary_key=True)
-
-    # Identificadores adicionales
-    code_postal: Mapped[Optional[str]] = mapped_column(String(10))
-    codes_postaux: Mapped[Optional[str]] = mapped_column(Text)  # Puede contener múltiples códigos separados
-
-    # Nombres de la ciudad
-    nom_standard: Mapped[Optional[str]] = mapped_column(String(255))
-    nom_standard_majuscule: Mapped[Optional[str]] = mapped_column(String(255))
 
     # Región
     reg_code: Mapped[Optional[str]] = mapped_column(String(10))

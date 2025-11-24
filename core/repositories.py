@@ -6,7 +6,7 @@
 from typing import List, Optional, TypeVar, Generic
 from .db import SessionLocal
 from modules.clientes.models import Cliente
-from .models import Invoice
+
 
 T = TypeVar('T')
 
@@ -65,37 +65,14 @@ class ClientRepo:
             db.close()
 
 
-class InvoiceRepo:
-    """Repositorio de facturas."""
-    
-    @staticmethod
-    def get_all() -> List[Invoice]:
-        """Obtiene todas las facturas."""
-        db = SessionLocal()
-        try:
-            return db.query(Invoice).all()
-        finally:
-            db.close()
-    
-    @staticmethod
-    def create(**kwargs) -> Invoice:
-        """Crea una nueva factura."""
-        db = SessionLocal()
-        try:
-            inv = Invoice(**kwargs)
-            db.add(inv)
-            db.commit()
-            db.refresh(inv)
-            return inv
-        finally:
-            db.close()
+
 
 
 # -----------------------------
 # Repositorios para autenticación y multi-empresa
 # -----------------------------
 
-from .models import User, BusinessGroup, Company
+from .models import User, BusinessGroup, Empresa
 
 
 class UserRepository:
@@ -137,10 +114,10 @@ class CompanyRepository:
     """Repositorio para operaciones con empresas."""
     
     @staticmethod
-    def get_companies_by_group(group_id: int) -> List[Company]:
+    def get_empresas_by_group(group_id: int) -> List[Empresa]:
         """Obtener empresas de un grupo específico."""
         db = SessionLocal()
         try:
-            return db.query(Company).filter(Company.group_id == group_id).all()
+            return db.query(Empresa).filter(Empresa.group_id == group_id).all()
         finally:
             db.close()

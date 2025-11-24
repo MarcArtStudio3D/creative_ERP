@@ -3,13 +3,13 @@ Repositorio para el módulo de Clientes
 Maneja todas las operaciones CRUD y lógica de negocio
 """
 
-from sqlalchemy.orm import Session
+from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import and_, or_, extract, func
 from datetime import date, datetime
 from typing import List, Optional, Dict
 from modules.clientes.models import (
     Cliente, DireccionAlternativa, DeudaCliente, 
-    HistorialCliente, EstadisticaClienteMes
+    HistorialCliente, EstadisticaClienteMes, ClienteTipo
 )
 
 
@@ -346,3 +346,44 @@ class ClienteRepository:
         return self.session.query(Cliente).filter(
             Cliente.bloqueado == True
         ).all()
+
+    # ========== Tipos de Cliente ==========
+
+    def obtener_tipos_cliente(self, id_cliente: int) -> List[ClienteTipo]:
+        """Obtiene los tipos asociados a un cliente"""
+        return self.session.query(ClienteTipo)\
+            .options(joinedload(ClienteTipo.tipo), joinedload(ClienteTipo.subtipo))\
+            .filter(ClienteTipo.id_cliente == id_cliente)\
+            .all()
+
+    def agregar_tipo_cliente(self, id_cliente: int, id_tipo: int, id_subtipo: Optional[int] = None) -> ClienteTipo:
+        """Asocia un tipo a un cliente"""
+        # Verificar si ya existe
+        query = self.session.query(ClienteTipo).filter(
+            ClienteTipo.id_cliente == id_cliente,
+            ClienteTipo.id_tipo == id_tipo
+        )
+        if id_subtipo:
+            query = query.filter(ClienteTipo.id_subtipo == id_subtipo)
+        else:
+            query = query.filter(ClienteTipo.id_subtipo.is_(None))
+            
+        exists = query.first()
+        if exists:
+            return exists
+            
+        nuevo = ClienteTipo(
+            id_cliente=id_cliente,
+            id_tipo=id_tipo,
+            id_subtipo=id_subtipo
+        )
+        self.session.add(nuevo)
+        self.session.commit()
+        return nuevo
+
+    def eliminar_tipo_cliente(self, id_asociacion: int):
+        """Elimina una asociación de tipo"""
+        item = self.session.query(ClienteTipo).get(id_asociacion)
+        if item:
+            self.session.delete(item)
+            self.session.commit()

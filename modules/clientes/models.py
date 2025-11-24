@@ -8,6 +8,7 @@ from sqlalchemy.orm import relationship, Mapped, mapped_column
 from datetime import date
 from typing import Optional
 from core.db import Base
+from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
 
 
 class Cliente(Base):
@@ -312,3 +313,21 @@ class Ville(Base):
     def nombre_completo(self):
         """Devuelve el nombre completo de la ciudad"""
         return self.nom_standard or self.nom_standard_majuscule or "Sin nombre"
+
+
+class ClienteTipo(Base):
+    """Relación entre clientes y tipos de cliente"""
+    __tablename__ = 'clientes_tipos'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False)
+    id_tipo: Mapped[int] = mapped_column(Integer, ForeignKey('tipocliente_def.id'), nullable=False)
+    id_subtipo: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('tiposubcliente_def.id'), nullable=True)
+    
+    # Relaciones
+    tipo = relationship("TipoCliente")
+    subtipo = relationship("TipoSubCliente")
+    
+    __table_args__ = (
+        {'sqlite_autoincrement': True},
+    )

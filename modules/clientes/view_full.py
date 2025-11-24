@@ -4,7 +4,7 @@ La UI se genera automáticamente desde frmClientes.ui
 """
 
 from logging import disable
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QVBoxLayout, QTableWidget, QTableView
+from PySide6.QtWidgets import QWidget, QMessageBox, QTableWidgetItem, QVBoxLayout, QTableWidget, QTableView, QTreeWidgetItem, QTreeWidgetItemIterator, QDialog
 from PySide6.QtCore import Qt, QDate, Signal, QAbstractTableModel
 from PySide6.QtSql import QSqlDatabase
 from typing import Any
@@ -81,7 +81,7 @@ class ClientesViewFull(QWidget):
         temp_dialog.deleteLater()
         
         # Desactivar campos de edición inmediatamente después de crear la UI
-        self.desactivar_campos_edicion()
+        self.desactivar_edicion()
         
         # Verificar que los campos estén realmente desactivados
         # self.verificar_estado_campos()  # Deshabilitado en producción
@@ -112,6 +112,13 @@ class ClientesViewFull(QWidget):
         
         # Cargar clientes
         self.cargar_clientes()
+        
+        # Cargar tipos de cliente
+        self.cargar_tipos_cliente()
+        
+        # Cargar países en el combo
+        self.cargar_paises()
+        
         # Re-aplicar ajustes de estilo para asegurar que cualquier limpieza posterior
         # no borre las exclusiones o estilos personalizados.
         try:
@@ -121,7 +128,7 @@ class ClientesViewFull(QWidget):
         
         # CRÍTICO: Re-aplicar desactivación de campos después de apply_palette_styles
         # ya que setStyleSheet puede resetear propiedades de los widgets
-        self.desactivar_campos_edicion()
+        self.desactivar_edicion()
     
     def conectar_senales(self):
         """Conecta las señales de los widgets a los métodos"""
@@ -259,13 +266,106 @@ class ClientesViewFull(QWidget):
 
     def abrir_tipo_cliente(self):
         """Abre el formulario de gestión de tipos de cliente"""
+        if not self.cliente_actual:
+            QMessageBox.warning(self, self.tr("Aviso"), self.tr("Debe guardar el cliente antes de asignar tipos."))
+            return
+
         try:
             dialog = TipoClienteView(self.session, self)
-            dialog.exec()
-            # Opcional: Recargar comboboxes de tipos si es necesario
-            # self.cargar_tipos_cliente()
+            if dialog.exec() == QDialog.DialogCode.Accepted:
+                if hasattr(dialog, 'resultado_seleccion') and dialog.resultado_seleccion:
+                    tipo_id = dialog.resultado_seleccion.get('tipo_id')
+                    subtipo_id = dialog.resultado_seleccion.get('subtipo_id')
+                    
+                    if tipo_id:
+                        self.repository.agregar_tipo_cliente(
+                            self.cliente_actual.id,
+                            tipo_id,
+                            subtipo_id
+                        )
+                        self.cargar_tipos_cliente()
+                        
+                        # Re-seleccionar el cliente en la tabla para mantener la navegación activa
+                        try:
+                            if self.cliente_actual and hasattr(self.cliente_actual, 'id'):
+                                self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
+                        except Exception:
+                            pass
+                        
         except Exception as e:
             QMessageBox.critical(self, self.tr("Error"), str(e))
+
+    def cargar_tipos_cliente(self):
+        """Carga los tipos asociados al cliente actual"""
+        lista = self._get_widget("lista_tipos")
+        if lista is None:
+            return
+            
+        lista.clear()
+        
+        if not self.cliente_actual:
+            return
+        
+        try:
+            tipos_asociados = self.repository.obtener_tipos_cliente(self.cliente_actual.id)
+            
+            for asociacion in tipos_asociados:
+                item = QTreeWidgetItem(lista)
+                
+                # Construir texto: Tipo (Subtipo)
+                texto = asociacion.tipo.nombre
+                if asociacion.subtipo:
+                    texto += f" ({asociacion.subtipo.nombre})"
+                
+                item.setText(0, texto)
+                item.setData(0, Qt.ItemDataRole.UserRole, asociacion.id)
+                    
+            lista.expandAll()
+        except Exception as e:
+            print(f"Error cargando tipos de cliente: {e}")
+
+    def cargar_paises(self):
+        """Carga los países desde la base de datos paises_es_fr.sqlite"""
+        import sqlite3
+        import os
+        from PySide6.QtCore import QCoreApplication
+        
+        # Obtener idioma actual de la aplicación
+        locale = QCoreApplication.instance().property("current_locale")
+        usar_frances = locale == "fr" if locale else False
+        
+        # Ruta a la base de datos
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        db_path = os.path.join(base_dir, 'datos', 'paises_es_fr.sqlite')
+        
+        if not os.path.exists(db_path):
+            print(f"Warning: {db_path} no encontrado")
+            return
+        
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            cursor.execute("SELECT pais_es, pais_fr FROM paises ORDER BY pais_es")
+            paises = cursor.fetchall()
+            conn.close()
+            
+            # Llenar ambos combos: cboPais y cbopaisAlternativa
+            for combo_name in ['cboPais', 'cbopaisAlternativa']:
+                if hasattr(self.ui, combo_name):
+                    combo = getattr(self.ui, combo_name)
+                    combo.clear()
+                    for pais_es, pais_fr in paises:
+                        # Mostrar en el idioma apropiado
+                        display_name = pais_fr if usar_frances else pais_es
+                        # Guardar ambos valores como data (para poder recuperar al guardar/cargar)
+                        combo.addItem(display_name, {'es': pais_es, 'fr': pais_fr})
+                    
+        except Exception as e:
+            print(f"Error cargando países: {e}")
+            import traceback
+            traceback.print_exc()
+
+
 
     def _install_focus_validation(self):
         """Instala event filter para mostrar bordes verdes/rojos en campos al recibir foco"""
@@ -410,44 +510,96 @@ class ClientesViewFull(QWidget):
         if index == 0:  # Página de edición
             # Solo activar si realmente estamos en modo edición (nuevo o editar)
             if hasattr(self, '_modo_edicion') and self._modo_edicion:
-                self.activar_campos_edicion()
+                self.activar_edicion()
         else:  # Página de lista/búsqueda - SIEMPRE desactivar campos
             self._modo_edicion = False
-            self.desactivar_campos_edicion()
+            self.desactivar_edicion()
 
-    def desactivar_campos_edicion(self):
-        """Desactiva todos los campos editables relacionados con la base de datos"""
+    def activar_edicion(self):
+        """Activa el modo de edición (habilita campos y botones de edición, desactiva navegación)"""
         from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
-
-        # Lista de campos que deben estar desactivados cuando no se está editando
+        
+        self._modo_edicion = True
+        get = self._get_widget
+        
+        # 1. Activar campos de edición
         campos_edicion = [
             'txtcodigo_cliente', 'txtcif_nif', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido',
             'txtnombre_fiscal', 'txtnombre_comercial', 'txtdireccion1', 'txtdireccion2', 'txtcp',
             'txtpoblacion', 'txtprovincia', 'txttelefono1', 'txttelefono2', 'txtmovil', 'txtfax',
             'txtemail', 'txtweb', 'txtNombreFiscal'
         ]
-
+        
         for campo in campos_edicion:
-            widget = self._get_widget(campo)
+            widget = get(campo)
+            if widget:
+                self._activar_widget(widget)
+        
+        for widget_name in dir(self.ui):
+            if widget_name.startswith('_'): continue
+            widget = getattr(self.ui, widget_name)
+            if isinstance(widget, (QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit)):
+                self._activar_widget(widget)
+        
+        # 2. Desactivar botones de navegación
+        for name in ('btnSiguiente', 'btnAnterior', 'btnEditar', 'btnBorrar', 'btnAnadir', 'btnBuscar'):
+            w = get(name)
+            if w:
+                w.setEnabled(False)
+        
+        # 3. Activar botones de edición (incluidos botones de direcciones alternativas)
+        for name in ('btnGuardar', 'btnDeshacer', 'btnEdita_tipoCliente', 
+                     'btnAnadirdireccion', 'btnEditardireccionAlternativa', 'btnBorrardireccion',
+                     'btnGuardardireccionAlternativa', 'btnDeshacerdireccionAlternativa'):
+            w = get(name)
+            if w:
+                w.setEnabled(True)
+        
+        # 4. Actualizar validación
+        self._update_form_validity()
+
+    def desactivar_edicion(self):
+        """Desactiva el modo de edición (deshabilita campos y botones de edición, activa navegación)"""
+        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
+        
+        self._modo_edicion = False
+        get = self._get_widget
+        
+        # 1. Desactivar campos de edición
+        campos_edicion = [
+            'txtcodigo_cliente', 'txtcif_nif', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido',
+            'txtnombre_fiscal', 'txtnombre_comercial', 'txtdireccion1', 'txtdireccion2', 'txtcp',
+            'txtpoblacion', 'txtprovincia', 'txttelefono1', 'txttelefono2', 'txtmovil', 'txtfax',
+            'txtemail', 'txtweb', 'txtNombreFiscal'
+        ]
+        
+        for campo in campos_edicion:
+            widget = get(campo)
             if widget:
                 self._desactivar_widget(widget)
-
-        # Desactivar también otros tipos de widgets editables que puedan existir
+        
         for widget_name in dir(self.ui):
-            if widget_name.startswith('_'):
-                continue
-
+            if widget_name.startswith('_'): continue
             widget = getattr(self.ui, widget_name)
             if isinstance(widget, (QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit)):
                 self._desactivar_widget(widget)
-        # Desactivar validaciones visuales
-        self._set_all_valid_state()
         
-        # Deshabilitar botones de acción (Guardar y Deshacer)
-        if hasattr(self.ui, 'btnGuardar'):
-            self.ui.btnGuardar.setEnabled(False)
-        if hasattr(self.ui, 'btnDeshacer'):
-            self.ui.btnDeshacer.setEnabled(False)
+        # 2. Activar botones de navegación
+        for name in ('btnSiguiente', 'btnAnterior', 'btnEditar', 'btnBorrar', 'btnAnadir', 'btnBuscar', 'botListados'):
+            w = get(name)
+            if w:
+                w.setEnabled(True)
+        
+        # 3. Desactivar botones de edición (incluidos botones de direcciones alternativas)
+        for name in ('btnGuardar', 'btnDeshacer', 'btnEdita_tipoCliente',
+                     'btnAnadirdireccion', 'btnEditardireccionAlternativa', 'btnBorrardireccion',
+                     'btnGuardardireccionAlternativa', 'btnDeshacerdireccionAlternativa'):
+            w = get(name)
+            if w:
+                w.setEnabled(False)
+        
+        # 4. Resetear validación
+        self._set_all_valid_state()
 
     def _desactivar_widget(self, widget):
         """Desactiva un widget usando la propiedad correcta según su tipo"""
@@ -488,39 +640,9 @@ class ClientesViewFull(QWidget):
                 self.ui.stackedWidget.setCurrentIndex(1)
             else:
                 # Si ya estamos en página 1, forzar desactivación sin disparar señal
-                self.desactivar_campos_edicion()
+                self.desactivar_edicion()
 
-    def activar_campos_edicion(self):
-        """Activa todos los campos editables relacionados con la base de datos"""
-        from PySide6.QtWidgets import QLineEdit, QTextEdit, QPlainTextEdit, QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox
 
-        # Lista de campos que deben estar activados cuando se está editando
-        campos_edicion = [
-            'txtcodigo_cliente', 'txtcif_nif', 'txtnombre', 'txtPrimerApellido', 'txtSegundoApellido',
-            'txtnombre_fiscal', 'txtnombre_comercial', 'txtdireccion1', 'txtdireccion2', 'txtcp',
-            'txtpoblacion', 'txtprovincia', 'txttelefono1', 'txttelefono2', 'txtmovil', 'txtfax',
-            'txtemail', 'txtweb', 'txtNombreFiscal'
-        ]
-
-        for campo in campos_edicion:
-            widget = self._get_widget(campo)
-            if widget:
-                self._activar_widget(widget)
-
-        # Activar también otros tipos de widgets editables que puedan existir
-        for widget_name in dir(self.ui):
-            if widget_name.startswith('_'):
-                continue
-
-            widget = getattr(self.ui, widget_name)
-            if isinstance(widget, (QComboBox, QSpinBox, QDoubleSpinBox, QDateEdit, QCheckBox, QLineEdit, QTextEdit, QPlainTextEdit)):
-                self._activar_widget(widget)
-        
-        # Habilitar botones de acción (Guardar y Deshacer)
-        if hasattr(self.ui, 'btnGuardar'):
-            self.ui.btnGuardar.setEnabled(True)
-        if hasattr(self.ui, 'btnDeshacer'):
-            self.ui.btnDeshacer.setEnabled(True)
 
     def _find_table(self):
         """Encuentra la tabla principal probando varios nombres y tipos."""
@@ -1304,12 +1426,24 @@ class ClientesViewFull(QWidget):
         except Exception:
             pass
         try:
-            if hasattr(self.ui, 'cboPais'):
+            if hasattr(self.ui, 'cboPais') and cliente.id_pais:
+                # Si id_pais es un número pequeño (ID legacy) intentar seleccionar por índice
+                # Si es mayor, asumir que es el nombre del país
+                pais_valor = str(cliente.id_pais) if isinstance(cliente.id_pais, int) else cliente.id_pais
+                
+                # Intentar buscar por nombre (en ambos idiomas)
                 for i in range(self.ui.cboPais.count()):
                     itemdata = self.ui.cboPais.itemData(i)
-                    if itemdata is not None and cliente.id_pais is not None and int(itemdata) == cliente.id_pais:
-                        self.ui.cboPais.setCurrentIndex(i)
-                        break
+                    if itemdata is not None:
+                        # itemdata es {'es': pais_es, 'fr': pais_fr}
+                        if (isinstance(itemdata, dict) and 
+                            (itemdata.get('es') == pais_valor or itemdata.get('fr') == pais_valor)):
+                            self.ui.cboPais.setCurrentIndex(i)
+                            break
+                        # Fallback: legacy ID
+                        elif isinstance(itemdata, int) and int(pais_valor) == itemdata:
+                            self.ui.cboPais.setCurrentIndex(i)
+                            break
         except Exception:
             pass
         
@@ -1335,6 +1469,9 @@ class ClientesViewFull(QWidget):
             except Exception:
                 continue
         self._update_form_validity()
+        
+        # Cargar tipos de cliente asociados
+        self.cargar_tipos_cliente()
     
     def cargar_direcciones_alternativas(self, id_cliente: int):
         """Carga direcciones alternativas en la tabla correspondiente"""
@@ -1373,9 +1510,8 @@ class ClientesViewFull(QWidget):
         """Crea un nuevo cliente"""
         self.cliente_actual = None
         self.limpiar_formulario()
-        self.desactivar_botones_navegacion()
-        self._modo_edicion = True  # Activar modo edición
         self.ui.stackedWidget.setCurrentIndex(0)
+        self.activar_edicion()
         
         # Generar código único automáticamente
         try:
@@ -1389,10 +1525,8 @@ class ClientesViewFull(QWidget):
         if hasattr(self.ui, 'txtnombre_fiscal'):
             self.ui.txtnombre_fiscal.clear()
         
-        self.activar_campos_edicion()  # Activar campos para edición
-        # Force initial validation state
-        self._set_all_valid_state()
-        self._update_form_validity()
+        # Limpiar tipos de cliente (ya que es nuevo cliente)
+        self.cargar_tipos_cliente()
         
         # Reconstruir pestañas del tabwidget si es necesario
         if hasattr(self.ui, 'tabwidget') and self.ui.tabwidget.count() == 0:
@@ -1415,9 +1549,7 @@ class ClientesViewFull(QWidget):
         """Edita el cliente seleccionado"""
         # Si ya tenemos un cliente cargado y estamos en la ficha (página 0), editar directamente
         if self.cliente_actual is not None and hasattr(self.ui, 'stackedWidget') and self.ui.stackedWidget.currentIndex() == 0:
-            self.desactivar_botones_navegacion()
-            self._modo_edicion = True  # Activar modo edición
-            self.activar_campos_edicion()  # Activar campos para edición
+            self.activar_edicion()
             # Ensure validation applied to loaded data
             if hasattr(self, '_on_widget_change'):
                 self._validate_and_apply('txtcodigo_cliente')
@@ -1437,10 +1569,8 @@ class ClientesViewFull(QWidget):
         if not selection.hasSelection():
             QMessageBox.warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para editar"))
             return
-        self.desactivar_botones_navegacion()
-        self._modo_edicion = True  # Activar modo edición
         self.abrir_ficha_cliente()
-        self.activar_campos_edicion()  # Activar campos para edición
+        self.activar_edicion()
         # Ensure validation applied to loaded data
         if hasattr(self, '_on_widget_change'):
             self._validate_and_apply('txtcodigo_cliente')
@@ -1561,6 +1691,12 @@ class ClientesViewFull(QWidget):
                 try:
                     idx = w.currentIndex()
                     val = w.itemData(idx)
+                    # Caso especial para combos de país: extraer el nombre en el idioma de la aplicación
+                    if name in ('cboPais', 'cbopaisAlternativa') and isinstance(val, dict):
+                        from PySide6.QtCore import QCoreApplication
+                        locale = QCoreApplication.instance().property("current_locale")
+                        lang_key = 'fr' if locale == 'fr' else 'es'
+                        return val.get(lang_key)  # Guardar en el idioma actual
                     return val if val is not None else idx
                 except Exception:
                     return None
@@ -1654,6 +1790,18 @@ class ClientesViewFull(QWidget):
                     except Exception:
                         print("[ERROR] guardar_cliente: session.commit() fallback failed")
                 
+                # Recargar lista de clientes para actualización
+                self.cargar_clientes()
+                
+                # Re-seleccionar el cliente actual en la tabla para que los botones de navegación funcionen
+                try:
+                    if self.cliente_actual and hasattr(self.cliente_actual, 'id'):
+                        self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
+                except Exception:
+                    pass
+                
+                QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente actualizado"))
+                
             else:
                 # Crear nuevo de forma declarativa con mapping
                 cliente_kwargs = {}
@@ -1713,13 +1861,7 @@ class ClientesViewFull(QWidget):
             # Mantenerse en la página de edición pero desactivar campos
             # (no volver a la lista de clientes). El usuario pidió que
             # tras guardar se queden los campos visibles pero no editables.
-            try:
-                self.desactivar_campos_edicion()
-            except Exception:
-                pass
-            # Restablecer el modo edición y botones de navegación
-            self._modo_edicion = False
-            self.activar_botones_navegacion()
+            self.desactivar_edicion()
             
         except Exception as e:
             QMessageBox.critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(str(e)))
@@ -1734,14 +1876,7 @@ class ClientesViewFull(QWidget):
             self.limpiar_formulario()
         
         # Desactivar modo edición y campos (igual que al guardar)
-        try:
-            self.desactivar_campos_edicion()
-        except Exception:
-            pass
-        
-        # Restablecer el modo edición y botones de navegación
-        self._modo_edicion = False
-        self.activar_botones_navegacion()
+        self.desactivar_edicion()
     
     def limpiar_formulario(self):
         """Limpia todos los campos del formulario de datos del cliente"""
@@ -2121,8 +2256,7 @@ class ClientesViewFull(QWidget):
         self.cliente_actual = cliente
         self.cargar_datos_en_formulario(cliente)
         self._modo_edicion = False
-        self.desactivar_campos_edicion()
-        self.activar_botones_navegacion()
+        self.desactivar_edicion()
         # Cambiar a la vista de ficha
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.setCurrentIndex(0)
@@ -2159,14 +2293,10 @@ class ClientesViewFull(QWidget):
             self.cargar_clientes()
         except Exception:
             pass
-
-        # Si tenemos un cliente seleccionado en la ficha, intentar seleccionarlo en la tabla
+    
+    def _reseleccionar_cliente_en_tabla(self, cid):
+        """Re-selecciona un cliente en la tabla por su ID"""
         try:
-            cid = getattr(self, 'cliente_actual', None)
-            cid = getattr(cid, 'id', None) if cid is not None else None
-            if cid is None:
-                return
-
             tabla = None
             if hasattr(self.ui, 'tabla_busquedas'):
                 tabla = self.ui.tabla_busquedas
@@ -2194,6 +2324,7 @@ class ClientesViewFull(QWidget):
                         selection = tabla.selectionModel()
                         index = tabla.model().index(r, 0)
                         selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
+                        print(f"[DEBUG] _reseleccionar_cliente_en_tabla: Selected row {r} for client ID {cid}")
                         break
 
             # Si es QTableView con QStandardItemModel
@@ -2225,9 +2356,26 @@ class ClientesViewFull(QWidget):
                         selection = tabla.selectionModel()
                         selection.setCurrentIndex(index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
                         break
-        except Exception:
+        except Exception as e:
             # No crítico; si algo falla no queremos romper la navegación
             pass
+    
+    def volver_a_lista(self):
+        """Vuelve a la página de búsquedas/lista"""
+        if hasattr(self.ui, 'stackedWidget'):
+            self.ui.stackedWidget.setCurrentIndex(1)
+
+        # Asegurar que la lista está actualizada
+        try:
+            self.cargar_clientes()
+        except Exception:
+            pass
+
+        # Si tenemos un cliente seleccionado en la ficha, intentar seleccionarlo en la tabla
+        cid = getattr(self, 'cliente_actual', None)
+        cid = getattr(cid, 'id', None) if cid is not None else None
+        if cid is not None:
+            self._reseleccionar_cliente_en_tabla(cid)
     
     def siguiente_cliente(self):
         """Navega al siguiente cliente en la lista"""
@@ -2265,70 +2413,7 @@ class ClientesViewFull(QWidget):
             selection.setCurrentIndex(prev_index, selection.SelectionFlag.ClearAndSelect | selection.SelectionFlag.Rows)
             self.abrir_ficha_cliente()
     
-    
-    '''----------------------------------------------------------'''
-    '''Zona activar/desactivar botones navegacion                '''
-    '''----------------------------------------------------------'''
-    def activar_botones_navegacion(self):
-        """Activa los botones normales """
-        get = self._get_widget
 
-        # Activar botones de navegación principales
-        for name in ('btnSiguiente', 'btnAnterior', 'btnEditar', 'btnBorrar', 'btnAnadir', 'btnBuscar'):
-            w = get(name)
-            if w is not None:
-                try:
-                    w.setEnabled(True)
-                except Exception:
-                    pass
-
-        # Asegurarse de que los controles de edición estén deshabilitados
-        for name in ('btnGuardar', 'btnDeshacer'):
-            w = get(name)
-            if w is not None:
-                try:
-                    w.setEnabled(False)
-                except Exception:
-                    pass
-
-        # Restaurar el botón de listados a su estado normal (visible/enabled)
-        bl = get('botListados')
-        if bl is not None:
-            try:
-                bl.setEnabled(True)
-            except Exception:
-                pass
-
-    def desactivar_botones_navegacion(self):
-        """Desactiva los botones normales..... """
-        get = self._get_widget
-
-        # Desactivar botones de navegación principales
-        for name in ('btnSiguiente', 'btnAnterior', 'btnEditar', 'btnBorrar', 'btnAnadir', 'btnBuscar'):
-            w = get(name)
-            if w is not None:
-                try:
-                    w.setEnabled(False)
-                except Exception:
-                    pass
-
-        # Activar los botones de guardar/undo (modo edición)
-        for name in ('btnGuardar', 'btnDeshacer'):
-            w = get(name)
-            if w is not None:
-                try:
-                    w.setEnabled(True)
-                except Exception:
-                    pass
-
-        # Durante edición no queremos que 'Listados' aparezca como activo
-        bl = get('botListados')
-        if bl is not None:
-            try:
-                bl.setEnabled(False)
-            except Exception:
-                pass
-        
     def _handle_postal_code_change(self):
         """Handle postal code changes - lookup city and province from france.db"""
         if not hasattr(self.ui, 'txtcp'):

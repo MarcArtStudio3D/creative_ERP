@@ -37,6 +37,7 @@ class TipoClienteView(QDialog):
         self.current_tipo_id: Optional[int] = None
         self.current_subtipo_id: Optional[int] = None
         self.edit_tipo = True  # True = editando tipo, False = editando subtipo
+        self.resultado_seleccion = None  # Para guardar la selección al aceptar
         
         self.setup_ui()
         self.load_tipos()
@@ -124,6 +125,10 @@ class TipoClienteView(QDialog):
         
         # Spacer
         bottom_layout.addItem(QSpacerItem(287, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum))
+        
+        self.btnInsertarenFichaCliente = QPushButton(self.tr("Insertar en ficha cliente"))
+        self.btnInsertarenFichaCliente.clicked.connect(self.on_btnInsertarenFichaCliente_clicked)
+        bottom_layout.addWidget(self.btnInsertarenFichaCliente)
         
         self.btnSalir = QPushButton(self.tr("Salir"))
         self.btnSalir.clicked.connect(self.close)
@@ -484,3 +489,24 @@ class TipoClienteView(QDialog):
                 self.tr("Error al borrar subtipo cliente"),
                 str(e)
             )
+
+    def on_btnInsertarenFichaCliente_clicked(self):
+        """
+        Maneja el clic en 'Insertar en ficha cliente'.
+        Guarda la selección actual y cierra el diálogo con Accepted.
+        """
+        if self.current_tipo_id is None:
+            QMessageBox.warning(
+                self,
+                self.tr("Selección requerida"),
+                self.tr("Por favor, seleccione al menos un tipo de cliente.")
+            )
+            return
+            
+        # Preparar resultado
+        self.resultado_seleccion = {
+            'tipo_id': self.current_tipo_id,
+            'subtipo_id': self.current_subtipo_id
+        }
+        
+        self.accept()

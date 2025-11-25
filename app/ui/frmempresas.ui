@@ -463,28 +463,6 @@
                </property>
               </widget>
              </item>
-             <item row="8" column="7" colspan="3">
-              <widget class="QLineEdit" name="txtweb"/>
-             </item>
-             <item row="8" column="6">
-              <widget class="QLabel" name="label_21">
-               <property name="sizePolicy">
-                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                 <horstretch>0</horstretch>
-                 <verstretch>0</verstretch>
-                </sizepolicy>
-               </property>
-               <property name="minimumSize">
-                <size>
-                 <width>80</width>
-                 <height>0</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Web:</string>
-               </property>
-              </widget>
-             </item>
              <item row="3" column="6">
               <widget class="QComboBox" name="cboPais_create">
                <property name="minimumSize">
@@ -563,9 +541,6 @@
                </property>
               </widget>
              </item>
-             <item row="8" column="2" colspan="4">
-              <widget class="QLineEdit" name="txtcMail"/>
-             </item>
              <item row="3" column="1">
               <widget class="QLabel" name="label_15">
                <property name="sizePolicy">
@@ -614,6 +589,31 @@
                 </size>
                </property>
               </spacer>
+             </item>
+             <item row="8" column="8" colspan="2">
+              <widget class="QLineEdit" name="txtweb"/>
+             </item>
+             <item row="8" column="7">
+              <widget class="QLabel" name="label_21">
+               <property name="sizePolicy">
+                <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+                 <horstretch>0</horstretch>
+                 <verstretch>0</verstretch>
+                </sizepolicy>
+               </property>
+               <property name="minimumSize">
+                <size>
+                 <width>80</width>
+                 <height>0</height>
+                </size>
+               </property>
+               <property name="text">
+                <string>Web:</string>
+               </property>
+              </widget>
+             </item>
+             <item row="8" column="2" colspan="3">
+              <widget class="QLineEdit" name="txtcMail"/>
              </item>
             </layout>
            </item>

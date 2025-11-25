@@ -285,19 +285,6 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_6.addWidget(self.label_17, 7, 1, 1, 1)
 
-        self.txtweb = QLineEdit(self.tabWidgetPage1)
-        self.txtweb.setObjectName(u"txtweb")
-
-        self.gridLayout_6.addWidget(self.txtweb, 8, 7, 1, 3)
-
-        self.label_21 = QLabel(self.tabWidgetPage1)
-        self.label_21.setObjectName(u"label_21")
-        sizePolicy.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
-        self.label_21.setSizePolicy(sizePolicy)
-        self.label_21.setMinimumSize(QSize(80, 0))
-
-        self.gridLayout_6.addWidget(self.label_21, 8, 6, 1, 1)
-
         self.cboPais_create = QComboBox(self.tabWidgetPage1)
         self.cboPais_create.setObjectName(u"cboPais_create")
         self.cboPais_create.setMinimumSize(QSize(168, 0))
@@ -337,11 +324,6 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_6.addWidget(self.txttelefono1, 7, 2, 1, 1)
 
-        self.txtcMail = QLineEdit(self.tabWidgetPage1)
-        self.txtcMail.setObjectName(u"txtcMail")
-
-        self.gridLayout_6.addWidget(self.txtcMail, 8, 2, 1, 4)
-
         self.label_15 = QLabel(self.tabWidgetPage1)
         self.label_15.setObjectName(u"label_15")
         sizePolicy.setHeightForWidth(self.label_15.sizePolicy().hasHeightForWidth())
@@ -369,6 +351,24 @@ class Ui_FrmEmpresas(object):
         self.verticalSpacer_3 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
 
         self.gridLayout_6.addItem(self.verticalSpacer_3, 9, 2, 1, 1)
+
+        self.txtweb = QLineEdit(self.tabWidgetPage1)
+        self.txtweb.setObjectName(u"txtweb")
+
+        self.gridLayout_6.addWidget(self.txtweb, 8, 8, 1, 2)
+
+        self.label_21 = QLabel(self.tabWidgetPage1)
+        self.label_21.setObjectName(u"label_21")
+        sizePolicy.setHeightForWidth(self.label_21.sizePolicy().hasHeightForWidth())
+        self.label_21.setSizePolicy(sizePolicy)
+        self.label_21.setMinimumSize(QSize(80, 0))
+
+        self.gridLayout_6.addWidget(self.label_21, 8, 7, 1, 1)
+
+        self.txtcMail = QLineEdit(self.tabWidgetPage1)
+        self.txtcMail.setObjectName(u"txtcMail")
+
+        self.gridLayout_6.addWidget(self.txtcMail, 8, 2, 1, 3)
 
 
         self.gridLayout_12.addLayout(self.gridLayout_6, 3, 0, 1, 4)
@@ -1464,7 +1464,6 @@ class Ui_FrmEmpresas(object):
         self.label_53.setText(QCoreApplication.translate("FrmEmpresas", u"N\u00ba RCS:", None))
         self.label_16.setText(QCoreApplication.translate("FrmEmpresas", u"Pais:", None))
         self.label_17.setText(QCoreApplication.translate("FrmEmpresas", u"Tel\u00e9fono 1:", None))
-        self.label_21.setText(QCoreApplication.translate("FrmEmpresas", u"Web:", None))
         self.label_23.setText(QCoreApplication.translate("FrmEmpresas", u"Inscripci\u00f3n:", None))
         self.label_43.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre comercial:", None))
         self.label_20.setText(QCoreApplication.translate("FrmEmpresas", u"Mail:", None))
@@ -1472,6 +1471,7 @@ class Ui_FrmEmpresas(object):
         self.txttelefono1.setText("")
         self.label_15.setText(QCoreApplication.translate("FrmEmpresas", u"Provincia:", None))
         self.label_34.setText(QCoreApplication.translate("FrmEmpresas", u"APE/NAF:", None))
+        self.label_21.setText(QCoreApplication.translate("FrmEmpresas", u"Web:", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabWidgetPage1), QCoreApplication.translate("FrmEmpresas", u"Datos Fiscales y de Gesti\u00f3n", None))
         self.groupBox_14.setTitle(QCoreApplication.translate("FrmEmpresas", u"Divisas", None))
         self.chk_upate_divisas.setText(QCoreApplication.translate("FrmEmpresas", u"Actualizar divisas al entrar", None))

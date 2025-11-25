@@ -1048,6 +1048,19 @@ class ClientesViewFull(QWidget):
     def cargar_clientes(self):
         """Carga los clientes desde la base de datos en la tabla"""
         try:
+            # Si la sesión está en estado rollback, hacer rollback antes de continuar
+            if hasattr(self.session, '_transaction') and self.session._transaction and self.session._transaction.is_active:
+                try:
+                    # Verificar el estado de la transacción
+                    self.session.commit()
+                except Exception:
+                    # Si falla commit, hacer rollback y crear nueva sesión
+                    try:
+                        self.session.rollback()
+                        print("✅ Rollback automático realizado en cargar_clientes")
+                    except Exception as rb_error:
+                        print(f"⚠️ Error en rollback automático: {rb_error}")
+            
             clientes = self.repository.obtener_todos()
             
             # Buscar la tabla en la UI generada
@@ -1104,7 +1117,20 @@ class ClientesViewFull(QWidget):
                 pass
                 
         except Exception as e:
-            QMessageBox.warning(self, self.tr("Error"), self.tr("Error al cargar clientes: {}").format(str(e)))
+            # Manejar errores de sesión rolled back
+            error_msg = str(e)
+            if "transaction has been rolled back" in error_msg:
+                try:
+                    self.session.rollback()
+                    print("✅ Rollback realizado en cargar_clientes tras error")
+                    # Intentar cargar de nuevo tras rollback
+                    clientes = self.repository.obtener_todos()
+                    print("✅ Recarga exitosa tras rollback")
+                    return  # Si funciona, salir sin mostrar error
+                except Exception as retry_error:
+                    error_msg = f"Error persistente tras rollback: {retry_error}"
+            
+            QMessageBox.warning(self, self.tr("Error"), self.tr("Error al cargar clientes: {}").format(error_msg))
     
     def filter_records(self, search_text: str, order_by: str, order_mode: str):
         """Filtra y ordena los registros de clientes según los criterios especificados.
@@ -1925,7 +1951,29 @@ class ClientesViewFull(QWidget):
             self.desactivar_edicion()
             
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(str(e)))
+            # Hacer rollback de la sesión si hay error
+            try:
+                if self.session:
+                    self.session.rollback()
+                    print("✅ Rollback de sesión realizado tras error")
+            except Exception as rollback_error:
+                print(f"⚠️ Error en rollback: {rollback_error}")
+            
+            error_msg = str(e)
+            if "transaction has been rolled back" in error_msg:
+                # Mensaje más claro para el usuario
+                QMessageBox.critical(
+                    self, 
+                    self.tr("Error de Base de Datos"), 
+                    self.tr("Error al guardar cliente. La base de datos ha rechazado la operación.\n\n"
+                           "Posibles causas:\n"
+                           "• Faltan tablas en la base de datos\n"
+                           "• Error de conexión\n"
+                           "• Datos inválidos\n\n"
+                           "Detalles técnicos: {}").format(error_msg)
+                )
+            else:
+                QMessageBox.critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(error_msg))
     
     def get_combo_value(self, name):
         """Helper method to get combo box value, handling special cases like countries"""

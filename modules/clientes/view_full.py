@@ -46,10 +46,11 @@ class ClientesViewFull(QWidget):
     
     cliente_seleccionado = Signal(int)
     
-    def __init__(self, parent=None, preserve_styles=None, custom_styles=None):
+    def __init__(self, parent=None, preserve_styles=None, custom_styles=None, session=None):
         """
         preserve_styles: iterable of objectName strings to NOT clear styles for.
         custom_styles: dict mapping objectName -> stylesheet string to apply.
+        session: SQLAlchemy session to use (if None, will create a new one)
         """
         super().__init__(parent)
         # exclusiones y estilos personalizados (por objectName)
@@ -90,8 +91,8 @@ class ClientesViewFull(QWidget):
         from PySide6.QtCore import QTimer
         QTimer.singleShot(100, self.forzar_desactivacion_campos)
         
-        # Inicializar datos
-        self.session = get_session()
+        # Inicializar datos - usar sesión proporcionada o crear nueva
+        self.session = session if session is not None else get_session()
         self.repository = ClienteRepository(self.session)
         self.cliente_actual = None
         self._modo_edicion = False  # Bandera para controlar el modo de edición
@@ -1305,35 +1306,48 @@ class ClientesViewFull(QWidget):
     
     def abrir_ficha_cliente(self):
         """Abre la ficha del cliente seleccionado"""
-        # Obtener tabla
-        tabla = getattr(self.ui, 'tabla_busquedas', None) or getattr(self.ui, 'tabla_clientes', None)
-        if not tabla:
-            return
-        
-        # Obtener fila seleccionada
-        selection = tabla.selectionModel()
-        if not selection.hasSelection():
-            return
-        
-        index = selection.currentIndex()
-        if not index.isValid():
-            return
-        
-        # Obtener ID del cliente desde el modelo
-        model = tabla.model()
-        id_cliente = model.item(index.row(), 0).data(Qt.ItemDataRole.UserRole)
-        
-        # Cargar cliente
-        self.cliente_actual = self.repository.obtener_por_id(id_cliente)
-        if not self.cliente_actual:
-            QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo cargar el cliente"))
-            return
-        
-        # Cargar datos en formulario
-        self.cargar_datos_en_formulario(self.cliente_actual)
-        
-        # Cambiar a página de edición (índice 0)
-        self.ui.stackedWidget.setCurrentIndex(0)
+        try:
+            # Obtener tabla
+            tabla = getattr(self.ui, 'tabla_busquedas', None) or getattr(self.ui, 'tabla_clientes', None)
+            if not tabla:
+                return
+            
+            # Obtener fila seleccionada
+            selection = tabla.selectionModel()
+            if not selection.hasSelection():
+                return
+            
+            index = selection.currentIndex()
+            if not index.isValid():
+                return
+            
+            # Obtener ID del cliente desde el modelo
+            model = tabla.model()
+            if not model:
+                return
+            
+            id_cliente = model.item(index.row(), 0).data(Qt.ItemDataRole.UserRole)
+            if not id_cliente:
+                return
+            
+            # Cargar cliente
+            self.cliente_actual = self.repository.obtener_por_id(id_cliente)
+            if not self.cliente_actual:
+                QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo cargar el cliente"))
+                return
+            
+            # Cargar datos en formulario (con manejo robusto de errores)
+            try:
+                self.cargar_datos_en_formulario(self.cliente_actual)
+            except Exception as e:
+                print(f"Advertencia: No se pudieron cargar todos los datos del formulario: {e}")
+                # Continuar con el cambio de página aunque haya errores en el formulario
+            
+            # Cambiar a página de edición (índice 0)
+            self.ui.stackedWidget.setCurrentIndex(0)
+            
+        except Exception as e:
+            QMessageBox.warning(self, self.tr("Error"), f"Error al abrir la ficha del cliente: {e}")
     
     def cargar_datos_en_formulario(self, cliente: Cliente):
         """Carga los datos del cliente en los campos del formulario"""

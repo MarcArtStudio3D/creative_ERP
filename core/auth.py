@@ -11,7 +11,7 @@ from datetime import datetime
 import hashlib
 import secrets
 
-from core.modules import Permission
+from core.module_manager import Permission
 import json
 import os
 

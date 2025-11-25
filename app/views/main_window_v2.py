@@ -13,7 +13,7 @@ from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrus
 from typing import Optional, Callable
 
 from core.auth import Session, UserRole
-from core.modules import ModuleManager, ModuleCategory
+from core.module_manager import ModuleManager, ModuleCategory
 
 
 class MainWindowV2(QMainWindow):
@@ -891,6 +891,65 @@ class MainWindowV2(QMainWindow):
                 f"El módulo '{module_id}' aún no está implementado."
             )
     
+    def show_cliente_ficha(self, cliente_id: int):
+        """
+        Muestra la ficha detallada de un cliente específico.
+        
+        Crea una nueva página en el StackedWidget con la ficha del cliente.
+        """
+        try:
+            from modules.clientes.ficha_view import ClienteFichaView
+            
+            # Crear widget de ficha de cliente
+            ficha_widget = ClienteFichaView(self.session, cliente_id)
+            
+            # Conectar señal para volver a la lista
+            ficha_widget.volver_lista.connect(self.volver_a_lista_clientes)
+            
+            # Añadir al stack y mostrarlo
+            ficha_key = f"cliente_ficha_{cliente_id}"
+            
+            # Si ya existe esta ficha, la reutilizamos
+            if ficha_key in self.module_widgets:
+                existing_widget = self.module_widgets[ficha_key]
+                self.stacked_widget.setCurrentWidget(existing_widget)
+            else:
+                # Crear nueva ficha
+                self.module_widgets[ficha_key] = ficha_widget
+                self.stacked_widget.addWidget(ficha_widget)
+                self.stacked_widget.setCurrentWidget(ficha_widget)
+            
+            msg = self.tr("Ficha cliente #{} abierta").format(cliente_id)
+            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
+            
+        except Exception as e:
+            print(f"❌ Error al abrir ficha de cliente: {e}")
+            QMessageBox.critical(
+                self,
+                "Error",
+                f"No se pudo abrir la ficha del cliente:\n{e}"
+            )
+    
+    def volver_a_lista_clientes(self):
+        """
+        Vuelve a mostrar la lista de clientes.
+        """
+        # Buscar el widget de clientes en el cache
+        if 'clientes' in self.module_widgets:
+            clientes_widget = self.module_widgets['clientes']
+            self.stacked_widget.setCurrentWidget(clientes_widget)
+            
+            # Recargar la lista por si ha habido cambios
+            module_view = self._find_module_view(clientes_widget)
+            if module_view and hasattr(module_view, 'load_clientes'):
+                module_view.load_clientes()
+            
+            msg = self.tr("Lista de clientes activa")
+            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
+        else:
+            # Si no existe, abrir el módulo de clientes
+            self.open_module('clientes')
+    
     def create_module_widget(self, module_id: str) -> Optional[QWidget]:
         """
         Crea el widget para un módulo específico con panel lateral derecho superpuesto.
@@ -968,7 +1027,7 @@ class MainWindowV2(QMainWindow):
         Por ejemplo: modules/clientes/view_full.py → ClientesViewFull
         """
         try:
-            # Intentar primero con view_full (vista completa)
+            # Intentar primero con view_full (vista completa con UI generada)
             if module_id == 'clientes':
                 module_name = f"modules.{module_id}.view_full"
                 view_class_name = self._module_id_to_class_name(module_id, "ViewFull")
@@ -983,8 +1042,23 @@ class MainWindowV2(QMainWindow):
             module = __import__(module_name, fromlist=[view_class_name])
             view_class = getattr(module, view_class_name)
             
-            # Crear instancia de la vista
-            view_instance = view_class()
+            # Crear instancia de la vista con parámetros necesarios
+            if module_id == 'clientes':
+                # Importar get_session para obtener la sesión de la base de datos actual
+                from core.db import get_session
+                current_session = get_session()
+                
+                # Para ClientesViewFull, pasar la sesión correcta
+                if 'ViewFull' in view_class_name:
+                    view_instance = view_class(session=current_session)
+                else:
+                    view_instance = view_class(self.session)
+                    # Conectar señal para abrir ficha de cliente (solo para view simple)
+                    if hasattr(view_instance, 'cliente_selected'):
+                        view_instance.cliente_selected.connect(self.show_cliente_ficha)
+            else:
+                view_instance = view_class()
+            
             return view_instance
             
         except (ImportError, AttributeError) as e:

@@ -9,7 +9,7 @@ import sys
 
 from core.db import init_db
 from core.auth import AuthenticationManager
-from core.modules import ModuleManager
+from core.module_manager import ModuleManager
 
 
 class CreativeERPApp:
@@ -24,35 +24,14 @@ class CreativeERPApp:
         self.module_manager = ModuleManager()
         self.main_window = None
         self.login_window = None
-        self.translator = None  # Guardar referencia al translator
     
     def initialize(self):
         """Inicializa la aplicación."""
-        # Leer idioma guardado en configuración ANTES de crear QApplication
-        from PySide6.QtCore import QSettings, QLocale
-        settings = QSettings("ArtStudio3D", "Creative ERP")
-        lang = settings.value("language", "es")
-        
-        # Establecer el locale ANTES de crear QApplication
-        locale = QLocale(lang)
-        QLocale.setDefault(locale)
-        
         # Crear aplicación Qt
         self.qapp = QApplication(sys.argv)
         self.qapp.setApplicationName("Creative ERP")
         self.qapp.setOrganizationName("ArtStudio3D")
         self.qapp.setOrganizationDomain("artstudio3d.com")
-        
-        # Cargar traducciones
-        print("Cargando traducciones...")
-        from core.translations import load_translation
-        
-        # Cargar traducción con el idioma configurado
-        self.translator = load_translation(self.qapp, lang)
-        if self.translator:
-            print(f"✓ Idioma cargado: {lang}")
-        else:
-            print("⚠ No se pudo cargar el archivo de traducción")
         
         # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
         # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
@@ -61,6 +40,10 @@ class CreativeERPApp:
         print("Inicializando base de datos...")
         init_db()
         print("✓ Base de datos lista")
+        
+        # Inicializar CompanyManager
+        from core.company_manager import company_manager
+        print("✓ CompanyManager inicializado")
         
         return True
     

@@ -119,6 +119,19 @@ class Empresa(Base):
     fecha_modificacion = Column(DateTime, default=datetime.datetime.utcnow)
     usuario_modificacion = Column(String(100))
 
+    # Configuración de base de datos por empresa
+    motor_base_datos = Column(String(20), default='mariadb', comment='Motor de base de datos: mariadb o postgresql')
+    nombre_base_datos_maria_db = Column(String(100), comment='Nombre de la base de datos MariaDB')
+    nombre_base_datos_postgresql = Column(String(100), comment='Nombre de la base de datos PostgreSQL')
+    host_mariadb = Column(String(100), default='localhost', comment='Host del servidor MariaDB')
+    puerto_mariadb = Column(Integer, default=3306, comment='Puerto del servidor MariaDB')
+    usuario_mariadb = Column(String(50), default='admin', comment='Usuario MariaDB')
+    password_mariadb = Column(String(255), default='admin123', comment='Contraseña MariaDB')
+    host_postgresql = Column(String(100), default='localhost', comment='Host del servidor PostgreSQL')
+    puerto_postgresql = Column(Integer, default=5432, comment='Puerto del servidor PostgreSQL')
+    usuario_postgresql = Column(String(50), default='postgres', comment='Usuario PostgreSQL')
+    password_postgresql = Column(String(255), default='postgres', comment='Contraseña PostgreSQL')
+
     # Relaciones
     group = relationship('BusinessGroup', backref='empresas')
 

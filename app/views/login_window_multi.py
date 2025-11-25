@@ -11,6 +11,7 @@ from PySide6.QtGui import QFont, QPixmap
 from core.repositories import UserRepository, BusinessGroupRepository, CompanyRepository
 from core.auth import AuthenticationManager, User, UserRole
 from core.business import BusinessGroup, Company, CompanyContext
+from core.company_manager import company_manager
 
 
 class LoginWindowMultiCompany(QDialog):
@@ -271,6 +272,17 @@ class LoginWindowMultiCompany(QDialog):
             
             # Guardar en la sesión
             self.auth_manager._current_session.company_context = context  # type: ignore
+            
+            # IMPORTANTE: Configurar la base de datos de la empresa
+            try:
+                company_id = company.id
+                success = company_manager.select_company(company_id)
+                if success:
+                    print(f"✅ Base de datos configurada para empresa: {company.nombre_fiscal}")
+                else:
+                    print(f"⚠️  Error configurando BD para empresa: {company.nombre_fiscal}")
+            except Exception as e:
+                print(f"❌ Error configurando empresa: {e}")
             
             self.login_successful.emit(context)
         else:

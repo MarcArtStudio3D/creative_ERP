@@ -10,7 +10,7 @@ import sys
 
 from core.db import init_db
 from core.auth import AuthenticationManager
-from core.modules import ModuleManager
+from core.module_manager import ModuleManager
 from core.translations import load_translation  # NUEVO
 
 

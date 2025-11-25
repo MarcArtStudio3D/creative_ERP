@@ -10,42 +10,198 @@ import os
 from sqlalchemy import inspect, text
 from sqlalchemy.sql.sqltypes import Integer, String, DateTime, Date, Float, Text
 
-# Ruta de la base de datos (por defecto MariaDB local)
-DB_PATH = os.environ.get('CREATIVE_ERP_DB', 'mysql+pymysql://admin:admin123@127.0.0.1:3306/creative_erp')
+# Importar configuración de entornos
+from .config import config as env_config
 
-# Motor de base de datos
-engine = create_engine(
-    DB_PATH, 
-    connect_args={"check_same_thread": False} if 'sqlite' in DB_PATH else {}
-)
+# Configuraciones de base de datos disponibles
+DATABASE_CONFIGS = {
+    'main': env_config.get_database_url('main'),
+    'artstudio3d': env_config.get_database_url('artstudio3d'),
+    'current': env_config.get_database_url('main')  # Para compatibilidad
+}
 
-# Sesión para queries
-SessionLocal = scoped_session(
-    sessionmaker(autocommit=False, autoflush=False, bind=engine)
-)
+# Base de datos por defecto
+DEFAULT_DB = os.environ.get('CREATIVE_ERP_DEFAULT_DB', 'main')
+
+# Motor de base de datos actual
+_current_db = DEFAULT_DB
+_current_engine = None
+_current_session = None
+
+def get_database_url(db_name='main'):
+    """Obtiene la URL de conexión para una base de datos específica."""
+    return DATABASE_CONFIGS.get(db_name, DATABASE_CONFIGS['main'])
+
+def set_current_database(db_name):
+    """Cambia la base de datos actual."""
+    global _current_db, _current_engine, _current_session
+
+    if db_name not in DATABASE_CONFIGS:
+        raise ValueError(f"Base de datos '{db_name}' no configurada. Opciones disponibles: {list(DATABASE_CONFIGS.keys())}")
+
+    _current_db = db_name
+    db_url = get_database_url(db_name)
+
+    # Crear nuevo motor
+    _current_engine = create_engine(
+        db_url,
+        connect_args={"check_same_thread": False} if 'sqlite' in db_url else {}
+    )
+
+    # Crear nueva sesión
+    _current_session = scoped_session(
+        sessionmaker(autocommit=False, autoflush=False, bind=_current_engine)
+    )
+
+    print(f"🔄 Base de datos cambiada a: {_current_db} ({db_url})")
+
+def get_current_database():
+    """Obtiene el nombre de la base de datos actual."""
+    return _current_db
+
+def get_engine():
+    """Obtiene el motor de base de datos actual."""
+    global _current_engine
+    if _current_engine is None:
+        set_current_database(_current_db)
+    return _current_engine
+
+def get_session():
+    """Obtiene una sesión de base de datos para la base de datos actual."""
+    global _current_session
+    if _current_session is None:
+        set_current_database(_current_db)
+    return _current_session()
+
+# Inicializar con la base de datos por defecto
+set_current_database(DEFAULT_DB)
+
+# Alias para compatibilidad hacia atrás
+DB_PATH = get_database_url(DEFAULT_DB)
+engine = get_engine()
+SessionLocal = _current_session
 
 
 def get_session():
-    """Obtiene una sesión de base de datos."""
-    return SessionLocal()
+    """Obtiene una sesión de base de datos para la base de datos actual."""
+    global _current_session
+    if _current_session is None:
+        set_current_database(_current_db)
+    return _current_session()
 
 
-def init_db():
-    """Crea todas las tablas en la base de datos."""
-    from . import models
-    from modules.clientes import models as clientes_models
-    
-    models.Base.metadata.create_all(bind=engine)
-    clientes_models.Base.metadata.create_all(bind=engine)
-    # Attempt to add missing columns for SQLite databases. This will only add columns
-    # and will not attempt destructive schema changes. It's a pragmatic helper
-    # for development environments where migrations may be missing.
-    if 'sqlite' in DB_PATH:
-        _ensure_sqlite_columns(models.Base)
+def _is_company_database_pointing_to_artstudio3d() -> bool:
+    """
+    Verifica si la base de datos actual es de una empresa que apunta a artstudio3d.
+    """
+    current_db = get_current_database()
+
+    # Verificar si es una base de datos de empresa (formato: company_X)
+    if not current_db.startswith('company_'):
+        return False
+
+    try:
+        # Extraer el ID de la empresa
+        company_id = int(current_db.split('_')[1])
+
+        # Verificar la configuración de la empresa
+        from .config import get_database_url_for_company
+        url = get_database_url_for_company(company_id)
+
+        # Verificar si la URL contiene 'artstudio3d'
+        return 'artstudio3d' in url
+
+    except (ValueError, IndexError):
+        return False
+
+
+def init_db(db_name=None):
+    """Crea todas las tablas específicas de módulos en la base de datos especificada."""
+    if db_name:
+        original_db = get_current_database()
+        set_current_database(db_name)
+        current_engine = get_engine()
+    else:
+        current_engine = get_engine()
+
+    # Crear tablas según la base de datos actual
+    if get_current_database() == 'main':
+        # Base de datos principal: tablas globales
+        from . import models as core_models
         try:
-            _ensure_sqlite_columns(clientes_models.Base)
-        except Exception:
-            pass
+            core_models.Base.metadata.create_all(bind=current_engine)
+            print("✅ Tablas globales creadas en la base de datos principal")
+        except Exception as e:
+            print(f"❌ Error creando tablas globales: {e}")
+            raise
+
+    elif get_current_database() == 'artstudio3d' or _is_company_database_pointing_to_artstudio3d():
+        # Base de datos ArtStudio3D o base de datos de empresa que apunta a ArtStudio3D: tablas específicas de clientes
+        from modules.clientes import models as clientes_models
+        from modules.tipo_cliente import models as tipo_cliente_models
+
+        try:
+            clientes_models.Base.metadata.create_all(bind=current_engine)
+            print(f"✅ Tablas de clientes creadas en {get_current_database()}")
+        except Exception as e:
+            print(f"⚠️  Error creando tablas de clientes: {e}")
+
+        try:
+            tipo_cliente_models.Base.metadata.create_all(bind=current_engine)
+            print(f"✅ Tablas de tipos de cliente creadas en {get_current_database()}")
+        except Exception as e:
+            print(f"⚠️  Error creando tablas de tipos de cliente: {e}")
+
+    else:
+        # Otras bases de datos: tablas específicas de módulos
+        from modules.clientes import models as clientes_models
+        from modules.facturas import models as facturas_models
+
+        try:
+            clientes_models.Base.metadata.create_all(bind=current_engine)
+        except Exception as e:
+            print(f"⚠️  Error creando tablas de clientes: {e}")
+
+        try:
+            facturas_models.Base.metadata.create_all(bind=current_engine)
+        except Exception as e:
+            print(f"⚠️  Error creando tablas de facturas: {e}")
+
+    # Intentar agregar columnas faltantes para SQLite (solo para desarrollo)
+    db_url = get_database_url(get_current_database())
+    if 'sqlite' in db_url:
+        if get_current_database() == 'artstudio3d':
+            try:
+                _ensure_sqlite_columns(clientes_models.Base)
+            except Exception:
+                pass
+            try:
+                _ensure_sqlite_columns(tipo_cliente_models.Base)
+            except Exception:
+                pass
+        else:
+            try:
+                _ensure_sqlite_columns(clientes_models.Base)
+            except Exception:
+                pass
+            try:
+                _ensure_sqlite_columns(facturas_models.Base)
+            except Exception:
+                pass
+
+    # Restaurar base de datos original si se cambió
+    if db_name:
+        set_current_database(original_db)
+
+
+def init_main_db():
+    """Inicializa las tablas globales en la base de datos principal."""
+    init_db('main')
+
+
+def init_artstudio3d_db():
+    """Inicializa las tablas específicas en la base de datos ArtStudio3D."""
+    init_db('artstudio3d')
 
 
 def _ensure_sqlite_columns(base):
@@ -93,3 +249,87 @@ def _ensure_sqlite_columns(base):
             except Exception:
                 # best-effort: ignore failures to avoid breaking startup
                 continue
+
+
+# Funciones para gestión dinámica de bases de datos por empresa
+def set_database_for_company(company_id: int):
+    """
+    Configura la base de datos actual según la empresa seleccionada.
+    Busca la configuración en la tabla empresas y cambia dinámicamente.
+    """
+    from .config import get_database_url_for_company
+
+    try:
+        url = get_database_url_for_company(company_id)
+
+        # Agregar dinámicamente la configuración de la empresa
+        db_key = f'company_{company_id}'
+        DATABASE_CONFIGS[db_key] = url
+
+        # Cambiar a la base de datos de la empresa
+        set_current_database(db_key)
+
+        print(f"🔄 Base de datos cambiada para empresa {company_id}")
+
+    except Exception as e:
+        print(f"❌ Error configurando base de datos para empresa {company_id}: {e}")
+        raise
+
+def get_company_database_info(company_id: int) -> dict:
+    """
+    Obtiene información de la base de datos configurada para una empresa.
+    """
+    from .config import get_database_url_for_company
+    from core.models import Empresa
+
+    # Cambiar temporalmente a BD principal
+    original_db = get_current_database()
+    set_current_database('main')
+
+    try:
+        session = get_session()
+        empresa = session.query(Empresa).filter_by(id=company_id).first()
+
+        if not empresa:
+            raise ValueError(f"Empresa con ID {company_id} no encontrada")
+
+        info = {
+            'company_id': company_id,
+            'company_name': empresa.nombre_fiscal,
+            'motor_base_datos': empresa.motor_base_datos,
+            'database_name': (empresa.nombre_base_datos_maria_db
+                            if empresa.motor_base_datos == 'mariadb'
+                            else empresa.nombre_base_datos_postgresql),
+            'host': (empresa.host_mariadb
+                    if empresa.motor_base_datos == 'mariadb'
+                    else empresa.host_postgresql),
+            'port': (empresa.puerto_mariadb
+                    if empresa.motor_base_datos == 'mariadb'
+                    else empresa.puerto_postgresql),
+            'username': (empresa.usuario_mariadb
+                        if empresa.motor_base_datos == 'mariadb'
+                        else empresa.usuario_postgresql),
+            'database_url': get_database_url_for_company(company_id)
+        }
+
+        return info
+
+    finally:
+        set_current_database(original_db)
+        session.close()
+
+def list_available_databases() -> list:
+    """Lista todas las bases de datos configuradas."""
+    return list(DATABASE_CONFIGS.keys())
+
+def refresh_database_configs():
+    """Refresca las configuraciones de base de datos desde el archivo de configuración."""
+    from .config import config as env_config
+
+    DATABASE_CONFIGS.update({
+        'main': env_config.get_database_url('main'),
+        'artstudio3d': env_config.get_database_url('artstudio3d'),
+        'current': env_config.get_database_url('main')
+    })
+
+    print("🔄 Configuraciones de base de datos refrescadas")

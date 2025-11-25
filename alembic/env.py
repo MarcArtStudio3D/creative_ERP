@@ -31,8 +31,8 @@ def run_migrations_offline():
         literal_binds=True,
         compare_type=True,
         compare_server_default=True,
-        render_as_batch=True,   # Muy importante para SQLite
-        dialect_opts={"paramstyle": "named"},
+        # render_as_batch=True,   # Solo para SQLite
+        # dialect_opts={"paramstyle": "named"},  # Solo para SQLite
     )
     with context.begin_transaction():
         context.run_migrations()

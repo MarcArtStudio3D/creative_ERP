@@ -23,6 +23,9 @@ class ClientesView(QWidget):
     - Eliminar cliente
     """
     
+    # Señal para comunicar que se quiere ver la ficha de un cliente
+    cliente_selected = Signal(int)
+    
     def __init__(self, session: Session, parent=None):
         super().__init__(parent)
         self.session = session
@@ -82,7 +85,7 @@ class ClientesView(QWidget):
         header.setSectionResizeMode(3, QHeaderView.ResizeMode.ResizeToContents)  # CIF
         header.setSectionResizeMode(4, QHeaderView.ResizeMode.ResizeToContents)  # Teléfono
         
-        # Doble clic para editar
+        # Doble clic para abrir ficha de cliente
         self.table.doubleClicked.connect(self.on_edit_cliente)
         
         layout.addWidget(self.table)
@@ -95,22 +98,60 @@ class ClientesView(QWidget):
         self.setLayout(layout)
     
     def load_clientes(self):
-        """Carga los clientes desde la base de datos."""
-        # TODO: Implementar consulta a BD
-        # Por ahora, datos de demostración
-        demo_data = [
-            (1, "CLI001", "MIRALLES BIOSCA, MARC", "77305760S", "0615800093", "info@artstudio3d.fr", "Laverune"),
-            (2, "CLI002", "ACME Corporation", "B12345678", "912345678", "info@acme.com", "Madrid"),
-            (3, "CLI003", "Tech Solutions SL", "B87654321", "934567890", "contact@tech.es", "Barcelona"),
-        ]
-        
-        self.table.setRowCount(len(demo_data))
-        
-        for row, data in enumerate(demo_data):
-            for col, value in enumerate(data):
-                item = QTableWidgetItem(str(value))
-                item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # No editable
-                self.table.setItem(row, col, item)
+        """Carga los clientes desde la base de datos de la empresa activa."""
+        try:
+            # Importar con sys.path configurado
+            import sys
+            from pathlib import Path
+            root_dir = Path(__file__).parent.parent.parent
+            sys.path.insert(0, str(root_dir))
+            
+            from core.db import get_session
+            import modules.clientes.models as clientes_models
+            Cliente = clientes_models.Cliente
+            
+            # Obtener clientes desde la BD de la empresa
+            session = get_session()
+            clientes = session.query(Cliente).all()
+            
+            self.table.setRowCount(len(clientes))
+            
+            for row, cliente in enumerate(clientes):
+                # ID, Código, Nombre Fiscal, CIF/NIF, Teléfono, Email, Población
+                data = [
+                    str(cliente.id),
+                    cliente.codigo_cliente or "",
+                    cliente.nombre_fiscal or "",
+                    cliente.cif_nif_siren or "",
+                    cliente.telefono1 or "",
+                    cliente.email or "",
+                    cliente.poblacion or ""
+                ]
+                
+                for col, value in enumerate(data):
+                    item = QTableWidgetItem(str(value))
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # No editable
+                    self.table.setItem(row, col, item)
+            
+            session.close()
+            print(f"✅ {len(clientes)} clientes cargados desde la base de datos")
+            
+        except Exception as e:
+            print(f"❌ Error al cargar clientes: {e}")
+            # Fallback a datos de demostración
+            demo_data = [
+                (1, "CLI001", "MIRALLES BIOSCA, MARC", "77305760S", "0615800093", "info@artstudio3d.fr", "Laverune"),
+                (2, "CLI002", "ACME Corporation", "B12345678", "912345678", "info@acme.com", "Madrid"),
+                (3, "CLI003", "Tech Solutions SL", "B87654321", "934567890", "contact@tech.es", "Barcelona"),
+            ]
+            
+            self.table.setRowCount(len(demo_data))
+            
+            for row, data in enumerate(demo_data):
+                for col, value in enumerate(data):
+                    item = QTableWidgetItem(str(value))
+                    item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)  # No editable
+                    self.table.setItem(row, col, item)
         
         self.update_info_label()
     
@@ -144,19 +185,16 @@ class ClientesView(QWidget):
             self.info_label.setText(self.tr("{} de {} clientes").format(visible_count, total_count))
     
     def on_edit_cliente(self):
-        """Abre el formulario de edición del cliente seleccionado."""
+        """Emite señal para abrir la ficha completa del cliente seleccionado."""
         current_row = self.table.currentRow()
         if current_row < 0:
             return
         
-        cliente_id = self.table.item(current_row, 0).text()
-        nombre = self.table.item(current_row, 2).text()
+        cliente_id = int(self.table.item(current_row, 0).text())
+        print(f"📋 Solicitando ficha de cliente ID: {cliente_id}")
         
-        QMessageBox.information(
-            self,
-            self.tr("Editar Cliente"),
-            self.tr("Editar cliente #{}: {}\n\nEl formulario de edición completo se implementará próximamente.").format(cliente_id, nombre)
-        )
+        # Emitir señal para que la ventana principal abra la ficha
+        self.cliente_selected.emit(cliente_id)
     
     def on_nuevo_cliente(self):
         """Abre el formulario para crear un nuevo cliente."""

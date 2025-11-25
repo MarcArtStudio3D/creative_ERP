@@ -9,7 +9,7 @@ from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
     QListWidgetItem, QComboBox, QMessageBox, QCheckBox, QGridLayout
 )
-from core.modules import AVAILABLE_MODULES
+from core.module_manager import AVAILABLE_MODULES
 from core.auth import UserRole
 from .model import RolePermissionsManager
 

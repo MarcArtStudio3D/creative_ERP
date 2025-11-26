@@ -128,6 +128,9 @@ class ClientesViewFull(QWidget):
         # Cargar países en el combo
         self.cargar_paises()
         
+        # Aplicar estilos CSS a las pestañas
+        self.aplicar_estilos_pestanas()
+        
         # Re-aplicar ajustes de estilo para asegurar que cualquier limpieza posterior
         # no borre las exclusiones o estilos personalizados.
         # (Deshabilitado para usar estilo global modern.qss)
@@ -3140,6 +3143,10 @@ class ClientesViewFull(QWidget):
                         self.ui.cbopaisAlternativa.setCurrentIndex(i)
                         break
 
+    def aplicar_estilos_pestanas(self):
+        """No aplica estilos a pestañas - reservado para otros elementos"""
+        pass
+    
     def _save_changes(self) -> bool:
         """Intenta guardar los cambios. Retorna True si tuvo éxito."""
         self.guardar_cliente()

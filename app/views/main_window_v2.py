@@ -1265,13 +1265,19 @@ class MainWindowV2(QMainWindow):
                 background-color: rgb(133, 170, 142);
                 border: 2px solid rgb(100, 140, 110);
                 border-right: none;
-                border-top-left-radius: 15px;
-                border-bottom-left-radius: 15px;
+                border-radius: 15px;
+                border-top-right-radius: 0px;
+                border-bottom-right-radius: 0px;
                 color: white;
                 font-weight: bold;
+                font-size: 16px;
+                font-family: "Arial", "DejaVu Sans", sans-serif;
+                text-align: center;
+                padding: 0px;
             }
             QPushButton#panelTab:hover {
                 background-color: rgb(150, 190, 160);
+                color: rgb(240, 240, 240);
             }
         """)
         

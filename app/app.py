@@ -36,6 +36,19 @@ class CreativeERPApp:
         # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
         # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
         
+        # Cargar hoja de estilos moderna
+        try:
+            import os
+            style_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resources', 'styles', 'modern.qss')
+            if os.path.exists(style_path):
+                with open(style_path, 'r') as f:
+                    self.qapp.setStyleSheet(f.read())
+                print(f"✓ Estilo moderno cargado desde {style_path}")
+            else:
+                print(f"⚠ No se encontró el archivo de estilo: {style_path}")
+        except Exception as e:
+            print(f"⚠ Error al cargar estilo: {e}")
+        
         # Inicializar base de datos
         print("Inicializando base de datos...")
         init_db()

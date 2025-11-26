@@ -46,6 +46,10 @@ def convert_ui_file(ui_file: Path) -> bool:
         )
         
         print(f"✓ Convertido: {ui_file.name} -> {output_name}")
+        
+        # Post-procesamiento: Limpiar estilos inline para respetar el tema global
+        clean_generated_file(output_file)
+        
         return True
         
     except subprocess.CalledProcessError as e:
@@ -56,6 +60,39 @@ def convert_ui_file(ui_file: Path) -> bool:
         print("✗ Error: pyuic6 no encontrado.")
         print("  Instala PyQt6-tools: pip install PyQt6-tools")
         return False
+
+
+def clean_generated_file(file_path: Path):
+    """
+    Lee el archivo Python generado y comenta las llamadas a setStyleSheet
+    para asegurar que se respete el tema global de la aplicación.
+    """
+    try:
+        with open(file_path, 'r', encoding='utf-8') as f:
+            lines = f.readlines()
+        
+        new_lines = []
+        modified = False
+        
+        for line in lines:
+            # Detectar setStyleSheet pero ignorar si es nuestro propio tema global o comentarios
+            if '.setStyleSheet(' in line and 'modern.qss' not in line and not line.strip().startswith('#'):
+                # Comentar la línea
+                # Mantenemos la indentación original
+                indent = line[:line.find(line.strip())]
+                content = line.strip()
+                new_lines.append(f"{indent}# {content} # Desactivado por convert_ui.py para usar tema global\n")
+                modified = True
+            else:
+                new_lines.append(line)
+                
+        if modified:
+            with open(file_path, 'w', encoding='utf-8') as f:
+                f.writelines(new_lines)
+            print(f"  ✓ Estilos inline limpiados en {file_path.name}")
+            
+    except Exception as e:
+        print(f"  ⚠ Advertencia: No se pudieron limpiar estilos en {file_path.name}: {e}")
 
 
 def convert_all_ui_files():

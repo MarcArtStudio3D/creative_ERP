@@ -81,6 +81,10 @@ class ClientesViewFull(QWidget):
         # Cerrar el diálogo temporal
         temp_dialog.deleteLater()
         
+        # Limpiar estilos hardcoded de la tabla de búsquedas para que use el tema global
+        if hasattr(self.ui, 'tabla_busquedas'):
+            self.ui.tabla_busquedas.setStyleSheet("")
+        
         # Desactivar campos de edición inmediatamente después de crear la UI
         self.desactivar_edicion()
         
@@ -105,11 +109,11 @@ class ClientesViewFull(QWidget):
         self.conectar_senales()
         
         # Aplicar ajustes de tema para que los widgets usen colores del palette
-        try:
-            self.apply_palette_styles()
-        except Exception:
-            # No crítico; si falla seguimos adelante
-            pass
+        # (Deshabilitado para usar estilo global modern.qss)
+        # try:
+        #     self.apply_palette_styles()
+        # except Exception:
+        #     pass
 
         # Mostrar página de búsquedas/lista al inicio (índice 1)
         if hasattr(self.ui, 'stackedWidget'):
@@ -126,10 +130,11 @@ class ClientesViewFull(QWidget):
         
         # Re-aplicar ajustes de estilo para asegurar que cualquier limpieza posterior
         # no borre las exclusiones o estilos personalizados.
-        try:
-            self.apply_palette_styles()
-        except Exception:
-            pass
+        # (Deshabilitado para usar estilo global modern.qss)
+        # try:
+        #     self.apply_palette_styles()
+        # except Exception:
+        #     pass
         
         # CRÍTICO: Re-aplicar desactivación de campos después de apply_palette_styles
         # ya que setStyleSheet puede resetear propiedades de los widgets

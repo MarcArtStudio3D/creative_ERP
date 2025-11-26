@@ -4,7 +4,7 @@ from PySide6.QtWidgets import QDialog
 from PySide6.QtSql import QSqlQueryModel, QSqlDatabase
 from PySide6.QtCore import Qt, QEvent, QAbstractTableModel
 
-from app.views.ui_db_consulta_view import Ui_db_consulta_view
+from modules.common.ui_db_consulta_view import Ui_db_consulta_view
 
 
 class DBConsultaView(QDialog):
@@ -143,6 +143,7 @@ class DBConsultaView(QDialog):
             pass
 
     def set_titulo(self, titulo: str):
+        self.ui.lbltabla.setText(str(titulo))
         self.setWindowTitle(str(titulo))
 
     def set_headers(self, cabecera: List[str]):
@@ -155,8 +156,23 @@ class DBConsultaView(QDialog):
         self.headers = list(cabecera)
 
     def set_tamano_columnas(self, tamanos: List[int]):
+        """Set column widths. Last column will stretch to fill remaining space.
+        
+        Args:
+            tamanos: List of column widths in pixels. If fewer widths than columns,
+                    remaining columns use default width. Last column always stretches.
+        """
+        from PySide6.QtWidgets import QHeaderView
+        
+        # Set specific widths for provided columns
         for i, t in enumerate(tamanos):
-            self.ui.resultado_list.setColumnWidth(i, int(t))
+            if i < self.ui.resultado_list.model().columnCount():
+                self.ui.resultado_list.setColumnWidth(i, int(t))
+        
+        # Make the last visible column stretch to fill remaining space
+        last_col = self.ui.resultado_list.model().columnCount() - 1
+        if last_col >= 0:
+            self.ui.resultado_list.horizontalHeader().setStretchLastSection(True)
 
     def set_delegate_monetary(self, cols):
         # Delegates are project-specific; no-op if not available
@@ -241,7 +257,9 @@ class DBConsultaView(QDialog):
         return 0, None
 
     @staticmethod
-    def select_from_sql(parent, sql: str, db: Optional[str | QSqlDatabase] = None, headers: Optional[List[str]] = None, campos: Optional[List[str]] = None, titulo: Optional[str] = None):
+    def select_from_sql(parent, sql: str, db: Optional[str | QSqlDatabase] = None, 
+                       headers: Optional[List[str]] = None, campos: Optional[List[str]] = None, 
+                       titulo: Optional[str] = None, tamanos: Optional[List[int]] = None):
         """Convenience method to show dialog and return (id, record) after user selects.
 
         Parameters:
@@ -251,15 +269,20 @@ class DBConsultaView(QDialog):
             headers: optional column headers (strings)
             campos: optional list of fields for search combobox
             titulo: optional window title
+            tamanos: optional list of column widths in pixels (last column stretches)
         """
         dlg = DBConsultaView(parent)
         if db:
             dlg.set_db(db)
         if titulo:
             dlg.set_titulo(titulo)
-        if headers:
-            dlg.set_headers(headers)
         if campos:
             dlg.set_campoBusqueda(campos)
+        # Set SQL first to create the model
         dlg.set_SQL(sql)
+        # Then set headers and column widths (they need the model to exist)
+        if headers:
+            dlg.set_headers(headers)
+        if tamanos:
+            dlg.set_tamano_columnas(tamanos)
         return dlg.exec_select()

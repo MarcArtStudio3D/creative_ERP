@@ -284,6 +284,14 @@ class ClientesViewFull(QWidget):
                         except Exception:
                             pass
                     
+                # Special handling for txtpoblacion - trigger reverse lookup on Enter key
+                w_poblacion = getattr(self.ui, 'txtpoblacion', None)
+                if w_poblacion is not None and isinstance(w_poblacion, QLineEdit):
+                    try:
+                        w_poblacion.returnPressed.connect(self._handle_poblacion_change)
+                    except Exception:
+                        pass
+                
                 self._validations_connected = True
             except Exception:
                 self._validations_connected = False
@@ -2585,9 +2593,10 @@ class ClientesViewFull(QWidget):
                         parent=self,
                         sql=sql,
                         db=france_db,
-                        headers=['ID', 'Población', 'Provincia'],
+                        headers=['ID', self.tr('Población'), self.tr('Provincia')],
                         campos=['nom_standard_majuscule'],
-                        titulo=f'Seleccionar población para CP {cp}'
+                        titulo=self.tr('Seleccionar población para CP {cp}').format(cp=cp),
+                        tamanos=[0, 250, 200]  # ID (hidden), Población, Provincia (stretches)
                     )
                     
                     if record and record.count() >= 3:  # Make sure we have all columns
@@ -2608,6 +2617,119 @@ class ClientesViewFull(QWidget):
         except Exception as e:
             # Silently ignore errors to not disrupt user experience
             print(f"Error in postal code lookup: {e}")
+            pass
+
+    def _handle_poblacion_change(self):
+        """Handle poblacion (city) changes - reverse lookup postal code and province from database"""
+        if not hasattr(self.ui, 'txtpoblacion'):
+            return
+        
+        # Only do reverse lookup if postal code is empty
+        if hasattr(self.ui, 'txtcp'):
+            cp = self.ui.txtcp.text().strip()
+            if cp:  # If postal code already has a value, don't override
+                return
+        
+        poblacion = self.ui.txtpoblacion.text().strip()
+        if not poblacion or len(poblacion) < 3:  # Require at least 3 characters
+            return
+        
+        try:
+            # Get active country from cboPais combo
+            pais_activo = 'Francia'  # Default
+            if hasattr(self.ui, 'cboPais'):
+                pais_valor = self.get_combo_value('cboPais')
+                if pais_valor:
+                    pais_activo = pais_valor
+            
+            # Map country names to database files and table structures
+            country_db_map = {
+                'francia': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
+                'france': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
+                'españa': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
+                'spain': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
+                'espagne': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom')
+            }
+            
+            db_config = country_db_map.get(pais_activo.lower())
+            if not db_config:
+                return
+            
+            db_filename, table_name, cp_col, city_col, prov_col = db_config
+            
+            # Connect to country database
+            db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', db_filename)
+            if not os.path.exists(db_path):
+                return
+            
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Query for city name (case-insensitive search)
+            cursor.execute(f"""
+                SELECT {cp_col}, {city_col}, {prov_col} 
+                FROM {table_name} 
+                WHERE {city_col} LIKE ? 
+                ORDER BY {city_col}
+            """, (f"%{poblacion.upper()}%",))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            if len(results) == 1:
+                # Single result - fill fields directly
+                codigo_postal, poblacion_db, provincia = results[0]
+                if hasattr(self.ui, 'txtcp'):
+                    self.ui.txtcp.setText(codigo_postal or '')
+                if hasattr(self.ui, 'txtpoblacion'):
+                    self.ui.txtpoblacion.setText(poblacion_db or '')
+                if hasattr(self.ui, 'txtprovincia'):
+                    self.ui.txtprovincia.setText(provincia or '')
+                    
+            elif len(results) > 1:
+                # Multiple results - show selection dialog
+                # Create QSqlDatabase connection to country database
+                country_db = QSqlDatabase.addDatabase("QSQLITE", "country_connection_poblacion")
+                country_db.setDatabaseName(db_path)
+                
+                if country_db.open():
+                    # Escape single quotes in poblacion for SQL
+                    poblacion_escaped = poblacion.upper().replace("'", "''")
+                    sql = f"""
+                        SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
+                        FROM {table_name} 
+                        WHERE {city_col} LIKE '%{poblacion_escaped}%' 
+                        ORDER BY {city_col}
+                    """
+                    
+                    id_selected, record = DBConsultaView.select_from_sql(
+                        parent=self,
+                        sql=sql,
+                        db=country_db,
+                        headers=['ID', self.tr('Código Postal'), self.tr('Población'), self.tr('Provincia')],
+                        campos=[city_col],
+                        titulo=self.tr('Seleccionar población: {poblacion}').format(poblacion=poblacion),
+                        tamanos=[0, 100, 250, 200]  # ID (hidden), CP, Población, Provincia (stretches)
+                    )
+                    
+                    if record and record.count() >= 4:  # Make sure we have all columns
+                        codigo_postal = record.value(1)  # CP column
+                        poblacion_db = record.value(2)  # City column
+                        provincia = record.value(3)  # Province column
+                        
+                        if hasattr(self.ui, 'txtcp'):
+                            self.ui.txtcp.setText(codigo_postal or '')
+                        if hasattr(self.ui, 'txtpoblacion'):
+                            self.ui.txtpoblacion.setText(poblacion_db or '')
+                        if hasattr(self.ui, 'txtprovincia'):
+                            self.ui.txtprovincia.setText(provincia or '')
+                    
+                    country_db.close()
+                    QSqlDatabase.removeDatabase("country_connection_poblacion")
+                    
+        except Exception as e:
+            # Silently ignore errors to not disrupt user experience
+            print(f"Error in poblacion reverse lookup: {e}")
             pass
 
     # ========== MÉTODOS PARA DIRECCIONES ALTERNATIVAS ==========

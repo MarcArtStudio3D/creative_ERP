@@ -2,7 +2,7 @@ from typing import Optional
 from PySide6.QtWidgets import QWidget, QMessageBox, QTableView, QHeaderView
 from PySide6.QtCore import Qt
 
-from app.views.ui_frmempresas import Ui_FrmEmpresas
+from modules.empresas.ui_frmempresas import Ui_FrmEmpresas
 from modules.empresas.controller import EmpresasController
 from core.models import Empresa
 

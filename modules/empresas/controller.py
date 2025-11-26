@@ -98,14 +98,11 @@ class EmpresasController(QObject):
             return False
     def cargar_grupos(self) -> List[BusinessGroup]:
         """Carga todos los grupos empresariales."""
-        session = get_session()
         try:
-            return session.query(BusinessGroup).all()
+            return self.repo.obtener_grupos()
         except Exception as e:
             self.error_occurred.emit(f"Error al cargar grupos: {e}")
             return []
-        finally:
-            session.close()
 
     def llenar_combo_grupos(self, combo):
         """Llena un QComboBox con los grupos empresariales."""

@@ -132,6 +132,91 @@ class Empresa(Base):
     usuario_postgresql = Column(String(50), default='postgres', comment='Usuario PostgreSQL')
     password_postgresql = Column(String(255), default='postgres', comment='Contraseña PostgreSQL')
 
+    # --- NUEVOS CAMPOS AÑADIDOS ---
+
+    # Configuración y Divisas
+    moneda_predeterminada = Column(String(10), default='EUR')
+    actualizar_divisas = Column(Integer, default=0)
+    aplicar_irpf = Column(Integer, default=0)
+    porcentaje_irpf = Column(Float, default=0.0)
+    decimales_totales = Column(Integer, default=2)
+    decimales_precios = Column(Integer, default=2)
+
+    # Facturación
+    digitos_factura = Column(Integer, default=7)
+    serie_factura = Column(String(20))
+    dia_cierre_ejercicio = Column(Integer, default=31)
+    mes_cierre_ejercicio = Column(Integer, default=12)
+
+    # Varios y Artículos
+    enlace_web_activo = Column(Integer, default=0)
+    gestion_internacional = Column(Integer, default=0)
+    autocodificar_articulos = Column(Integer, default=1)
+    tamano_codigo_articulo = Column(Integer, default=15)
+    tarifa_predeterminada = Column(String(50))
+    margen_general = Column(Float, default=0.0)
+    margen_minimo = Column(Float, default=0.0)
+
+    # Logotipo y Comentarios
+    ruta_logo = Column(String(255))
+    comentario_albaran = Column(Text)
+    comentario_factura = Column(Text)
+
+    # Horarios
+    horario_lunes = Column(String(100))
+    horario_martes = Column(String(100))
+    horario_miercoles = Column(String(100))
+    horario_jueves = Column(String(100))
+    horario_viernes = Column(String(100))
+    horario_sabado = Column(String(100))
+    horario_domingo = Column(String(100))
+
+    # Integraciones (Google)
+    google_calendar_id = Column(String(255))
+    google_oauth_token = Column(Text)
+    google_refresh_token = Column(Text)
+    google_token_expiry = Column(String(100))
+
+    # Contabilidad
+    activar_contabilidad = Column(Integer, default=1)
+    cuenta_venta_servicios = Column(String(20))
+    cuenta_venta_mercaderias = Column(String(20))
+    cuenta_acreedores = Column(String(20))
+    cuenta_proveedores = Column(String(20))
+    digitos_cuentas_contables = Column(Integer, default=8)
+    cuenta_clientes = Column(String(20))
+    cuenta_cobros = Column(String(20))
+    cuenta_pagos = Column(String(20))
+    
+    # Cuentas IVA (Repercutido y Soportado)
+    cuenta_iva_repercutido_1 = Column(String(20))
+    cuenta_iva_repercutido_2 = Column(String(20))
+    cuenta_iva_repercutido_3 = Column(String(20))
+    cuenta_iva_repercutido_4 = Column(String(20))
+    
+    cuenta_iva_repercutido_re_1 = Column(String(20))
+    cuenta_iva_repercutido_re_2 = Column(String(20))
+    cuenta_iva_repercutido_re_3 = Column(String(20))
+    cuenta_iva_repercutido_re_4 = Column(String(20))
+    
+    cuenta_iva_soportado_1 = Column(String(20))
+    cuenta_iva_soportado_2 = Column(String(20))
+    cuenta_iva_soportado_3 = Column(String(20))
+    cuenta_iva_soportado_4 = Column(String(20))
+    
+    cuenta_iva_soportado_re_1 = Column(String(20))
+    cuenta_iva_soportado_re_2 = Column(String(20))
+    cuenta_iva_soportado_re_3 = Column(String(20))
+    cuenta_iva_soportado_re_4 = Column(String(20))
+
+    # Datos Registrales Adicionales
+    inscripcion_registro = Column(String(200))
+    ciudad_rcs = Column(String(100))
+    numero_rcs = Column(String(50))
+    numero_rm = Column(String(50))
+    siret = Column(String(50))
+    ape_naf = Column(String(20))
+
     # Relaciones
     group = relationship('BusinessGroup', backref='empresas')
 

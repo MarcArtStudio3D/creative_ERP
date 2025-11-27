@@ -110,3 +110,11 @@ class EmpresasController(QObject):
         combo.clear()
         for grupo in grupos:
             combo.addItem(grupo.name, grupo.id)
+
+    def obtener_paises(self):
+        """Obtiene la lista de países."""
+        return self.repo.obtener_paises()
+
+    def buscar_poblacion(self, cp: str, pais: str):
+        """Busca población por código postal."""
+        return self.repo.buscar_poblacion(cp, pais)

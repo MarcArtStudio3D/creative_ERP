@@ -8,7 +8,6 @@ set -euo pipefail
 ROOT_DIR="$(cd "$(dirname "$0")/.." && pwd)"
 UI_DIR="$ROOT_DIR/app/ui"
 MODULES_DIR="$ROOT_DIR/modules"
-APP_VIEWS_DIR="$ROOT_DIR/app/views"
 VENV_BIN="$ROOT_DIR/.venv/bin"
 SCRIPTS_DIR="$ROOT_DIR/scripts"
 
@@ -50,49 +49,58 @@ for qrc in "$UI_DIR"/*.qrc; do
     "$PYRCC" "$qrc" -o "$out"
 done
 
+# Function to compile a UI file to its target module
+compile_ui_file() {
+    local ui_file="$1"
+    local output_file="$2"
+    
+    echo " - Compiling $ui_file -> $output_file"
+    "$PYUIC" --from-imports "$ui_file" -o "$output_file"
+    
+    # Remove palette code to allow system themes to work
+    echo "   - Removing palette code from $output_file"
+    "$PYTHON" "$SCRIPTS_DIR/ui_tools/remove_palette.py" "$output_file"
+    
+    # Patch imports
+    perl -0777 -pe 's/^import designer_rc\b/from modules import designer_rc/igm; s/^from\s+\.\s+import\s+designer_rc\b/from modules import designer_rc/igm' -i "$output_file"
+    
+    # Fix Qt constants
+    echo "   - Fixing Qt constants in $output_file"
+    "$PYTHON" "$SCRIPTS_DIR/ui_tools/fix_qt_constants.py" "$output_file"
+}
+
 echo "Compiling UI files..."
+
+# Map UI files to their corresponding modules
+# Format: "ui_filename:module_name"
+declare -A UI_MODULE_MAP=(
+    ["frmClientes.ui"]="clientes"
+    ["frmempresas.ui"]="empresas"
+    ["frmtipocliente.ui"]="tipo_cliente"
+    ["db_consulta_view.ui"]="common"
+    ["frmConfig.ui"]="common"
+    ["frmeditaravisos.ui"]="common"
+    ["frmformas_pago.ui"]="common"
+    ["frmnuevosavisos.ui"]="common"
+)
+
 for ui_file in "$UI_DIR"/*.ui; do
     [ -e "$ui_file" ] || continue
-    base=$(basename "$ui_file" .ui)
+    base=$(basename "$ui_file")
     
-    # Determine output location
-    if [[ "$base" == "frmClientes" ]]; then
-        # Special case: frmClientes.ui generates files in both app/views and modules/clientes
-        out_app="$APP_VIEWS_DIR/ui_${base}.py"
-        out_modules="$MODULES_DIR/clientes/ui_${base}.py"
-        
-        echo " - Compiling $ui_file -> $out_app"
-        "$PYUIC" --from-imports "$ui_file" -o "$out_app"
-        # Remove palette code to allow system themes to work
-        echo "   - Removing palette code from $out_app"
-        "$PYTHON" "$SCRIPTS_DIR/remove_palette.py" "$out_app"
-        # Patch imports
-        perl -0777 -pe 's/^import designer_rc\b/from modules import designer_rc/igm; s/^from\s+\.\s+import\s+designer_rc\b/from modules import designer_rc/igm' -i "$out_app"
-        # Fix Qt constants
-        echo "   - Fixing Qt constants in $out_app"
-        "$PYTHON" "$SCRIPTS_DIR/fix_qt_constants.py" "$out_app"
-        
-        # Copy to modules location
-        cp "$out_app" "$out_modules"
-        echo "   - Copied to $out_modules"
+    # Check if this UI file has a module mapping
+    if [[ -v UI_MODULE_MAP["$base"] ]]; then
+        module="${UI_MODULE_MAP[$base]}"
+        out="$MODULES_DIR/$module/ui_${base%.ui}.py"
+        compile_ui_file "$ui_file" "$out"
     else
-        # Default: put in app/views/
-        out="$APP_VIEWS_DIR/ui_${base}.py"
-        echo " - Compiling $ui_file -> $out"
-        "$PYUIC" --from-imports "$ui_file" -o "$out"
-        # Remove palette code to allow system themes to work
-        echo "   - Removing palette code from $out"
-        "$PYTHON" "$SCRIPTS_DIR/remove_palette.py" "$out"
-        # Patch imports
-        perl -0777 -pe 's/^import designer_rc\b/from modules import designer_rc/igm; s/^from\s+\.\s+import\s+designer_rc\b/from modules import designer_rc/igm' -i "$out"
-        # Fix Qt constants
-        echo "   - Fixing Qt constants in $out"
-        "$PYTHON" "$SCRIPTS_DIR/fix_qt_constants.py" "$out"
+        # If no mapping exists, skip or warn
+        echo " - WARNING: No module mapping for $base, skipping..."
     fi
 done
 
 echo "Running UI import tests..."
-"$PYTHON" "$SCRIPTS_DIR/test_ui_imports.py" "$ROOT_DIR"
+"$PYTHON" "$SCRIPTS_DIR/ui_tools/test_ui_imports.py" "$ROOT_DIR"
 
 echo "Compilation and testing done. You can now import generated UI modules."
 

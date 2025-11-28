@@ -20,21 +20,21 @@ def test_ficha_import():
         print(f"❌ Error al importar ClienteFichaView: {e}")
         return False
 
-def test_clientes_view_signal():
-    """Prueba que ClientesView tenga la señal cliente_selected."""
+def test_cliente_selected_signal():
+    """Prueba que ClientesViewFull tenga la señal cliente_seleccionado."""
     try:
-        from modules.clientes.view import ClientesView
+        from modules.clientes.view_full import ClientesViewFull
         from PySide6.QtCore import Signal
         
-        # Verificar que tiene la señal
-        if hasattr(ClientesView, 'cliente_selected'):
-            print("✅ Señal cliente_selected encontrada en ClientesView")
+        # Verificar que la clase tiene la señal
+        if hasattr(ClientesViewFull, 'cliente_seleccionado'):
+            print("✅ Señal cliente_seleccionado encontrada en ClientesViewFull")
             return True
         else:
-            print("❌ Señal cliente_selected NO encontrada en ClientesView")
+            print("❌ Señal cliente_seleccionado NO encontrada en ClientesViewFull")
             return False
     except Exception as e:
-        print(f"❌ Error al verificar ClientesView: {e}")
+        print(f"❌ Error al verificar ClientesViewFull: {e}")
         return False
 
 def main():

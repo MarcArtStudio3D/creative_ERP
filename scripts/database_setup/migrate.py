@@ -22,8 +22,13 @@ def main():
     args = sys.argv[2:]
 
     # Ejecutar alembic con el comando
-    cmd = ['alembic', command] + args
-    result = subprocess.run(cmd, cwd=os.path.dirname(__file__) + '/../')
+    cmd = [sys.executable, '-m', 'alembic', command] + args
+    # cwd debe ser la raíz del proyecto donde está alembic.ini
+    # migrate.py está en scripts/database_setup/
+    # .. -> scripts/
+    # ../.. -> root/
+    project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '../../'))
+    result = subprocess.run(cmd, cwd=project_root)
 
     sys.exit(result.returncode)
 

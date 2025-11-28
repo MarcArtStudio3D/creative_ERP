@@ -167,25 +167,30 @@ def init_db(db_name=None):
         except Exception as e:
             print(f"⚠️  Error creando tablas de facturas: {e}")
 
-    # Intentar agregar columnas faltantes para SQLite (solo para desarrollo)
+    # Intentar agregar columnas faltantes (migración automática simple)
     db_url = get_database_url(get_current_database())
-    if 'sqlite' in db_url:
+    is_sqlite = 'sqlite' in db_url
+    is_mysql = 'mysql' in db_url or 'mariadb' in db_url
+
+    if is_sqlite or is_mysql:
+        dialect = 'sqlite' if is_sqlite else 'mysql'
+        
         if get_current_database() == 'artstudio3d':
             try:
-                _ensure_sqlite_columns(clientes_models.Base)
+                _ensure_columns(clientes_models.Base, dialect)
             except Exception:
                 pass
             try:
-                _ensure_sqlite_columns(tipo_cliente_models.Base)
+                _ensure_columns(tipo_cliente_models.Base, dialect)
             except Exception:
                 pass
         else:
             try:
-                _ensure_sqlite_columns(clientes_models.Base)
+                _ensure_columns(clientes_models.Base, dialect)
             except Exception:
                 pass
             try:
-                _ensure_sqlite_columns(facturas_models.Base)
+                _ensure_columns(facturas_models.Base, dialect)
             except Exception:
                 pass
 
@@ -204,7 +209,31 @@ def init_artstudio3d_db():
     init_db('artstudio3d')
 
 
-def _ensure_sqlite_columns(base):
+def _get_sql_type(sa_type, dialect):
+    """Mapea tipos de SQLAlchemy a tipos SQL según el dialecto."""
+    if dialect == 'sqlite':
+        if isinstance(sa_type, Integer): return 'INTEGER'
+        if isinstance(sa_type, Float): return 'REAL'
+        if isinstance(sa_type, DateTime): return 'DATETIME'
+        if isinstance(sa_type, Date): return 'DATE'
+        if isinstance(sa_type, Text): return 'TEXT'
+        if isinstance(sa_type, String):
+            return f'VARCHAR({sa_type.length})' if sa_type.length else 'VARCHAR'
+        return 'TEXT'
+    elif dialect == 'mysql':
+        if isinstance(sa_type, Integer): return 'INT'
+        if isinstance(sa_type, Float): return 'DOUBLE'
+        if isinstance(sa_type, DateTime): return 'DATETIME'
+        if isinstance(sa_type, Date): return 'DATE'
+        if isinstance(sa_type, Text): return 'TEXT'
+        if isinstance(sa_type, String):
+            return f'VARCHAR({sa_type.length})' if sa_type.length else 'VARCHAR(255)'
+        return 'TEXT'
+    return 'TEXT'
+
+
+def _ensure_columns(base, dialect):
+    """Asegura que las columnas del modelo existan en la base de datos."""
     inspector = inspect(engine)
     for table_name, table_obj in base.metadata.tables.items():
         if not inspector.has_table(table_name):
@@ -217,37 +246,27 @@ def _ensure_sqlite_columns(base):
             # Skip primary key additions
             if col.primary_key:
                 continue
-            # Map SQLAlchemy types to SQLite types (simple mapping)
-            sa_type = col.type
-            sql_type = 'TEXT'
-            if isinstance(sa_type, Integer):
-                sql_type = 'INTEGER'
-            elif isinstance(sa_type, Float):
-                sql_type = 'REAL'
-            elif isinstance(sa_type, DateTime):
-                sql_type = 'DATETIME'
-            elif isinstance(sa_type, Date):
-                sql_type = 'DATE'
-            elif isinstance(sa_type, Text):
-                sql_type = 'TEXT'
-            elif isinstance(sa_type, String):
-                # honor length if present
-                try:
-                    length = sa_type.length
-                    if length:
-                        sql_type = f'VARCHAR({length})'
-                    else:
-                        sql_type = 'VARCHAR'
-                except Exception:
-                    sql_type = 'VARCHAR'
+            
+            # Obtener tipo SQL
+            sql_type = _get_sql_type(col.type, dialect)
 
             # Compose ALTER TABLE statement. Make column nullable to avoid issues.
             stmt = text(f'ALTER TABLE "{table_name}" ADD COLUMN "{col_name}" {sql_type}')
+            
+            # MySQL/MariaDB syntax uses backticks usually, but double quotes might work in ANSI mode.
+            # Safer to use no quotes or backticks for MySQL if standard quotes fail, 
+            # but SQLAlchemy 'text' usually passes raw SQL.
+            # Let's try to be dialect specific for quoting if needed, but simple names usually work.
+            if dialect == 'mysql':
+                 stmt = text(f'ALTER TABLE `{table_name}` ADD COLUMN `{col_name}` {sql_type}')
+
             try:
                 with engine.connect() as conn:
                     conn.execute(stmt)
-            except Exception:
+                    print(f"✅ Columna agregada: {table_name}.{col_name} ({sql_type})")
+            except Exception as e:
                 # best-effort: ignore failures to avoid breaking startup
+                print(f"⚠️  Error agregando columna {table_name}.{col_name}: {e}")
                 continue
 
 

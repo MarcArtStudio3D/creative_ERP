@@ -202,10 +202,10 @@
               </widget>
              </item>
              <item row="8" column="8" colspan="3">
-              <widget class="QLineEdit" name="lineEdit_3"/>
+              <widget class="QLineEdit" name="txtAPE"/>
              </item>
              <item row="8" column="6">
-              <widget class="QLineEdit" name="lineEdit_2"/>
+              <widget class="QLineEdit" name="txtSiret"/>
              </item>
              <item row="2" column="8">
               <widget class="QCheckBox" name="chkTVA">
@@ -327,10 +327,10 @@
               </widget>
              </item>
              <item row="9" column="2">
-              <widget class="QLineEdit" name="lineEdit_4"/>
+              <widget class="QLineEdit" name="txtNRS"/>
              </item>
              <item row="9" column="8" colspan="3">
-              <widget class="QLineEdit" name="lineEdit_6"/>
+              <widget class="QLineEdit" name="txtRM"/>
              </item>
              <item row="12" column="8" colspan="3">
               <widget class="QLineEdit" name="txtweb"/>
@@ -388,7 +388,7 @@
               </widget>
              </item>
              <item row="9" column="6">
-              <widget class="QLineEdit" name="lineEdit_5"/>
+              <widget class="QLineEdit" name="txtCiudadRCS"/>
              </item>
              <item row="1" column="4" colspan="3">
               <widget class="QLineEdit" name="txtEmpresa">
@@ -580,7 +580,7 @@
               <widget class="QLineEdit" name="txtcMail"/>
              </item>
              <item row="2" column="2" colspan="2">
-              <widget class="QComboBox" name="cboPais_create">
+              <widget class="QComboBox" name="cboPais">
                <property name="minimumSize">
                 <size>
                  <width>168</width>
@@ -1144,7 +1144,7 @@ color: rgb(255, 255, 255);</string>
                  <property name="title">
                   <string>Acceso a Google Calendar</string>
                  </property>
-                 <widget class="QLineEdit" name="lineEdit_11">
+                 <widget class="QLineEdit" name="txtGoogleCalendarID">
                   <property name="geometry">
                    <rect>
                     <x>190</x>
@@ -1154,7 +1154,7 @@ color: rgb(255, 255, 255);</string>
                    </rect>
                   </property>
                  </widget>
-                 <widget class="QLineEdit" name="lineEdit_12">
+                 <widget class="QLineEdit" name="txtOauthToken">
                   <property name="geometry">
                    <rect>
                     <x>190</x>
@@ -1164,7 +1164,7 @@ color: rgb(255, 255, 255);</string>
                    </rect>
                   </property>
                  </widget>
-                 <widget class="QLineEdit" name="lineEdit_13">
+                 <widget class="QLineEdit" name="txtOauthRefreshToken">
                   <property name="geometry">
                    <rect>
                     <x>190</x>
@@ -1174,7 +1174,7 @@ color: rgb(255, 255, 255);</string>
                    </rect>
                   </property>
                  </widget>
-                 <widget class="QLineEdit" name="lineEdit_14">
+                 <widget class="QLineEdit" name="txtTokenExpirity">
                   <property name="geometry">
                    <rect>
                     <x>190</x>
@@ -1482,7 +1482,7 @@ color: rgb(255, 255, 255);</string>
                   </widget>
                  </item>
                  <item row="4" column="1">
-                  <widget class="QLineEdit" name="ivasoportado4">
+                  <widget class="QLineEdit" name="txtIvasoportado4">
                    <property name="placeholderText">
                     <string>(F1 - lista)</string>
                    </property>
@@ -1499,7 +1499,7 @@ color: rgb(255, 255, 255);</string>
                   </widget>
                  </item>
                  <item row="2" column="1">
-                  <widget class="QLineEdit" name="ivasoportado2">
+                  <widget class="QLineEdit" name="txtIvasoportado2">
                    <property name="placeholderText">
                     <string>(F1 - lista)</string>
                    </property>
@@ -1592,7 +1592,7 @@ color: rgb(255, 255, 255);</string>
                   </widget>
                  </item>
                  <item row="1" column="1">
-                  <widget class="QLineEdit" name="ivasoportado1">
+                  <widget class="QLineEdit" name="txtIvasoportado1">
                    <property name="placeholderText">
                     <string>(F1 - lista)</string>
                    </property>
@@ -1639,7 +1639,7 @@ color: rgb(255, 255, 255);</string>
                   </widget>
                  </item>
                  <item row="3" column="1">
-                  <widget class="QLineEdit" name="ivasoportado3">
+                  <widget class="QLineEdit" name="txtIvasoportado3">
                    <property name="placeholderText">
                     <string>(F1 - lista)</string>
                    </property>
@@ -1850,14 +1850,14 @@ color: rgb(255, 255, 255);</string>
                 </widget>
                </item>
                <item row="4" column="0" colspan="5">
-                <widget class="QPushButton" name="pushButton_5">
+                <widget class="QPushButton" name="btnTestBDMariaDB">
                  <property name="text">
                   <string>Test Database conexion</string>
                  </property>
                 </widget>
                </item>
                <item row="2" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtUsuarioMariaDB_2"/>
+                <widget class="QLineEdit" name="txtUsuarioMariaDB"/>
                </item>
                <item row="1" column="0" colspan="2">
                 <widget class="QLabel" name="label_82">
@@ -1874,13 +1874,13 @@ color: rgb(255, 255, 255);</string>
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLineEdit" name="txtHostMariaDB_2"/>
+                <widget class="QLineEdit" name="txtHostMariaDB"/>
                </item>
                <item row="0" column="4">
-                <widget class="QLineEdit" name="lineEdit_17"/>
+                <widget class="QLineEdit" name="txtPortMariadb"/>
                </item>
                <item row="3" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtPasswordMariaDB_2"/>
+                <widget class="QLineEdit" name="txtPasswordMariaDB"/>
                </item>
                <item row="2" column="0" colspan="2">
                 <widget class="QLabel" name="label_87">
@@ -1890,7 +1890,7 @@ color: rgb(255, 255, 255);</string>
                 </widget>
                </item>
                <item row="1" column="3" colspan="2">
-                <widget class="QLineEdit" name="lineEdit_16"/>
+                <widget class="QLineEdit" name="txtNombreBD_MariaDB"/>
                </item>
                <item row="3" column="0" colspan="2">
                 <widget class="QLabel" name="label_83">
@@ -2032,10 +2032,10 @@ color: rgb(255, 255, 255);</string>
               </property>
               <layout class="QGridLayout" name="gridLayout_18">
                <item row="2" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtUsuarioMariaDB"/>
+                <widget class="QLineEdit" name="txtUsuarioPostgreSQL"/>
                </item>
                <item row="1" column="3" colspan="2">
-                <widget class="QLineEdit" name="lineEdit_15"/>
+                <widget class="QLineEdit" name="txtNombreBD_PostgreSQL"/>
                </item>
                <item row="0" column="4">
                 <widget class="QLineEdit" name="lineEdit"/>
@@ -2055,10 +2055,10 @@ color: rgb(255, 255, 255);</string>
                 </widget>
                </item>
                <item row="0" column="1">
-                <widget class="QLineEdit" name="txtHostMariaDB"/>
+                <widget class="QLineEdit" name="txtHostPostgreSQL"/>
                </item>
                <item row="3" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtPasswordMariaDB"/>
+                <widget class="QLineEdit" name="txtPasswordPostgreSQL"/>
                </item>
                <item row="0" column="3">
                 <widget class="QLabel" name="label_78">
@@ -2082,7 +2082,7 @@ color: rgb(255, 255, 255);</string>
                 </widget>
                </item>
                <item row="4" column="0" colspan="5">
-                <widget class="QPushButton" name="pushButton_4">
+                <widget class="QPushButton" name="btnTestDBPostgreSQL">
                  <property name="text">
                   <string>Test Database conexion</string>
                  </property>
@@ -2148,18 +2148,18 @@ color: rgb(255, 255, 255);</string>
   <tabstop>cboGrupoEmpresa</tabstop>
   <tabstop>txtEmpresa</tabstop>
   <tabstop>cboFormajuridica</tabstop>
-  <tabstop>cboPais_create</tabstop>
+  <tabstop>cboPais</tabstop>
   <tabstop>chkTVA</tabstop>
   <tabstop>txtdireccion1</tabstop>
   <tabstop>txtcp</tabstop>
   <tabstop>txtpoblacion</tabstop>
   <tabstop>txtprovincia</tabstop>
   <tabstop>txtcif</tabstop>
-  <tabstop>lineEdit_2</tabstop>
-  <tabstop>lineEdit_3</tabstop>
-  <tabstop>lineEdit_4</tabstop>
-  <tabstop>lineEdit_5</tabstop>
-  <tabstop>lineEdit_6</tabstop>
+  <tabstop>txtSiret</tabstop>
+  <tabstop>txtAPE</tabstop>
+  <tabstop>txtNRS</tabstop>
+  <tabstop>txtCiudadRCS</tabstop>
+  <tabstop>txtRM</tabstop>
   <tabstop>txtcInscripcion</tabstop>
   <tabstop>txttelefono1</tabstop>
   <tabstop>txttelefono2</tabstop>
@@ -2194,20 +2194,20 @@ color: rgb(255, 255, 255);</string>
   <tabstop>lineEdit_8</tabstop>
   <tabstop>lineEdit_9</tabstop>
   <tabstop>lineEdit_10</tabstop>
-  <tabstop>lineEdit_11</tabstop>
-  <tabstop>lineEdit_12</tabstop>
-  <tabstop>lineEdit_13</tabstop>
-  <tabstop>lineEdit_14</tabstop>
+  <tabstop>txtGoogleCalendarID</tabstop>
+  <tabstop>txtOauthToken</tabstop>
+  <tabstop>txtOauthRefreshToken</tabstop>
+  <tabstop>txtTokenExpirity</tabstop>
   <tabstop>txtdigitos_cuentas</tabstop>
   <tabstop>txtcuentaCliente</tabstop>
   <tabstop>txtcuenta_proveedores</tabstop>
   <tabstop>txtcuenta_acreedores</tabstop>
   <tabstop>txtCuenta_venta_mercaderias</tabstop>
   <tabstop>txtCuenta_venta_servicios</tabstop>
-  <tabstop>ivasoportado1</tabstop>
-  <tabstop>ivasoportado2</tabstop>
-  <tabstop>ivasoportado3</tabstop>
-  <tabstop>ivasoportado4</tabstop>
+  <tabstop>txtIvasoportado1</tabstop>
+  <tabstop>txtIvasoportado2</tabstop>
+  <tabstop>txtIvasoportado3</tabstop>
+  <tabstop>txtIvasoportado4</tabstop>
   <tabstop>ivasoportadore1</tabstop>
   <tabstop>ivasoportadore2</tabstop>
   <tabstop>ivasoportadore3</tabstop>
@@ -2228,18 +2228,18 @@ color: rgb(255, 255, 255);</string>
   <tabstop>txtruta_bd_conta</tabstop>
   <tabstop>btnSeleccionarBDSQLiteConta</tabstop>
   <tabstop>btn_migrar</tabstop>
-  <tabstop>txtHostMariaDB_2</tabstop>
-  <tabstop>lineEdit_17</tabstop>
-  <tabstop>lineEdit_16</tabstop>
-  <tabstop>txtUsuarioMariaDB_2</tabstop>
-  <tabstop>txtPasswordMariaDB_2</tabstop>
-  <tabstop>pushButton_5</tabstop>
   <tabstop>txtHostMariaDB</tabstop>
-  <tabstop>lineEdit</tabstop>
-  <tabstop>lineEdit_15</tabstop>
+  <tabstop>txtPortMariadb</tabstop>
+  <tabstop>txtNombreBD_MariaDB</tabstop>
   <tabstop>txtUsuarioMariaDB</tabstop>
   <tabstop>txtPasswordMariaDB</tabstop>
-  <tabstop>pushButton_4</tabstop>
+  <tabstop>btnTestBDMariaDB</tabstop>
+  <tabstop>txtHostPostgreSQL</tabstop>
+  <tabstop>lineEdit</tabstop>
+  <tabstop>txtNombreBD_PostgreSQL</tabstop>
+  <tabstop>txtUsuarioPostgreSQL</tabstop>
+  <tabstop>txtPasswordPostgreSQL</tabstop>
+  <tabstop>btnTestDBPostgreSQL</tabstop>
   <tabstop>btn_guardar_nuevo</tabstop>
   <tabstop>pushButton</tabstop>
   <tabstop>btn_salir</tabstop>

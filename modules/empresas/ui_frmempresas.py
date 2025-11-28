@@ -137,15 +137,15 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_6.addWidget(self.label_22, 8, 1, 1, 1)
 
-        self.lineEdit_3 = QLineEdit(self.tabWidgetPage1)
-        self.lineEdit_3.setObjectName(u"lineEdit_3")
+        self.txtAPE = QLineEdit(self.tabWidgetPage1)
+        self.txtAPE.setObjectName(u"txtAPE")
 
-        self.gridLayout_6.addWidget(self.lineEdit_3, 8, 8, 1, 3)
+        self.gridLayout_6.addWidget(self.txtAPE, 8, 8, 1, 3)
 
-        self.lineEdit_2 = QLineEdit(self.tabWidgetPage1)
-        self.lineEdit_2.setObjectName(u"lineEdit_2")
+        self.txtSiret = QLineEdit(self.tabWidgetPage1)
+        self.txtSiret.setObjectName(u"txtSiret")
 
-        self.gridLayout_6.addWidget(self.lineEdit_2, 8, 6, 1, 1)
+        self.gridLayout_6.addWidget(self.txtSiret, 8, 6, 1, 1)
 
         self.chkTVA = QCheckBox(self.tabWidgetPage1)
         self.chkTVA.setObjectName(u"chkTVA")
@@ -218,15 +218,15 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_6.addWidget(self.label_23, 10, 1, 1, 1)
 
-        self.lineEdit_4 = QLineEdit(self.tabWidgetPage1)
-        self.lineEdit_4.setObjectName(u"lineEdit_4")
+        self.txtNRS = QLineEdit(self.tabWidgetPage1)
+        self.txtNRS.setObjectName(u"txtNRS")
 
-        self.gridLayout_6.addWidget(self.lineEdit_4, 9, 2, 1, 1)
+        self.gridLayout_6.addWidget(self.txtNRS, 9, 2, 1, 1)
 
-        self.lineEdit_6 = QLineEdit(self.tabWidgetPage1)
-        self.lineEdit_6.setObjectName(u"lineEdit_6")
+        self.txtRM = QLineEdit(self.tabWidgetPage1)
+        self.txtRM.setObjectName(u"txtRM")
 
-        self.gridLayout_6.addWidget(self.lineEdit_6, 9, 8, 1, 3)
+        self.gridLayout_6.addWidget(self.txtRM, 9, 8, 1, 3)
 
         self.txtweb = QLineEdit(self.tabWidgetPage1)
         self.txtweb.setObjectName(u"txtweb")
@@ -259,10 +259,10 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_6.addWidget(self.label_17, 11, 1, 1, 1)
 
-        self.lineEdit_5 = QLineEdit(self.tabWidgetPage1)
-        self.lineEdit_5.setObjectName(u"lineEdit_5")
+        self.txtCiudadRCS = QLineEdit(self.tabWidgetPage1)
+        self.txtCiudadRCS.setObjectName(u"txtCiudadRCS")
 
-        self.gridLayout_6.addWidget(self.lineEdit_5, 9, 6, 1, 1)
+        self.gridLayout_6.addWidget(self.txtCiudadRCS, 9, 6, 1, 1)
 
         self.txtEmpresa = QLineEdit(self.tabWidgetPage1)
         self.txtEmpresa.setObjectName(u"txtEmpresa")
@@ -352,12 +352,12 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_6.addWidget(self.txtcMail, 12, 2, 1, 4)
 
-        self.cboPais_create = QComboBox(self.tabWidgetPage1)
-        self.cboPais_create.setObjectName(u"cboPais_create")
-        self.cboPais_create.setMinimumSize(QSize(168, 0))
-        self.cboPais_create.setMaximumSize(QSize(250, 16777215))
+        self.cboPais = QComboBox(self.tabWidgetPage1)
+        self.cboPais.setObjectName(u"cboPais")
+        self.cboPais.setMinimumSize(QSize(168, 0))
+        self.cboPais.setMaximumSize(QSize(250, 16777215))
 
-        self.gridLayout_6.addWidget(self.cboPais_create, 2, 2, 1, 2)
+        self.gridLayout_6.addWidget(self.cboPais, 2, 2, 1, 2)
 
         self.txttelefono2 = QLineEdit(self.tabWidgetPage1)
         self.txttelefono2.setObjectName(u"txttelefono2")
@@ -736,18 +736,18 @@ class Ui_FrmEmpresas(object):
 
         self.groupBox_7 = QGroupBox(self.tab_8)
         self.groupBox_7.setObjectName(u"groupBox_7")
-        self.lineEdit_11 = QLineEdit(self.groupBox_7)
-        self.lineEdit_11.setObjectName(u"lineEdit_11")
-        self.lineEdit_11.setGeometry(QRect(190, 40, 341, 32))
-        self.lineEdit_12 = QLineEdit(self.groupBox_7)
-        self.lineEdit_12.setObjectName(u"lineEdit_12")
-        self.lineEdit_12.setGeometry(QRect(190, 80, 341, 32))
-        self.lineEdit_13 = QLineEdit(self.groupBox_7)
-        self.lineEdit_13.setObjectName(u"lineEdit_13")
-        self.lineEdit_13.setGeometry(QRect(190, 120, 341, 32))
-        self.lineEdit_14 = QLineEdit(self.groupBox_7)
-        self.lineEdit_14.setObjectName(u"lineEdit_14")
-        self.lineEdit_14.setGeometry(QRect(190, 160, 341, 32))
+        self.txtGoogleCalendarID = QLineEdit(self.groupBox_7)
+        self.txtGoogleCalendarID.setObjectName(u"txtGoogleCalendarID")
+        self.txtGoogleCalendarID.setGeometry(QRect(190, 40, 341, 32))
+        self.txtOauthToken = QLineEdit(self.groupBox_7)
+        self.txtOauthToken.setObjectName(u"txtOauthToken")
+        self.txtOauthToken.setGeometry(QRect(190, 80, 341, 32))
+        self.txtOauthRefreshToken = QLineEdit(self.groupBox_7)
+        self.txtOauthRefreshToken.setObjectName(u"txtOauthRefreshToken")
+        self.txtOauthRefreshToken.setGeometry(QRect(190, 120, 341, 32))
+        self.txtTokenExpirity = QLineEdit(self.groupBox_7)
+        self.txtTokenExpirity.setObjectName(u"txtTokenExpirity")
+        self.txtTokenExpirity.setGeometry(QRect(190, 160, 341, 32))
         self.label_72 = QLabel(self.groupBox_7)
         self.label_72.setObjectName(u"label_72")
         self.label_72.setGeometry(QRect(20, 50, 161, 18))
@@ -896,22 +896,22 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_13.addWidget(self.label_65, 4, 3, 1, 1)
 
-        self.ivasoportado4 = QLineEdit(self.tab_5)
-        self.ivasoportado4.setObjectName(u"ivasoportado4")
-        self.ivasoportado4.setClearButtonEnabled(True)
+        self.txtIvasoportado4 = QLineEdit(self.tab_5)
+        self.txtIvasoportado4.setObjectName(u"txtIvasoportado4")
+        self.txtIvasoportado4.setClearButtonEnabled(True)
 
-        self.gridLayout_13.addWidget(self.ivasoportado4, 4, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.txtIvasoportado4, 4, 1, 1, 1)
 
         self.label_59 = QLabel(self.tab_5)
         self.label_59.setObjectName(u"label_59")
 
         self.gridLayout_13.addWidget(self.label_59, 2, 0, 1, 1)
 
-        self.ivasoportado2 = QLineEdit(self.tab_5)
-        self.ivasoportado2.setObjectName(u"ivasoportado2")
-        self.ivasoportado2.setClearButtonEnabled(True)
+        self.txtIvasoportado2 = QLineEdit(self.tab_5)
+        self.txtIvasoportado2.setObjectName(u"txtIvasoportado2")
+        self.txtIvasoportado2.setClearButtonEnabled(True)
 
-        self.gridLayout_13.addWidget(self.ivasoportado2, 2, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.txtIvasoportado2, 2, 1, 1, 1)
 
         self.label_63 = QLabel(self.tab_5)
         self.label_63.setObjectName(u"label_63")
@@ -960,11 +960,11 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_13.addWidget(self.label_62, 1, 3, 1, 1)
 
-        self.ivasoportado1 = QLineEdit(self.tab_5)
-        self.ivasoportado1.setObjectName(u"ivasoportado1")
-        self.ivasoportado1.setClearButtonEnabled(True)
+        self.txtIvasoportado1 = QLineEdit(self.tab_5)
+        self.txtIvasoportado1.setObjectName(u"txtIvasoportado1")
+        self.txtIvasoportado1.setClearButtonEnabled(True)
 
-        self.gridLayout_13.addWidget(self.ivasoportado1, 1, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.txtIvasoportado1, 1, 1, 1, 1)
 
         self.ivarepercutido1 = QLineEdit(self.tab_5)
         self.ivarepercutido1.setObjectName(u"ivarepercutido1")
@@ -989,11 +989,11 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_13.addWidget(self.label_60, 3, 0, 1, 1)
 
-        self.ivasoportado3 = QLineEdit(self.tab_5)
-        self.ivasoportado3.setObjectName(u"ivasoportado3")
-        self.ivasoportado3.setClearButtonEnabled(True)
+        self.txtIvasoportado3 = QLineEdit(self.tab_5)
+        self.txtIvasoportado3.setObjectName(u"txtIvasoportado3")
+        self.txtIvasoportado3.setClearButtonEnabled(True)
 
-        self.gridLayout_13.addWidget(self.ivasoportado3, 3, 1, 1, 1)
+        self.gridLayout_13.addWidget(self.txtIvasoportado3, 3, 1, 1, 1)
 
         self.label_64 = QLabel(self.tab_5)
         self.label_64.setObjectName(u"label_64")
@@ -1120,15 +1120,15 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_19.addWidget(self.label_84, 0, 3, 1, 1)
 
-        self.pushButton_5 = QPushButton(self.gridLayoutWidget_2)
-        self.pushButton_5.setObjectName(u"pushButton_5")
+        self.btnTestBDMariaDB = QPushButton(self.gridLayoutWidget_2)
+        self.btnTestBDMariaDB.setObjectName(u"btnTestBDMariaDB")
 
-        self.gridLayout_19.addWidget(self.pushButton_5, 4, 0, 1, 5)
+        self.gridLayout_19.addWidget(self.btnTestBDMariaDB, 4, 0, 1, 5)
 
-        self.txtUsuarioMariaDB_2 = QLineEdit(self.gridLayoutWidget_2)
-        self.txtUsuarioMariaDB_2.setObjectName(u"txtUsuarioMariaDB_2")
+        self.txtUsuarioMariaDB = QLineEdit(self.gridLayoutWidget_2)
+        self.txtUsuarioMariaDB.setObjectName(u"txtUsuarioMariaDB")
 
-        self.gridLayout_19.addWidget(self.txtUsuarioMariaDB_2, 2, 3, 1, 2)
+        self.gridLayout_19.addWidget(self.txtUsuarioMariaDB, 2, 3, 1, 2)
 
         self.label_82 = QLabel(self.gridLayoutWidget_2)
         self.label_82.setObjectName(u"label_82")
@@ -1140,30 +1140,30 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_19.addWidget(self.label_86, 0, 0, 1, 1)
 
-        self.txtHostMariaDB_2 = QLineEdit(self.gridLayoutWidget_2)
-        self.txtHostMariaDB_2.setObjectName(u"txtHostMariaDB_2")
+        self.txtHostMariaDB = QLineEdit(self.gridLayoutWidget_2)
+        self.txtHostMariaDB.setObjectName(u"txtHostMariaDB")
 
-        self.gridLayout_19.addWidget(self.txtHostMariaDB_2, 0, 1, 1, 1)
+        self.gridLayout_19.addWidget(self.txtHostMariaDB, 0, 1, 1, 1)
 
-        self.lineEdit_17 = QLineEdit(self.gridLayoutWidget_2)
-        self.lineEdit_17.setObjectName(u"lineEdit_17")
+        self.txtPortMariadb = QLineEdit(self.gridLayoutWidget_2)
+        self.txtPortMariadb.setObjectName(u"txtPortMariadb")
 
-        self.gridLayout_19.addWidget(self.lineEdit_17, 0, 4, 1, 1)
+        self.gridLayout_19.addWidget(self.txtPortMariadb, 0, 4, 1, 1)
 
-        self.txtPasswordMariaDB_2 = QLineEdit(self.gridLayoutWidget_2)
-        self.txtPasswordMariaDB_2.setObjectName(u"txtPasswordMariaDB_2")
+        self.txtPasswordMariaDB = QLineEdit(self.gridLayoutWidget_2)
+        self.txtPasswordMariaDB.setObjectName(u"txtPasswordMariaDB")
 
-        self.gridLayout_19.addWidget(self.txtPasswordMariaDB_2, 3, 3, 1, 2)
+        self.gridLayout_19.addWidget(self.txtPasswordMariaDB, 3, 3, 1, 2)
 
         self.label_87 = QLabel(self.gridLayoutWidget_2)
         self.label_87.setObjectName(u"label_87")
 
         self.gridLayout_19.addWidget(self.label_87, 2, 0, 1, 2)
 
-        self.lineEdit_16 = QLineEdit(self.gridLayoutWidget_2)
-        self.lineEdit_16.setObjectName(u"lineEdit_16")
+        self.txtNombreBD_MariaDB = QLineEdit(self.gridLayoutWidget_2)
+        self.txtNombreBD_MariaDB.setObjectName(u"txtNombreBD_MariaDB")
 
-        self.gridLayout_19.addWidget(self.lineEdit_16, 1, 3, 1, 2)
+        self.gridLayout_19.addWidget(self.txtNombreBD_MariaDB, 1, 3, 1, 2)
 
         self.label_83 = QLabel(self.gridLayoutWidget_2)
         self.label_83.setObjectName(u"label_83")
@@ -1246,15 +1246,15 @@ class Ui_FrmEmpresas(object):
         self.gridLayout_18 = QGridLayout(self.gridLayoutWidget)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
         self.gridLayout_18.setContentsMargins(0, 0, 0, 0)
-        self.txtUsuarioMariaDB = QLineEdit(self.gridLayoutWidget)
-        self.txtUsuarioMariaDB.setObjectName(u"txtUsuarioMariaDB")
+        self.txtUsuarioPostgreSQL = QLineEdit(self.gridLayoutWidget)
+        self.txtUsuarioPostgreSQL.setObjectName(u"txtUsuarioPostgreSQL")
 
-        self.gridLayout_18.addWidget(self.txtUsuarioMariaDB, 2, 3, 1, 2)
+        self.gridLayout_18.addWidget(self.txtUsuarioPostgreSQL, 2, 3, 1, 2)
 
-        self.lineEdit_15 = QLineEdit(self.gridLayoutWidget)
-        self.lineEdit_15.setObjectName(u"lineEdit_15")
+        self.txtNombreBD_PostgreSQL = QLineEdit(self.gridLayoutWidget)
+        self.txtNombreBD_PostgreSQL.setObjectName(u"txtNombreBD_PostgreSQL")
 
-        self.gridLayout_18.addWidget(self.lineEdit_15, 1, 3, 1, 2)
+        self.gridLayout_18.addWidget(self.txtNombreBD_PostgreSQL, 1, 3, 1, 2)
 
         self.lineEdit = QLineEdit(self.gridLayoutWidget)
         self.lineEdit.setObjectName(u"lineEdit")
@@ -1271,15 +1271,15 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_18.addWidget(self.label_81, 3, 0, 1, 2)
 
-        self.txtHostMariaDB = QLineEdit(self.gridLayoutWidget)
-        self.txtHostMariaDB.setObjectName(u"txtHostMariaDB")
+        self.txtHostPostgreSQL = QLineEdit(self.gridLayoutWidget)
+        self.txtHostPostgreSQL.setObjectName(u"txtHostPostgreSQL")
 
-        self.gridLayout_18.addWidget(self.txtHostMariaDB, 0, 1, 1, 1)
+        self.gridLayout_18.addWidget(self.txtHostPostgreSQL, 0, 1, 1, 1)
 
-        self.txtPasswordMariaDB = QLineEdit(self.gridLayoutWidget)
-        self.txtPasswordMariaDB.setObjectName(u"txtPasswordMariaDB")
+        self.txtPasswordPostgreSQL = QLineEdit(self.gridLayoutWidget)
+        self.txtPasswordPostgreSQL.setObjectName(u"txtPasswordPostgreSQL")
 
-        self.gridLayout_18.addWidget(self.txtPasswordMariaDB, 3, 3, 1, 2)
+        self.gridLayout_18.addWidget(self.txtPasswordPostgreSQL, 3, 3, 1, 2)
 
         self.label_78 = QLabel(self.gridLayoutWidget)
         self.label_78.setObjectName(u"label_78")
@@ -1296,10 +1296,10 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_18.addWidget(self.label_80, 2, 0, 1, 2)
 
-        self.pushButton_4 = QPushButton(self.gridLayoutWidget)
-        self.pushButton_4.setObjectName(u"pushButton_4")
+        self.btnTestDBPostgreSQL = QPushButton(self.gridLayoutWidget)
+        self.btnTestDBPostgreSQL.setObjectName(u"btnTestDBPostgreSQL")
 
-        self.gridLayout_18.addWidget(self.pushButton_4, 4, 0, 1, 5)
+        self.gridLayout_18.addWidget(self.btnTestDBPostgreSQL, 4, 0, 1, 5)
 
 
         self.gridLayout_5.addWidget(self.groupBox_9, 2, 1, 4, 4)
@@ -1335,19 +1335,19 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.txtNombreComercial, self.cboGrupoEmpresa)
         QWidget.setTabOrder(self.cboGrupoEmpresa, self.txtEmpresa)
         QWidget.setTabOrder(self.txtEmpresa, self.cboFormajuridica)
-        QWidget.setTabOrder(self.cboFormajuridica, self.cboPais_create)
-        QWidget.setTabOrder(self.cboPais_create, self.chkTVA)
+        QWidget.setTabOrder(self.cboFormajuridica, self.cboPais)
+        QWidget.setTabOrder(self.cboPais, self.chkTVA)
         QWidget.setTabOrder(self.chkTVA, self.txtdireccion1)
         QWidget.setTabOrder(self.txtdireccion1, self.txtcp)
         QWidget.setTabOrder(self.txtcp, self.txtpoblacion)
         QWidget.setTabOrder(self.txtpoblacion, self.txtprovincia)
         QWidget.setTabOrder(self.txtprovincia, self.txtcif)
-        QWidget.setTabOrder(self.txtcif, self.lineEdit_2)
-        QWidget.setTabOrder(self.lineEdit_2, self.lineEdit_3)
-        QWidget.setTabOrder(self.lineEdit_3, self.lineEdit_4)
-        QWidget.setTabOrder(self.lineEdit_4, self.lineEdit_5)
-        QWidget.setTabOrder(self.lineEdit_5, self.lineEdit_6)
-        QWidget.setTabOrder(self.lineEdit_6, self.txtcInscripcion)
+        QWidget.setTabOrder(self.txtcif, self.txtSiret)
+        QWidget.setTabOrder(self.txtSiret, self.txtAPE)
+        QWidget.setTabOrder(self.txtAPE, self.txtNRS)
+        QWidget.setTabOrder(self.txtNRS, self.txtCiudadRCS)
+        QWidget.setTabOrder(self.txtCiudadRCS, self.txtRM)
+        QWidget.setTabOrder(self.txtRM, self.txtcInscripcion)
         QWidget.setTabOrder(self.txtcInscripcion, self.txttelefono1)
         QWidget.setTabOrder(self.txttelefono1, self.txttelefono2)
         QWidget.setTabOrder(self.txttelefono2, self.txtMovil)
@@ -1381,21 +1381,21 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.lineEdit_7, self.lineEdit_8)
         QWidget.setTabOrder(self.lineEdit_8, self.lineEdit_9)
         QWidget.setTabOrder(self.lineEdit_9, self.lineEdit_10)
-        QWidget.setTabOrder(self.lineEdit_10, self.lineEdit_11)
-        QWidget.setTabOrder(self.lineEdit_11, self.lineEdit_12)
-        QWidget.setTabOrder(self.lineEdit_12, self.lineEdit_13)
-        QWidget.setTabOrder(self.lineEdit_13, self.lineEdit_14)
-        QWidget.setTabOrder(self.lineEdit_14, self.txtdigitos_cuentas)
+        QWidget.setTabOrder(self.lineEdit_10, self.txtGoogleCalendarID)
+        QWidget.setTabOrder(self.txtGoogleCalendarID, self.txtOauthToken)
+        QWidget.setTabOrder(self.txtOauthToken, self.txtOauthRefreshToken)
+        QWidget.setTabOrder(self.txtOauthRefreshToken, self.txtTokenExpirity)
+        QWidget.setTabOrder(self.txtTokenExpirity, self.txtdigitos_cuentas)
         QWidget.setTabOrder(self.txtdigitos_cuentas, self.txtcuentaCliente)
         QWidget.setTabOrder(self.txtcuentaCliente, self.txtcuenta_proveedores)
         QWidget.setTabOrder(self.txtcuenta_proveedores, self.txtcuenta_acreedores)
         QWidget.setTabOrder(self.txtcuenta_acreedores, self.txtCuenta_venta_mercaderias)
         QWidget.setTabOrder(self.txtCuenta_venta_mercaderias, self.txtCuenta_venta_servicios)
-        QWidget.setTabOrder(self.txtCuenta_venta_servicios, self.ivasoportado1)
-        QWidget.setTabOrder(self.ivasoportado1, self.ivasoportado2)
-        QWidget.setTabOrder(self.ivasoportado2, self.ivasoportado3)
-        QWidget.setTabOrder(self.ivasoportado3, self.ivasoportado4)
-        QWidget.setTabOrder(self.ivasoportado4, self.ivasoportadore1)
+        QWidget.setTabOrder(self.txtCuenta_venta_servicios, self.txtIvasoportado1)
+        QWidget.setTabOrder(self.txtIvasoportado1, self.txtIvasoportado2)
+        QWidget.setTabOrder(self.txtIvasoportado2, self.txtIvasoportado3)
+        QWidget.setTabOrder(self.txtIvasoportado3, self.txtIvasoportado4)
+        QWidget.setTabOrder(self.txtIvasoportado4, self.ivasoportadore1)
         QWidget.setTabOrder(self.ivasoportadore1, self.ivasoportadore2)
         QWidget.setTabOrder(self.ivasoportadore2, self.ivasoportadore3)
         QWidget.setTabOrder(self.ivasoportadore3, self.ivasoportadore4)
@@ -1415,19 +1415,19 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.btnSelecionarBDSQLite, self.txtruta_bd_conta)
         QWidget.setTabOrder(self.txtruta_bd_conta, self.btnSeleccionarBDSQLiteConta)
         QWidget.setTabOrder(self.btnSeleccionarBDSQLiteConta, self.btn_migrar)
-        QWidget.setTabOrder(self.btn_migrar, self.txtHostMariaDB_2)
-        QWidget.setTabOrder(self.txtHostMariaDB_2, self.lineEdit_17)
-        QWidget.setTabOrder(self.lineEdit_17, self.lineEdit_16)
-        QWidget.setTabOrder(self.lineEdit_16, self.txtUsuarioMariaDB_2)
-        QWidget.setTabOrder(self.txtUsuarioMariaDB_2, self.txtPasswordMariaDB_2)
-        QWidget.setTabOrder(self.txtPasswordMariaDB_2, self.pushButton_5)
-        QWidget.setTabOrder(self.pushButton_5, self.txtHostMariaDB)
-        QWidget.setTabOrder(self.txtHostMariaDB, self.lineEdit)
-        QWidget.setTabOrder(self.lineEdit, self.lineEdit_15)
-        QWidget.setTabOrder(self.lineEdit_15, self.txtUsuarioMariaDB)
+        QWidget.setTabOrder(self.btn_migrar, self.txtHostMariaDB)
+        QWidget.setTabOrder(self.txtHostMariaDB, self.txtPortMariadb)
+        QWidget.setTabOrder(self.txtPortMariadb, self.txtNombreBD_MariaDB)
+        QWidget.setTabOrder(self.txtNombreBD_MariaDB, self.txtUsuarioMariaDB)
         QWidget.setTabOrder(self.txtUsuarioMariaDB, self.txtPasswordMariaDB)
-        QWidget.setTabOrder(self.txtPasswordMariaDB, self.pushButton_4)
-        QWidget.setTabOrder(self.pushButton_4, self.btn_guardar_nuevo)
+        QWidget.setTabOrder(self.txtPasswordMariaDB, self.btnTestBDMariaDB)
+        QWidget.setTabOrder(self.btnTestBDMariaDB, self.txtHostPostgreSQL)
+        QWidget.setTabOrder(self.txtHostPostgreSQL, self.lineEdit)
+        QWidget.setTabOrder(self.lineEdit, self.txtNombreBD_PostgreSQL)
+        QWidget.setTabOrder(self.txtNombreBD_PostgreSQL, self.txtUsuarioPostgreSQL)
+        QWidget.setTabOrder(self.txtUsuarioPostgreSQL, self.txtPasswordPostgreSQL)
+        QWidget.setTabOrder(self.txtPasswordPostgreSQL, self.btnTestDBPostgreSQL)
+        QWidget.setTabOrder(self.btnTestDBPostgreSQL, self.btn_guardar_nuevo)
         QWidget.setTabOrder(self.btn_guardar_nuevo, self.pushButton)
         QWidget.setTabOrder(self.pushButton, self.btn_salir)
         QWidget.setTabOrder(self.btn_salir, self.chkContabilidad)
@@ -1553,9 +1553,9 @@ class Ui_FrmEmpresas(object):
         self.ivarepercutidore1.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.ivarepercutido3.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.label_65.setText(QCoreApplication.translate("FrmEmpresas", u"E", None))
-        self.ivasoportado4.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
+        self.txtIvasoportado4.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.label_59.setText(QCoreApplication.translate("FrmEmpresas", u"R", None))
-        self.ivasoportado2.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
+        self.txtIvasoportado2.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.label_63.setText(QCoreApplication.translate("FrmEmpresas", u"R", None))
         self.label_38.setText(QCoreApplication.translate("FrmEmpresas", u"Cuenta IVA soportado", None))
         self.ivasoportadore4.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
@@ -1563,12 +1563,12 @@ class Ui_FrmEmpresas(object):
         self.label_39.setText(QCoreApplication.translate("FrmEmpresas", u"Cuenta IVA repercutido", None))
         self.label_40.setText(QCoreApplication.translate("FrmEmpresas", u"N", None))
         self.label_62.setText(QCoreApplication.translate("FrmEmpresas", u"N", None))
-        self.ivasoportado1.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
+        self.txtIvasoportado1.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.ivarepercutido1.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.ivarepercutido4.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.ivarepercutido2.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.label_60.setText(QCoreApplication.translate("FrmEmpresas", u"SR", None))
-        self.ivasoportado3.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
+        self.txtIvasoportado3.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
         self.label_64.setText(QCoreApplication.translate("FrmEmpresas", u"SR", None))
         self.label_61.setText(QCoreApplication.translate("FrmEmpresas", u"E", None))
         self.ivasoportadore1.setPlaceholderText(QCoreApplication.translate("FrmEmpresas", u"(F1 - lista)", None))
@@ -1587,7 +1587,7 @@ class Ui_FrmEmpresas(object):
         self.label_2.setText(QCoreApplication.translate("FrmEmpresas", u"Motor Activo de Base de Datos", None))
         self.groupBox_8.setTitle(QCoreApplication.translate("FrmEmpresas", u"Datos Acceso MariaDB / MySQL ( Recomendado para empresas entre 2 y 10 ordenadores)", None))
         self.label_84.setText(QCoreApplication.translate("FrmEmpresas", u"Puerto:", None))
-        self.pushButton_5.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
+        self.btnTestBDMariaDB.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
         self.label_82.setText(QCoreApplication.translate("FrmEmpresas", u"Nombre Base de Datos:", None))
         self.label_86.setText(QCoreApplication.translate("FrmEmpresas", u"Host:", None))
         self.label_87.setText(QCoreApplication.translate("FrmEmpresas", u"Usuario:", None))
@@ -1609,7 +1609,7 @@ class Ui_FrmEmpresas(object):
         self.label_78.setText(QCoreApplication.translate("FrmEmpresas", u"Puerto:", None))
         self.label_56.setText(QCoreApplication.translate("FrmEmpresas", u"Host:", None))
         self.label_80.setText(QCoreApplication.translate("FrmEmpresas", u"Usuario:", None))
-        self.pushButton_4.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
+        self.btnTestDBPostgreSQL.setText(QCoreApplication.translate("FrmEmpresas", u"Test Database conexion", None))
         self.tabWidget.setTabText(self.tabWidget.indexOf(self.tabWidgetPage2), QCoreApplication.translate("FrmEmpresas", u"Datos conexi\u00f3n Base de datos", None))
         self.label.setText(QCoreApplication.translate("FrmEmpresas", u"Gesti\u00f3n de Empresas", None))
     # retranslateUi

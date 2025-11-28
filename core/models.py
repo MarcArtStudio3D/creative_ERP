@@ -131,6 +131,9 @@ class Empresa(Base):
     puerto_postgresql = Column(Integer, default=5432, comment='Puerto del servidor PostgreSQL')
     usuario_postgresql = Column(String(50), default='postgres', comment='Usuario PostgreSQL')
     password_postgresql = Column(String(255), default='postgres', comment='Contraseña PostgreSQL')
+    
+    # SQLite
+    ruta_base_datos_sqlite = Column(String(255), comment='Ruta relativa o absoluta a la BD SQLite')
 
     # --- NUEVOS CAMPOS AÑADIDOS ---
 
@@ -221,23 +224,3 @@ class Empresa(Base):
     group = relationship('BusinessGroup', backref='empresas')
 
 
-class DireccionAlternativaEmpresa(Base):
-    """Direcciones alternativas de entrega/facturación para empresas"""
-    __tablename__ = 'direcciones_alternativas_empresas'
-    
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    id_empresa = Column(Integer, ForeignKey('empresas.id'), nullable=False)
-    
-    descripcion = Column(String(100))  # Ej: "Almacén principal", "Oficina central"
-    direccion1 = Column(String(255))
-    direccion2 = Column(String(255))
-    cp = Column(String(10))
-    poblacion = Column(String(100))
-    provincia = Column(String(100))
-    id_pais = Column(Integer, default=1)
-    email = Column(String(200))
-    comentarios = Column(Text)
-    
-    # Metadatos
-    fecha_creacion = Column(DateTime, default=datetime.datetime.utcnow)
-    fecha_modificacion = Column(DateTime, default=datetime.datetime.utcnow)

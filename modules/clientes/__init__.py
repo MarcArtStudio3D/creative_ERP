@@ -2,6 +2,6 @@
 Módulo de gestión de clientes.
 """
 
-from .view import ClientesView
+from .view_full import ClientesViewFull
 
-__all__ = ['ClientesView']
+__all__ = ['ClientesViewFull']

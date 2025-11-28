@@ -891,65 +891,6 @@ class MainWindowV2(QMainWindow):
                 f"El módulo '{module_id}' aún no está implementado."
             )
     
-    def show_cliente_ficha(self, cliente_id: int):
-        """
-        Muestra la ficha detallada de un cliente específico.
-        
-        Crea una nueva página en el StackedWidget con la ficha del cliente.
-        """
-        try:
-            from modules.clientes.ficha_view import ClienteFichaView
-            
-            # Crear widget de ficha de cliente
-            ficha_widget = ClienteFichaView(self.session, cliente_id)
-            
-            # Conectar señal para volver a la lista
-            ficha_widget.volver_lista.connect(self.volver_a_lista_clientes)
-            
-            # Añadir al stack y mostrarlo
-            ficha_key = f"cliente_ficha_{cliente_id}"
-            
-            # Si ya existe esta ficha, la reutilizamos
-            if ficha_key in self.module_widgets:
-                existing_widget = self.module_widgets[ficha_key]
-                self.stacked_widget.setCurrentWidget(existing_widget)
-            else:
-                # Crear nueva ficha
-                self.module_widgets[ficha_key] = ficha_widget
-                self.stacked_widget.addWidget(ficha_widget)
-                self.stacked_widget.setCurrentWidget(ficha_widget)
-            
-            msg = self.tr("Ficha cliente #{} abierta").format(cliente_id)
-            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
-            
-        except Exception as e:
-            print(f"❌ Error al abrir ficha de cliente: {e}")
-            QMessageBox.critical(
-                self,
-                "Error",
-                f"No se pudo abrir la ficha del cliente:\n{e}"
-            )
-    
-    def volver_a_lista_clientes(self):
-        """
-        Vuelve a mostrar la lista de clientes.
-        """
-        # Buscar el widget de clientes en el cache
-        if 'clientes' in self.module_widgets:
-            clientes_widget = self.module_widgets['clientes']
-            self.stacked_widget.setCurrentWidget(clientes_widget)
-            
-            # Recargar la lista por si ha habido cambios
-            module_view = self._find_module_view(clientes_widget)
-            if module_view and hasattr(module_view, 'load_clientes'):
-                module_view.load_clientes()
-            
-            msg = self.tr("Lista de clientes activa")
-            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
-        else:
-            # Si no existe, abrir el módulo de clientes
-            self.open_module('clientes')
-    
     def create_module_widget(self, module_id: str) -> Optional[QWidget]:
         """
         Crea el widget para un módulo específico con panel lateral derecho superpuesto.
@@ -1053,9 +994,6 @@ class MainWindowV2(QMainWindow):
                     view_instance = view_class(session=current_session)
                 else:
                     view_instance = view_class(self.session)
-                    # Conectar señal para abrir ficha de cliente (solo para view simple)
-                    if hasattr(view_instance, 'cliente_selected'):
-                        view_instance.cliente_selected.connect(self.show_cliente_ficha)
             else:
                 view_instance = view_class()
             

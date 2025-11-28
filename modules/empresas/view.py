@@ -53,6 +53,12 @@ class EmpresasView(QWidget):
         # Cargar países
         self.cargar_paises()
         
+        # Conectar botones de test de base de datos
+        if hasattr(self.ui, 'btnTestBDMariaDB'):
+            self.ui.btnTestBDMariaDB.clicked.connect(self.test_mariadb_connection)
+        if hasattr(self.ui, 'btnTestDBPostgreSQL'):
+            self.ui.btnTestDBPostgreSQL.clicked.connect(self.test_postgresql_connection)
+        
     def cargar_paises(self):
         """Carga los países usando el controlador."""
         # Obtener idioma actual de la aplicación
@@ -113,6 +119,7 @@ class EmpresasView(QWidget):
             
         empresa = self.controller.obtener_empresa(id_)
         if empresa:
+            self._limpiar_formulario()  # Limpiar antes de cargar
             self._map_to_form(empresa)
             self.ui.stackedWidget.setCurrentIndex(0)  # Ir al formulario
 
@@ -153,6 +160,7 @@ class EmpresasView(QWidget):
     def deshacer(self):
         """Deshace los cambios recargando los datos de la empresa actual."""
         if self.controller.empresa_actual:
+            self._limpiar_formulario() # Limpiar antes de recargar
             self._map_to_form(self.controller.empresa_actual)
             QMessageBox.information(self, "Deshacer", "Cambios descartados. Datos recargados.")
         else:
@@ -170,12 +178,23 @@ class EmpresasView(QWidget):
     def _limpiar_formulario(self):
         """Limpia los campos del formulario."""
         w = self.ui
-        # Limpiar QLineEdits
+        from PySide6.QtWidgets import QLineEdit, QSpinBox, QDoubleSpinBox, QCheckBox, QComboBox, QPlainTextEdit
+        
         for widget_name in dir(w):
             widget = getattr(w, widget_name)
-            if hasattr(widget, 'clear') and callable(widget.clear):
-                if "txt" in widget_name or "lineEdit" in widget_name:
-                    widget.clear()
+            
+            if isinstance(widget, QLineEdit):
+                widget.clear()
+            elif isinstance(widget, (QSpinBox, QDoubleSpinBox)):
+                widget.setValue(widget.minimum()) # Reset to min value (usually 0)
+            elif isinstance(widget, QCheckBox):
+                widget.setChecked(False)
+            elif isinstance(widget, QPlainTextEdit):
+                widget.clear()
+            elif isinstance(widget, QComboBox):
+                # Don't clear items, just reset selection if possible, or set to index 0
+                if widget.count() > 0:
+                    widget.setCurrentIndex(0)
 
     def _map_to_form(self, empresa: Empresa):
         """Rellena el formulario con los datos de la empresa."""
@@ -238,7 +257,7 @@ class EmpresasView(QWidget):
                 w.chkInternacional.setChecked(bool(getattr(empresa, 'intracomunitario', 0)))
                 
             if hasattr(w, 'spinPorc_irpf'):
-                w.spinPorc_irpf.setValue(float(getattr(empresa, 'porcentaje_retencion', 0.0)))
+                w.spinPorc_irpf.setValue(float(getattr(empresa, 'porcentaje_retencion', 0.0) or 0.0))
 
             # Configuración Base de Datos
             if hasattr(w, 'comboBox'): # Motor BD
@@ -247,26 +266,26 @@ class EmpresasView(QWidget):
             # MariaDB Config
             if hasattr(w, 'txtHostMariaDB'):
                 w.txtHostMariaDB.setText(getattr(empresa, 'host_mariadb', '') or '')
-            if hasattr(w, 'lineEdit'): # Puerto MariaDB
-                w.lineEdit.setText(str(getattr(empresa, 'puerto_mariadb', 3306)))
-            if hasattr(w, 'lineEdit_15'): # Nombre BD MariaDB
-                w.lineEdit_15.setText(getattr(empresa, 'nombre_base_datos_maria_db', '') or '')
+            if hasattr(w, 'txtPortMariadb'): # Puerto MariaDB (Renamed from lineEdit)
+                w.txtPortMariadb.setText(str(getattr(empresa, 'puerto_mariadb', 3306)))
+            if hasattr(w, 'txtNombreBD_MariaDB'): # Nombre BD MariaDB (Renamed from lineEdit_15)
+                w.txtNombreBD_MariaDB.setText(getattr(empresa, 'nombre_base_datos_maria_db', '') or '')
             if hasattr(w, 'txtUsuarioMariaDB'):
                 w.txtUsuarioMariaDB.setText(getattr(empresa, 'usuario_mariadb', '') or '')
             if hasattr(w, 'txtPasswordMariaDB'):
                 w.txtPasswordMariaDB.setText(getattr(empresa, 'password_mariadb', '') or '')
                 
             # PostgreSQL Config
-            if hasattr(w, 'txtHostMariaDB_2'):
-                w.txtHostMariaDB_2.setText(getattr(empresa, 'host_postgresql', '') or '')
-            if hasattr(w, 'lineEdit_17'): # Puerto PG
-                w.lineEdit_17.setText(str(getattr(empresa, 'puerto_postgresql', 5432)))
-            if hasattr(w, 'lineEdit_16'): # Nombre BD PG
-                w.lineEdit_16.setText(getattr(empresa, 'nombre_base_datos_postgresql', '') or '')
-            if hasattr(w, 'txtUsuarioMariaDB_2'):
-                w.txtUsuarioMariaDB_2.setText(getattr(empresa, 'usuario_postgresql', '') or '')
-            if hasattr(w, 'txtPasswordMariaDB_2'):
-                w.txtPasswordMariaDB_2.setText(getattr(empresa, 'password_postgresql', '') or '')
+            if hasattr(w, 'txtHostPostgreSQL'): # Renamed from txtHostMariaDB_2
+                w.txtHostPostgreSQL.setText(getattr(empresa, 'host_postgresql', '') or '')
+            if hasattr(w, 'lineEdit'): # Puerto PG (Now lineEdit, previously lineEdit_17)
+                w.lineEdit.setText(str(getattr(empresa, 'puerto_postgresql', 5432)))
+            if hasattr(w, 'txtNombreBD_PostgreSQL'): # Nombre BD PG (Renamed from lineEdit_16)
+                w.txtNombreBD_PostgreSQL.setText(getattr(empresa, 'nombre_base_datos_postgresql', '') or '')
+            if hasattr(w, 'txtUsuarioPostgreSQL'): # Renamed from txtUsuarioMariaDB_2
+                w.txtUsuarioPostgreSQL.setText(getattr(empresa, 'usuario_postgresql', '') or '')
+            if hasattr(w, 'txtPasswordPostgreSQL'): # Renamed from txtPasswordMariaDB_2
+                w.txtPasswordPostgreSQL.setText(getattr(empresa, 'password_postgresql', '') or '')
 
             # --- NUEVOS CAMPOS ---
             
@@ -278,7 +297,7 @@ class EmpresasView(QWidget):
             if hasattr(w, 'chkIRPF'):
                 w.chkIRPF.setChecked(bool(getattr(empresa, 'aplicar_irpf', 0)))
             if hasattr(w, 'spinPorc_irpf'):
-                w.spinPorc_irpf.setValue(float(getattr(empresa, 'porcentaje_irpf', 0.0)))
+                w.spinPorc_irpf.setValue(float(getattr(empresa, 'porcentaje_irpf', 0.0) or 0.0))
             if hasattr(w, 'spinDecimales_create'):
                 w.spinDecimales_create.setValue(int(getattr(empresa, 'decimales_totales', 2)))
             if hasattr(w, 'spinDecimales_precios_create'):
@@ -306,9 +325,9 @@ class EmpresasView(QWidget):
             if hasattr(w, 'cboTarifa'):
                 w.cboTarifa.setCurrentText(getattr(empresa, 'tarifa_predeterminada', '') or '')
             if hasattr(w, 'spinMargen'):
-                w.spinMargen.setValue(float(getattr(empresa, 'margen_general', 0.0)))
+                w.spinMargen.setValue(float(getattr(empresa, 'margen_general', 0.0) or 0.0))
             if hasattr(w, 'spinMargen_minimo'):
-                w.spinMargen_minimo.setValue(float(getattr(empresa, 'margen_minimo', 0.0)))
+                w.spinMargen_minimo.setValue(float(getattr(empresa, 'margen_minimo', 0.0) or 0.0))
 
             # Comentarios
             if hasattr(w, 'txtcCometarioAlbaran'):
@@ -326,10 +345,10 @@ class EmpresasView(QWidget):
             if hasattr(w, 'lineEdit_10'): w.lineEdit_10.setText(getattr(empresa, 'horario_domingo', '') or '')
 
             # Google Calendar
-            if hasattr(w, 'lineEdit_11'): w.lineEdit_11.setText(getattr(empresa, 'google_calendar_id', '') or '')
-            if hasattr(w, 'lineEdit_12'): w.lineEdit_12.setText(getattr(empresa, 'google_oauth_token', '') or '')
-            if hasattr(w, 'lineEdit_13'): w.lineEdit_13.setText(getattr(empresa, 'google_refresh_token', '') or '')
-            if hasattr(w, 'lineEdit_14'): w.lineEdit_14.setText(getattr(empresa, 'google_token_expiry', '') or '')
+            if hasattr(w, 'txtGoogleCalendarID'): w.txtGoogleCalendarID.setText(getattr(empresa, 'google_calendar_id', '') or '')
+            if hasattr(w, 'txtOauthToken'): w.txtOauthToken.setText(getattr(empresa, 'google_oauth_token', '') or '')
+            if hasattr(w, 'txtOauthRefreshToken'): w.txtOauthRefreshToken.setText(getattr(empresa, 'google_refresh_token', '') or '')
+            if hasattr(w, 'txtTokenExpirity'): w.txtTokenExpirity.setText(getattr(empresa, 'google_token_expiry', '') or '')
 
             # Contabilidad
             if hasattr(w, 'chkContabilidad'):
@@ -367,11 +386,11 @@ class EmpresasView(QWidget):
             
             # Datos Registrales
             if hasattr(w, 'txtcInscripcion'): w.txtcInscripcion.setText(getattr(empresa, 'inscripcion_registro', '') or '')
-            if hasattr(w, 'lineEdit_2'): w.lineEdit_2.setText(getattr(empresa, 'numero_rcs', '') or '')
-            if hasattr(w, 'lineEdit_3'): w.lineEdit_3.setText(getattr(empresa, 'siret', '') or '')
-            if hasattr(w, 'lineEdit_4'): w.lineEdit_4.setText(getattr(empresa, 'ciudad_rcs', '') or '')
-            if hasattr(w, 'lineEdit_5'): w.lineEdit_5.setText(getattr(empresa, 'numero_rm', '') or '')
-            if hasattr(w, 'lineEdit_6'): w.lineEdit_6.setText(getattr(empresa, 'ape_naf', '') or '')
+            if hasattr(w, 'txtNRS'): w.txtNRS.setText(getattr(empresa, 'numero_rcs', '') or '')
+            if hasattr(w, 'txtSiret'): w.txtSiret.setText(getattr(empresa, 'siret', '') or '')
+            if hasattr(w, 'txtCiudadRCS'): w.txtCiudadRCS.setText(getattr(empresa, 'ciudad_rcs', '') or '')
+            if hasattr(w, 'txtRM'): w.txtRM.setText(getattr(empresa, 'numero_rm', '') or '')
+            if hasattr(w, 'txtAPE'): w.txtAPE.setText(getattr(empresa, 'ape_naf', '') or '')
 
         except Exception as e:
             print(f"Error mapping to form: {e}")
@@ -442,37 +461,37 @@ class EmpresasView(QWidget):
 
             # Configuración Base de Datos
             if hasattr(w, 'comboBox'): # Motor BD
-                empresa.motor_base_datos = w.comboBox.currentText()
+                empresa.motor_base_datos = w.comboBox.currentText().strip()
             
             # MariaDB Config
             if hasattr(w, 'txtHostMariaDB'):
                 empresa.host_mariadb = w.txtHostMariaDB.text()
-            if hasattr(w, 'lineEdit'): # Puerto MariaDB
+            if hasattr(w, 'txtPortMariadb'): # Puerto MariaDB (Renamed from lineEdit)
                 try:
-                    empresa.puerto_mariadb = int(w.lineEdit.text())
+                    empresa.puerto_mariadb = int(w.txtPortMariadb.text())
                 except ValueError:
                     empresa.puerto_mariadb = 3306
-            if hasattr(w, 'lineEdit_15'): # Nombre BD MariaDB
-                empresa.nombre_base_datos_maria_db = w.lineEdit_15.text()
+            if hasattr(w, 'txtNombreBD_MariaDB'): # Nombre BD MariaDB (Renamed from lineEdit_15)
+                empresa.nombre_base_datos_maria_db = w.txtNombreBD_MariaDB.text()
             if hasattr(w, 'txtUsuarioMariaDB'):
                 empresa.usuario_mariadb = w.txtUsuarioMariaDB.text()
             if hasattr(w, 'txtPasswordMariaDB'):
                 empresa.password_mariadb = w.txtPasswordMariaDB.text()
                 
             # PostgreSQL Config
-            if hasattr(w, 'txtHostMariaDB_2'):
-                empresa.host_postgresql = w.txtHostMariaDB_2.text()
-            if hasattr(w, 'lineEdit_17'): # Puerto PG
+            if hasattr(w, 'txtHostPostgreSQL'): # Renamed from txtHostMariaDB_2
+                empresa.host_postgresql = w.txtHostPostgreSQL.text()
+            if hasattr(w, 'lineEdit'): # Puerto PG (Now lineEdit, previously lineEdit_17)
                 try:
-                    empresa.puerto_postgresql = int(w.lineEdit_17.text())
+                    empresa.puerto_postgresql = int(w.lineEdit.text())
                 except ValueError:
                     empresa.puerto_postgresql = 5432
-            if hasattr(w, 'lineEdit_16'): # Nombre BD PG
-                empresa.nombre_base_datos_postgresql = w.lineEdit_16.text()
-            if hasattr(w, 'txtUsuarioMariaDB_2'):
-                empresa.usuario_postgresql = w.txtUsuarioMariaDB_2.text()
-            if hasattr(w, 'txtPasswordMariaDB_2'):
-                empresa.password_postgresql = w.txtPasswordMariaDB_2.text()
+            if hasattr(w, 'txtNombreBD_PostgreSQL'): # Nombre BD PG (Renamed from lineEdit_16)
+                empresa.nombre_base_datos_postgresql = w.txtNombreBD_PostgreSQL.text()
+            if hasattr(w, 'txtUsuarioPostgreSQL'): # Renamed from txtUsuarioMariaDB_2
+                empresa.usuario_postgresql = w.txtUsuarioPostgreSQL.text()
+            if hasattr(w, 'txtPasswordPostgreSQL'): # Renamed from txtPasswordMariaDB_2
+                empresa.password_postgresql = w.txtPasswordPostgreSQL.text()
 
             # --- NUEVOS CAMPOS ---
             
@@ -532,10 +551,10 @@ class EmpresasView(QWidget):
             if hasattr(w, 'lineEdit_10'): empresa.horario_domingo = w.lineEdit_10.text()
 
             # Google Calendar
-            if hasattr(w, 'lineEdit_11'): empresa.google_calendar_id = w.lineEdit_11.text()
-            if hasattr(w, 'lineEdit_12'): empresa.google_oauth_token = w.lineEdit_12.text()
-            if hasattr(w, 'lineEdit_13'): empresa.google_refresh_token = w.lineEdit_13.text()
-            if hasattr(w, 'lineEdit_14'): empresa.google_token_expiry = w.lineEdit_14.text()
+            if hasattr(w, 'txtGoogleCalendarID'): empresa.google_calendar_id = w.txtGoogleCalendarID.text()
+            if hasattr(w, 'txtOauthToken'): empresa.google_oauth_token = w.txtOauthToken.text()
+            if hasattr(w, 'txtOauthRefreshToken'): empresa.google_refresh_token = w.txtOauthRefreshToken.text()
+            if hasattr(w, 'txtTokenExpirity'): empresa.google_token_expiry = w.txtTokenExpirity.text()
 
             # Contabilidad
             if hasattr(w, 'chkContabilidad'):
@@ -573,11 +592,11 @@ class EmpresasView(QWidget):
             
             # Datos Registrales
             if hasattr(w, 'txtcInscripcion'): empresa.inscripcion_registro = w.txtcInscripcion.text()
-            if hasattr(w, 'lineEdit_2'): empresa.numero_rcs = w.lineEdit_2.text()
-            if hasattr(w, 'lineEdit_3'): empresa.siret = w.lineEdit_3.text()
-            if hasattr(w, 'lineEdit_4'): empresa.ciudad_rcs = w.lineEdit_4.text()
-            if hasattr(w, 'lineEdit_5'): empresa.numero_rm = w.lineEdit_5.text()
-            if hasattr(w, 'lineEdit_6'): empresa.ape_naf = w.lineEdit_6.text()
+            if hasattr(w, 'txtNRS'): empresa.numero_rcs = w.txtNRS.text()
+            if hasattr(w, 'txtSiret'): empresa.siret = w.txtSiret.text()
+            if hasattr(w, 'txtCiudadRCS'): empresa.ciudad_rcs = w.txtCiudadRCS.text()
+            if hasattr(w, 'txtRM'): empresa.numero_rm = w.txtRM.text()
+            if hasattr(w, 'txtAPE'): empresa.ape_naf = w.txtAPE.text()
 
         except Exception as e:
             print(f"Error mapping from form: {e}")
@@ -660,3 +679,122 @@ class EmpresasView(QWidget):
             # Silently ignore errors to not disrupt user experience
             print(f"Error in postal code lookup: {e}")
             pass
+    
+    def test_mariadb_connection(self):
+        """Testea la conexión a MariaDB con los datos del formulario."""
+        w = self.ui
+        
+        # Obtener datos del formulario
+        host = w.txtHostMariaDB.text().strip() if hasattr(w, 'txtHostMariaDB') else ''
+        port = w.txtPortMariadb.text().strip() if hasattr(w, 'txtPortMariadb') else '3306'
+        database = w.txtNombreBD_MariaDB.text().strip() if hasattr(w, 'txtNombreBD_MariaDB') else ''
+        user = w.txtUsuarioMariaDB.text().strip() if hasattr(w, 'txtUsuarioMariaDB') else ''
+        password = w.txtPasswordMariaDB.text().strip() if hasattr(w, 'txtPasswordMariaDB') else ''
+        
+        # Validar que haya datos
+        if not all([host, database, user]):
+            QMessageBox.warning(
+                self,
+                "Datos incompletos",
+                "Por favor, rellena al menos Host, Base de Datos y Usuario."
+            )
+            return
+        
+        # Intentar conexión
+        try:
+            from sqlalchemy import create_engine, text
+            
+            # Construir URL de conexión
+            db_url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
+            
+            # Crear engine y probar conexión
+            engine = create_engine(db_url, connect_args={'connect_timeout': 5})
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT VERSION()"))
+                version = result.scalar()
+            
+            engine.dispose()
+            
+            # Mostrar éxito
+            QMessageBox.information(
+                self,
+                "✅ Conexión exitosa",
+                f"Conexión a MariaDB establecida correctamente.\n\n"
+                f"Host: {host}:{port}\n"
+                f"Base de datos: {database}\n"
+                f"Versión: {version}"
+            )
+            
+        except Exception as e:
+            # Mostrar error
+            QMessageBox.critical(
+                self,
+                "❌ Error de conexión",
+                f"No se pudo conectar a MariaDB.\n\n"
+                f"Error: {str(e)}\n\n"
+                f"Verifica:\n"
+                f"• Host y puerto correctos\n"
+                f"• Usuario y contraseña válidos\n"
+                f"• Base de datos existe\n"
+                f"• Servidor MariaDB está activo"
+            )
+    
+    def test_postgresql_connection(self):
+        """Testea la conexión a PostgreSQL con los datos del formulario."""
+        w = self.ui
+        
+        # Obtener datos del formulario
+        host = w.txtHostPostgreSQL.text().strip() if hasattr(w, 'txtHostPostgreSQL') else ''
+        port = w.lineEdit.text().strip() if hasattr(w, 'lineEdit') else '5432'
+        database = w.txtNombreBD_PostgreSQL.text().strip() if hasattr(w, 'txtNombreBD_PostgreSQL') else ''
+        user = w.txtUsuarioPostgreSQL.text().strip() if hasattr(w, 'txtUsuarioPostgreSQL') else ''
+        password = w.txtPasswordPostgreSQL.text().strip() if hasattr(w, 'txtPasswordPostgreSQL') else ''
+        
+        # Validar que haya datos
+        if not all([host, database, user]):
+            QMessageBox.warning(
+                self,
+                "Datos incompletos",
+                "Por favor, rellena al menos Host, Base de Datos y Usuario."
+            )
+            return
+        
+        # Intentar conexión
+        try:
+            from sqlalchemy import create_engine, text
+            
+            # Construir URL de conexión
+            db_url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
+            
+            # Crear engine y probar conexión
+            engine = create_engine(db_url, connect_args={'connect_timeout': 5})
+            with engine.connect() as conn:
+                result = conn.execute(text("SELECT version()"))
+                version = result.scalar()
+            
+            engine.dispose()
+            
+            # Mostrar éxito
+            QMessageBox.information(
+                self,
+                "✅ Conexión exitosa",
+                f"Conexión a PostgreSQL establecida correctamente.\n\n"
+                f"Host: {host}:{port}\n"
+                f"Base de datos: {database}\n"
+                f"Versión: {version[:50]}..."  # Truncar versión larga
+            )
+            
+        except Exception as e:
+            # Mostrar error
+            QMessageBox.critical(
+                self,
+                "❌ Error de conexión",
+                f"No se pudo conectar a PostgreSQL.\n\n"
+                f"Error: {str(e)}\n\n"
+                f"Verifica:\n"
+                f"• Host y puerto correctos\n"
+                f"• Usuario y contraseña válidos\n"
+                f"• Base de datos existe\n"
+                f"• Servidor PostgreSQL está activo"
+            )
+

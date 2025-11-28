@@ -1,0 +1,211 @@
+me explicas que ida has seguido en empresas para separar controller.py y repository.py? en un modelo MVC no s supone que esta View, model y controller? Cual es la funcion de repository? (no hagas nada) solo explicame la logica que has usado?
+
+Claro, te explico la arquitectura que se ha seguido en el módulo de empresas. Es una variación del patrón MVC tradicional que incorpora el patrón Repository.
+
+Arquitectura Utilizada: MVC + Repository Pattern
+Componentes:
+View (
+view.py
+)
+Responsabilidad: Interfaz de usuario y lógica de presentación
+Maneja los widgets de Qt (botones, campos de texto, etc.)
+Captura eventos del usuario (clicks, ediciones)
+Muestra datos al usuario
+NO accede directamente a la base de datos
+
+Controller (controller.py)
+Responsabilidad: Lógica de negocio y orquestación
+Actúa como intermediario entre View y Repository
+Coordina las operaciones (ej: "cuando guardo una empresa, también actualizo la configuración")
+Maneja la lógica de aplicación (validaciones de negocio, flujos complejos)
+Gestiona el estado de la aplicación (ej: empresa_actual)
+
+Repository (repository.py)
+Responsabilidad: Acceso a datos y persistencia
+Única capa que interactúa con la base de datos
+Encapsula todas las operaciones CRUD (Create, Read, Update, Delete)
+Abstrae los detalles de SQLAlchemy
+Facilita cambios futuros en la capa de datos
+Model (
+core/models.py
+)
+Responsabilidad: Definición de la estructura de datos
+Define las entidades (clases SQLAlchemy como 
+Empresa
+)
+Representa la estructura de la base de datos
+¿Por qué separar Controller y Repository?
+Ventajas del patrón Repository:
+Separación de responsabilidades:
+Controller: "¿QUÉ hacer?" (lógica de negocio)
+Repository: "¿CÓMO acceder a los datos?" (persistencia)
+Facilita testing:
+Puedes probar el Controller sin necesidad de una base de datos real
+Puedes crear un "mock repository" para pruebas
+Reutilización:
+Múltiples controllers pueden usar el mismo repository
+Las consultas complejas están centralizadas
+Mantenibilidad:
+Si cambias de SQLAlchemy a otro ORM, solo modificas el Repository
+La lógica de negocio (Controller) permanece intacta
+Flujo de datos:
+Usuario → View → Controller → Repository → Base de Datos
+                    ↓
+              Lógica de negocio
+Ejemplo práctico:
+
+View: "El usuario hizo click en Guardar"
+Controller: "Valido que el CIF sea único, luego guardo"
+Repository: "Ejecuto el INSERT/UPDATE en la base de datos"
+Esta arquitectura es más robusta que el MVC puro y es común en aplicaciones empresariales modernas. Es similar a lo que se usa en frameworks como Spring (Java) o .NET.
+
+y que nombre tiene esta arquitectura?
+
+Esta arquitectura tiene varios nombres dependiendo del contexto y la comunidad:
+
+Nombres comunes:
+1. Layered Architecture (Arquitectura en Capas) ⭐ Más común
+También conocida como N-Tier Architecture o Multi-Tier Architecture.
+
+Las capas típicas son:
+
+Presentation Layer (View)
+Business Logic Layer (Controller/Service)
+Data Access Layer (Repository)
+Data Layer (Model/Database)
+2. Repository Pattern
+Cuando se enfatiza específicamente la separación de la lógica de acceso a datos.
+
+3. Service Layer Pattern
+A veces el Controller se llama "Service" en lugar de Controller, especialmente en aplicaciones empresariales.
+
+4. Clean Architecture / Hexagonal Architecture
+Variantes más modernas que siguen el mismo principio de separación de responsabilidades.
+
+En tu caso específico:
+Tu aplicación usa una Arquitectura en Capas (Layered Architecture) con el patrón Repository, que es una evolución natural del MVC tradicional para aplicaciones más complejas.
+
+┌─────────────────────────────────────┐
+│  Presentation Layer (View)          │  ← UI/Qt
+├─────────────────────────────────────┤
+│  Business Logic Layer (Controller)  │  ← Lógica de negocio
+├─────────────────────────────────────┤
+│  Data Access Layer (Repository)     │  ← Acceso a datos
+├─────────────────────────────────────┤
+│  Data Layer (Model + SQLAlchemy)    │  ← Base de datos
+└─────────────────────────────────────┘
+Esta arquitectura es muy común en:
+
+Java: Spring Framework (Controller → Service → Repository)
+.NET: ASP.NET MVC/Core
+Python: Django (aunque usa MVT), Flask con SQLAlchemy
+PHP: Laravel, Symfony
+Es considerada una best practice para aplicaciones empresariales porque facilita el mantenimiento, testing y escalabilidad.
+
+Por qué 
+Empresa
+ está en 
+core/models.py
+:
+1. 
+Empresa
+ es un modelo CORE/FUNDAMENTAL:
+Es transversal a toda la aplicación
+Todos los módulos necesitan acceder a la empresa actual
+Define el contexto de trabajo (qué base de datos usar)
+Es parte del sistema de autenticación y sesión
+2. Se usa en múltiples lugares:
+python
+# En core/auth.py
+from core.models import Empresa
+
+# En core/db.py
+from core.models import Empresa
+
+# En app/views/main_window_v2.py
+from core.models import Empresa
+
+# En modules/clientes/view_full.py
+# NO necesita importar Empresa directamente
+3. Relación con otros modelos core:
+python
+# core/models.py
+class BusinessGroup(Base):  # Grupo empresarial
+    ...
+
+class Empresa(Base):
+    group_id = ForeignKey('business_groups.id')  # ← Relación con BusinessGroup
+    ...
+
+class User(Base):  # Usuario
+    allowed_groups = ...  # ← Puede acceder a ciertos grupos/empresas
+Por qué 
+Cliente
+ está en 
+modules/clientes/models.py
+:
+1. 
+Cliente
+ es un modelo de DOMINIO específico:
+Solo se usa en el módulo de clientes
+No es necesario en otros módulos (a menos que haya relaciones)
+Es parte de la lógica de negocio de ventas
+2. Tiene modelos relacionados específicos:
+python
+# modules/clientes/models.py
+class Cliente(Base):
+    ...
+
+class DireccionAlternativa(Base):  # ← Solo para clientes
+    cliente_id = ForeignKey('clientes.id')
+
+class DeudaCliente(Base):  # ← Solo para clientes
+    cliente_id = ForeignKey('clientes.id')
+
+class HistorialCliente(Base):  # ← Solo para clientes
+    cliente_id = ForeignKey('clientes.id')
+Comparación visual:
+┌─────────────────────────────────────────┐
+│         core/models.py                  │
+│  (Modelos fundamentales/compartidos)    │
+├─────────────────────────────────────────┤
+│  • User (autenticación)                 │
+│  • BusinessGroup (grupos)               │
+│  • Empresa (contexto global) ←──────────┼─── Usado por TODOS
+│  • DireccionAlternativaEmpresa          │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│   modules/clientes/models.py            │
+│   (Dominio de negocio: Clientes)        │
+├─────────────────────────────────────────┤
+│  • Cliente                              │
+│  • DireccionAlternativa                 │
+│  • DeudaCliente                         │
+│  • HistorialCliente                     │
+│  • EstadisticaClienteMes                │
+│  • ClienteTipo                          │
+└─────────────────────────────────────────┘
+         ↑
+         └─── Usado solo en módulo clientes
+Regla general:
+core/models.py
+: Modelos que toda la aplicación necesita (User, Empresa, BusinessGroup)
+modules/X/models.py: Modelos específicos del dominio X (Cliente, Producto, Factura, etc.)
+¿Y si necesitas 
+Empresa
+ en el módulo de clientes?
+Simplemente importas desde core:
+
+python
+# modules/clientes/view_full.py
+from core.models import Empresa  # ← Importar desde core
+from modules.clientes.models import Cliente  # ← Importar desde módulo
+Esta arquitectura es correcta y escalable. Si en el futuro creas módulos como:
+
+modules/productos/ → tendrá su propio 
+models.py
+ con Producto
+modules/facturas/ → tendrá su propio models.py con Factura
+etc.
+Pero Empresa siempre estará en core/ porque es fundamental para todos. 👍

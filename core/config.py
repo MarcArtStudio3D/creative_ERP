@@ -257,8 +257,11 @@ def get_database_url_for_company(company_id: int) -> str:
         if not empresa:
             raise ValueError(f"Empresa con ID {company_id} no encontrada")
 
+        # Normalizar motor
+        motor = empresa.motor_base_datos.strip().lower() if empresa.motor_base_datos else 'mariadb'
+
         # Determinar qué base de datos usar según el motor configurado
-        if empresa.motor_base_datos == 'postgresql':
+        if motor == 'postgresql':
             if not empresa.nombre_base_datos_postgresql:
                 raise ValueError(f"Empresa {company_id} no tiene configurada base de datos PostgreSQL")
 
@@ -267,7 +270,7 @@ def get_database_url_for_company(company_id: int) -> str:
                    f"{empresa.host_postgresql}:{empresa.puerto_postgresql}/"
                    f"{empresa.nombre_base_datos_postgresql}")
 
-        elif empresa.motor_base_datos == 'mariadb':
+        elif motor in ['mariadb', 'mysql']:
             if not empresa.nombre_base_datos_maria_db:
                 raise ValueError(f"Empresa {company_id} no tiene configurada base de datos MariaDB")
 
@@ -275,6 +278,22 @@ def get_database_url_for_company(company_id: int) -> str:
             url = (f"mysql+pymysql://{empresa.usuario_mariadb}:{empresa.password_mariadb}@"
                    f"{empresa.host_mariadb}:{empresa.puerto_mariadb}/"
                    f"{empresa.nombre_base_datos_maria_db}")
+
+        elif motor == 'sqlite':
+            # Usar ruta configurada o por defecto
+            ruta = getattr(empresa, 'ruta_base_datos_sqlite', None)
+            if not ruta:
+                # Fallback a convención por defecto
+                ruta = f"datos/company_{company_id}.sqlite"
+            
+            # Asegurar ruta absoluta si es necesario o relativa al proyecto
+            import os
+            if not os.path.isabs(ruta):
+                # Asumir relativa a la raíz del proyecto
+                base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+                ruta = os.path.join(base_dir, ruta)
+                
+            url = f"sqlite:///{ruta}"
 
         else:
             raise ValueError(f"Motor de base de datos '{empresa.motor_base_datos}' no soportado")

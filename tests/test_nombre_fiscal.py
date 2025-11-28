@@ -1,4 +1,4 @@
-from modules.clientes.view_full import format_nombre_fiscal
+from modules.clientes.view import format_nombre_fiscal
 
 
 def test_format_nombre_fiscal_all_parts():

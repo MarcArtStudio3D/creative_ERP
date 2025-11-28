@@ -1,7 +1,7 @@
 """
-Módulo de gestión de clientes.
+Módulo de Clientes
 """
 
-from .view_full import ClientesViewFull
+from .view import ClientesView
 
-__all__ = ['ClientesViewFull']
+__all__ = ['ClientesView']

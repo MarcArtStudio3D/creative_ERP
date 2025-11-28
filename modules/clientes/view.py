@@ -15,6 +15,7 @@ import os
 from core.db import get_session
 from modules.clientes.models import Cliente, DireccionAlternativa
 from modules.clientes.repository import ClienteRepository
+from modules.clientes.controller import ClientesController
 from modules.clientes.ui_frmClientes import Ui_frmClientes
 from modules.common.db_consulta_view import DBConsultaView
 from modules.tipo_cliente.view import TipoClienteView
@@ -41,7 +42,7 @@ def format_nombre_fiscal(ap1: str, ap2: str, nombre: str) -> str:
     return computed.upper() if computed else ''
 
 
-class ClientesViewFull(QWidget):
+class ClientesView(QWidget):
     """Vista completa de clientes - Solo lógica, UI desde archivo .ui"""
     
     cliente_seleccionado = Signal(int)
@@ -56,6 +57,9 @@ class ClientesViewFull(QWidget):
         # exclusiones y estilos personalizados (por objectName)
         self._preserve_styles = set(preserve_styles or [])
         self._custom_styles = dict(custom_styles or {})
+        
+        # Bandera para evitar eventos automáticos durante carga programática
+        self._loading_data = False
         
         # Crear layout principal
         layout = QVBoxLayout(self)
@@ -97,9 +101,17 @@ class ClientesViewFull(QWidget):
         
         # Inicializar datos - usar sesión proporcionada o crear nueva
         self.session = session if session is not None else get_session()
-        self.repository = ClienteRepository(self.session)
-        self.cliente_actual = None
+        
+        # Inicializar controller (maneja repository y modelo)
+        self.controller = ClientesController(self.session, self)
+        self.repository = self.controller.repository  # Mantener referencia para compatibilidad
         self._modo_edicion = False  # Bandera para controlar el modo de edición
+        
+        # Conectar señales del controller
+        self.controller.data_changed.connect(self._on_data_changed)
+        self.controller.error_occurred.connect(self._on_error_occurred)
+        self.controller.operation_success.connect(self._on_operation_success)
+        self.controller.cliente_changed.connect(self._on_cliente_changed)
         
         # Variables para edición de direcciones alternativas
         self._modo_edicion_direccion = False
@@ -119,8 +131,8 @@ class ClientesViewFull(QWidget):
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.setCurrentIndex(1)
         
-        # Cargar clientes
-        self.cargar_clientes()
+        # Cargar clientes (delegado al controller)
+        self.controller.cargar_clientes()
         
         # Cargar tipos de cliente
         self.cargar_tipos_cliente()
@@ -230,6 +242,14 @@ class ClientesViewFull(QWidget):
         if hasattr(self.ui, 'stackedWidget'):
             self.ui.stackedWidget.currentChanged.connect(self.on_pagina_cambiada)
         
+        # Conectar búsqueda por población al pulsar Enter
+        if hasattr(self.ui, 'txtpoblacion'):
+            self.ui.txtpoblacion.returnPressed.connect(self._handle_poblacion_search)
+
+
+        ''' ----------------------------------------------------
+            VARIACIONES SEGÚN PAÍS FISCAL EN LOS CAMPOS VISUALIZADOS
+            ---------------------------------------------------------'''
         # Obtener el país fiscal desde la configuración global
         from PySide6.QtCore import QSettings
         settings = QSettings()
@@ -292,11 +312,27 @@ class ClientesViewFull(QWidget):
                         except Exception:
                             pass
                     
-                # Special handling for txtpoblacion - trigger reverse lookup on Enter key
-                w_poblacion = getattr(self.ui, 'txtpoblacion', None)
-                if w_poblacion is not None and isinstance(w_poblacion, QLineEdit):
+                # Special handling for txtcp - trigger postal code lookup
+                w_cp = getattr(self.ui, 'txtcp', None)
+                if w_cp is not None and isinstance(w_cp, QLineEdit):
                     try:
-                        w_poblacion.returnPressed.connect(self._handle_poblacion_change)
+                        w_cp.returnPressed.connect(self._handle_postal_code_search)
+                    except Exception:
+                        pass
+                
+                # Special handling for direcciones alternativas - txtcpPoblacionAlternativa
+                w_cp_alt = getattr(self.ui, 'txtcpPoblacionAlternativa', None)
+                if w_cp_alt is not None and isinstance(w_cp_alt, QLineEdit):
+                    try:
+                        w_cp_alt.returnPressed.connect(self._handle_postal_code_alternativa_search)
+                    except Exception:
+                        pass
+                
+                # Special handling for direcciones alternativas - txtpoblacionAlternativa
+                w_pob_alt = getattr(self.ui, 'txtpoblacionAlternativa', None)
+                if w_pob_alt is not None and isinstance(w_pob_alt, QLineEdit):
+                    try:
+                        w_pob_alt.returnPressed.connect(self._handle_poblacion_alternativa_change)
                     except Exception:
                         pass
                 
@@ -337,6 +373,50 @@ class ClientesViewFull(QWidget):
                         
         except Exception as e:
             QMessageBox.critical(self, self.tr("Error"), str(e))
+    
+    # Propiedad para acceder al cliente actual del controller
+    @property
+    def cliente_actual(self):
+        """Obtiene el cliente actual del controller."""
+        return self.controller.cliente_actual
+    
+    @cliente_actual.setter
+    def cliente_actual(self, value):
+        """Establece el cliente actual en el controller."""
+        self.controller.cliente_actual = value
+    
+    # Manejadores de señales del controller
+    def _on_data_changed(self):
+        """Maneja la señal data_changed del controller."""
+        # Actualizar la tabla con el modelo del controller
+        tabla = self._find_table()
+        if tabla:
+            tabla.setModel(self.controller.model)
+            tabla.resizeColumnsToContents()
+            try:
+                self._ajustar_encabezado_tabla(tabla, stretch_index=2)
+            except Exception:
+                pass
+            
+            # Re-seleccionar cliente actual si existe (para mantener navegación)
+            if self.cliente_actual and hasattr(self.cliente_actual, 'id'):
+                try:
+                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
+                except Exception:
+                    pass
+    
+    def _on_error_occurred(self, mensaje: str):
+        """Maneja la señal error_occurred del controller."""
+        QMessageBox.warning(self, self.tr("Error"), mensaje)
+    
+    def _on_operation_success(self, mensaje: str):
+        """Maneja la señal operation_success del controller."""
+        QMessageBox.information(self, self.tr("Éxito"), mensaje)
+    
+    def _on_cliente_changed(self, cliente_id: int):
+        """Maneja la señal cliente_changed del controller."""
+        # Actualizar tipos de cliente cuando cambia el cliente actual
+        self.cargar_tipos_cliente()
 
     def cargar_tipos_cliente(self):
         """Carga los tipos asociados al cliente actual"""
@@ -1062,91 +1142,8 @@ class ClientesViewFull(QWidget):
         return (len(errores) == 0, errores)
     
     def cargar_clientes(self):
-        """Carga los clientes desde la base de datos en la tabla"""
-        try:
-            # Si la sesión está en estado rollback, hacer rollback antes de continuar
-            if hasattr(self.session, '_transaction') and self.session._transaction and self.session._transaction.is_active:
-                try:
-                    # Verificar el estado de la transacción
-                    self.session.commit()
-                except Exception:
-                    # Si falla commit, hacer rollback y crear nueva sesión
-                    try:
-                        self.session.rollback()
-                        print("✅ Rollback automático realizado en cargar_clientes")
-                    except Exception as rb_error:
-                        print(f"⚠️ Error en rollback automático: {rb_error}")
-            
-            clientes = self.repository.obtener_todos()
-            
-            # Buscar la tabla en la UI generada
-            tabla = None
-            if hasattr(self.ui, 'tabla_busquedas'):
-                tabla = self.ui.tabla_busquedas
-            elif hasattr(self.ui, 'tabla_clientes'):
-                tabla = self.ui.tabla_clientes
-            elif hasattr(self.ui, 'tableWidget'):
-                tabla = self.ui.tableWidget
-            
-            if not tabla:
-                print("No se encontró widget de tabla de clientes")
-                return
-            
-            # Crear modelo para QTableView
-            model = QStandardItemModel(len(clientes), 5)
-            model.setHorizontalHeaderLabels([self.tr("Código"), self.tr("NIF/CIF"), self.tr("Nombre Fiscal"), self.tr("Teléfono"), self.tr("Email")])
-            
-            for row, cliente in enumerate(clientes):
-                # Código
-                item = QStandardItem(self._get_str(cliente, 'codigo_cliente'))
-                item.setData(cliente.id, Qt.ItemDataRole.UserRole)
-                item.setEditable(False)
-                model.setItem(row, 0, item)
-                
-                # CIF/NIF
-                item = QStandardItem(self._get_str(cliente, 'cif_nif_siren'))
-                item.setEditable(False)
-                model.setItem(row, 1, item)
-                
-                # Nombre Fiscal
-                nombre_fiscal = self._get_str(cliente, 'nombre_fiscal') or (cliente.nombre_completo() if hasattr(cliente, 'nombre_completo') else '')
-                item = QStandardItem(str(nombre_fiscal))
-                item.setEditable(False)
-                model.setItem(row, 2, item)
-                
-                # Teléfono
-                item = QStandardItem(self._get_str(cliente, 'telefono1'))
-                item.setEditable(False)
-                model.setItem(row, 3, item)
-                
-                # Email
-                item = QStandardItem(self._get_str(cliente, 'email'))
-                item.setEditable(False)
-                model.setItem(row, 4, item)
-            
-            tabla.setModel(model)
-            tabla.resizeColumnsToContents()
-            # Ajustar comportamiento de redimensionado de columnas mediante helper
-            try:
-                self._ajustar_encabezado_tabla(tabla, stretch_index=2)
-            except Exception:
-                pass
-                
-        except Exception as e:
-            # Manejar errores de sesión rolled back
-            error_msg = str(e)
-            if "transaction has been rolled back" in error_msg:
-                try:
-                    self.session.rollback()
-                    print("✅ Rollback realizado en cargar_clientes tras error")
-                    # Intentar cargar de nuevo tras rollback
-                    clientes = self.repository.obtener_todos()
-                    print("✅ Recarga exitosa tras rollback")
-                    return  # Si funciona, salir sin mostrar error
-                except Exception as retry_error:
-                    error_msg = f"Error persistente tras rollback: {retry_error}"
-            
-            QMessageBox.warning(self, self.tr("Error"), self.tr("Error al cargar clientes: {}").format(error_msg))
+        """Carga los clientes desde la base de datos en la tabla (delegado al controller)."""
+        self.controller.cargar_clientes()
     
     def filter_records(self, search_text: str, order_by: str, order_mode: str):
         """Filtra y ordena los registros de clientes según los criterios especificados.
@@ -1356,7 +1353,7 @@ class ClientesViewFull(QWidget):
             
             # Obtener fila seleccionada
             selection = tabla.selectionModel()
-            if not selection.hasSelection():
+            if not selection or not selection.hasSelection():
                 return
             
             index = selection.currentIndex()
@@ -1368,19 +1365,29 @@ class ClientesViewFull(QWidget):
             if not model:
                 return
             
-            id_cliente = model.item(index.row(), 0).data(Qt.ItemDataRole.UserRole)
+            # El controller guarda el ID usando setData() en el primer item
+            first_item = model.item(index.row(), 0)
+            if not first_item:
+                return
+                
+            id_cliente = first_item.data()
             if not id_cliente:
                 return
             
-            # Cargar cliente
-            self.cliente_actual = self.repository.obtener_por_id(id_cliente)
-            if not self.cliente_actual:
+            # Cargar cliente usando el controller
+            try:
+                cliente = self.controller.obtener_cliente(id_cliente)
+            except Exception as controller_error:
+                QMessageBox.warning(self, self.tr("Error"), f"Error en controller: {controller_error}")
+                return
+                
+            if not cliente:
                 QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo cargar el cliente"))
                 return
             
             # Cargar datos en formulario (con manejo robusto de errores)
             try:
-                self.cargar_datos_en_formulario(self.cliente_actual)
+                self.cargar_datos_en_formulario(cliente)
             except Exception as e:
                 print(f"Advertencia: No se pudieron cargar todos los datos del formulario: {e}")
                 # Continuar con el cambio de página aunque haya errores en el formulario
@@ -1393,6 +1400,9 @@ class ClientesViewFull(QWidget):
     
     def cargar_datos_en_formulario(self, cliente: Cliente):
         """Carga los datos del cliente en los campos del formulario"""
+        # Activar bandera para evitar eventos automáticos durante carga
+        self._loading_data = True
+        
         # Campos principales
         if hasattr(self.ui, 'txtcodigo_cliente'):
             self.ui.txtcodigo_cliente.setText(self._get_str(cliente, 'codigo_cliente'))
@@ -1508,10 +1518,9 @@ class ClientesViewFull(QWidget):
         except Exception:
             pass
         try:
-            if hasattr(self.ui, 'cboPais') and cliente.id_pais:
-                # Si id_pais es un número pequeño (ID legacy) intentar seleccionar por índice
-                # Si es mayor, asumir que es el nombre del país
-                pais_valor = str(cliente.id_pais) if isinstance(cliente.id_pais, int) else cliente.id_pais
+            if hasattr(self.ui, 'cboPais') and cliente.pais:
+                # Usar directamente el nombre del país
+                pais_valor = str(cliente.pais)
                 
                 # Intentar buscar por nombre (en ambos idiomas)
                 for i in range(self.ui.cboPais.count()):
@@ -1554,6 +1563,9 @@ class ClientesViewFull(QWidget):
         
         # Cargar tipos de cliente asociados
         self.cargar_tipos_cliente()
+        
+        # Desactivar bandera de carga programática
+        self._loading_data = False
     
     def cargar_direcciones_alternativas(self, id_cliente: int):
         """Carga direcciones alternativas en la tabla correspondiente"""
@@ -1737,19 +1749,13 @@ class ClientesViewFull(QWidget):
         respuesta = msg.clickedButton()
         
         if respuesta == btn_yes:
-            try:
-                self.repository.eliminar(id_cliente)
-                QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente borrado correctamente"))
-                self.cargar_clientes()
+            # Delegar eliminación al controller
+            if self.controller.borrar_cliente(id_cliente):
                 # Volver a la vista de lista después de borrar
                 if hasattr(self.ui, 'stackedWidget'):
                     self.ui.stackedWidget.setCurrentIndex(1)
                 # Limpiar cliente actual
                 self.cliente_actual = None
-            except ValueError as e:
-                QMessageBox.warning(self, self.tr("No se puede borrar"), str(e))
-            except Exception as e:
-                QMessageBox.critical(self, self.tr("Error"), self.tr("Error al borrar: {}").format(str(e)))
     
     def guardar_cliente(self):
         """Guarda el cliente actual"""
@@ -1831,7 +1837,7 @@ class ClientesViewFull(QWidget):
                          ('deuda_actual','txtdeuda_actual'), ('porc_dto_cliente','txtporc_dto_cliente'), ('importe_a_cuenta','txtimporte_a_cuenta'),
                          ('vales','txtvales')]
             bool_map = [('recargo_equivalencia','chkrecargo_equivalencia'), ('irpf','chkClienteEmpresa'), ('bloqueado','chklBloqueoCliente')]
-            cbo_map = [('id_idioma_documentos','cboidiomaDocumentos'), ('id_pais','cboPais'), ('id_divisa','cboDivisa'),
+            cbo_map = [('id_idioma_documentos','cboidiomaDocumentos'), ('pais','cboPais'), ('id_divisa','cboDivisa'),
                        ('id_forma_pago','cboforma_pago'), ('id_tarifa','cbotarifa_cliente'), ('id_agente','cboagente'), ('id_transportista','cbotransportista')]
 
             if self.cliente_actual:
@@ -1869,41 +1875,14 @@ class ClientesViewFull(QWidget):
                             setattr(self.cliente_actual, attr, self.get_combo_value(widget_name))
                     except Exception:
                         continue
-                # Persistir cambios en la base de datos usando el repositorio
-                try:
-                    # Debug log: indicate update attempt
-                    try:
-                        cid = getattr(self.cliente_actual, 'id', None)
-                    except Exception:
-                        cid = None
-                    print(f"[DEBUG] guardar_cliente: calling repository.actualizar id={cid}")
-                    # Use repository.actualizar para asegurar commit y registro de historial
-                    self.repository.actualizar(self.cliente_actual)
-                    print(f"[DEBUG] guardar_cliente: repository.actualizar succeeded for id={cid}")
-                except Exception as e:
-                    # Log exception and traceback for debugging
-                    print(f"[ERROR] guardar_cliente: repository.actualizar raised: {e}")
-                    import traceback
-                    traceback.print_exc()
-                    # Fallback: si el repositorio falla, intentar commit directo
-                    try:
-                        print("[DEBUG] guardar_cliente: attempting session.commit() fallback")
-                        self.session.commit()
-                        print("[DEBUG] guardar_cliente: session.commit() fallback succeeded")
-                    except Exception:
-                        print("[ERROR] guardar_cliente: session.commit() fallback failed")
+                # Persistir cambios en la base de datos usando el controller
+                cliente_guardado = self.controller.guardar_cliente(self.cliente_actual)
+                if not cliente_guardado:
+                    # El controller ya emitió la señal de error
+                    return
                 
-                # Recargar lista de clientes para actualización
-                self.cargar_clientes()
-                
-                # Re-seleccionar el cliente actual en la tabla para que los botones de navegación funcionen
-                try:
-                    if self.cliente_actual and hasattr(self.cliente_actual, 'id'):
-                        self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
-                except Exception:
-                    pass
-                
-                QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente actualizado"))
+                # Actualizar referencia con el cliente guardado
+                self.cliente_actual = cliente_guardado
                 
             else:
                 # Crear nuevo de forma declarativa con mapping
@@ -1949,17 +1928,15 @@ class ClientesViewFull(QWidget):
                     cliente_kwargs['dia_pago2'] = v if v is not None else 0
 
                 cliente = Cliente(**cliente_kwargs)
-                self.repository.crear(cliente)
-                QMessageBox.information(self, self.tr("Éxito"), self.tr("Cliente creado"))
-            
-            self.cargar_clientes()
-            
-            # Re-seleccionar el cliente actual en la tabla para que los botones de navegación funcionen
-            try:
-                if self.cliente_actual and hasattr(self.cliente_actual, 'id'):
-                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
-            except Exception:
-                pass
+                
+                # Guardar usando el controller
+                cliente_guardado = self.controller.guardar_cliente(cliente)
+                if not cliente_guardado:
+                    # El controller ya emitió la señal de error
+                    return
+                
+                # Actualizar referencia al cliente actual con el cliente guardado
+                self.cliente_actual = cliente_guardado
             
             # Mantenerse en la página de edición pero desactivar campos
             # (no volver a la lista de clientes). El usuario pidió que
@@ -2138,7 +2115,7 @@ class ClientesViewFull(QWidget):
         # Handle postal code lookup
         if name == 'txtcp':
             try:
-                self._handle_postal_code_change()
+                self._handle_postal_code_search()
             except Exception:
                 pass
         self._validate_and_apply(str(name))
@@ -2516,7 +2493,7 @@ class ClientesViewFull(QWidget):
             return
         
         selection = tabla.selectionModel()
-        if not selection.hasSelection():
+        if not selection or not selection.hasSelection():
             return
         
         current_index = selection.currentIndex()
@@ -2534,7 +2511,7 @@ class ClientesViewFull(QWidget):
             return
         
         selection = tabla.selectionModel()
-        if not selection.hasSelection():
+        if not selection or not selection.hasSelection():
             return
         
         current_index = selection.currentIndex()
@@ -2546,8 +2523,12 @@ class ClientesViewFull(QWidget):
             self.abrir_ficha_cliente()
     
 
-    def _handle_postal_code_change(self):
-        """Handle postal code changes - lookup city and province from france.db"""
+    def _handle_postal_code_search(self):
+        """Maneja búsqueda por código postal al pulsar Enter - DELEGADO AL CONTROLLER"""
+        # No ejecutar durante carga programática de datos
+        if self._loading_data:
+            return
+            
         if not hasattr(self.ui, 'txtcp'):
             return
             
@@ -2556,24 +2537,14 @@ class ClientesViewFull(QWidget):
             return
             
         try:
-            # Connect to france.db
-            db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', 'france.db')
-            if not os.path.exists(db_path):
+            # Delegar búsqueda al controller (retorna tupla)
+            results, db_path, db_config = self.controller.buscar_poblacion_por_cp(cp, pais="Francia")
+            
+            if not results:
                 return
-                
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
             
-            # Query for postal code
-            cursor.execute("""
-                SELECT nom_standard_majuscule, dep_nom 
-                FROM villes 
-                WHERE code_postal = ? 
-                ORDER BY nom_standard_majuscule
-            """, (cp,))
-            
-            results = cursor.fetchall()
-            conn.close()
+            # Unpack config
+            _, table_name, cp_col, city_col, prov_col = db_config
             
             if len(results) == 1:
                 # Single result - fill fields directly
@@ -2584,129 +2555,16 @@ class ClientesViewFull(QWidget):
                     self.ui.txtprovincia.setText(provincia or '')
                     
             elif len(results) > 1:
-                # Create QSqlDatabase connection to france.db
-                db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', 'france.db')
-                france_db = QSqlDatabase.addDatabase("QSQLITE", "france_connection")
-                france_db.setDatabaseName(db_path)
-                
-                if france_db.open():
-                    sql = f"""
-                        SELECT ROWID, nom_standard_majuscule, dep_nom 
-                        FROM villes 
-                        WHERE code_postal = '{cp}' 
-                        ORDER BY nom_standard_majuscule
-                    """
-                    
-                    id_selected, record = DBConsultaView.select_from_sql(
-                        parent=self,
-                        sql=sql,
-                        db=france_db,
-                        headers=['ID', self.tr('Población'), self.tr('Provincia')],
-                        campos=['nom_standard_majuscule'],
-                        titulo=self.tr('Seleccionar población para CP {cp}').format(cp=cp),
-                        tamanos=[0, 250, 200]  # ID (hidden), Población, Provincia (stretches)
-                    )
-                    
-                    if record and record.count() >= 3:  # Make sure we have all columns
-                        poblacion = record.value(1)  # nom_standard_majuscule (columna 1, ya que 0 es ROWID)
-                        provincia = record.value(2)  # dep_nom (columna 2)
-                        
-                        if hasattr(self.ui, 'txtpoblacion'):
-                            self.ui.txtpoblacion.setText(poblacion or '')
-                        if hasattr(self.ui, 'txtprovincia'):
-                            self.ui.txtprovincia.setText(provincia or '')
-                    
-                    france_db.close()
-                    QSqlDatabase.removeDatabase("france_connection")
-                    
-                    france_db.close()
-                    QSqlDatabase.removeDatabase("france_connection")
-                        
-        except Exception as e:
-            # Silently ignore errors to not disrupt user experience
-            print(f"Error in postal code lookup: {e}")
-            pass
-
-    def _handle_poblacion_change(self):
-        """Handle poblacion (city) changes - reverse lookup postal code and province from database"""
-        if not hasattr(self.ui, 'txtpoblacion'):
-            return
-        
-        # Only do reverse lookup if postal code is empty
-        if hasattr(self.ui, 'txtcp'):
-            cp = self.ui.txtcp.text().strip()
-            if cp:  # If postal code already has a value, don't override
-                return
-        
-        poblacion = self.ui.txtpoblacion.text().strip()
-        if not poblacion or len(poblacion) < 3:  # Require at least 3 characters
-            return
-        
-        try:
-            # Get active country from cboPais combo
-            pais_activo = 'Francia'  # Default
-            if hasattr(self.ui, 'cboPais'):
-                pais_valor = self.get_combo_value('cboPais')
-                if pais_valor:
-                    pais_activo = pais_valor
-            
-            # Map country names to database files and table structures
-            country_db_map = {
-                'francia': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
-                'france': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
-                'españa': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
-                'spain': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
-                'espagne': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom')
-            }
-            
-            db_config = country_db_map.get(pais_activo.lower())
-            if not db_config:
-                return
-            
-            db_filename, table_name, cp_col, city_col, prov_col = db_config
-            
-            # Connect to country database
-            db_path = os.path.join(os.path.dirname(__file__), '..', '..', 'datos', db_filename)
-            if not os.path.exists(db_path):
-                return
-            
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-            
-            # Query for city name (case-insensitive search)
-            cursor.execute(f"""
-                SELECT {cp_col}, {city_col}, {prov_col} 
-                FROM {table_name} 
-                WHERE {city_col} LIKE ? 
-                ORDER BY {city_col}
-            """, (f"%{poblacion.upper()}%",))
-            
-            results = cursor.fetchall()
-            conn.close()
-            
-            if len(results) == 1:
-                # Single result - fill fields directly
-                codigo_postal, poblacion_db, provincia = results[0]
-                if hasattr(self.ui, 'txtcp'):
-                    self.ui.txtcp.setText(codigo_postal or '')
-                if hasattr(self.ui, 'txtpoblacion'):
-                    self.ui.txtpoblacion.setText(poblacion_db or '')
-                if hasattr(self.ui, 'txtprovincia'):
-                    self.ui.txtprovincia.setText(provincia or '')
-                    
-            elif len(results) > 1:
                 # Multiple results - show selection dialog
-                # Create QSqlDatabase connection to country database
-                country_db = QSqlDatabase.addDatabase("QSQLITE", "country_connection_poblacion")
+                from PySide6.QtSql import QSqlDatabase
+                country_db = QSqlDatabase.addDatabase("QSQLITE", "france_connection")
                 country_db.setDatabaseName(db_path)
                 
                 if country_db.open():
-                    # Escape single quotes in poblacion for SQL
-                    poblacion_escaped = poblacion.upper().replace("'", "''")
                     sql = f"""
-                        SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
+                        SELECT ROWID, {city_col}, {prov_col} 
                         FROM {table_name} 
-                        WHERE {city_col} LIKE '%{poblacion_escaped}%' 
+                        WHERE {cp_col} = '{cp}' 
                         ORDER BY {city_col}
                     """
                     
@@ -2714,31 +2572,309 @@ class ClientesViewFull(QWidget):
                         parent=self,
                         sql=sql,
                         db=country_db,
-                        headers=['ID', self.tr('Código Postal'), self.tr('Población'), self.tr('Provincia')],
+                        headers=['ID', self.tr('Población'), self.tr('Provincia')],
                         campos=[city_col],
-                        titulo=self.tr('Seleccionar población: {poblacion}').format(poblacion=poblacion),
-                        tamanos=[0, 100, 250, 200]  # ID (hidden), CP, Población, Provincia (stretches)
+                        titulo=self.tr('Seleccionar población para CP {cp}').format(cp=cp),
+                        tamanos=[0, 250, 200]  # ID (hidden), Población, Provincia
                     )
                     
-                    if record and record.count() >= 4:  # Make sure we have all columns
-                        codigo_postal = record.value(1)  # CP column
-                        poblacion_db = record.value(2)  # City column
-                        provincia = record.value(3)  # Province column
+                    if record and record.count() >= 3:  # Make sure we have all columns
+                        poblacion = record.value(1)  # City column
+                        provincia = record.value(2)  # Province column
                         
-                        if hasattr(self.ui, 'txtcp'):
-                            self.ui.txtcp.setText(codigo_postal or '')
                         if hasattr(self.ui, 'txtpoblacion'):
-                            self.ui.txtpoblacion.setText(poblacion_db or '')
+                            self.ui.txtpoblacion.setText(poblacion or '')
                         if hasattr(self.ui, 'txtprovincia'):
                             self.ui.txtprovincia.setText(provincia or '')
                     
                     country_db.close()
-                    QSqlDatabase.removeDatabase("country_connection_poblacion")
-                    
+                    QSqlDatabase.removeDatabase("france_connection")
+                        
         except Exception as e:
             # Silently ignore errors to not disrupt user experience
-            print(f"Error in poblacion reverse lookup: {e}")
+            print(f"Error in postal code lookup: {e}")
             pass
+
+
+    def _handle_postal_code_alternativa_search(self):
+        """Handle postal code changes for direcciones alternativas"""
+        # No ejecutar durante carga programática de datos
+        if self._loading_data:
+            return
+            
+        if not hasattr(self.ui, 'txtcpPoblacionAlternativa'):
+            return
+            
+        cp = self.ui.txtcpPoblacionAlternativa.text().strip()
+        if not cp:
+            return
+            
+        # Delegar al controller
+        pais = self._get_selected_country_alternativa()
+        if pais in ['Francia', 'España']:
+            self.controller.buscar_poblacion_por_cp_alternativa(cp, pais)
+
+    def _handle_poblacion_alternativa_change(self):
+        """Handle población changes for direcciones alternativas - reverse lookup for postal code"""
+        print("[DEBUG] _handle_poblacion_alternativa_change llamado")
+        
+        # No ejecutar durante carga programática de datos
+        if self._loading_data:
+            print("[DEBUG] Skipping - loading data")
+            return
+            
+        if not hasattr(self.ui, 'txtpoblacionAlternativa'):
+            print("[DEBUG] No tiene txtpoblacionAlternativa")
+            return
+        
+        # Don't override if postal code already has a value
+        if hasattr(self.ui, 'txtcpPoblacionAlternativa'):
+            cp = self.ui.txtcpPoblacionAlternativa.text().strip()
+            if cp:
+                print(f"[DEBUG] Ya hay CP: {cp}, skipping")
+                return
+        
+        poblacion = self.ui.txtpoblacionAlternativa.text().strip()
+        print(f"[DEBUG] Población: '{poblacion}'")
+        if not poblacion:
+            print("[DEBUG] Población vacía")
+            return
+            
+        # Delegar al controller
+        pais = self._get_selected_country_alternativa()
+        print(f"[DEBUG] País seleccionado: {pais}")
+        if pais in ['Francia', 'España']:
+            print("[DEBUG] Llamando a controller.buscar_cp_por_poblacion_alternativa")
+            self.controller.buscar_cp_por_poblacion_alternativa(poblacion, pais)
+        else:
+            print("[DEBUG] País no es Francia ni España")
+
+    def _handle_poblacion_search(self):
+        """Maneja búsqueda por población al pulsar Enter - DELEGADO AL CONTROLLER"""
+        # No ejecutar durante carga programática de datos
+        if self._loading_data:
+            return
+            
+        if not hasattr(self.ui, 'txtpoblacion'):
+            return
+        
+        poblacion = self.ui.txtpoblacion.text().strip()
+        if not poblacion:
+            return
+            
+        try:
+            # Delegar búsqueda al controller (retorna tupla)
+            results, db_path, db_config = self.controller.buscar_cp_por_poblacion_simple(poblacion, pais="Francia")
+            
+            if not results:
+                return
+                
+            # Unpack config
+            _, table_name, cp_col, city_col, prov_col = db_config
+            
+            if len(results) == 1:
+                # Una sola población - llenar código postal automáticamente
+                cp, ciudad, provincia = results[0]
+                if hasattr(self.ui, 'txtcp'):
+                    self.ui.txtcp.setText(cp or '')
+                if hasattr(self.ui, 'txtprovincia'):
+                    self.ui.txtprovincia.setText(provincia or '')
+                    
+            elif len(results) > 1:
+                # Múltiples resultados - mostrar DBConsultaView para seleccionar
+                from PySide6.QtSql import QSqlDatabase
+                country_db = QSqlDatabase.addDatabase("QSQLITE", "france_connection_poblacion_search")
+                country_db.setDatabaseName(db_path)
+                
+                if country_db.open():
+                    sql = f"""
+                        SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
+                        FROM {table_name} 
+                        WHERE {city_col} LIKE '%{poblacion.upper()}%' 
+                        ORDER BY {city_col}, {cp_col}
+                        LIMIT 50
+                    """
+                    
+                    id_selected, record = DBConsultaView.select_from_sql(
+                        parent=self,
+                        sql=sql,
+                        db=country_db,
+                        headers=['ID', self.tr('CP'), self.tr('Población'), self.tr('Provincia')],
+                        campos=[cp_col, city_col],
+                        titulo=self.tr('Seleccionar población'),
+                        tamanos=[0, 80, 250, 200]  # ID (hidden), CP, Población, Provincia
+                    )
+                    
+                    if record and record.count() >= 4:  # Make sure we have all columns
+                        cp = record.value(1)        # CP column
+                        ciudad = record.value(2)    # City column
+                        provincia = record.value(3) # Province column
+                        
+                        if hasattr(self.ui, 'txtcp'):
+                            self.ui.txtcp.setText(cp or '')
+                        if hasattr(self.ui, 'txtpoblacion'):
+                            self.ui.txtpoblacion.setText(ciudad or '')
+                        if hasattr(self.ui, 'txtprovincia'):
+                            self.ui.txtprovincia.setText(provincia or '')
+                    
+                    country_db.close()
+                    QSqlDatabase.removeDatabase("france_connection_poblacion_search")
+                        
+        except Exception as e:
+            print(f"Error in population search: {e}")
+            pass
+
+    def _get_selected_country_alternativa(self):
+        """Obtiene el país seleccionado en direcciones alternativas"""
+        if not hasattr(self.ui, 'cbopaisAlternativa'):
+            return None
+            
+        combo = self.ui.cbopaisAlternativa
+        current_index = combo.currentIndex()
+        if current_index < 0:
+            return None
+            
+        # Obtener datos del item actual
+        itemdata = combo.itemData(current_index)
+        if itemdata is None:
+            return None
+            
+        # Convertir a formato estándar
+        if isinstance(itemdata, dict):
+            pais_es = itemdata.get('es', '')
+            if 'Francia' in pais_es or 'France' in pais_es:
+                return 'Francia'
+            elif 'España' in pais_es or 'Espagne' in pais_es:
+                return 'España'
+        
+        return str(itemdata)
+
+    def actualizar_campos_alternativa(self, cp=None, poblacion=None, provincia=None):
+        """Actualiza campos de dirección alternativa - llamado desde el Controller"""
+        if cp and hasattr(self.ui, 'txtcpPoblacionAlternativa'):
+            self.ui.txtcpPoblacionAlternativa.setText(str(cp))
+        if poblacion and hasattr(self.ui, 'txtpoblacionAlternativa'):
+            self.ui.txtpoblacionAlternativa.setText(str(poblacion))
+        if provincia and hasattr(self.ui, 'txtprovinciaAlternativa'):
+            self.ui.txtprovinciaAlternativa.setText(str(provincia))
+
+    def _establecer_pais_empresa_defecto(self):
+        """Establece el país de la empresa actual por defecto en direcciones alternativas"""
+        try:
+            from core.company_manager import get_current_company_context
+            
+            # Obtener información de la empresa actual
+            context = get_current_company_context()
+            if not context.get('has_company', False):
+                return
+                
+            # Obtener información completa de la empresa desde la BD
+            company_id = context.get('company_id')
+            if not company_id:
+                return
+                
+            # Obtener la empresa actual usando el Controller de empresas
+            from modules.empresas.controller import EmpresasController
+            
+            empresas_controller = EmpresasController()
+            empresa = empresas_controller.obtener_empresa(company_id)
+            
+            if not empresa:
+                return
+                
+            if not hasattr(empresa, 'pais'):
+                return
+                
+            pais_empresa = str(empresa.pais) if empresa.pais else ""
+                
+            # Establecer el país en el combo
+            if not hasattr(self.ui, 'cbopaisAlternativa'):
+                return
+                
+            combo = self.ui.cbopaisAlternativa
+            
+            # Si el país está vacío, no hacer nada
+            if not pais_empresa:
+                return
+            
+            # Buscar el país en el combo comparando con el texto mostrado y los datos
+            for i in range(combo.count()):
+                texto_combo = combo.itemText(i)
+                itemdata = combo.itemData(i)
+                
+                # Comparar directamente por texto mostrado
+                if texto_combo.lower() == pais_empresa.lower():
+                    combo.setCurrentIndex(i)
+                    return
+                    
+                # Comparar con los datos del item (formato {'es': 'España', 'fr': 'Espagne'})
+                if itemdata and isinstance(itemdata, dict):
+                    pais_es = itemdata.get('es', '')
+                    pais_fr = itemdata.get('fr', '')
+                    
+                    if (pais_es.lower() == pais_empresa.lower() or 
+                        pais_fr.lower() == pais_empresa.lower()):
+                        combo.setCurrentIndex(i)
+                        return
+                                
+        except Exception:
+            # No mostrar error al usuario, es una funcionalidad opcional
+            pass
+
+    def mostrar_dialogo_poblacion_alternativa(self, results, search_term, is_cp_search=True):
+        """Muestra diálogo de selección de población para direcciones alternativas"""
+        try:
+            from modules.common.db_consulta_view import DBConsultaView
+            from core.db import get_france_db_path
+            from PySide6.QtSql import QSqlDatabase
+            import os
+            
+            # Conectar a la base de datos de Francia
+            france_db_path = get_france_db_path()
+            if not os.path.exists(france_db_path):
+                return
+                
+            import time
+            connection_name = f"france_connection_pop_alt_{int(time.time() * 1000)}"
+            if QSqlDatabase.contains(connection_name):
+                QSqlDatabase.removeDatabase(connection_name)
+                
+            france_db = QSqlDatabase.addDatabase("QSQLITE", connection_name)
+            france_db.setDatabaseName(france_db_path)
+            
+            if france_db.open():
+                if is_cp_search:
+                    sql = f"SELECT ROWID, code_postal, nom_standard_majuscule, nom_departement FROM communes WHERE code_postal = '{search_term}' ORDER BY nom_standard_majuscule"
+                else:
+                    sql = f"SELECT ROWID, code_postal, nom_standard_majuscule, nom_departement FROM communes WHERE nom_standard_majuscule LIKE '%{search_term.upper()}%' ORDER BY nom_standard_majuscule LIMIT 50"
+                
+                id_selected, record = DBConsultaView.select_from_sql(
+                    parent=self,
+                    sql=sql,
+                    db=france_db,
+                    headers=['ID', self.tr('CP'), self.tr('Población'), self.tr('Provincia')],
+                    campos=['code_postal', 'nom_standard_majuscule'],
+                    titulo=self.tr('Seleccionar población (Dirección Alternativa)'),
+                    tamanos=[0, 80, 250, 200]
+                )
+                
+                if record and record.count() >= 4:
+                    cp = record.value(1)
+                    poblacion = record.value(2) 
+                    provincia = record.value(3)
+                    self.actualizar_campos_alternativa(cp, poblacion, provincia)
+                
+                # Cerrar conexión después del procesamiento
+                france_db.close()
+            else:
+                print("No se pudo abrir la base de datos de Francia")
+                
+        except Exception as e:
+            print(f"Error in poblacion dialog (alternativa): {e}")
+        finally:
+            # Asegurar que la conexión se remueva al final
+            if QSqlDatabase.contains(connection_name):
+                QSqlDatabase.removeDatabase(connection_name)
 
     # ========== MÉTODOS PARA DIRECCIONES ALTERNATIVAS ==========
 
@@ -2750,6 +2886,9 @@ class ClientesViewFull(QWidget):
 
         # Limpiar campos de dirección
         self.limpiar_campos_direccion_alternativa()
+        
+        # Establecer país por defecto de la empresa
+        self._establecer_pais_empresa_defecto()
         
         # Establecer modo edición de dirección
         self._modo_edicion_direccion = True
@@ -2899,6 +3038,9 @@ class ClientesViewFull(QWidget):
                     widget.clear()
                 elif hasattr(widget, 'setCurrentIndex'):
                     widget.setCurrentIndex(0)
+        
+        # Establecer país por defecto después de limpiar
+        self._establecer_pais_empresa_defecto()
 
     def activar_campos_direccion_alternativa(self):
         """Activa los campos de dirección alternativa para edición"""
@@ -2964,35 +3106,42 @@ class ClientesViewFull(QWidget):
 
     def cargar_direccion_en_campos(self, direccion):
         """Carga los datos de una dirección en los campos del formulario"""
-        campos_map = {
-            'txtdescripcion_direccion': direccion.descripcion,
-            'txtcpPoblacionAlternativa': direccion.cp,
-            'txtpoblacionAlternativa': direccion.poblacion,
-            'txtdireccion1Alternativa1': direccion.direccion1,
-            'txtdireccion1Alternativa2': direccion.direccion2,
-            'txtprovinciaAlternativa': direccion.provincia,
-            'txtemail_alternativa': direccion.email,
-            'txtcomentarios_alternativa': direccion.comentarios
-        }
+        # Activar bandera para evitar eventos automáticos durante carga
+        self._loading_data = True
         
-        for campo, valor in campos_map.items():
-            widget = getattr(self.ui, campo, None)
-            if widget and valor is not None:
-                if hasattr(widget, 'setText'):
-                    widget.setText(str(valor))
-                elif hasattr(widget, 'setPlainText'):
-                    widget.setPlainText(str(valor))
-                    
-        # País
-        if hasattr(self.ui, 'cbopaisAlternativa') and direccion.id_pais:
-            # Intentar buscar por nombre (en ambos idiomas)
-            for i in range(self.ui.cbopaisAlternativa.count()):
-                itemdata = self.ui.cbopaisAlternativa.itemData(i)
-                if itemdata is not None and isinstance(itemdata, dict):
-                    # itemdata es {'es': pais_es, 'fr': pais_fr}
-                    if (itemdata.get('es') == direccion.id_pais or itemdata.get('fr') == direccion.id_pais):
-                        self.ui.cbopaisAlternativa.setCurrentIndex(i)
-                        break
+        try:
+            campos_map = {
+                'txtdescripcion_direccion': direccion.descripcion,
+                'txtcpPoblacionAlternativa': direccion.cp,
+                'txtpoblacionAlternativa': direccion.poblacion,
+                'txtdireccion1Alternativa1': direccion.direccion1,
+                'txtdireccion1Alternativa2': direccion.direccion2,
+                'txtprovinciaAlternativa': direccion.provincia,
+                'txtemail_alternativa': direccion.email,
+                'txtcomentarios_alternativa': direccion.comentarios
+            }
+            
+            for campo, valor in campos_map.items():
+                widget = getattr(self.ui, campo, None)
+                if widget and valor is not None:
+                    if hasattr(widget, 'setText'):
+                        widget.setText(str(valor))
+                    elif hasattr(widget, 'setPlainText'):
+                        widget.setPlainText(str(valor))
+                        
+            # País
+            if hasattr(self.ui, 'cbopaisAlternativa') and direccion.pais:
+                # Intentar buscar por nombre (en ambos idiomas)
+                for i in range(self.ui.cbopaisAlternativa.count()):
+                    itemdata = self.ui.cbopaisAlternativa.itemData(i)
+                    if itemdata is not None and isinstance(itemdata, dict):
+                        # itemdata es {'es': pais_es, 'fr': pais_fr}
+                        if (itemdata.get('es') == direccion.pais or itemdata.get('fr') == direccion.pais):
+                            self.ui.cbopaisAlternativa.setCurrentIndex(i)
+                            break
+        finally:
+            # Desactivar bandera de carga programática
+            self._loading_data = False
 
     def crear_direccion_desde_campos(self):
         """Crea una nueva instancia de DireccionAlternativa desde los campos"""
@@ -3027,7 +3176,7 @@ class ClientesViewFull(QWidget):
         # País
         if hasattr(self.ui, 'cbopaisAlternativa'):
             pais_valor = self.get_combo_value('cbopaisAlternativa')
-            direccion.id_pais = pais_valor if pais_valor else 'Francia'
+            direccion.pais = pais_valor if pais_valor else 'Francia'
             
         # Fechas
         now = datetime.now()
@@ -3065,7 +3214,7 @@ class ClientesViewFull(QWidget):
         # País
         if hasattr(self.ui, 'cbopaisAlternativa'):
             pais_valor = self.get_combo_value('cbopaisAlternativa')
-            direccion.id_pais = pais_valor if pais_valor else 'Francia'
+            direccion.pais = pais_valor if pais_valor else 'Francia'
             
         # Fecha de modificación
         direccion.fecha_modificacion = datetime.now()
@@ -3113,35 +3262,42 @@ class ClientesViewFull(QWidget):
 
     def cargar_direccion_en_campos_solo_lectura(self, direccion):
         """Carga los datos de una dirección en los campos para solo lectura"""
-        campos_map = {
-            'txtdescripcion_direccion': direccion.descripcion,
-            'txtcpPoblacionAlternativa': direccion.cp,
-            'txtpoblacionAlternativa': direccion.poblacion,
-            'txtdireccion1Alternativa1': direccion.direccion1,
-            'txtdireccion1Alternativa2': direccion.direccion2,
-            'txtprovinciaAlternativa': direccion.provincia,
-            'txtemail_alternativa': direccion.email,
-            'txtcomentarios_alternativa': direccion.comentarios
-        }
+        # Activar bandera para evitar eventos automáticos durante carga
+        self._loading_data = True
         
-        for campo, valor in campos_map.items():
-            widget = getattr(self.ui, campo, None)
-            if widget and valor is not None:
-                if hasattr(widget, 'setText'):
-                    widget.setText(str(valor))
-                elif hasattr(widget, 'setPlainText'):
-                    widget.setPlainText(str(valor))
-                    
-        # País
-        if hasattr(self.ui, 'cbopaisAlternativa') and direccion.id_pais:
-            # Intentar buscar por nombre (en ambos idiomas)
-            for i in range(self.ui.cbopaisAlternativa.count()):
-                itemdata = self.ui.cbopaisAlternativa.itemData(i)
-                if itemdata is not None and isinstance(itemdata, dict):
-                    # itemdata es {'es': pais_es, 'fr': pais_fr}
-                    if (itemdata.get('es') == direccion.id_pais or itemdata.get('fr') == direccion.id_pais):
-                        self.ui.cbopaisAlternativa.setCurrentIndex(i)
-                        break
+        try:
+            campos_map = {
+                'txtdescripcion_direccion': direccion.descripcion,
+                'txtcpPoblacionAlternativa': direccion.cp,
+                'txtpoblacionAlternativa': direccion.poblacion,
+                'txtdireccion1Alternativa1': direccion.direccion1,
+                'txtdireccion1Alternativa2': direccion.direccion2,
+                'txtprovinciaAlternativa': direccion.provincia,
+                'txtemail_alternativa': direccion.email,
+                'txtcomentarios_alternativa': direccion.comentarios
+            }
+            
+            for campo, valor in campos_map.items():
+                widget = getattr(self.ui, campo, None)
+                if widget and valor is not None:
+                    if hasattr(widget, 'setText'):
+                        widget.setText(str(valor))
+                    elif hasattr(widget, 'setPlainText'):
+                        widget.setPlainText(str(valor))
+                        
+            # País
+            if hasattr(self.ui, 'cbopaisAlternativa') and direccion.pais:
+                # Intentar buscar por nombre (en ambos idiomas)
+                for i in range(self.ui.cbopaisAlternativa.count()):
+                    itemdata = self.ui.cbopaisAlternativa.itemData(i)
+                    if itemdata is not None and isinstance(itemdata, dict):
+                        # itemdata es {'es': pais_es, 'fr': pais_fr}
+                        if (itemdata.get('es') == direccion.pais or itemdata.get('fr') == direccion.pais):
+                            self.ui.cbopaisAlternativa.setCurrentIndex(i)
+                            break
+        finally:
+            # Desactivar bandera de carga programática
+            self._loading_data = False
 
     def aplicar_estilos_pestanas(self):
         """No aplica estilos a pestañas - reservado para otros elementos"""

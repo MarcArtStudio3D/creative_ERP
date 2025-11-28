@@ -405,3 +405,116 @@ class ClienteRepository:
         if item:
             self.session.delete(item)
             self.session.commit()
+
+    # ========== Búsquedas Geográficas (CP/Población) ==========
+
+    def buscar_poblacion_por_cp(self, cp: str, pais: str = "Francia"):
+        """
+        Busca población por código postal.
+        Retorna una tupla: (resultados, db_path, db_config)
+        resultados: lista de tuplas (poblacion, provincia)
+        db_path: ruta a la BD usada
+        db_config: configuración de columnas (para uso en vista si es necesario)
+        """
+        import sqlite3
+        import os
+        
+        # Map country names to database files and table structures
+        country_db_map = {
+            'francia': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
+            'france': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
+            'españa': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
+            'spain': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
+            'espagne': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia')
+        }
+        
+        db_config = country_db_map.get(pais.lower())
+        if not db_config:
+            # Default to France if country not found
+            db_config = country_db_map['francia']
+        
+        db_filename, table_name, cp_col, city_col, prov_col = db_config
+        
+        # Connect to country database
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        db_path = os.path.join(base_dir, 'datos', db_filename)
+        
+        if not os.path.exists(db_path):
+            return [], db_path, db_config
+            
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Query for postal code
+            cursor.execute(f"""
+                SELECT {city_col}, {prov_col} 
+                FROM {table_name} 
+                WHERE {cp_col} = ? 
+                ORDER BY {city_col}
+            """, (cp,))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            return results, db_path, db_config
+            
+        except Exception as e:
+            print(f"Error en repositorio buscando población: {e}")
+            return [], db_path, db_config
+
+    def buscar_cp_por_poblacion(self, poblacion: str, pais: str = "Francia"):
+        """
+        Busca códigos postales por nombre de población.
+        Retorna una tupla: (resultados, db_path, db_config)
+        resultados: lista de tuplas (codigo_postal, poblacion, provincia)
+        db_path: ruta a la BD usada
+        db_config: configuración de columnas
+        """
+        import sqlite3
+        import os
+        
+        # Map country names to database files and table structures
+        country_db_map = {
+            'francia': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
+            'france': ('france.db', 'villes', 'code_postal', 'nom_standard_majuscule', 'dep_nom'),
+            'españa': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
+            'spain': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia'),
+            'espagne': ('spain.sqlite', 'cp_info', 'cp', 'poblacion', 'provincia')
+        }
+        
+        db_config = country_db_map.get(pais.lower())
+        if not db_config:
+            # Default to France if country not found
+            db_config = country_db_map['francia']
+        
+        db_filename, table_name, cp_col, city_col, prov_col = db_config
+        
+        # Connect to country database
+        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
+        db_path = os.path.join(base_dir, 'datos', db_filename)
+        
+        if not os.path.exists(db_path):
+            return [], db_path, db_config
+            
+        try:
+            conn = sqlite3.connect(db_path)
+            cursor = conn.cursor()
+            
+            # Query for city name (case-insensitive LIKE search)
+            cursor.execute(f"""
+                SELECT {cp_col}, {city_col}, {prov_col} 
+                FROM {table_name} 
+                WHERE {city_col} LIKE ? 
+                ORDER BY {city_col}, {cp_col}
+                LIMIT 50
+            """, (f"%{poblacion.upper()}%",))
+            
+            results = cursor.fetchall()
+            conn.close()
+            
+            return results, db_path, db_config
+            
+        except Exception as e:
+            print(f"Error en repositorio buscando códigos postales: {e}")
+            return [], db_path, db_config

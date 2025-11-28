@@ -352,3 +352,7 @@ def refresh_database_configs():
     })
 
     print("🔄 Configuraciones de base de datos refrescadas")
+
+def get_france_db_path():
+    """Obtiene la ruta completa a la base de datos de Francia."""
+    return os.path.join(os.path.dirname(__file__), '..', 'datos', 'france.db')

@@ -39,7 +39,7 @@ class Cliente(Base):
     cp: Mapped[Optional[str]] = mapped_column(String(10))
     poblacion: Mapped[Optional[str]] = mapped_column(String(100))
     provincia: Mapped[Optional[str]] = mapped_column(String(100))
-    id_pais: Mapped[str] = mapped_column(String(100), default='España')
+    pais: Mapped[str] = mapped_column(String(100), default='España')
     
     # Contacto
     telefono1: Mapped[Optional[str]] = mapped_column(String(50))
@@ -197,7 +197,7 @@ class DireccionAlternativa(Base):
     cp: Mapped[Optional[str]] = mapped_column(String(10))
     poblacion: Mapped[Optional[str]] = mapped_column(String(100))
     provincia: Mapped[Optional[str]] = mapped_column(String(100))
-    id_pais: Mapped[Optional[str]] = mapped_column(String(100), default='Francia')  # Nombre del país
+    pais: Mapped[Optional[str]] = mapped_column(String(100), default='Francia')  # Nombre del país
     email: Mapped[Optional[str]] = mapped_column(String(200))
     comentarios: Mapped[Optional[str]] = mapped_column(Text)
     

@@ -59,7 +59,7 @@ class Empresa(Base):
     cp = Column(String(10))
     poblacion = Column(String(100))
     provincia = Column(String(100))
-    id_pais = Column(Integer, default=1)
+    pais = Column(String(100), default='España')
     telefono = Column(String(50))
     email = Column(String(200))
     web = Column(String(200))

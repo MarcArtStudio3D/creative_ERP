@@ -1,5 +1,5 @@
 from typing import Optional, List
-from PySide6.QtCore import QObject, Signal
+from PySide6.QtCore import QObject, Signal, Qt
 from PySide6.QtGui import QStandardItemModel, QStandardItem
 from PySide6.QtWidgets import QMessageBox
 
@@ -19,8 +19,8 @@ class EmpresasController(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.repo = EmpresaRepository()
-        self.model = QStandardItemModel(0, 5)
-        self.model.setHorizontalHeaderLabels(["ID", "Código", "Nombre Fiscal", "CIF/NIF", "Población"])
+        self.model = QStandardItemModel(0, 4)
+        self.model.setHorizontalHeaderLabels(["Código", "Nombre Fiscal", "CIF/NIF", "Población"])
         self._empresa_actual: Optional[Empresa] = None
 
     @property
@@ -38,7 +38,6 @@ class EmpresasController(QObject):
             empresas = self.repo.obtener_todos()
             for e in empresas:
                 items = [
-                    QStandardItem(str(e.id)),
                     QStandardItem(getattr(e, 'codigo_empresa', '') or ''),
                     QStandardItem(getattr(e, 'nombre_fiscal', '') or ''),
                     QStandardItem(getattr(e, 'cif_nif', '') or ''),
@@ -46,6 +45,10 @@ class EmpresasController(QObject):
                 ]
                 for it in items:
                     it.setEditable(False)
+                
+                # Almacenar el ID en la primera columna como datos ocultos
+                items[0].setData(e.id, Qt.ItemDataRole.UserRole)
+                
                 self.model.appendRow(items)
             self.data_changed.emit()
         except Exception as e:
@@ -118,3 +121,7 @@ class EmpresasController(QObject):
     def buscar_poblacion(self, cp: str, pais: str):
         """Busca población por código postal."""
         return self.repo.buscar_poblacion(cp, pais)
+
+    def buscar_codigos_postales(self, poblacion: str, pais: str):
+        """Busca códigos postales por nombre de población."""
+        return self.repo.buscar_codigos_postales(poblacion, pais)

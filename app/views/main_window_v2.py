@@ -964,20 +964,19 @@ class MainWindowV2(QMainWindow):
         """
         Intenta cargar dinámicamente la vista de un módulo.
         
-        Busca en modules/{module_id}/view_full.py (o view.py como fallback)
-        Por ejemplo: modules/clientes/view_full.py → ClientesViewFull
+        Busca en modules/{module_id}/view.py
+        Por ejemplo: modules/clientes/view.py → ClientesView
         """
         try:
-            # Intentar primero con view_full (vista completa con UI generada)
+            # Todos los módulos usan view.py ahora
+            module_name = f"modules.{module_id}.view"
+            
             if module_id == 'clientes':
-                module_name = f"modules.{module_id}.view_full"
-                view_class_name = self._module_id_to_class_name(module_id, "ViewFull")
+                view_class_name = "ClientesView"
             elif module_id == 'empresas':
-                module_name = f"modules.{module_id}.view"
                 view_class_name = "EmpresasView"
             else:
-                # Para otros módulos, usar view normal
-                module_name = f"modules.{module_id}.view"
+                # Para otros módulos, usar convención estándar
                 view_class_name = self._module_id_to_class_name(module_id, "View")
             
             module = __import__(module_name, fromlist=[view_class_name])
@@ -989,11 +988,8 @@ class MainWindowV2(QMainWindow):
                 from core.db import get_session
                 current_session = get_session()
                 
-                # Para ClientesViewFull, pasar la sesión correcta
-                if 'ViewFull' in view_class_name:
-                    view_instance = view_class(session=current_session)
-                else:
-                    view_instance = view_class(self.session)
+                # Para ClientesView, pasar la sesión correcta
+                view_instance = view_class(session=current_session)
             else:
                 view_instance = view_class()
             

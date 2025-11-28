@@ -30,7 +30,7 @@ class EmpresasView(QWidget):
         self.ui.tableView.horizontalHeader().setSectionResizeMode(QHeaderView.ResizeMode.Stretch)
         
         # Conectar señales de UI
-        self.ui.tableView.doubleClicked.connect(self.editar)
+        self.ui.tableView.doubleClicked.connect(self._on_double_click)
         self.ui.btn_guardar_nuevo.clicked.connect(self.guardar)
         self.ui.btn_salir.clicked.connect(self.cancelar)
         # Conectar botón Descartar/Deshacer
@@ -67,9 +67,10 @@ class EmpresasView(QWidget):
         
         try:
             paises = self.controller.obtener_paises()
+            print(f"[DEBUG] Países obtenidos: {len(paises) if paises else 0}")
             
-            # Llenar combo cboPais_create
-            if hasattr(self.ui, 'cboPais_create'):
+            # Llenar combo cboPais
+            if hasattr(self.ui, 'cboPais'):
                 combo = self.ui.cboPais
                 combo.clear()
                 for pais_es, pais_fr in paises:
@@ -77,13 +78,20 @@ class EmpresasView(QWidget):
                     display_name = pais_fr if usar_frances else pais_es
                     # Guardar ambos valores como data (para poder recuperar al guardar/cargar)
                     combo.addItem(display_name, {'es': pais_es, 'fr': pais_fr})
-                    
+
+                
         except Exception as e:
             print(f"Error cargando países: {e}")
+            import traceback
+            traceback.print_exc()
         
         # Conectar evento de Enter en campo de código postal
         if hasattr(self.ui, 'txtcp'):
-            self.ui.txtcp.returnPressed.connect(self._handle_postal_code_change)
+            self.ui.txtcp.returnPressed.connect(self._handle_postal_code_search)
+            
+        # Conectar evento de Enter en campo de población
+        if hasattr(self.ui, 'txtpoblacion'):
+            self.ui.txtpoblacion.returnPressed.connect(self._handle_poblacion_search)
             
         self.ui.stackedWidget.setCurrentIndex(1)  # Mostrar lista por defecto
 
@@ -93,14 +101,39 @@ class EmpresasView(QWidget):
     def mostrar_exito(self, mensaje: str):
         QMessageBox.information(self, "Éxito", mensaje)
 
+    def _on_double_click(self, index):
+        """Maneja el doble click en la tabla"""
+        if index.isValid():
+            try:
+                # Obtener ID desde los datos ocultos del modelo
+                item = self.controller.model.item(index.row(), 0)
+                id_ = item.data(Qt.ItemDataRole.UserRole)
+                
+                if id_ is None:
+                    QMessageBox.warning(self, "Error", "No se pudo obtener el ID de la empresa")
+                    return
+                
+                # Cargar empresa directamente
+                empresa = self.controller.obtener_empresa(id_)
+                if empresa:
+                    self._limpiar_formulario()
+                    self._map_to_form(empresa)
+                    self.ui.stackedWidget.setCurrentIndex(0)  # Ir al formulario
+                else:
+                    QMessageBox.warning(self, "Error", f"No se pudo cargar la empresa con ID {id_}")
+                    
+            except Exception as e:
+                QMessageBox.warning(self, "Error", f"Error al procesar doble click: {e}")
+
     def _get_selected_id(self) -> Optional[int]:
         sel = self.ui.tableView.selectionModel()
         if not sel.hasSelection():
             return None
         idx = sel.currentIndex()
         try:
-            # Usar el modelo del controlador
-            return int(self.controller.model.item(idx.row(), 0).text())
+            # Obtener ID desde los datos ocultos del modelo
+            item = self.controller.model.item(idx.row(), 0)
+            return item.data(Qt.ItemDataRole.UserRole)
         except Exception:
             return None
 
@@ -113,6 +146,7 @@ class EmpresasView(QWidget):
     def editar(self):
         """Carga la empresa seleccionada en el formulario."""
         id_ = self._get_selected_id()
+        
         if id_ is None:
             QMessageBox.information(self, "Selecciona", "Selecciona una empresa primero.")
             return
@@ -236,15 +270,15 @@ class EmpresasView(QWidget):
                 if idx >= 0:
                     w.cboGrupoEmpresa.setCurrentIndex(idx)
                     
-            # Mapear País (cboPais_create)
-            if hasattr(w, 'cboPais_create') and hasattr(empresa, 'id_pais'):
-                # Asumimos que el combo ya está cargado con data={'es':..., 'fr':...}
-                # No tenemos el ID del país en el combo, sino nombres. 
-                # El modelo tiene id_pais (int). Esto podría requerir ajuste si id_pais es FK.
-                # Por ahora, intentamos seleccionar por texto si id_pais fuera nombre, 
-                # o si tenemos lógica de conversión.
-                # TODO: Revisar si id_pais es int o string en la práctica o si necesitamos mapear ID a nombre.
-                pass
+            # Mapear País (cboPais)
+            if hasattr(w, 'cboPais') and hasattr(empresa, 'pais'):
+                pais_empresa = str(empresa.pais) if empresa.pais else ""
+                if pais_empresa:
+                    # Buscar el país en el combo por texto
+                    for i in range(w.cboPais.count()):
+                        if w.cboPais.itemText(i).lower() == pais_empresa.lower():
+                            w.cboPais.setCurrentIndex(i)
+                            break
 
             # Datos Fiscales y Forma Jurídica
             if hasattr(w, 'cboFormajuridica'):
@@ -444,7 +478,10 @@ class EmpresasView(QWidget):
                     empresa.group_id = int(group_id)
             
             # Mapear País (TODO: Resolver ID vs Texto)
-            # Por ahora no guardamos id_pais desde el combo porque falta lógica de ID
+            # Mapear país desde el combo
+            # Mapear país desde el combo
+            if hasattr(w, 'cboPais'):
+                empresa.pais = w.cboPais.currentText() or ""
             
             # Datos Fiscales y Forma Jurídica
             if hasattr(w, 'cboFormajuridica'):
@@ -613,8 +650,8 @@ class EmpresasView(QWidget):
             
         return empresa
 
-    def _handle_postal_code_change(self):
-        """Handle postal code changes - lookup city and province using controller"""
+    def _handle_postal_code_search(self):
+        """Maneja búsqueda por código postal al pulsar Enter - DELEGADO AL CONTROLLER"""
         if not hasattr(self.ui, 'txtcp'):
             return
             
@@ -623,25 +660,25 @@ class EmpresasView(QWidget):
             return
             
         try:
-            # Get active country from cboPais_create combo
+            # Obtener país seleccionado
             pais_activo = 'Francia'  # Default
-            if hasattr(self.ui, 'cboPais_create'):
-                # Get the current text from combo
+            if hasattr(self.ui, 'cboPais'):
                 pais_texto = self.ui.cboPais.currentText()
                 if pais_texto:
                     pais_activo = pais_texto
+
             
-            # Use controller to search
+            # Delegar búsqueda al controller
             results, db_path, db_config = self.controller.buscar_poblacion(cp, pais_activo)
             
             if not results:
                 return
                 
-            # Unpack config for potential dialog use
+            # Unpack config
             _, table_name, cp_col, city_col, prov_col = db_config
             
             if len(results) == 1:
-                # Single result - fill fields directly
+                # Una sola población - llenar campos automáticamente
                 poblacion, provincia = results[0]
                 if hasattr(self.ui, 'txtpoblacion'):
                     self.ui.txtpoblacion.setText(poblacion or '')
@@ -649,9 +686,11 @@ class EmpresasView(QWidget):
                     self.ui.txtprovincia.setText(provincia or '')
                     
             elif len(results) > 1:
-                # Multiple results - show selection dialog
-                # Create QSqlDatabase connection to country database
-                country_db = QSqlDatabase.addDatabase("QSQLITE", "country_connection_empresas")
+                # Múltiples resultados - mostrar DBConsultaView para seleccionar
+                from PySide6.QtSql import QSqlDatabase
+                from modules.common.db_consulta_view import DBConsultaView
+                
+                country_db = QSqlDatabase.addDatabase("QSQLITE", "country_connection_cp")
                 country_db.setDatabaseName(db_path)
                 
                 if country_db.open():
@@ -682,11 +721,91 @@ class EmpresasView(QWidget):
                             self.ui.txtprovincia.setText(provincia or '')
                     
                     country_db.close()
-                    QSqlDatabase.removeDatabase("country_connection_empresas")
+                    QSqlDatabase.removeDatabase("country_connection_cp")
                         
         except Exception as e:
-            # Silently ignore errors to not disrupt user experience
-            print(f"Error in postal code lookup: {e}")
+            print(f"Error in postal code search: {e}")
+            pass
+
+    def _handle_poblacion_search(self):
+        """Maneja búsqueda por población al pulsar Enter - DELEGADO AL CONTROLLER"""
+        if not hasattr(self.ui, 'txtpoblacion'):
+            return
+            
+        poblacion = self.ui.txtpoblacion.text().strip()
+        if not poblacion:
+            return
+            
+        try:
+            # Obtener país seleccionado
+            pais_activo = 'Francia'  # Default
+            if hasattr(self.ui, 'cboPais'):
+                pais_texto = self.ui.cboPais.currentText()
+                if pais_texto:
+                    pais_activo = pais_texto
+
+            
+            # Delegar búsqueda al controller
+            results, db_path, db_config = self.controller.buscar_codigos_postales(poblacion, pais_activo)
+            
+            if not results:
+                return
+                
+            # Unpack config
+            _, table_name, cp_col, city_col, prov_col = db_config
+            
+            if len(results) == 1:
+                # Una sola población - llenar código postal automáticamente
+                cp, ciudad, provincia = results[0]
+                if hasattr(self.ui, 'txtcp'):
+                    self.ui.txtcp.setText(cp or '')
+                if hasattr(self.ui, 'txtprovincia'):
+                    self.ui.txtprovincia.setText(provincia or '')
+                    
+            elif len(results) > 1:
+                # Múltiples resultados - mostrar DBConsultaView para seleccionar
+                from PySide6.QtSql import QSqlDatabase
+                from modules.common.db_consulta_view import DBConsultaView
+                
+                country_db = QSqlDatabase.addDatabase("QSQLITE", "country_connection_poblacion")
+                country_db.setDatabaseName(db_path)
+                
+                if country_db.open():
+                    sql = f"""
+                        SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
+                        FROM {table_name} 
+                        WHERE {city_col} LIKE '%{poblacion.upper()}%' 
+                        ORDER BY {city_col}, {cp_col}
+                        LIMIT 50
+                    """
+                    
+                    id_selected, record = DBConsultaView.select_from_sql(
+                        parent=self,
+                        sql=sql,
+                        db=country_db,
+                        headers=['ID', self.tr('CP'), self.tr('Población'), self.tr('Provincia')],
+                        campos=[cp_col, city_col],
+                        titulo=self.tr('Seleccionar población'),
+                        tamanos=[0, 80, 250, 200]  # ID (hidden), CP, Población, Provincia
+                    )
+                    
+                    if record and record.count() >= 4:  # Make sure we have all columns
+                        cp = record.value(1)        # CP column
+                        ciudad = record.value(2)    # City column
+                        provincia = record.value(3) # Province column
+                        
+                        if hasattr(self.ui, 'txtcp'):
+                            self.ui.txtcp.setText(cp or '')
+                        if hasattr(self.ui, 'txtpoblacion'):
+                            self.ui.txtpoblacion.setText(ciudad or '')
+                        if hasattr(self.ui, 'txtprovincia'):
+                            self.ui.txtprovincia.setText(provincia or '')
+                    
+                    country_db.close()
+                    QSqlDatabase.removeDatabase("country_connection_poblacion")
+                        
+        except Exception as e:
+            print(f"Error in population search: {e}")
             pass
     
     def test_mariadb_connection(self):

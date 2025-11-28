@@ -70,7 +70,7 @@ class EmpresasView(QWidget):
             
             # Llenar combo cboPais_create
             if hasattr(self.ui, 'cboPais_create'):
-                combo = self.ui.cboPais_create
+                combo = self.ui.cboPais
                 combo.clear()
                 for pais_es, pais_fr in paises:
                     # Mostrar en el idioma apropiado
@@ -364,10 +364,10 @@ class EmpresasView(QWidget):
             if hasattr(w, 'txtcuenta_pagos'): w.txtcuenta_pagos.setText(getattr(empresa, 'cuenta_pagos', '') or '')
 
             # Cuentas IVA
-            if hasattr(w, 'ivasoportado1'): w.ivasoportado1.setText(getattr(empresa, 'cuenta_iva_soportado_1', '') or '')
-            if hasattr(w, 'ivasoportado2'): w.ivasoportado2.setText(getattr(empresa, 'cuenta_iva_soportado_2', '') or '')
-            if hasattr(w, 'ivasoportado3'): w.ivasoportado3.setText(getattr(empresa, 'cuenta_iva_soportado_3', '') or '')
-            if hasattr(w, 'ivasoportado4'): w.ivasoportado4.setText(getattr(empresa, 'cuenta_iva_soportado_4', '') or '')
+            if hasattr(w, 'ivasoportado1'): w.txtIvasoportado1.setText(getattr(empresa, 'cuenta_iva_soportado_1', '') or '')
+            if hasattr(w, 'ivasoportado2'): w.txtIvasoportado2.setText(getattr(empresa, 'cuenta_iva_soportado_2', '') or '')
+            if hasattr(w, 'ivasoportado3'): w.txtIvasoportado3.setText(getattr(empresa, 'cuenta_iva_soportado_3', '') or '')
+            if hasattr(w, 'ivasoportado4'): w.txtIvasoportado4.setText(getattr(empresa, 'cuenta_iva_soportado_4', '') or '')
 
             if hasattr(w, 'ivasoportadore1'): w.ivasoportadore1.setText(getattr(empresa, 'cuenta_iva_soportado_re_1', '') or '')
             if hasattr(w, 'ivasoportadore2'): w.ivasoportadore2.setText(getattr(empresa, 'cuenta_iva_soportado_re_2', '') or '')
@@ -407,29 +407,29 @@ class EmpresasView(QWidget):
         w = self.ui
         
         try:
-            # Datos Generales
-            if hasattr(w, 'txtcodigo'):
-                empresa.codigo_empresa = w.txtcodigo.text()
-            if hasattr(w, 'txtEmpresa'):
-                empresa.nombre_fiscal = w.txtEmpresa.text()
-            if hasattr(w, 'txtNombreComercial'):
-                empresa.nombre_comercial = w.txtNombreComercial.text()
-            if hasattr(w, 'txtcif'):
-                empresa.cif_nif = w.txtcif.text()
-            if hasattr(w, 'txtdireccion1'):
-                empresa.direccion = w.txtdireccion1.text()
-            if hasattr(w, 'txtcp'):
-                empresa.cp = w.txtcp.text()
-            if hasattr(w, 'txtpoblacion'):
-                empresa.poblacion = w.txtpoblacion.text()
-            if hasattr(w, 'txtprovincia'):
-                empresa.provincia = w.txtprovincia.text()
-            if hasattr(w, 'txttelefono1'):
-                empresa.telefono = w.txttelefono1.text()
-            if hasattr(w, 'txtcMail'):
-                empresa.email = w.txtcMail.text()
-            if hasattr(w, 'txtweb'):
-                empresa.web = w.txtweb.text()
+            # Datos Generales - con manejo seguro
+            if hasattr(w, 'txtcodigo') and w.txtcodigo:
+                empresa.codigo_empresa = w.txtcodigo.text() or ""
+            if hasattr(w, 'txtEmpresa') and w.txtEmpresa:
+                empresa.nombre_fiscal = w.txtEmpresa.text() or ""
+            if hasattr(w, 'txtNombreComercial') and w.txtNombreComercial:
+                empresa.nombre_comercial = w.txtNombreComercial.text() or ""
+            if hasattr(w, 'txtcif') and w.txtcif:
+                empresa.cif_nif = w.txtcif.text() or ""
+            if hasattr(w, 'txtdireccion1') and w.txtdireccion1:
+                empresa.direccion = w.txtdireccion1.text() or ""
+            if hasattr(w, 'txtcp') and w.txtcp:
+                empresa.cp = w.txtcp.text() or ""
+            if hasattr(w, 'txtpoblacion') and w.txtpoblacion:
+                empresa.poblacion = w.txtpoblacion.text() or ""
+            if hasattr(w, 'txtprovincia') and w.txtprovincia:
+                empresa.provincia = w.txtprovincia.text() or ""
+            if hasattr(w, 'txttelefono1') and w.txttelefono1:
+                empresa.telefono = w.txttelefono1.text() or ""
+            if hasattr(w, 'txtcMail') and w.txtcMail:
+                empresa.email = w.txtcMail.text() or ""
+            if hasattr(w, 'txtweb') and w.txtweb:
+                empresa.web = w.txtweb.text() or ""
             
             # Contacto adicional
             if hasattr(w, 'txttelefono2'):
@@ -456,27 +456,31 @@ class EmpresasView(QWidget):
             if hasattr(w, 'chkInternacional'):
                 empresa.intracomunitario = 1 if w.chkInternacional.isChecked() else 0
                 
-            if hasattr(w, 'spinPorc_irpf'):
-                empresa.porcentaje_retencion = w.spinPorc_irpf.value()
+            if hasattr(w, 'spinPorc_irpf') and w.spinPorc_irpf:
+                try:
+                    empresa.porcentaje_retencion = float(w.spinPorc_irpf.value())
+                except (ValueError, AttributeError):
+                    empresa.porcentaje_retencion = 0.0
 
             # Configuración Base de Datos
-            if hasattr(w, 'comboBox'): # Motor BD
-                empresa.motor_base_datos = w.comboBox.currentText().strip()
+            if hasattr(w, 'comboBox') and w.comboBox: # Motor BD
+                empresa.motor_base_datos = (w.comboBox.currentText() or "").strip()
             
             # MariaDB Config
-            if hasattr(w, 'txtHostMariaDB'):
-                empresa.host_mariadb = w.txtHostMariaDB.text()
-            if hasattr(w, 'txtPortMariadb'): # Puerto MariaDB (Renamed from lineEdit)
+            if hasattr(w, 'txtHostMariaDB') and w.txtHostMariaDB:
+                empresa.host_mariadb = w.txtHostMariaDB.text() or ""
+            if hasattr(w, 'txtPortMariadb') and w.txtPortMariadb: # Puerto MariaDB (Renamed from lineEdit)
                 try:
-                    empresa.puerto_mariadb = int(w.txtPortMariadb.text())
-                except ValueError:
+                    port_text = w.txtPortMariadb.text() or "3306"
+                    empresa.puerto_mariadb = int(port_text) if port_text.strip() else 3306
+                except (ValueError, AttributeError):
                     empresa.puerto_mariadb = 3306
-            if hasattr(w, 'txtNombreBD_MariaDB'): # Nombre BD MariaDB (Renamed from lineEdit_15)
-                empresa.nombre_base_datos_maria_db = w.txtNombreBD_MariaDB.text()
-            if hasattr(w, 'txtUsuarioMariaDB'):
-                empresa.usuario_mariadb = w.txtUsuarioMariaDB.text()
-            if hasattr(w, 'txtPasswordMariaDB'):
-                empresa.password_mariadb = w.txtPasswordMariaDB.text()
+            if hasattr(w, 'txtNombreBD_MariaDB') and w.txtNombreBD_MariaDB: # Nombre BD MariaDB (Renamed from lineEdit_15)
+                empresa.nombre_base_datos_maria_db = w.txtNombreBD_MariaDB.text() or ""
+            if hasattr(w, 'txtUsuarioMariaDB') and w.txtUsuarioMariaDB:
+                empresa.usuario_mariadb = w.txtUsuarioMariaDB.text() or ""
+            if hasattr(w, 'txtPasswordMariaDB') and w.txtPasswordMariaDB:
+                empresa.password_mariadb = w.txtPasswordMariaDB.text() or ""
                 
             # PostgreSQL Config
             if hasattr(w, 'txtHostPostgreSQL'): # Renamed from txtHostMariaDB_2
@@ -598,9 +602,14 @@ class EmpresasView(QWidget):
             if hasattr(w, 'txtRM'): empresa.numero_rm = w.txtRM.text()
             if hasattr(w, 'txtAPE'): empresa.ape_naf = w.txtAPE.text()
 
+        except AttributeError as e:
+            print(f"Error: Widget attribute not found - {e}")
+        except ValueError as e:
+            print(f"Error: Invalid value in form field - {e}")
         except Exception as e:
-            print(f"Error mapping from form: {e}")
-            pass
+            print(f"Unexpected error mapping from form: {type(e).__name__}: {e}")
+            import traceback
+            traceback.print_exc()
             
         return empresa
 
@@ -618,7 +627,7 @@ class EmpresasView(QWidget):
             pais_activo = 'Francia'  # Default
             if hasattr(self.ui, 'cboPais_create'):
                 # Get the current text from combo
-                pais_texto = self.ui.cboPais_create.currentText()
+                pais_texto = self.ui.cboPais.currentText()
                 if pais_texto:
                     pais_activo = pais_texto
             

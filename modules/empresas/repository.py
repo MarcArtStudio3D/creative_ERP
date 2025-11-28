@@ -1,5 +1,5 @@
 from typing import List, Optional
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 from sqlalchemy.orm import sessionmaker
 from core.db import get_session, get_database_url
 from core.models import Empresa, BusinessGroup
@@ -20,7 +20,7 @@ class EmpresaRepository:
         if self._main_session:
             try:
                 # Simple check to see if session is valid
-                self._main_session.execute("SELECT 1")
+                self._main_session.execute(text("SELECT 1"))
                 return self._main_session
             except Exception:
                 # Si falla, recrear

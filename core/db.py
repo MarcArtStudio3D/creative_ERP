@@ -139,6 +139,7 @@ def init_db(db_name=None):
         # Base de datos ArtStudio3D o base de datos de empresa que apunta a ArtStudio3D: tablas específicas de clientes
         from modules.clientes import models as clientes_models
         from modules.tipo_cliente import models as tipo_cliente_models
+        from modules.articulos import models as articulos_models
 
         try:
             clientes_models.Base.metadata.create_all(bind=current_engine)
@@ -152,10 +153,17 @@ def init_db(db_name=None):
         except Exception as e:
             print(f"⚠️  Error creando tablas de tipos de cliente: {e}")
 
+        try:
+            articulos_models.Base.metadata.create_all(bind=current_engine)
+            print(f"✅ Tablas de artículos creadas en {get_current_database()}")
+        except Exception as e:
+            print(f"⚠️  Error creando tablas de artículos: {e}")
+
     else:
         # Otras bases de datos: tablas específicas de módulos
         from modules.clientes import models as clientes_models
         from modules.facturas import models as facturas_models
+        from modules.articulos import models as articulos_models
 
         try:
             clientes_models.Base.metadata.create_all(bind=current_engine)
@@ -166,6 +174,11 @@ def init_db(db_name=None):
             facturas_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
             print(f"⚠️  Error creando tablas de facturas: {e}")
+
+        try:
+            articulos_models.Base.metadata.create_all(bind=current_engine)
+        except Exception as e:
+            print(f"⚠️  Error creando tablas de artículos: {e}")
 
     # Intentar agregar columnas faltantes (migración automática simple)
     db_url = get_database_url(get_current_database())

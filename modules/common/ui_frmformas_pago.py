@@ -54,9 +54,8 @@ class Ui_FrmFormas_pago(object):
         self.gridLayout.setContentsMargins(-1, -1, 20, -1)
         self.tabla_buscar = QTableView(self.page)
         self.tabla_buscar.setObjectName(u"tabla_buscar")
-        self.tabla_buscar.setStyleSheet(u"alternate-background-color: rgb(255, 255, 255);\n"
-"font: 8pt \"Sans\";\n"
-"background-color: rgb(248, 245, 194);")
+        self.tabla_buscar.setStyleSheet(u"alternate-\n"
+"font: 8pt \"Sans\";")
         self.tabla_buscar.setAlternatingRowColors(True)
         self.tabla_buscar.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tabla_buscar.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)

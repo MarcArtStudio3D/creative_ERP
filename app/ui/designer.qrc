@@ -1,5 +1,6 @@
 <RCC>
   <qresource prefix="PNG">
+    <file>../../resources/icons/png/down_arrow.png</file>
     <file>../../resources/icons/png/LogoIcono.png</file>
     <file>../../resources/icons/png/Add.png</file>
     <file>../../resources/icons/png/Calendar.png</file>

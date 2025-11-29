@@ -1664,7 +1664,7 @@ class Ui_frmClientes(object):
         self.tabla_busquedas = QTableView(self.paginaBisquedas)
         self.tabla_busquedas.setObjectName(u"tabla_busquedas")
         self.tabla_busquedas.setAutoFillBackground(True)
-        self.tabla_busquedas.setStyleSheet(u"alternate-background-color: rgb(255, 255, 255);\n"
+        self.tabla_busquedas.setStyleSheet(u"alternate-\n"
 "background-color: rgb(248, 245, 194);\n"
 "font: 8pt \"Sans\";")
         self.tabla_busquedas.setAlternatingRowColors(True)

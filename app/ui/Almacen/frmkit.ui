@@ -1,0 +1,488 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>FrmKit</class>
+ <widget class="QDialog" name="FrmKit">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1077</width>
+    <height>722</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Gestión de Kits de producto.</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_3">
+   <item row="1" column="0">
+    <widget class="QTableView" name="tabla">
+     <property name="autoFillBackground">
+      <bool>true</bool>
+     </property>
+     <property name="alternatingRowColors">
+      <bool>true</bool>
+     </property>
+     <property name="selectionMode">
+      <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+     </property>
+     <property name="selectionBehavior">
+      <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+     </property>
+     <attribute name="horizontalHeaderStretchLastSection">
+      <bool>true</bool>
+     </attribute>
+    </widget>
+   </item>
+   <item row="0" column="0" colspan="2">
+    <layout class="QGridLayout" name="gridLayout_2">
+     <item row="0" column="1">
+      <widget class="QLineEdit" name="txtCodigo_kit">
+       <property name="maximumSize">
+        <size>
+         <width>120</width>
+         <height>16777215</height>
+        </size>
+       </property>
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="0">
+      <widget class="QLabel" name="label_7">
+       <property name="text">
+        <string>Código:</string>
+       </property>
+      </widget>
+     </item>
+     <item row="0" column="2">
+      <widget class="QLineEdit" name="txtDesc_kit">
+       <property name="readOnly">
+        <bool>true</bool>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QPushButton" name="btnQuitar">
+     <property name="text">
+      <string>Quitar producto</string>
+     </property>
+     <property name="icon">
+      <iconset>
+       <normaloff>:/Icons/PNG/borrar.png</normaloff>:/Icons/PNG/borrar.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" rowspan="2">
+    <widget class="QFrame" name="frame">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>500</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="12" column="0" colspan="2">
+       <layout class="QHBoxLayout" name="horizontalLayout">
+        <item>
+         <spacer name="horizontalSpacer">
+          <property name="orientation">
+           <enum>Qt::Orientation::Horizontal</enum>
+          </property>
+          <property name="sizeHint" stdset="0">
+           <size>
+            <width>40</width>
+            <height>20</height>
+           </size>
+          </property>
+         </spacer>
+        </item>
+        <item>
+         <widget class="QPushButton" name="pushButton">
+          <property name="text">
+           <string>Cerrar</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/Icons/PNG/Exit.png</normaloff>:/Icons/PNG/Exit.png</iconset>
+          </property>
+         </widget>
+        </item>
+       </layout>
+      </item>
+      <item row="5" column="0" colspan="2">
+       <widget class="QFrame" name="frame_3">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(255, 85, 0);</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_5">
+         <item row="1" column="3">
+          <widget class="QDoubleSpinBox" name="spinCantidad">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="minimum">
+            <double>1.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>999999999.990000009536743</double>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1" colspan="3">
+          <widget class="QLineEdit" name="txtDescripcion">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLabel" name="label_8">
+           <property name="text">
+            <string>Coste en Kit</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLineEdit" name="txtCodigo">
+           <property name="minimumSize">
+            <size>
+             <width>139</width>
+             <height>0</height>
+            </size>
+           </property>
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="label_5">
+           <property name="text">
+            <string>Descripción:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="label_4">
+           <property name="text">
+            <string>Código:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLabel" name="label_6">
+           <property name="text">
+            <string>Dto:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QDoubleSpinBox" name="spinCoste">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+color: rgb(0, 0, 0);</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+           <property name="minimum">
+            <double>-10000000.000000000000000</double>
+           </property>
+           <property name="maximum">
+            <double>1000000000.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLabel" name="label_3">
+           <property name="text">
+            <string>Cantidad:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="3">
+          <widget class="QLabel" name="lblCoste">
+           <property name="text">
+            <string>0,0</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="label_9">
+           <property name="text">
+            <string>Coste:</string>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="3">
+          <widget class="QDoubleSpinBox" name="spinDto">
+           <property name="styleSheet">
+            <string notr="true">background-color: rgb(255, 255, 255);
+</string>
+           </property>
+           <property name="maximum">
+            <double>100.000000000000000</double>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="1">
+       <widget class="QComboBox" name="cboSentido">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(0, 0, 0);</string>
+        </property>
+       </widget>
+      </item>
+      <item row="8" column="0" colspan="2">
+       <widget class="QPushButton" name="btnGuardar">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="text">
+         <string>&lt;&lt;Agregar(2)</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../designer.qrc">
+          <normaloff>:/PNG/resources/icons/png/Previous.png</normaloff>:/PNG/resources/icons/png/Previous.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="1">
+       <widget class="QLineEdit" name="txtBuscar"/>
+      </item>
+      <item row="10" column="0" colspan="2">
+       <widget class="QFrame" name="frame_4">
+        <property name="enabled">
+         <bool>true</bool>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(170, 152, 158);</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_6">
+         <item row="2" column="1">
+          <widget class="QPushButton" name="btnRomperKit">
+           <property name="text">
+            <string>Romper Kit</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../designer.qrc">
+             <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0" rowspan="2">
+          <widget class="QLabel" name="label_12">
+           <property name="styleSheet">
+            <string notr="true">color: rgb(255, 255, 255);</string>
+           </property>
+           <property name="text">
+            <string>Romper Kits (Añadirá stock
+a los productos del kit):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="1">
+          <widget class="QSpinBox" name="spinCantRomper">
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+      <item row="1" column="0">
+       <widget class="QLabel" name="label_10">
+        <property name="text">
+         <string>Sentido:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="4" column="0" colspan="2">
+       <widget class="QPushButton" name="btnAnadir">
+        <property name="text">
+         <string>Preparar componente kit (1)</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../designer.qrc">
+          <normaloff>:/PNG/resources/icons/png/down_arrow.png</normaloff>:/PNG/resources/icons/png/down_arrow.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0">
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Buscar por:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="1">
+       <widget class="QComboBox" name="cboOrden">
+        <property name="styleSheet">
+         <string notr="true">color: rgb(0, 0, 0);</string>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0">
+       <widget class="QLabel" name="label">
+        <property name="text">
+         <string>Filtro:</string>
+        </property>
+       </widget>
+      </item>
+      <item row="3" column="0" colspan="2">
+       <widget class="QTableView" name="tabla_buscar">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="minimumSize">
+         <size>
+          <width>0</width>
+          <height>92</height>
+         </size>
+        </property>
+        <property name="alternatingRowColors">
+         <bool>true</bool>
+        </property>
+        <property name="selectionMode">
+         <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+        </property>
+        <property name="selectionBehavior">
+         <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+        </property>
+        <attribute name="verticalHeaderVisible">
+         <bool>false</bool>
+        </attribute>
+       </widget>
+      </item>
+      <item row="9" column="0" colspan="2">
+       <widget class="QFrame" name="frame_2">
+        <property name="styleSheet">
+         <string notr="true">background-color: rgb(170, 152, 158);</string>
+        </property>
+        <property name="frameShape">
+         <enum>QFrame::Shape::StyledPanel</enum>
+        </property>
+        <property name="frameShadow">
+         <enum>QFrame::Shadow::Raised</enum>
+        </property>
+        <layout class="QGridLayout" name="gridLayout_4">
+         <item row="1" column="1">
+          <widget class="QPushButton" name="btnAnadirKits">
+           <property name="text">
+            <string>Añadir stock Kit (3)</string>
+           </property>
+           <property name="icon">
+            <iconset resource="../designer.qrc">
+             <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0" rowspan="2">
+          <widget class="QLabel" name="label_11">
+           <property name="styleSheet">
+            <string notr="true">color: rgb(255, 255, 255);</string>
+           </property>
+           <property name="text">
+            <string>Crear Kits (Descontará stock
+de los productos kit):</string>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QSpinBox" name="spinCant">
+           <property name="alignment">
+            <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <tabstops>
+  <tabstop>txtCodigo_kit</tabstop>
+  <tabstop>txtDesc_kit</tabstop>
+  <tabstop>cboOrden</tabstop>
+  <tabstop>cboSentido</tabstop>
+  <tabstop>txtBuscar</tabstop>
+  <tabstop>tabla_buscar</tabstop>
+  <tabstop>btnAnadir</tabstop>
+  <tabstop>txtCodigo</tabstop>
+  <tabstop>spinCantidad</tabstop>
+  <tabstop>txtDescripcion</tabstop>
+  <tabstop>spinCoste</tabstop>
+  <tabstop>spinDto</tabstop>
+  <tabstop>btnGuardar</tabstop>
+  <tabstop>spinCant</tabstop>
+  <tabstop>btnAnadirKits</tabstop>
+  <tabstop>spinCantRomper</tabstop>
+  <tabstop>btnRomperKit</tabstop>
+  <tabstop>pushButton</tabstop>
+  <tabstop>btnQuitar</tabstop>
+  <tabstop>tabla</tabstop>
+ </tabstops>
+ <resources>
+  <include location="../designer.qrc"/>
+ </resources>
+ <connections>
+  <connection>
+   <sender>pushButton</sender>
+   <signal>clicked()</signal>
+   <receiver>FrmKit</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>868</x>
+     <y>493</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>608</x>
+     <y>526</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

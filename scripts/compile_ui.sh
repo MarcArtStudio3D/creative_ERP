@@ -64,9 +64,21 @@ compile_ui_file() {
     # Patch imports
     perl -0777 -pe 's/^import designer_rc\b/from modules import designer_rc/igm; s/^from\s+\.\s+import\s+designer_rc\b/from modules import designer_rc/igm' -i "$output_file"
     
+    # Patch chartviewwidget imports to use modules.common
+    perl -0777 -pe 's/^from chartviewwidget import/from modules.common.chartviewwidget import/igm' -i "$output_file"
+    
+    # Patch openchart imports to use modules.common
+    perl -0777 -pe 's/^from openchart import/from modules.common.openchart import/igm' -i "$output_file"
+    
     # Fix Qt constants
     echo "   - Fixing Qt constants in $output_file"
     "$PYTHON" "$SCRIPTS_DIR/ui_tools/fix_qt_constants.py" "$output_file"
+    
+    # Clean hardcoded colors
+    if [ -f "$ROOT_DIR/clean_ui_colors.py" ]; then
+        echo "   - Cleaning hardcoded colors from $output_file"
+        "$PYTHON" "$ROOT_DIR/clean_ui_colors.py" "$output_file"
+    fi
 }
 
 echo "Compiling UI files..."
@@ -77,6 +89,8 @@ declare -A UI_MODULE_MAP=(
     ["frmClientes.ui"]="clientes"
     ["frmempresas.ui"]="empresas"
     ["frmtipocliente.ui"]="tipo_cliente"
+    ["/Almacen/frmarticulos.ui"]="articulos"
+    ["/Almacen/frmkit.ui"]="articulos"
     ["db_consulta_view.ui"]="common"
     ["frmConfig.ui"]="common"
     ["frmeditaravisos.ui"]="common"
@@ -84,20 +98,32 @@ declare -A UI_MODULE_MAP=(
     ["frmnuevosavisos.ui"]="common"
 )
 
-for ui_file in "$UI_DIR"/*.ui; do
+# Find all .ui files recursively
+while IFS= read -r ui_file; do
     [ -e "$ui_file" ] || continue
+    
+    # Get relative path from UI_DIR
+    rel_path="${ui_file#$UI_DIR/}"
     base=$(basename "$ui_file")
     
-    # Check if this UI file has a module mapping
-    if [[ -v UI_MODULE_MAP["$base"] ]]; then
+    # Check for module mapping with various key formats
+    module=""
+    if [[ -v UI_MODULE_MAP["$rel_path"] ]]; then
+        module="${UI_MODULE_MAP[$rel_path]}"
+    elif [[ -v UI_MODULE_MAP["/$rel_path"] ]]; then
+        module="${UI_MODULE_MAP[/$rel_path]}"
+    elif [[ -v UI_MODULE_MAP["$base"] ]]; then
         module="${UI_MODULE_MAP[$base]}"
+    fi
+    
+    if [ -n "$module" ]; then
         out="$MODULES_DIR/$module/ui_${base%.ui}.py"
         compile_ui_file "$ui_file" "$out"
     else
         # If no mapping exists, skip or warn
-        echo " - WARNING: No module mapping for $base, skipping..."
+        echo " - WARNING: No module mapping for $rel_path (checked '$rel_path', '/$rel_path', '$base'), skipping..."
     fi
-done
+done < <(find "$UI_DIR" -name "*.ui")
 
 echo "Running UI import tests..."
 "$PYTHON" "$SCRIPTS_DIR/ui_tools/test_ui_imports.py" "$ROOT_DIR"

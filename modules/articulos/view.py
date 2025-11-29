@@ -89,6 +89,11 @@ class ArticulosView(QDialog):
     def borrar(self):
         """Public method for 'Delete' action from side panel"""
         self._on_delete_clicked()
+        
+    def list(self):
+        """Public method to switch to list view"""
+        self.ui.stackedWidget.setCurrentIndex(1)
+
 
     def get_search_options(self) -> dict:
         """
@@ -387,6 +392,9 @@ class ArticulosView(QDialog):
         """Handle Edit button click"""
         if self.controller.get_current_article():
             self._lock_fields(False)
+            # Switch to edit tab
+            self.ui.stackedWidget.setCurrentIndex(0)
+
     
     def _on_save_clicked(self):
         """Handle Save button click"""

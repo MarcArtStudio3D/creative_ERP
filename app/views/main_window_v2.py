@@ -8,7 +8,8 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QDateEdit, QMenu, QMenuBar, QToolButton, QMessageBox,
                                QScrollArea, QComboBox, QLineEdit)
 from PySide6.QtCore import Qt, QDate, Signal, QPropertyAnimation, QEasingCurve, Property, QPoint
-from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush
+from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush, QShortcut, QKeySequence
+
 
 from typing import Optional, Callable
 
@@ -1283,6 +1284,9 @@ class MainWindowV2(QMainWindow):
         panel_animation.setEasingCurve(QEasingCurve.Type.OutElastic)
         setattr(container, '_animation', panel_animation)
         
+        #---------------------------------------------------------------------
+        # -          Panel derecho con funcines de búsqueda y acciones
+        #---------------------------------------------------------------------
         def toggle_panel() -> None:
             parent = container.parent()
             if not parent or not isinstance(parent, QWidget):
@@ -1304,10 +1308,39 @@ class MainWindowV2(QMainWindow):
                 getattr(container, '_animation').setEndValue(QPoint(parent.width() - 250, container.pos().y()))
                 getattr(container, '_animation').start()
                 setattr(panel, '_is_open', True)
+                
+                # Poner foco en el campo de búsqueda para escribir inmediatamente
+                search_input.setFocus()
+                search_input.selectAll()
+                
+                # Cambiar a vista de lista si el módulo lo soporta
+                if module_view and hasattr(module_view, 'list'):
+                    module_view.list()
+                elif module_view and hasattr(module_view, 'show_list'): # Alternative name
+                    module_view.show_list()
+
+
         
         tab.clicked.connect(toggle_panel)
         
+        # Atajos de teclado
+        # F1: Alternar panel (Abrir/Cerrar)
+        shortcut_f1 = QShortcut(QKeySequence("F1"), container)
+        shortcut_f1.activated.connect(toggle_panel)
+        # Asegurar que el shortcut funcione en el contexto de la ventana
+        shortcut_f1.setContext(Qt.ShortcutContext.WindowShortcut)
+        
+        # ESC: Cerrar panel (solo si está abierto)
+        shortcut_esc = QShortcut(QKeySequence("Esc"), container)
+        def close_panel_esc():
+            if getattr(panel, '_is_open', False):
+                toggle_panel()
+        shortcut_esc.activated.connect(close_panel_esc)
+        # Asegurar que el shortcut funcione en el contexto de la ventana
+        shortcut_esc.setContext(Qt.ShortcutContext.WindowShortcut)
+        
         # Actualizar posición al redimensionar y al mostrar
+
         def update_position() -> None:
             parent = container.parent()
             if parent and isinstance(parent, QWidget) and parent.width() > 0:

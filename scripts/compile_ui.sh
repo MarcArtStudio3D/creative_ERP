@@ -78,6 +78,10 @@ compile_ui_file() {
     if [ -f "$ROOT_DIR/clean_ui_colors.py" ]; then
         echo "   - Cleaning hardcoded colors from $output_file"
         "$PYTHON" "$ROOT_DIR/clean_ui_colors.py" "$output_file"
+        
+        # Also remove problematic text colors directly
+        sed -i 's/\.setStyleSheet(u"color: rgb(0, 0, 0);")/.setStyleSheet(u"")/g' "$output_file"
+        sed -i 's/\.setStyleSheet(u"color: rgb(0, 0, 0)")/.setStyleSheet(u"")/g' "$output_file"
     fi
 }
 

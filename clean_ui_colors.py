@@ -9,7 +9,7 @@ import re
 import os
 
 def clean_hardcoded_colors(content):
-    """Remove hardcoded background colors from UI Python file content."""
+    """Remove hardcoded background colors and problematic text colors from UI Python file content."""
     # First, handle multiline setStyleSheet cases with regex
     # Remove background-color from multiline strings like:
     # setStyleSheet(u"color: rgb(0, 0, 0);\n"
@@ -23,6 +23,13 @@ def clean_hardcoded_colors(content):
     # Clean up extra newlines left after removing background colors
     content = re.sub(r'\\n"\s*\n""', '"', content)
     content = re.sub(r';\s*\\n"\s*\n""', ';"', content)
+    
+    # Remove hardcoded black text color (causes problems with disabled fields)
+    content = re.sub(
+        r'\.setStyleSheet\(u"color: rgb\(0, 0, 0\);"\)',
+        '.setStyleSheet(u"")',
+        content
+    )
     
     # Handle complete setStyleSheet replacements for problematic cases
     # Replace entire setStyleSheet calls that only contain background-color

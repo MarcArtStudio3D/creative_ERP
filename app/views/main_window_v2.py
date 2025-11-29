@@ -912,8 +912,9 @@ class MainWindowV2(QMainWindow):
         module_content.setParent(container)
         
         # ========== PANEL DERECHO SUPERPUESTO ==========
-        actions_panel = self.create_module_side_panel(module_id, module_info)
+        actions_panel = self.create_module_side_panel(module_id, module_info, module_view=module_content)
         actions_panel.setParent(container)
+
         
         # Función para posicionar elementos
         def update_positions() -> None:
@@ -975,10 +976,13 @@ class MainWindowV2(QMainWindow):
                 view_class_name = "ClientesView"
             elif module_id == 'empresas':
                 view_class_name = "EmpresasView"
+            elif module_id == 'articulos':
+                view_class_name = "ArticulosView"
             else:
                 # Para otros módulos, usar convención estándar
                 view_class_name = self._module_id_to_class_name(module_id, "View")
             
+            print(f"Intentando cargar módulo {module_id} desde {module_name}.{view_class_name}")
             module = __import__(module_name, fromlist=[view_class_name])
             view_class = getattr(module, view_class_name)
             
@@ -990,6 +994,9 @@ class MainWindowV2(QMainWindow):
                 
                 # Para ClientesView, pasar la sesión correcta
                 view_instance = view_class(session=current_session)
+            elif module_id == 'articulos':
+                # ArticulosView no requiere sesión en el constructor por ahora, pero es bueno ser explícito
+                view_instance = view_class()
             else:
                 view_instance = view_class()
             
@@ -997,7 +1004,18 @@ class MainWindowV2(QMainWindow):
             
         except (ImportError, AttributeError) as e:
             print(f"No se pudo cargar módulo {module_id}: {e}")
+            import traceback
+            traceback.print_exc()
+            
+            # Mostrar error al usuario si estamos en modo debug o desarrollo
+            # Esto ayuda a diagnosticar por qué falla la carga
+            QMessageBox.warning(
+                self,
+                "Error de carga de módulo",
+                f"No se pudo cargar el módulo '{module_id}'.\n\nError: {str(e)}"
+            )
             return None
+
     
     def create_placeholder_content(self, module_info) -> QWidget:
         """Crea un contenido placeholder para módulos sin implementar."""
@@ -1046,7 +1064,7 @@ class MainWindowV2(QMainWindow):
         content_container.setLayout(content_layout)
         return content_container
     
-    def create_module_side_panel(self, module_id: str, module_info) -> QWidget:
+    def create_module_side_panel(self, module_id: str, module_info, module_view=None) -> QWidget:
         """
         Crea el panel lateral derecho deslizante con las acciones del módulo.
         
@@ -1108,7 +1126,37 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(order_label)
         
         order_combo = QComboBox()
-        order_combo.addItems([self.tr("Nombre Fiscal"), self.tr("Código"), self.tr("Fecha")])
+        
+        # Configuración dinámica de opciones de búsqueda
+        sort_fields = []
+        search_placeholder = self.tr("Buscar...")
+        
+        if module_view and hasattr(module_view, 'get_search_options'):
+            try:
+                options = module_view.get_search_options()
+                if 'sort_fields' in options:
+                    # Expecting list of tuples (Label, Value) or just strings
+                    raw_fields = options['sort_fields']
+                    for field in raw_fields:
+                        if isinstance(field, (list, tuple)) and len(field) >= 1:
+                            sort_fields.append(field[0]) # Use label
+                            # TODO: Store value mapping if needed
+                        else:
+                            sort_fields.append(str(field))
+                
+                if 'search_placeholder' in options:
+                    search_placeholder = options['search_placeholder']
+            except Exception as e:
+                print(f"Error getting search options for {module_id}: {e}")
+        
+        # Fallback defaults if no options provided
+        if not sort_fields:
+            if module_id == 'articulos': # Fallback legacy
+                sort_fields = [self.tr("Descripción"), self.tr("Código"), self.tr("Stock")]
+            else:
+                sort_fields = [self.tr("Nombre Fiscal"), self.tr("Código"), self.tr("Fecha")]
+        
+        order_combo.addItems(sort_fields)
         order_combo.setMinimumHeight(30)
         panel_layout.addWidget(order_combo)
         
@@ -1126,7 +1174,8 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(search_label)
         
         search_input = QLineEdit()
-        search_input.setPlaceholderText(self.tr("Buscar..."))
+        search_input.setPlaceholderText(search_placeholder)
+
         search_input.setMinimumHeight(30)
         search_input.textChanged.connect(lambda text: self.on_search_changed(module_id, text, order_combo.currentText(), mode_combo.currentText()))  # type: ignore
         panel_layout.addWidget(search_input)
@@ -1405,21 +1454,47 @@ class MainWindowV2(QMainWindow):
         
         module_widget_container = self.module_widgets[module_id]
         # El módulo real está dentro del contenedor, buscarlo
-        module_view = None
-        for child in module_widget_container.findChildren(QWidget):
-            # Buscar la vista que tenga el método filter_records
-            if hasattr(child, 'filter_records'):
-                module_view = child
-                break
+        # Buscar la vista del módulo
+        module_view = self._find_module_view(module_widget_container)
         
-        if module_view and hasattr(module_view, 'filter_records'):
+        if module_view:
             # Si search_text está vacío, obtenerlo del panel
             if not search_text:
                 panel = module_widget_container.findChild(QFrame, "sidePanel")
                 if panel and hasattr(panel, 'search_input'):
                     search_text = getattr(panel, 'search_input').text()
             
-            module_view.filter_records(search_text, order_by, order_mode)
+            # Intentar llamar a métodos de búsqueda en orden de preferencia
+            # 1. filter_records(text, order_by, order_mode) - El más completo
+            if hasattr(module_view, 'filter_records'):
+                try:
+                    module_view.filter_records(search_text, order_by, order_mode)
+                    return
+                except TypeError:
+                    # Si falla por argumentos, intentar solo con texto
+                    module_view.filter_records(search_text)
+                    return
+            
+            # 2. search(text) - Estándar simple
+            if hasattr(module_view, 'search'):
+                try:
+                    # Intentar pasar todos los argumentos si los acepta
+                    module_view.search(search_text, order_by, order_mode)
+                except TypeError:
+                    # Si no acepta ordenación, pasar solo texto
+                    module_view.search(search_text)
+                return
+                
+            # 3. filtrar(text) - Español
+            if hasattr(module_view, 'filtrar'):
+                module_view.filtrar(search_text)
+                return
+                
+            # 4. buscar_clientes(text) - Legacy específico
+            if hasattr(module_view, 'buscar_clientes'):
+                module_view.buscar_clientes(search_text)
+                return
+
     
     def on_module_action(self, module_id: str, action: str) -> None:
         """Ejecuta una acción específica de un módulo."""

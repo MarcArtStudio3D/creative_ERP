@@ -294,3 +294,25 @@ class ArticuloController:
         except Exception as e:
             print(f"Error searching articles: {e}")
             return []
+    
+    def filter_articles(self, filter_text: str = "") -> list:
+        """
+        Filter articles by search term across multiple fields
+        Similar to clientes.controller.cargar_clientes with filtro parameter
+        
+        Args:
+            filter_text: Text to filter by (searches in codigo, descripcion_reducida, codigo_barras)
+            
+        Returns:
+            List of filtered articles
+        """
+        try:
+            if not filter_text or filter_text.strip() == "":
+                # Return all articles if no filter
+                return self.repository.get_all(limit=1000)
+            
+            # Search across multiple fields
+            return self.repository.search_multi_field(filter_text.strip())
+        except Exception as e:
+            print(f"Error filtering articles: {e}")
+            return []

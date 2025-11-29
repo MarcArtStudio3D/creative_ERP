@@ -91,10 +91,24 @@ class ArticuloRepository:
         session = self._session()
         try:
             temp_code = codigo if codigo else f"_{random.randint(1000, 9999)}_"
+            # Insert with default values for mandatory fields to avoid "Field doesn't have a default value" error
             result = session.execute(
-                text("INSERT INTO articulos (codigo) VALUES (:codigo)"),
+                text("""
+                    INSERT INTO articulos (
+                        codigo, coste, coste_real, porc_dto, margen, margen_min, 
+                        tipo_iva, stock_real, stock_fisico_almacen, stock_maximo, stock_minimo,
+                        unidades_compradas, importe_acumulado_compras, unidades_vendidas, importe_acumulado_ventas,
+                        cantidad_pendiente_recibir, unidades_reservadas, mostrar_web, etiquetas, paquetes
+                    ) VALUES (
+                        :codigo, 0, 0, 0, 0, 0, 
+                        0, 0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0, 0
+                    )
+                """),
                 {"codigo": temp_code}
             )
+
             session.commit()
             return result.lastrowid
         except Exception as e:
@@ -202,6 +216,62 @@ class ArticuloRepository:
         finally:
             if not self._external_session:
                 session.close()
+    
+    def search_multi_field(self, search_term: str, limit: int = 500) -> List[dict]:
+        """
+        Search articles across multiple fields (codigo, descripcion_reducida, codigo_barras)
+        Similar to clientes.repository.obtener_todos with filtro parameter
+        
+        Args:
+            search_term: Term to search for
+            limit: Maximum results
+            
+        Returns:
+            List of articles matching the search term in any field
+        """
+        session = self._session()
+        try:
+            # Get default tarifa for search view
+            # Fallback to 1 if configuracion table doesn't exist or is empty
+            try:
+                tarifa_result = session.execute(
+                    text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
+                )
+                tarifa_row = tarifa_result.fetchone()
+                id_tarifa = tarifa_row[0] if tarifa_row else 1
+            except Exception:
+                # If table doesn't exist or any other error, default to 1
+                id_tarifa = 1
+
+            
+            # Search across multiple fields using OR conditions
+            sql = """
+                SELECT DISTINCT a.id, a.codigo, a.descripcion_reducida, a.codigo_barras, 
+                       a.codigo_fabricante, a.stock_real, a.coste, a.margen
+                FROM articulos a
+                WHERE (
+                    UPPER(a.codigo) LIKE :search OR
+                    UPPER(a.descripcion_reducida) LIKE :search OR
+                    UPPER(a.codigo_barras) LIKE :search OR
+                    UPPER(a.codigo_fabricante) LIKE :search
+                )
+                ORDER BY a.descripcion_reducida ASC
+                LIMIT :limit
+            """
+            
+            result = session.execute(
+                text(sql),
+                {
+                    "search": f"%{search_term.upper()}%",
+                    "limit": limit
+                }
+            )
+            
+            return [dict(row._mapping) for row in result.fetchall()]
+        finally:
+            if not self._external_session:
+                session.close()
+
     
     # ==================== Lookups ====================
     

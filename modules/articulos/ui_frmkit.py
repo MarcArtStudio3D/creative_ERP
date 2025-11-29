@@ -188,7 +188,7 @@ class Ui_FrmKit(object):
 
         self.cboSentido = QComboBox(self.frame)
         self.cboSentido.setObjectName(u"cboSentido")
-        self.cboSentido.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.cboSentido.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.cboSentido, 1, 1, 1, 1)
 
@@ -257,7 +257,7 @@ class Ui_FrmKit(object):
 
         self.cboOrden = QComboBox(self.frame)
         self.cboOrden.setObjectName(u"cboOrden")
-        self.cboOrden.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.cboOrden.setStyleSheet(u"")
 
         self.gridLayout.addWidget(self.cboOrden, 0, 1, 1, 1)
 

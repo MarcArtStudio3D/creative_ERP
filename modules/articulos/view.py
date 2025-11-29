@@ -72,6 +72,44 @@ class ArticulosView(QDialog):
         self.ui.radGrafica_unidades.toggled.connect(self._on_chart_data_changed)
         self.ui.radGrafica_importes.toggled.connect(self._on_chart_data_changed)
     
+    def search(self, text: str):
+        """
+        Method called by main_window_v2.py side panel search
+        """
+        self._load_articles_data(text)
+        
+    def nuevo(self):
+        """Public method for 'New' action from side panel"""
+        self._on_add_clicked()
+        
+    def editar(self):
+        """Public method for 'Edit' action from side panel"""
+        self._on_edit_clicked()
+        
+    def borrar(self):
+        """Public method for 'Delete' action from side panel"""
+        self._on_delete_clicked()
+
+    def get_search_options(self) -> dict:
+        """
+        Returns configuration for the side panel search options.
+        Used by main_window_v2.py to populate the sort combo box.
+        """
+        return {
+            'sort_fields': [
+                ("Descripción", "descripcion_reducida"),
+                ("Código", "codigo"),
+                ("Stock", "stock_real"),
+                ("Precio", "pvp")
+            ],
+            'search_placeholder': "Buscar por código, descripción..."
+        }
+
+
+
+
+
+    
     def _setup_initial_state(self):
         """Set initial UI state"""
         # Show list view initially
@@ -304,13 +342,18 @@ class ArticulosView(QDialog):
         # Load data
         self._load_articles_data()
     
-    def _load_articles_data(self):
-        """Load articles data into the table"""
+    def _load_articles_data(self, filter_text: str = ""):
+        """Load articles data into the table with optional filter"""
         try:
-            articles = self.controller.repository.get_all(limit=100)  # Load first 100 articles
+            articles = self.controller.filter_articles(filter_text)
             self.articles_model.set_articles(articles)
         except Exception as e:
             print(f"Error loading articles: {e}")
+    
+    def _on_filter_changed(self, text: str):
+        """Handle filter text change - reload articles with filter"""
+        self._load_articles_data(text)
+
     
     def _on_table_double_click(self, index: QModelIndex):
         """Handle table double-click to edit article"""

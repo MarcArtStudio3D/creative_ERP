@@ -336,6 +336,25 @@ class ArticuloRepository:
     
     # ==================== Tarifas ====================
     
+    def get_default_tarifa(self) -> int:
+        """
+        Get default tarifa ID from configuration
+        Returns 1 if not configured
+        """
+        session = self._session()
+        try:
+            result = session.execute(
+                text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
+            )
+            row = result.fetchone()
+            return row[0] if row and row[0] else 1
+        except Exception as e:
+            print(f"Error getting default tarifa: {e}")
+            return 1
+        finally:
+            if not self._external_session:
+                session.close()
+    
     def create_tarifas_for_article(self, articulo_id: int) -> bool:
         """Create tarifa entries for new article based on codigotarifa"""
         session = self._session()

@@ -1,7 +1,7 @@
 from PySide6.QtWidgets import QDialog, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
-from PySide6.QtGui import QPainter
+from PySide6.QtGui import QPainter, QShortcut, QKeySequence
 from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
 from modules.articulos.controller import ArticuloController
 from core.db import get_current_database, set_current_database
@@ -59,6 +59,10 @@ class ArticulosView(QDialog):
         
         # Search button
         self.ui.btnBuscar.clicked.connect(self._on_search_clicked)
+        
+        # Keyboard shortcut for search (Ctrl+F)
+        self.search_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
+        self.search_shortcut.activated.connect(self._on_search_clicked)
         
         # Tab changes
         self.ui.Pestanas.currentChanged.connect(self._on_tab_changed)
@@ -393,9 +397,11 @@ class ArticulosView(QDialog):
             self._load_form_from_article()
     
     def _on_search_clicked(self):
-        """Handle Search button click"""
-        # TODO: Implement search dialog
-        pass
+        """Handle Search button click - switch to list view"""
+        # Simply switch to the list view (page_2 with tablaBusqueda)
+        self.ui.stackedWidget.setCurrentIndex(1)
+        # Set focus on the table for immediate keyboard navigation
+        self.ui.tablaBusqueda.setFocus()
     
     def _on_tab_changed(self, index: int):
         """Handle tab change"""

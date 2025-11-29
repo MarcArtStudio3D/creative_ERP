@@ -756,11 +756,16 @@ class EmpresasView(QWidget):
             
             if len(results) == 1:
                 # Una sola población - llenar código postal automáticamente
-                cp, ciudad, provincia = results[0]
-                if hasattr(self.ui, 'txtcp'):
-                    self.ui.txtcp.setText(cp or '')
-                if hasattr(self.ui, 'txtprovincia'):
-                    self.ui.txtprovincia.setText(provincia or '')
+                # Now results has 4 columns: cp, ciudad, provincia, rowid
+                if len(results[0]) >= 3:
+                    cp = results[0][0]
+                    ciudad = results[0][1]
+                    provincia = results[0][2]
+                    
+                    if hasattr(self.ui, 'txtcp'):
+                        self.ui.txtcp.setText(cp or '')
+                    if hasattr(self.ui, 'txtprovincia'):
+                        self.ui.txtprovincia.setText(provincia or '')
                     
             elif len(results) > 1:
                 # Múltiples resultados - mostrar DBConsultaView para seleccionar
@@ -771,13 +776,27 @@ class EmpresasView(QWidget):
                 country_db.setDatabaseName(db_path)
                 
                 if country_db.open():
-                    sql = f"""
-                        SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
-                        FROM {table_name} 
-                        WHERE {city_col} LIKE '%{poblacion.upper()}%' 
-                        ORDER BY {city_col}, {cp_col}
-                        LIMIT 50
-                    """
+                    # Extract IDs found by the repository (which handled accents correctly)
+                    # results tuples are (cp, city, prov, rowid)
+                    ids = [str(r[3]) for r in results if len(r) > 3]
+                    ids_str = ",".join(ids)
+                    
+                    if ids_str:
+                        sql = f"""
+                            SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
+                            FROM {table_name} 
+                            WHERE ROWID IN ({ids_str})
+                            ORDER BY {city_col}, {cp_col}
+                        """
+                    else:
+                        # Fallback if no IDs (shouldn't happen if results > 0)
+                        sql = f"""
+                            SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
+                            FROM {table_name} 
+                            WHERE {city_col} LIKE '%{poblacion.upper()}%' 
+                            ORDER BY {city_col}, {cp_col}
+                            LIMIT 50
+                        """
                     
                     id_selected, record = DBConsultaView.select_from_sql(
                         parent=self,

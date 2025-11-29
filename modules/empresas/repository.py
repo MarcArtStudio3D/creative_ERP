@@ -5,6 +5,13 @@ from core.db import get_session, get_database_url
 from core.models import Empresa, BusinessGroup
 
 
+def remove_accents(input_str):
+    import unicodedata
+    if input_str is None:
+        return ""
+    nfkd_form = unicodedata.normalize('NFKD', str(input_str))
+    return "".join([c for c in nfkd_form if not unicodedata.combining(c)])
+
 class EmpresaRepository:
     def __init__(self, session=None):
         self._external_session = session
@@ -148,6 +155,7 @@ class EmpresaRepository:
             print(f"Error en repositorio buscando población: {e}")
             return [], db_path, db_config
 
+
     def buscar_codigos_postales(self, poblacion: str, pais: str):
         """
         Busca códigos postales por nombre de población.
@@ -181,16 +189,18 @@ class EmpresaRepository:
             
         try:
             conn = sqlite3.connect(db_path)
+            conn.create_function("REMOVE_ACCENTS", 1, remove_accents)
             cursor = conn.cursor()
             
-            # Query for city name (case-insensitive LIKE search)
+            # Query for city name (case-insensitive and accent-insensitive LIKE search)
+            # We select ROWID to help the view filter specifically these results
             cursor.execute(f"""
-                SELECT {cp_col}, {city_col}, {prov_col} 
+                SELECT {cp_col}, {city_col}, {prov_col}, ROWID 
                 FROM {table_name} 
-                WHERE {city_col} LIKE ? 
+                WHERE REMOVE_ACCENTS({city_col}) LIKE ? 
                 ORDER BY {city_col}, {cp_col}
-                LIMIT 50
-            """, (f"%{poblacion.upper()}%",))
+                LIMIT 500
+            """, (f"%{remove_accents(poblacion).upper()}%",))
             
             results = cursor.fetchall()
             conn.close()

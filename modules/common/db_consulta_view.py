@@ -50,6 +50,10 @@ class DBConsultaView(QDialog):
         self.ui.resultado_list.doubleClicked.connect(self.on_resultado_list_doubleClicked)
         self.ui.btn_aceptar.clicked.connect(self.accept)
         self.ui.btn_cancelar.clicked.connect(self.reject)
+        
+        # Connect comboboxes to update filter immediately
+        self.ui.cboSentido.currentIndexChanged.connect(lambda: self.set_filtro(self.ui.lineaTextoBuscar.text()))
+        self.ui.cboCampoBusqueda.currentIndexChanged.connect(lambda: self.set_filtro(self.ui.lineaTextoBuscar.text()))
 
     # helper getters
     def get_selected_id(self) -> int:
@@ -97,17 +101,38 @@ class DBConsultaView(QDialog):
         self.cSQLFiltered = ''
         if not self.cSQL:
             return
-        self.cSQLFiltered = self.cSQL
-        if 'where' in self.cSQL.lower():
+        self.cSQLFiltered = ''
+        if not self.cSQL:
+            return
+            
+        # Strip existing ORDER BY to avoid syntax errors (e.g. ... ORDER BY ... WHERE ...)
+        base_sql = self.cSQL
+        lower_sql = base_sql.lower()
+        
+        # Strip LIMIT first (it's usually at the end)
+        limit_index = lower_sql.rfind(' limit ')
+        if limit_index != -1:
+            base_sql = base_sql[:limit_index]
+            lower_sql = base_sql.lower() # update lower_sql for order by check
+            
+        order_by_index = lower_sql.rfind(' order by ')
+        if order_by_index != -1:
+            base_sql = base_sql[:order_by_index]
+            
+        self.cSQLFiltered = base_sql
+        
+        if 'where' in base_sql.lower():
             self.cSQLFiltered += ' and '
         else:
             self.cSQLFiltered += ' where '
+            
         # Use the current selected field to filter
         campo = self.ui.cboCampoBusqueda.currentText().strip() or ''
         if campo:
             # Escape single quotes in filtro to prevent SQL injection
             filtro_escaped = filtro.replace("'", "''")
-            self.cSQLFiltered += f"{campo} like '%{filtro_escaped}%'"
+            # Use UPPER for case-insensitive matching on accented characters in SQLite
+            self.cSQLFiltered += f"{campo} like '%{filtro_escaped.upper()}%'"
         else:
             # fallback to generic clause: search across all columns would be needed, but
             # for now append a LIKE on the first column (assuming it's not the ID column)
@@ -117,9 +142,9 @@ class DBConsultaView(QDialog):
                 filtro_escaped = filtro.replace("'", "''")
                 self.cSQLFiltered += f"{first_column} like '%{filtro_escaped}%'"
             else:
-                # No valid columns to filter, remove the WHERE clause
-                if 'where' not in self.cSQL.lower():
-                    self.cSQLFiltered = self.cSQL
+                # No valid columns to filter, remove the WHERE/AND clause we just added
+                # We go back to base_sql which has no ORDER BY, but we will add it later
+                self.cSQLFiltered = base_sql
         # extra filters (example from old code for articles)
         if self.ui.lbltabla.text() == 'articulos' and ('vista_art_prov' not in self.cSQL):
             if self.id_tarifa_cliente:

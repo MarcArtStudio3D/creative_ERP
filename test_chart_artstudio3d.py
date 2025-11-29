@@ -15,9 +15,8 @@ def test_chart_with_artstudio3d():
     """Test chart with artstudio3d database"""
     app = QApplication(sys.argv)
     
-    # Asegurar que usamos la base de datos correcta
-    set_current_database('artstudio3d')
-    print("✅ Base de datos configurada a: artstudio3d")
+    # La base de datos se configurará automáticamente en ArticulosView
+    print("✅ Iniciando aplicación de artículos")
     
     # Crear ventana de artículos
     window = ArticulosView()

@@ -4,6 +4,7 @@ from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCatego
 from PySide6.QtGui import QPainter
 from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
 from modules.articulos.controller import ArticuloController
+from core.db import get_current_database, set_current_database
 
 
 class ArticulosView(QDialog):
@@ -11,6 +12,9 @@ class ArticulosView(QDialog):
         super().__init__(parent)
         self.ui = Ui_FrmArticulos()
         self.ui.setupUi(self)
+        
+        # Ensure we're using the correct database for articles
+        self._ensure_articles_database()
         
         self.controller = ArticuloController()
         self._init_complete = False
@@ -20,6 +24,24 @@ class ArticulosView(QDialog):
         self._setup_initial_state()
         
         self._init_complete = True
+    
+    # ==================== Database Setup ====================
+    
+    def _ensure_articles_database(self):
+        """Ensure we're using the correct database for articles module"""
+        current_db = get_current_database()
+        
+        # If we're on main database, we need to switch to articles database
+        # This should be the company's configured database (e.g., artstudio3d)
+        if current_db == 'main':
+            # TODO: In a full multi-company setup, this would get the company's DB
+            # For now, default to artstudio3d for articles
+            try:
+                set_current_database('artstudio3d')
+                print(f"🔄 Switched to articles database: artstudio3d")
+            except Exception as e:
+                print(f"❌ Error switching to articles database: {e}")
+                # Stay on current database if switch fails
     
     # ==================== Setup ====================
     

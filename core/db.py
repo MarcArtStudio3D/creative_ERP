@@ -21,7 +21,7 @@ DATABASE_CONFIGS = {
 }
 
 # Base de datos por defecto
-DEFAULT_DB = os.environ.get('CREATIVE_ERP_DEFAULT_DB', 'artstudio3d')
+DEFAULT_DB = os.environ.get('CREATIVE_ERP_DEFAULT_DB', 'main')
 
 # Motor de base de datos actual
 _current_db = DEFAULT_DB

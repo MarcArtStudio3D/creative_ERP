@@ -1,4 +1,4 @@
-from typing import Optional, Dict, Any
+from typing import Optional, Dict, Any, List
 from datetime import date
 from modules.articulos.repository import ArticuloRepository
 
@@ -181,8 +181,9 @@ class ArticuloController:
         if not form_data.get("descripcion_reducida"):
             errors.append("Nombre del artículo")
         
-        if not form_data.get("id_seccion"):
-            errors.append("Sección")
+        # Section is optional for now (TODO: implement section lookup)
+        # if not form_data.get("id_seccion"):
+        #     errors.append("Sección")
         
         if errors:
             return "Debe especificar los siguientes campos:\n" + "\n".join(errors)
@@ -316,3 +317,15 @@ class ArticuloController:
         except Exception as e:
             print(f"Error filtering articles: {e}")
             return []
+    
+    def get_iva_types(self, pais: str = None) -> List[dict]:
+        """
+        Get IVA types for populating combo boxes
+        
+        Args:
+            pais: Optional country filter
+            
+        Returns:
+            List of IVA types
+        """
+        return self.repository.get_iva_types(pais)

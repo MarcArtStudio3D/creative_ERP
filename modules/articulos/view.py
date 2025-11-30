@@ -126,12 +126,42 @@ class ArticulosView(QDialog):
         # Setup chart
         self._setup_chart()
         
+        # Populate IVA types combo box
+        self._populate_iva_combo()
+        
         # Lock fields initially
         self._lock_fields(True)
         
         # Hide certain labels
         self.ui.lblkit.setVisible(False)
         self.ui.lbl_en_promocion.setVisible(False)
+    
+    def _populate_iva_combo(self):
+        """Populate IVA types combo box from TVAIVA table"""
+        try:
+            # Get IVA types from controller
+            iva_types = self.controller.get_iva_types()
+            
+            # Clear existing items
+            self.ui.cboTipoIVA.clear()
+            
+            # Add empty option
+            self.ui.cboTipoIVA.addItem("", None)
+            
+            # Add IVA types
+            for iva in iva_types:
+                # Display format: "descripcion (porcentaje%)"
+                display_text = f"{iva['descripcion']} ({iva['porcentaje']}%)"
+                # Store the ID as user data
+                self.ui.cboTipoIVA.addItem(display_text, iva['id'])
+            
+            print(f"✓ Loaded {len(iva_types)} IVA types")
+            
+        except Exception as e:
+            print(f"Error populating IVA combo: {e}")
+            # Add a default option if error
+            self.ui.cboTipoIVA.clear()
+            self.ui.cboTipoIVA.addItem("Error cargando tipos IVA", None)
     
     # ==================== Field Locking ====================
     

@@ -458,3 +458,86 @@ class ArticuloRepository:
         finally:
             if not self._external_session:
                 session.close()
+    
+    def get_iva_types(self, pais: str = None) -> List[dict]:
+        """
+        Get IVA types from TVAIVA table, optionally filtered by country
+        
+        Args:
+            pais: Country code/name to filter by. If None, gets from current company
+            
+        Returns:
+            List of IVA types with id, codigo, descripcion, porcentaje
+        """
+        session = self._session()
+        try:
+            # If no country specified, get from current company
+            if not pais:
+                from core.company_manager import get_current_company_context
+                company_ctx = get_current_company_context()
+                if company_ctx.get('has_company'):
+                    # Get company's country from database
+                    from core.db import get_session as get_main_session, set_current_database, get_current_database
+                    from core.models import Empresa
+                    
+                    original_db = get_current_database()
+                    set_current_database('main')
+                    try:
+                        main_session = get_main_session()
+                        empresa = main_session.query(Empresa).filter_by(
+                            id=company_ctx['company_id']
+                        ).first()
+                        if empresa:
+                            pais = empresa.pais
+                            print(f"📍 País de la empresa: {pais}")
+                    finally:
+                        set_current_database(original_db)
+                        main_session.close()
+            
+            # Default to España if still no country
+            if not pais:
+                pais = 'España'
+                print(f"📍 Usando país por defecto: {pais}")
+            
+            # First, check if table exists
+            try:
+                check_sql = """
+                    SELECT COUNT(*) as count FROM TVAIVA LIMIT 1
+                """
+                check_result = session.execute(text(check_sql))
+                print(f"✓ Tabla TVAIVA existe")
+            except Exception as table_error:
+                print(f"❌ Tabla TVAIVA no existe o error: {table_error}")
+                return []
+            
+            # Query TVAIVA table (case-insensitive comparison)
+            sql = """
+                SELECT id, codigo, descripcion, porcentaje, pais
+                FROM TVAIVA
+                WHERE LOWER(pais) = LOWER(:pais)
+                ORDER BY porcentaje ASC
+            """
+            
+            result = session.execute(text(sql), {"pais": pais})
+            iva_types = [dict(row._mapping) for row in result.fetchall()]
+            
+            if not iva_types:
+                # Try without country filter to see if there's any data
+                print(f"⚠️ No se encontraron tipos de IVA para país '{pais}', intentando sin filtro...")
+                sql_all = "SELECT id, codigo, descripcion, porcentaje, pais FROM TVAIVA ORDER BY porcentaje ASC"
+                result_all = session.execute(text(sql_all))
+                all_iva = [dict(row._mapping) for row in result_all.fetchall()]
+                print(f"📊 Total de tipos de IVA en la tabla: {len(all_iva)}")
+                if all_iva:
+                    print(f"📋 Países disponibles: {set(row['pais'] for row in all_iva)}")
+            
+            return iva_types
+            
+        except Exception as e:
+            print(f"❌ Error getting IVA types: {e}")
+            import traceback
+            traceback.print_exc()
+            return []
+        finally:
+            if not self._external_session:
+                session.close()

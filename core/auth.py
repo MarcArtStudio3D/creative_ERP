@@ -129,7 +129,7 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
     
     # ADMIN: Acceso total a todo
     if role == UserRole.ADMIN:
-        return {
+        perms = {
             "clientes": [Permission.ADMIN],
             "facturas": [Permission.ADMIN],
             "albaranes": [Permission.ADMIN],
@@ -148,10 +148,11 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
                 "empresas": [Permission.ADMIN],
                 "gestor_modulos": [Permission.ADMIN],
         }
+        return _apply_overrides_for_role(role, perms)
     
     # MANAGER: Gestión completa excepto usuarios y configuración
     elif role == UserRole.MANAGER:
-        return {
+        perms = {
             "clientes": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
             "facturas": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.EXPORT, Permission.PRINT],
             "albaranes": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.PRINT],
@@ -168,10 +169,11 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
                 "empresas": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
                 "gestor_modulos": [Permission.READ],
         }
+        return _apply_overrides_for_role(role, perms)
     
     # ACCOUNTANT: Contabilidad y finanzas
     elif role == UserRole.ACCOUNTANT:
-        return {
+        perms = {
             "clientes": [Permission.READ],
             "facturas": [Permission.READ, Permission.EXPORT],
             "proveedores": [Permission.READ],
@@ -180,10 +182,11 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "tesoreria": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "informes": [Permission.READ, Permission.EXPORT],
         }
+        return _apply_overrides_for_role(role, perms)
     
     # SALES: Ventas y clientes
     elif role == UserRole.SALES:
-        return {
+        perms = {
             "clientes": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "facturas": [Permission.READ, Permission.CREATE, Permission.PRINT],
             "albaranes": [Permission.READ, Permission.CREATE, Permission.PRINT],
@@ -192,10 +195,11 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "proyectos": [Permission.READ],
             "informes": [Permission.READ],
         }
+        return _apply_overrides_for_role(role, perms)
     
     # PROJECT_MANAGER: Gestión de proyectos
     elif role == UserRole.PROJECT_MANAGER:
-        return {
+        perms = {
             "clientes": [Permission.READ],
             "proyectos": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],
@@ -203,18 +207,20 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "presupuestos": [Permission.READ, Permission.CREATE],
             "informes": [Permission.READ],
         }
+        return _apply_overrides_for_role(role, perms)
     
     # EMPLOYEE: Empleado básico
     elif role == UserRole.EMPLOYEE:
-        return {
+        perms = {
             "proyectos": [Permission.READ],  # Solo sus proyectos
             "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],  # Su tiempo
             "clientes": [Permission.READ],
         }
+        return _apply_overrides_for_role(role, perms)
     
     # VIEWER: Solo lectura
     elif role == UserRole.VIEWER:
-        return {
+        perms = {
             "clientes": [Permission.READ],
             "facturas": [Permission.READ],
             "albaranes": [Permission.READ],
@@ -223,8 +229,9 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "proyectos": [Permission.READ],
             "informes": [Permission.READ],
         }
+        return _apply_overrides_for_role(role, perms)
     
-    return {}
+    return _apply_overrides_for_role(role, {})
 
 
 def _load_role_overrides() -> Dict[str, Dict]:

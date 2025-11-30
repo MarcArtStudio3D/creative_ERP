@@ -10,6 +10,45 @@ from typing import Optional
 from core.db import Base
 
 
+class Seccion(Base):
+    """Modelo de Sección - Primera división del almacén"""
+    __tablename__ = 'secciones'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    codigo: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
+    seccion: Mapped[str] = mapped_column(String(100), nullable=False)
+    
+    def __repr__(self):
+        return f"<Seccion(id={self.id}, codigo='{self.codigo}', seccion='{self.seccion}')>"
+
+
+class Familia(Base):
+    """Modelo de Familia - Segunda división del almacén (pertenece a una sección)"""
+    __tablename__ = 'familias'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id_seccion: Mapped[int] = mapped_column(Integer, ForeignKey('secciones.id'), nullable=False)
+    codigo: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
+    familia: Mapped[str] = mapped_column(String(100), nullable=False)
+    
+    def __repr__(self):
+        return f"<Familia(id={self.id}, codigo='{self.codigo}', familia='{self.familia}')>"
+
+
+class Subfamilia(Base):
+    """Modelo de Subfamilia - Tercera división del almacén (pertenece a una familia)"""
+    __tablename__ = 'subfamilias'
+    
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    id_familia: Mapped[int] = mapped_column(Integer, ForeignKey('familias.id'), nullable=False)
+    codigo: Mapped[str] = mapped_column(String(10), unique=True, nullable=False)
+    subfamilia: Mapped[str] = mapped_column(String(100), nullable=False)
+    id_seccion: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    
+    def __repr__(self):
+        return f"<Subfamilia(id={self.id}, codigo='{self.codigo}', subfamilia='{self.subfamilia}')>"
+
+
 class Articulo(Base):
     """Modelo de Artículo - Refleja la estructura de RedFox SGC"""
     __tablename__ = 'articulos'

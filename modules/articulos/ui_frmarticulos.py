@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QTextEdit, QVBoxLayout, QWidget)
 
 from modules.common.chartviewwidget import ChartViewWidget
-from modules.common.openchart import OpenChart
 from modules import designer_rc
 
 class Ui_FrmArticulos(object):
@@ -698,7 +697,7 @@ class Ui_FrmArticulos(object):
         self.verticalLayout_2.setObjectName(u"verticalLayout_2")
         self.tablaProveedores = QTableView(self.tab_distribuidores)
         self.tablaProveedores.setObjectName(u"tablaProveedores")
-        self.tablaProveedores.setMaximumSize(QSize(16777215, 299))
+        self.tablaProveedores.setMaximumSize(QSize(16777215, 1677215))
         self.tablaProveedores.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
         self.tablaProveedores.setAlternatingRowColors(True)
         self.tablaProveedores.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
@@ -761,18 +760,6 @@ class Ui_FrmArticulos(object):
 
 
         self.verticalLayout_4.addLayout(self.verticalLayout_2)
-
-        self.graf_prov = OpenChart(self.tab_distribuidores)
-        self.graf_prov.setObjectName(u"graf_prov")
-        sizePolicy3.setHeightForWidth(self.graf_prov.sizePolicy().hasHeightForWidth())
-        self.graf_prov.setSizePolicy(sizePolicy3)
-        self.graf_prov.setMinimumSize(QSize(0, 232))
-        self.graf_prov.setProperty(u"Etiquetas", True)
-        self.graf_prov.setProperty(u"ValoresEjeY", True)
-        self.graf_prov.setProperty(u"Leyenda", False)
-        self.graf_prov.setProperty(u"animationDuration", 700)
-
-        self.verticalLayout_4.addWidget(self.graf_prov)
 
         self.Pestanas.addTab(self.tab_distribuidores, "")
         self.tab_promociones = QWidget()
@@ -1522,7 +1509,7 @@ class Ui_FrmArticulos(object):
         self.txtfecha_fecha_ultima_compra.setSizePolicy(sizePolicy6)
         self.txtfecha_fecha_ultima_compra.setMaximumSize(QSize(120, 27))
         self.txtfecha_fecha_ultima_compra.setDateTime(QDateTime(QDate(2000, 9, 13), QTime(0, 0, 0)))
-        self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 13), QTime(0, 0, 0)))
+        self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 12), QTime(0, 0, 0)))
         self.txtfecha_fecha_ultima_compra.setCalendarPopup(True)
         self.txtfecha_fecha_ultima_compra.setDate(QDate(2000, 9, 13))
 
@@ -2558,7 +2545,6 @@ class Ui_FrmArticulos(object):
         self.btnAsignarDistribuidor.setToolTip(QCoreApplication.translate("FrmArticulos", u"<html><head/><body><p><span style=\" color:#ff0000;\">Asignar como proveedor principal.</span></p></body></html>", None))
 #endif // QT_CONFIG(tooltip)
         self.btnAsignarDistribuidor.setText("")
-        self.graf_prov.setProperty(u"Title", QCoreApplication.translate("FrmArticulos", u"PVD Distribuidores", None))
         self.Pestanas.setTabText(self.Pestanas.indexOf(self.tab_distribuidores), QCoreApplication.translate("FrmArticulos", u"Distrubuidores", None))
         self.chkArticulo_promocionado.setText(QCoreApplication.translate("FrmArticulos", u"Art\u00edculo promocionado", None))
         self.label_63.setText(QCoreApplication.translate("FrmArticulos", u"OFERTA PRECIO FIJO", None))

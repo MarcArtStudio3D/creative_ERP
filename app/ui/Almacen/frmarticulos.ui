@@ -1349,7 +1349,7 @@ color: rgb(255, 255, 255);</string>
                <property name="maximumSize">
                 <size>
                  <width>16777215</width>
-                 <height>299</height>
+                 <height>1677215</height>
                 </size>
                </property>
                <property name="editTriggers">
@@ -1507,37 +1507,6 @@ color: rgb(255, 255, 255);</string>
               </layout>
              </item>
             </layout>
-           </item>
-           <item>
-            <widget class="OpenChart" name="graf_prov" native="true">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="minimumSize">
-              <size>
-               <width>0</width>
-               <height>232</height>
-              </size>
-             </property>
-             <property name="Title" stdset="0">
-              <string>PVD Distribuidores</string>
-             </property>
-             <property name="Etiquetas" stdset="0">
-              <bool>true</bool>
-             </property>
-             <property name="ValoresEjeY" stdset="0">
-              <bool>true</bool>
-             </property>
-             <property name="Leyenda" stdset="0">
-              <bool>false</bool>
-             </property>
-             <property name="animationDuration" stdset="0">
-              <number>700</number>
-             </property>
-            </widget>
            </item>
           </layout>
          </widget>
@@ -3108,7 +3077,7 @@ Imagen.</string>
                   <second>0</second>
                   <year>1900</year>
                   <month>9</month>
-                  <day>13</day>
+                  <day>12</day>
                  </datetime>
                 </property>
                 <property name="displayFormat">
@@ -4850,11 +4819,6 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   </layout>
  </widget>
  <customwidgets>
-  <customwidget>
-   <class>OpenChart</class>
-   <extends>QWidget</extends>
-   <header location="global">openchart.h</header>
-  </customwidget>
   <customwidget>
    <class>ChartViewWidget</class>
    <extends>QWidget</extends>

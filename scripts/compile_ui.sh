@@ -95,6 +95,7 @@ declare -A UI_MODULE_MAP=(
     ["frmtipocliente.ui"]="tipo_cliente"
     ["/Almacen/frmarticulos.ui"]="articulos"
     ["/Almacen/frmkit.ui"]="articulos"
+    ["/Almacen/frmDivisiones.ui"]="articulos"
     ["db_consulta_view.ui"]="common"
     ["frmConfig.ui"]="common"
     ["frmeditaravisos.ui"]="common"

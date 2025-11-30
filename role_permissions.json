@@ -169,6 +169,13 @@
       "PRINT",
       "READ",
       "UPDATE"
+    ],
+    "divisiones_almacen": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
     ]
   },
   "employee": {
@@ -237,6 +244,9 @@
       "DELETE",
       "READ",
       "UPDATE"
+    ],
+    "divisiones_almacen": [
+      "READ"
     ]
   },
   "manager": {
@@ -249,6 +259,29 @@
       "PRINT",
       "READ",
       "UPDATE"
+    ],
+    "divisiones_almacen": [
+      "READ",
+      "UPDATE"
+    ]
+  },
+  "accountant": {
+    "divisiones_almacen": [
+      "CREATE",
+      "READ",
+      "UPDATE"
+    ]
+  },
+  "project_manager": {
+    "divisiones_almacen": [
+      "CREATE",
+      "READ",
+      "UPDATE"
+    ]
+  },
+  "viewer": {
+    "divisiones_almacen": [
+      "READ"
     ]
   }
 }

@@ -1,0 +1,349 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>DlgDivisionesAlmacen</class>
+ <widget class="QDialog" name="DlgDivisionesAlmacen">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>996</width>
+    <height>549</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Divisiones del almacén</string>
+  </property>
+  <layout class="QGridLayout" name="gridLayout_2">
+   <item row="0" column="3" colspan="2">
+    <widget class="QLabel" name="label_2">
+     <property name="styleSheet">
+      <string notr="true">background-color: #304163;
+color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="text">
+      <string>Familias</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="3" colspan="2">
+    <widget class="QListWidget" name="listFamilias"/>
+   </item>
+   <item row="3" column="5">
+    <widget class="QPushButton" name="btnBorrarSub">
+     <property name="text">
+      <string>Borrar subfamilia</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="3">
+    <widget class="QPushButton" name="btnBorrarFam">
+     <property name="text">
+      <string>Borrar familia</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="5" colspan="2">
+    <widget class="QLabel" name="label_6">
+     <property name="styleSheet">
+      <string notr="true">background-color: #304163;
+color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="text">
+      <string>Subfamilias</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="5" colspan="2">
+    <widget class="QListWidget" name="listSubfamilias"/>
+   </item>
+   <item row="2" column="2">
+    <widget class="QPushButton" name="btnActualizarSeccion">
+     <property name="text">
+      <string>Actualizar</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/Save.png</normaloff>:/PNG/resources/icons/png/Save.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="6">
+    <widget class="QPushButton" name="btnActualizarSubfamilia">
+     <property name="text">
+      <string>Actualizar</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/Save.png</normaloff>:/PNG/resources/icons/png/Save.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QPushButton" name="btnBorrarSec">
+     <property name="text">
+      <string>Borrar sección</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" colspan="6">
+    <widget class="QFrame" name="frame">
+     <property name="frameShape">
+      <enum>QFrame::Shape::StyledPanel</enum>
+     </property>
+     <property name="frameShadow">
+      <enum>QFrame::Shadow::Raised</enum>
+     </property>
+     <layout class="QGridLayout" name="gridLayout">
+      <item row="5" column="4">
+       <widget class="QPushButton" name="btnCerrar">
+        <property name="enabled">
+         <bool>false</bool>
+        </property>
+        <property name="text">
+         <string>Cerrar</string>
+        </property>
+        <property name="icon">
+         <iconset resource="../designer.qrc">
+          <normaloff>:/PNG/resources/icons/png/close.png</normaloff>:/PNG/resources/icons/png/close.png</iconset>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="0" rowspan="3" colspan="2">
+       <widget class="QLabel" name="lbl_imagen">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="maximumSize">
+         <size>
+          <width>250</width>
+          <height>250</height>
+         </size>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+        <property name="pixmap">
+         <pixmap>:/Icons/PNG/Box.png</pixmap>
+        </property>
+        <property name="scaledContents">
+         <bool>true</bool>
+        </property>
+       </widget>
+      </item>
+      <item row="0" column="0" colspan="5">
+       <widget class="QLabel" name="lbl_tree">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+        <property name="text">
+         <string/>
+        </property>
+       </widget>
+      </item>
+      <item row="2" column="3">
+       <spacer name="horizontalSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item row="2" column="2">
+       <spacer name="verticalSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Vertical</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>20</width>
+          <height>40</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item row="2" column="4">
+    <widget class="QPushButton" name="btnActualizarFamilia">
+     <property name="text">
+      <string>Actualizar</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/Save.png</normaloff>:/PNG/resources/icons/png/Save.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="2">
+    <widget class="QLabel" name="label">
+     <property name="maximumSize">
+      <size>
+       <width>16777215</width>
+       <height>21</height>
+      </size>
+     </property>
+     <property name="styleSheet">
+      <string notr="true">background-color: #304163;
+color: rgb(255, 255, 255);</string>
+     </property>
+     <property name="text">
+      <string>Secciones</string>
+     </property>
+     <property name="alignment">
+      <set>Qt::AlignmentFlag::AlignCenter</set>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <widget class="QPushButton" name="btnAddSeccion">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
+     <property name="text">
+      <string>Añadir sección</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="5">
+    <widget class="QPushButton" name="btnAddSub">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Añadir subfamilia</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" colspan="2">
+    <widget class="QListWidget" name="listSecciones"/>
+   </item>
+   <item row="2" column="3">
+    <widget class="QPushButton" name="btnAddFamily">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Añadir familia</string>
+     </property>
+     <property name="icon">
+      <iconset resource="../designer.qrc">
+       <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="2" colspan="4">
+    <widget class="QGroupBox" name="groupBox">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Preferred" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="title">
+      <string>VALORES EN EDICIÓN</string>
+     </property>
+     <widget class="QWidget" name="gridLayoutWidget">
+      <property name="geometry">
+       <rect>
+        <x>20</x>
+        <y>50</y>
+        <width>611</width>
+        <height>41</height>
+       </rect>
+      </property>
+      <layout class="QGridLayout" name="gridLayout_3">
+       <item row="0" column="2">
+        <widget class="QLabel" name="label_5">
+         <property name="text">
+          <string>Nombre</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Codigo</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="txtcodigo">
+         <property name="maximumSize">
+          <size>
+           <width>300</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="3">
+        <widget class="QLineEdit" name="txtnombre">
+         <property name="minimumSize">
+          <size>
+           <width>350</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>16777215</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="readOnly">
+          <bool>true</bool>
+         </property>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources>
+  <include location="../designer.qrc"/>
+ </resources>
+ <connections/>
+</ui>

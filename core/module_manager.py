@@ -176,6 +176,16 @@ AVAILABLE_MODULES = {
         dependencies=["articulos"]
     ),
     
+    "divisiones_almacen": Module(
+        id="divisiones_almacen",
+        name="Secciones Almacén",
+        description="Gestión de Secciones, Familias y Subfamilias",
+        icon="📁",
+        category=ModuleCategory.ALMACEN,
+        required_permissions=[Permission.READ],
+        dependencies=[]
+    ),
+    
     # MÓDULOS FINANCIEROS
     "contabilidad": Module(
         id="contabilidad",
@@ -376,6 +386,7 @@ def _dummy_translations():
     QCoreApplication.translate("Modules", "Registro de facturas de proveedores")
     QCoreApplication.translate("Modules", "Catálogo de productos y servicios")
     QCoreApplication.translate("Modules", "Control de inventario y stock")
+    QCoreApplication.translate("Modules", "Secciones Almacén")
     QCoreApplication.translate("Modules", "Asientos contables y balance")
     QCoreApplication.translate("Modules", "Gestión de cobros y pagos")
     QCoreApplication.translate("Modules", "Gestión de proyectos creativos")
@@ -385,3 +396,4 @@ def _dummy_translations():
     QCoreApplication.translate("Modules", "Configuración general del sistema")
     QCoreApplication.translate("Modules", "Informes y estadísticas")
     QCoreApplication.translate("Modules", "Ver módulos y otorgar permisos por rol")
+    QCoreApplication.translate("Modules", "Gestión de Secciones, Familias y Subfamilias")

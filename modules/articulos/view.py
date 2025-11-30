@@ -390,10 +390,29 @@ class ArticulosView(QDialog):
     
     def _on_edit_clicked(self):
         """Handle Edit button click"""
-        if self.controller.get_current_article():
+        # If we're already in form view with an article loaded, just unlock
+        if self.controller.get_current_article() and self.ui.stackedWidget.currentIndex() == 0:
+            self._lock_fields(False)
+            return
+        
+        # Otherwise, get the selected article from the table
+        selection = self.ui.tablaBusqueda.selectionModel()
+        if not selection or not selection.hasSelection():
+            QMessageBox.information(self, "Editar", "Por favor, selecciona un artículo de la lista")
+            return
+        
+        index = selection.currentIndex()
+        if not index.isValid():
+            return
+        
+        article = self.articles_model.get_article(index.row())
+        if article:
+            self.controller.load_by_id(article['id'])
+            self._load_form_from_article()
             self._lock_fields(False)
             # Switch to edit tab
             self.ui.stackedWidget.setCurrentIndex(0)
+
 
     
     def _on_save_clicked(self):

@@ -1285,7 +1285,7 @@ class MainWindowV2(QMainWindow):
         setattr(container, '_animation', panel_animation)
         
         #---------------------------------------------------------------------
-        # -          Panel derecho con funcines de búsqueda y acciones
+        # -          Panel derecho con funciones de búsqueda y acciones
         #---------------------------------------------------------------------
         def toggle_panel() -> None:
             parent = container.parent()
@@ -1320,8 +1320,14 @@ class MainWindowV2(QMainWindow):
                     module_view.show_list()
 
 
+
+
+        
+        # Exponer toggle_panel como método del contenedor para uso externo
+        setattr(container, 'toggle_panel', toggle_panel)
         
         tab.clicked.connect(toggle_panel)
+
         
         # Atajos de teclado
         # F1: Alternar panel (Abrir/Cerrar)
@@ -1440,10 +1446,32 @@ class MainWindowV2(QMainWindow):
             # Buscar widgets que tengan métodos típicos de módulos
             if hasattr(child, 'nuevo_cliente') or hasattr(child, 'nuevo') or \
                hasattr(child, 'editar_cliente') or hasattr(child, 'editar') or \
-               hasattr(child, 'borrar_cliente') or hasattr(child, 'borrar'):
+                hasattr(child, 'borrar_cliente') or hasattr(child, 'borrar'):
                 return child
         
         return None
+    
+    def _close_side_panel(self, module_id: str) -> None:
+        """
+        Cierra el panel lateral de un módulo si está abierto.
+        
+        Args:
+            module_id: ID del módulo cuyo panel se debe cerrar
+        """
+        if module_id not in self.module_widgets:
+            return
+        
+        module_widget_container = self.module_widgets[module_id]
+        
+        # Buscar el contenedor del panel lateral (tiene el método toggle_panel)
+        for child in module_widget_container.findChildren(QWidget):
+            if hasattr(child, 'toggle_panel'):
+                # Verificar si el panel está abierto
+                panel = child.findChild(QFrame, "sidePanel")
+                if panel and getattr(panel, '_is_open', False):
+                    # Cerrar el panel
+                    child.toggle_panel()
+                break
     
     def _call_module_method(self, module_view: QWidget, method_names: list) -> bool:
         """
@@ -1558,13 +1586,18 @@ class MainWindowV2(QMainWindow):
             # Llamar al método correspondiente según la acción
             if action == 'new':
                 self._call_module_method(module_view, ['nuevo_cliente', 'nuevo', 'nuevo_registro', 'on_nuevo_cliente'])
+                # Cerrar panel lateral para dar espacio a la edición
+                self._close_side_panel(module_id)
             elif action == 'edit':
                 self._call_module_method(module_view, ['editar_cliente', 'editar', 'editar_registro', 'on_edit_cliente'])
+                # Cerrar panel lateral para dar espacio a la edición
+                self._close_side_panel(module_id)
             elif action == 'delete':
                 self._call_module_method(module_view, ['borrar_cliente', 'borrar', 'eliminar', 'borrar_registro', 'on_eliminar_cliente'])
             elif action == 'exceptions':
                 # Funcionalidad futura
                 QMessageBox.information(self, self.tr("Excepciones"), self.tr("Funcionalidad en desarrollo"))
+
         
         else:
             QMessageBox.information(

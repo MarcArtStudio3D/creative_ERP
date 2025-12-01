@@ -110,7 +110,7 @@ def create_env_files():
         # Entornos a generar
         environments = ["development", "testing", "production"]
 
-            print("Creative ERP - Generador de Variables de Entorno")
+        print("Creative ERP - Generador de Variables de Entorno")
         print("=" * 60)
 
         for env in environments:
@@ -248,7 +248,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 
 def main():
     """Función principal."""
-        print("Creative ERP - Configuración de Variables de Entorno")
+    print("Creative ERP - Configuración de Variables de Entorno")
     print("=" * 60)
 
     # Crear archivos .env

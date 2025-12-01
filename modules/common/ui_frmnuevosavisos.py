@@ -31,7 +31,7 @@ class Ui_frmNuevosAvisos(object):
         self.btnAceptar = QPushButton(frmNuevosAvisos)
         self.btnAceptar.setObjectName(u"btnAceptar")
         icon = QIcon()
-        icon.addFile(u":/Icons/PNG/OK.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon.addFile(u":/PNG/resources/icons/png/ok.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.btnAceptar.setIcon(icon)
 
         self.gridLayout_2.addWidget(self.btnAceptar, 1, 1, 1, 1)
@@ -39,7 +39,7 @@ class Ui_frmNuevosAvisos(object):
         self.btnCancelar = QPushButton(frmNuevosAvisos)
         self.btnCancelar.setObjectName(u"btnCancelar")
         icon1 = QIcon()
-        icon1.addFile(u":/Icons/PNG/close.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        icon1.addFile(u":/PNG/resources/icons/png/close.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.btnCancelar.setIcon(icon1)
 
         self.gridLayout_2.addWidget(self.btnCancelar, 1, 2, 1, 1)
@@ -62,7 +62,7 @@ class Ui_frmNuevosAvisos(object):
         self.txtFecha = QDateEdit(self.frame)
         self.txtFecha.setObjectName(u"txtFecha")
         self.txtFecha.setStyleSheet(u"")
-        self.txtFecha.setDateTime(QDateTime(QDate(2026, 1, 1), QTime(0, 0, 0)))
+        self.txtFecha.setDateTime(QDateTime(QDate(2025, 12, 31), QTime(23, 0, 0)))
 
         self.gridLayout.addWidget(self.txtFecha, 2, 1, 1, 1)
 
@@ -119,6 +119,13 @@ class Ui_frmNuevosAvisos(object):
 
         self.gridLayout_2.addWidget(self.frame, 0, 0, 1, 3)
 
+        QWidget.setTabOrder(self.cboTipoAviso, self.cboUsuarios)
+        QWidget.setTabOrder(self.cboUsuarios, self.txtFecha)
+        QWidget.setTabOrder(self.txtFecha, self.txtHora)
+        QWidget.setTabOrder(self.txtHora, self.txtAviso)
+        QWidget.setTabOrder(self.txtAviso, self.cboEmpresa)
+        QWidget.setTabOrder(self.cboEmpresa, self.btnCancelar)
+        QWidget.setTabOrder(self.btnCancelar, self.btnAceptar)
 
         self.retranslateUi(frmNuevosAvisos)
         self.btnAceptar.clicked.connect(frmNuevosAvisos.accept)

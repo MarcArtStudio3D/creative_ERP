@@ -13,6 +13,12 @@ class ArticulosView(QWidget):
         super().__init__(parent)
         self.ui = Ui_FrmArticulos()
         self.ui.setupUi(self)
+        # Ensure the 'Nuevo' button uses the centralized 'success' style from modern.qss
+        try:
+            # Set a dynamic property 'class' to match selectors like QPushButton[class="success"]
+            self.ui.botAnadir.setProperty('class', 'success')
+        except Exception:
+            pass
         
         # Ensure we're using the correct database for articles
         self._ensure_articles_database()

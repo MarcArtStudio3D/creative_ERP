@@ -87,3 +87,15 @@ Para el futuro, cuando modifiques archivos
 
 # 4. Compilar traducciones
 lrelease translations/creative_erp_fr.ts -qm translations/creative_erp_fr.qm
+
+## 🧪 Política local de ejecución de tests (decisión del equipo)
+
+Por defecto en el flujo local seguimos la política **opción 2** (ejecución mínima y bajo confirmación):
+
+- No ejecutaré tests automáticamente para cambios triviales (p. ej. cambios visuales en `ui_*.py`, actualizaciones de iconos, comentarios, etc.).
+- Si el cambio afecta lógica de negocio o código del backend (archivos en `core/`, `modules/*/`, `app/` con lógica), te pediré confirmación para ejecutar un subconjunto mínimo de tests relacionados con los archivos modificados (por ejemplo, los tests unitarios que usan los módulos tocados o tests claramente relevantes).
+- Si quieres que me ejecute la suite completa, siempre puedo hacerlo a petición explícita (antes de commitear, antes de abrir PR o cuando lo pidas).
+
+Por defecto antes de ejecutar tests mínimos te preguntaré: "¿Quieres que ejecute los tests mínimos relacionados con este cambio? (y/n)". Esto evita ejecuciones largas por cambios triviales y respeta la preferencia del revisor.
+
+Si preferís una regla más automática (por ejemplo: ejecutar automáticamente tests mínimos cuando se tocan ficheros en `modules/`), dímelo y lo configuro.

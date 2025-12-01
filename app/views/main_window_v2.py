@@ -104,6 +104,14 @@ class MainWindowV2(QMainWindow):
         
         # Barra de estado
         self.statusBar().showMessage(self.get_status_text())
+
+        # Aplicar fondo global igual al del login (#021323) para probar la coherencia visual
+        # Usamos QMainWindow selector para que el cambio afecte a toda la ventana
+        try:
+            self.setStyleSheet("QMainWindow { background: #021323; }")
+        except Exception:
+            # No fatal si falla el stylesheet
+            pass
     
     def create_sidebar(self) -> QFrame:
         """Crea la barra lateral izquierda con módulos disponibles."""

@@ -70,7 +70,7 @@
              </size>
             </property>
             <property name="text">
-             <string>Añadir</string>
+             <string>Nuevo</string>
             </property>
             <property name="icon">
              <iconset resource="../designer.qrc">
@@ -259,35 +259,6 @@
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="botBorrar">
-            <property name="minimumSize">
-             <size>
-              <width>115</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="maximumSize">
-             <size>
-              <width>118</width>
-              <height>16777215</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Borrar</string>
-            </property>
-            <property name="icon">
-             <iconset resource="../designer.qrc">
-              <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="btnExcepciones_3">
             <property name="minimumSize">
              <size>
@@ -326,6 +297,48 @@ Editar
             <property name="icon">
              <iconset>
               <normaloff>:/Icons/PNG/kits.png</normaloff>:/Icons/PNG/kits.png</iconset>
+            </property>
+            <property name="iconSize">
+             <size>
+              <width>24</width>
+              <height>24</height>
+             </size>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <spacer name="verticalSpacer_5">
+            <property name="orientation">
+             <enum>Qt::Orientation::Vertical</enum>
+            </property>
+            <property name="sizeHint" stdset="0">
+             <size>
+              <width>20</width>
+              <height>40</height>
+             </size>
+            </property>
+           </spacer>
+          </item>
+          <item>
+           <widget class="QPushButton" name="botBorrar">
+            <property name="minimumSize">
+             <size>
+              <width>115</width>
+              <height>40</height>
+             </size>
+            </property>
+            <property name="maximumSize">
+             <size>
+              <width>118</width>
+              <height>16777215</height>
+             </size>
+            </property>
+            <property name="text">
+             <string>Borrar</string>
+            </property>
+            <property name="icon">
+             <iconset resource="../designer.qrc">
+              <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
             </property>
             <property name="iconSize">
              <size>
@@ -3093,7 +3106,7 @@ background-color: rgb(239, 239, 239);</string>
                   <second>0</second>
                   <year>1900</year>
                   <month>9</month>
-                  <day>11</day>
+                  <day>10</day>
                  </datetime>
                 </property>
                 <property name="displayFormat">
@@ -4853,7 +4866,6 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>botEditar</tabstop>
   <tabstop>botGuardar</tabstop>
   <tabstop>botDeshacer</tabstop>
-  <tabstop>botBorrar</tabstop>
   <tabstop>btnExcepciones_3</tabstop>
   <tabstop>btnKit</tabstop>
   <tabstop>btn_cerrar</tabstop>
@@ -5005,5 +5017,22 @@ font: 14pt &quot;Sans Serif&quot;;</string>
  <resources>
   <include location="../designer.qrc"/>
  </resources>
- <connections/>
+ <connections>
+  <connection>
+   <sender>btn_cerrar</sender>
+   <signal>clicked()</signal>
+   <receiver>FrmArticulos</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>142</x>
+     <y>659</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>141</x>
+     <y>698</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

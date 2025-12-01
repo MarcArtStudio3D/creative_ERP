@@ -556,7 +556,8 @@ class ClientesView(QWidget):
 
         # Aplicar borde verde si válido, rojo si inválido
         if is_valid and value:  # Solo mostrar verde si hay contenido y es válido
-            widget.setStyleSheet("border: 2px solid #52c41a; border-radius: 2px;")
+            # Use the centralized success color (#198754) for validation borders
+            widget.setStyleSheet("border: 2px solid #198754; border-radius: 2px;")
         elif value and not is_valid:  # Mostrar rojo solo si hay contenido inválido
             widget.setStyleSheet("border: 2px solid #ff4d4f; border-radius: 2px;")
         else:

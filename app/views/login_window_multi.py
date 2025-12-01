@@ -1,13 +1,11 @@
 """
-Ventana de login multi-empresa.
-Basada en el diseño de RedFox SGC.
+Ventana de login multi-empresa con diseño moderno.
 """
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                               QLineEdit, QPushButton, QFrame, QComboBox)
-from PySide6.QtGui import QIcon
+                               QLineEdit, QPushButton, QFrame, QComboBox, QGraphicsDropShadowEffect)
+from PySide6.QtGui import QIcon, QFont, QPixmap
 from PySide6.QtCore import Signal, Qt
-from PySide6.QtGui import QFont, QPixmap
 
 from core.repositories import UserRepository, BusinessGroupRepository, CompanyRepository
 from core.auth import AuthenticationManager, User, UserRole
@@ -43,211 +41,268 @@ class LoginWindowMultiCompany(QDialog):
         # by setting focus in showEvent (see below).
     
     def setup_ui(self):
-        """Configura la interfaz tipo RedFox SGC."""
-        self.setWindowTitle(self.tr("Creative ERP - Acceso Usuarios"))
-        self.setFixedSize(700, 520)
+        """Configura la interfaz basada en la imagen de referencia."""
+        self.setWindowTitle(self.tr("Creative ERP - Acceso"))
+        # Hacemos la ventana más alta para que el logo grande encaje sin apretar
+        self.setFixedSize(540, 820)
         self.setModal(True)
         
-        # Layout principal horizontal
-        main_layout = QHBoxLayout()
+        # Layout principal
+        main_layout = QVBoxLayout()
         main_layout.setSpacing(0)
-        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setContentsMargins(60, 50, 60, 50)
         
-        # ========== PANEL IZQUIERDO (Botones laterales) ==========
-        left_panel = self.create_left_panel()
-        main_layout.addWidget(left_panel)
+        # Espaciado superior
+        main_layout.addSpacing(20)
         
-        # ========== PANEL CENTRAL (Logo + Formulario) ==========
-        center_layout = QVBoxLayout()
-        center_layout.setSpacing(15)
-        center_layout.setContentsMargins(30, 30, 30, 30)
+        # header textual eliminado (usaremos solo el logo grande centrado)
+        # dejamos un pequeño margen superior para balance visual
+        main_layout.addSpacing(10)
         
-        # Logo grande (tipo NEUX Software)
-        logo_container = QFrame()
-        logo_container.setFrameShape(QFrame.Shape.StyledPanel)
-        logo_container.setMaximumHeight(90)
-        logo_layout = QVBoxLayout()
-        logo_layout.setContentsMargins(0, 10, 0, 10)
-        logo_layout.setSpacing(2)
+        # ========== LOGO ISOMÉTRICO ==========
+        logo_label = QLabel()
+        logo_label.setObjectName('loginLogo')
+        self.login_logo = logo_label
+        try:
+            pix = QPixmap(":/PNG/resources/icons/png/LogoCreative.png")
+            if not pix.isNull():
+                # Escalado para que el ancho del logo coincida con el ancho de los campos
+                # disponibles en el layout (anchura total - márgenes principales - padding interno)
+                margins = main_layout.contentsMargins()
+                available_width = self.width() - (margins.left() + margins.right())
+                # input containers usan 15px de padding a izquierda y derecha
+                target_width = max(120, available_width - 30)
+                logo_label.setPixmap(pix.scaledToWidth(int(target_width), Qt.TransformationMode.SmoothTransformation))
+            else:
+                # Fallback si no hay logo
+                logo_label.setText("🎨")
+                logo_label.setStyleSheet("font-size: 80px; background: transparent;")
+        except Exception:
+            logo_label.setText("🎨")
+            logo_label.setStyleSheet("font-size: 80px; background: transparent;")
         
-        logo_label = QLabel("CREATIVE ERP")
-        logo_font = QFont()
-        logo_font.setPointSize(24)
-        logo_font.setBold(True)
-        logo_label.setFont(logo_font)
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo_layout.addWidget(logo_label)
+        main_layout.addWidget(logo_label)
+        main_layout.addSpacing(40)
         
-        subtitle = QLabel(self.tr("Sistema de Gestión Empresarial"))
-        subtitle_font = QFont()
-        subtitle_font.setPointSize(9)
-        subtitle.setFont(subtitle_font)
-        subtitle.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo_layout.addWidget(subtitle)
+        # ========== FORMULARIO ==========
+        # Usuario con icono
+        user_container = QFrame()
+        user_container.setObjectName("inputField")
+        user_layout = QHBoxLayout(user_container)
+        user_layout.setContentsMargins(15, 0, 15, 0)
+        user_layout.setSpacing(10)
         
-        logo_container.setLayout(logo_layout)
-        center_layout.addWidget(logo_container)
-        
-        # Formulario de login
-        form_container = QFrame()
-        form_layout = QVBoxLayout()
-        form_layout.setSpacing(3)
-        form_layout.setContentsMargins(0, 0, 0, 0)
-        
-        # Usuario
-        user_label = QLabel(self.tr("Usuario:"))
-        user_font = QFont()
-        user_font.setBold(True)
-        user_font.setPointSize(9)
-        user_label.setFont(user_font)
-        user_label.setMaximumHeight(18)
-        form_layout.addWidget(user_label)
+        user_icon = QLabel("👤")
+        user_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        user_layout.addWidget(user_icon)
         
         self.user_combo = QComboBox()
-        self.user_combo.setMinimumHeight(32)
-        self.user_combo.setMaximumHeight(32)
-        form_layout.addWidget(self.user_combo)
-        form_layout.addSpacing(8)
+        self.user_combo.setObjectName("loginCombo")
+        self.user_combo.setMinimumHeight(50)
+        self.user_combo.setPlaceholderText("Username")
+        user_layout.addWidget(self.user_combo)
         
-        # Contraseña
-        password_label = QLabel(self.tr("Contraseña:"))
-        password_label.setFont(user_font)
-        password_label.setMaximumHeight(18)
-        form_layout.addWidget(password_label)
+        main_layout.addWidget(user_container)
+        main_layout.addSpacing(15)
+        
+        # Contraseña con icono
+        password_container = QFrame()
+        password_container.setObjectName("inputField")
+        password_layout = QHBoxLayout(password_container)
+        password_layout.setContentsMargins(15, 0, 15, 0)
+        password_layout.setSpacing(10)
+        
+        password_icon = QLabel("🔒")
+        password_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        password_layout.addWidget(password_icon)
         
         self.password_input = QLineEdit()
+        self.password_input.setObjectName("loginInput")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
-        self.password_input.setMinimumHeight(32)
-        self.password_input.setMaximumHeight(32)
+        self.password_input.setMinimumHeight(50)
+        self.password_input.setPlaceholderText("Password")
         self.password_input.returnPressed.connect(self.on_login_clicked)
-        form_layout.addWidget(self.password_input)
-        form_layout.addSpacing(8)
+        password_layout.addWidget(self.password_input)
         
-        # Grupo
-        group_label = QLabel(self.tr("Grupo:"))
-        group_label.setFont(user_font)
-        group_label.setMaximumHeight(18)
-        form_layout.addWidget(group_label)
+        main_layout.addWidget(password_container)
+        main_layout.addSpacing(15)
+        
+        # Grupo con icono
+        group_container = QFrame()
+        group_container.setObjectName("inputField")
+        group_layout = QHBoxLayout(group_container)
+        group_layout.setContentsMargins(15, 0, 15, 0)
+        group_layout.setSpacing(10)
+        
+        group_icon = QLabel("🏢")
+        group_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        group_layout.addWidget(group_icon)
         
         self.group_combo = QComboBox()
-        self.group_combo.setMinimumHeight(32)
-        self.group_combo.setMaximumHeight(32)
+        self.group_combo.setObjectName("loginCombo")
+        self.group_combo.setMinimumHeight(50)
+        self.group_combo.setPlaceholderText("Business Group")
         self.group_combo.currentIndexChanged.connect(self.on_group_changed)
-        form_layout.addWidget(self.group_combo)
-        form_layout.addSpacing(8)
+        group_layout.addWidget(self.group_combo)
         
-        # Empresa
-        company_label = QLabel(self.tr("Empresa:"))
-        company_label.setFont(user_font)
-        company_label.setMaximumHeight(18)
-        form_layout.addWidget(company_label)
+        main_layout.addWidget(group_container)
+        main_layout.addSpacing(15)
+        
+        # Empresa con icono
+        company_container = QFrame()
+        company_container.setObjectName("inputField")
+        company_layout = QHBoxLayout(company_container)
+        company_layout.setContentsMargins(15, 0, 15, 0)
+        company_layout.setSpacing(10)
+        
+        company_icon = QLabel("🏭")
+        company_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        company_layout.addWidget(company_icon)
         
         self.company_combo = QComboBox()
-        self.company_combo.setMinimumHeight(32)
-        self.company_combo.setMaximumHeight(32)
-        form_layout.addWidget(self.company_combo)
+        self.company_combo.setObjectName("loginCombo")
+        self.company_combo.setMinimumHeight(50)
+        self.company_combo.setPlaceholderText("Company")
+        company_layout.addWidget(self.company_combo)
         
-        form_container.setLayout(form_layout)
+        main_layout.addWidget(company_container)
+        main_layout.addSpacing(30)
         
-        center_layout.addWidget(form_container)
-        
-        # Espaciado antes de los botones
-        center_layout.addSpacing(40)
-        
-        center_layout.addStretch()
-        
-        # Botones inferiores
-        button_layout = QHBoxLayout()
-        button_layout.setSpacing(10)
-        
-        self.access_button = QPushButton(self.tr("Acceder"))
-        self.access_button.setMinimumHeight(40)
+        # ========== BOTÓN LOGIN ==========
+        self.access_button = QPushButton("LOGIN")
+        self.access_button.setObjectName("loginButton")
+        self.access_button.setMinimumHeight(55)
         access_font = QFont()
         access_font.setBold(True)
-        access_font.setPointSize(11)
+        access_font.setPointSize(13)
+        access_font.setLetterSpacing(QFont.SpacingType.AbsoluteSpacing, 2)
         self.access_button.setFont(access_font)
         self.access_button.clicked.connect(self.on_login_clicked)
-        button_layout.addWidget(self.access_button)
+        main_layout.addWidget(self.access_button)
         
-        self.close_button = QPushButton(self.tr("Cerrar"))
-        self.close_button.setMinimumHeight(40)
-        self.close_button.setFont(access_font)
-        self.close_button.clicked.connect(self.reject)
-        button_layout.addWidget(self.close_button)
+        main_layout.addSpacing(20)
         
-        center_layout.addLayout(button_layout)
+        # ========== ENLACES INFERIORES ==========
+        links_layout = QHBoxLayout()
+        links_layout.setSpacing(30)
         
-        main_layout.addLayout(center_layout, 3)
+        # Forgot Password
+        forgot_link = QPushButton("Forgot Password?")
+        forgot_link.setObjectName("linkButton")
+        forgot_link.setMinimumHeight(30)
+        forgot_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        forgot_link.clicked.connect(self.reject)  # Por ahora solo cierra
+        links_layout.addWidget(forgot_link)
         
-        # ========== PANEL DERECHO (Imagen corporativa) ==========
-        right_panel = self.create_right_panel()
-        main_layout.addWidget(right_panel, 2)
+        # Create Account (abre configuración)
+        create_link = QPushButton("Create Account")
+        create_link.setObjectName("linkButton")
+        create_link.setMinimumHeight(30)
+        create_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        create_link.clicked.connect(self.open_config)
+        links_layout.addWidget(create_link)
+        
+        main_layout.addLayout(links_layout)
+        main_layout.addStretch()
         
         self.setLayout(main_layout)
+        
+        # Aplicar estilos
+        self.apply_styles()
     
-    def create_left_panel(self) -> QFrame:
-        """Crea el panel izquierdo con botones laterales."""
-        panel = QFrame()
-        panel.setFrameShape(QFrame.Shape.StyledPanel)
-        panel.setMaximumWidth(150)
-        
-        layout = QVBoxLayout()
-        layout.setSpacing(10)
-        layout.setContentsMargins(10, 20, 10, 20)
-        
-        # Botón Configuración
-        # Use a small PNG icon from resources rather than emoji text (safer)
-        self.config_btn = QPushButton(self.tr("Configuración"))
-        try:
-            # Resource path used by compiled resources: :/PNG/resources/icons/png/Edit.png
-            self.config_btn.setIcon(QIcon(":/PNG/resources/icons/png/Edit.png"))
-        except Exception:
-            # If resources are not available for some reason, ignore silently
-            pass
-        self.config_btn.setMinimumHeight(80)
-        self.config_btn.clicked.connect(self.open_config)
-        layout.addWidget(self.config_btn)
-        
-
-        
-        layout.addStretch()
-        
-        panel.setLayout(layout)
-        return panel
-    
-    def create_right_panel(self) -> QFrame:
-        """Crea el panel derecho con imagen corporativa."""
-        panel = QFrame()
-        panel.setFrameShape(QFrame.Shape.StyledPanel)
-        panel.setMinimumWidth(200)
-        
-        layout = QVBoxLayout()
-        layout.setContentsMargins(20, 20, 20, 20)
-        
-        # Aquí iría el logo/imagen corporativa
-        # Usamos el recurso `LogoIcono.png` en lugar de emoji para evitar problemas
-        image_label = QLabel()
-        # expose the widget for tests and future customization
-        self.login_logo = image_label
-        image_label.setObjectName('login_logo')
-        try:
-            pix = QPixmap(":/PNG/resources/icons/png/LogoIcono.png")
-            if not pix.isNull():
-                # ajustamos un tamaño razonable para la cabecera
-                image_label.setPixmap(pix.scaled(140, 140, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
-            else:
-                # fallback: texto si la imagen no está disponible
-                image_label.setText("ArtStudio3D\n\nCreative Solutions")
-                image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-                image_label.setWordWrap(True)
-        except Exception:
-            image_label.setText("ArtStudio3D\n\nCreative Solutions")
-            image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-            image_label.setWordWrap(True)
-        layout.addWidget(image_label)
-        
-        panel.setLayout(layout)
-        return panel
+    def apply_styles(self):
+        """Aplica los estilos CSS basados en la imagen de referencia."""
+        self.setStyleSheet("""
+            QDialog {
+                /* Fondo ahora igual al fondo del logo */
+                background: #021323;
+            }
+            
+            QLabel {
+                background: transparent;
+            }
+            
+            QFrame#inputField {
+                background: white;
+                border-radius: 8px;
+                border: none;
+                min-height: 50px;
+                max-height: 50px;
+            }
+            
+            QComboBox#loginCombo {
+                background: transparent;
+                border: none;
+                color: #2c3e50;
+                font-size: 14px;
+                padding-left: 5px;
+            }
+            
+            QComboBox#loginCombo::drop-down {
+                border: none;
+                width: 30px;
+                background: transparent;
+            }
+            
+            QComboBox#loginCombo::down-arrow {
+                image: none;
+                border-left: 5px solid transparent;
+                border-right: 5px solid transparent;
+                border-top: 6px solid #95a5a6;
+                margin-right: 10px;
+            }
+            
+            QComboBox#loginCombo QAbstractItemView {
+                background: white;
+                color: #2c3e50;
+                border: 1px solid #dee2e6;
+                selection-background-color: #ff8c42;
+                selection-color: white;
+            }
+            
+            QLineEdit#loginInput {
+                background: transparent;
+                border: none;
+                color: #2c3e50;
+                font-size: 14px;
+                padding-left: 5px;
+            }
+            
+            QLineEdit#loginInput::placeholder {
+                color: #95a5a6;
+            }
+            
+            QPushButton#loginButton {
+                background: #ff8c42;
+                color: white;
+                border: none;
+                border-radius: 8px;
+                font-weight: bold;
+                font-size: 14px;
+                letter-spacing: 2px;
+            }
+            
+            QPushButton#loginButton:hover {
+                background: #ff7a28;
+            }
+            
+            QPushButton#loginButton:pressed {
+                background: #e67a3c;
+            }
+            
+            QPushButton#linkButton {
+                background: transparent;
+                border: none;
+                color: white;
+                font-size: 13px;
+                text-decoration: underline;
+            }
+            
+            QPushButton#linkButton:hover {
+                color: #ff8c42;
+            }
+        """)
     
     def load_demo_data(self):
         """Carga datos de usuarios, grupos y empresas desde la base de datos."""

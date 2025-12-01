@@ -129,23 +129,12 @@ class Ui_FrmArticulos(object):
 
         self.verticalLayout.addWidget(self.botDeshacer)
 
-        self.botBorrar = QPushButton(self.frame_16)
-        self.botBorrar.setObjectName(u"botBorrar")
-        self.botBorrar.setMinimumSize(QSize(115, 40))
-        self.botBorrar.setMaximumSize(QSize(118, 16777215))
-        icon8 = QIcon()
-        icon8.addFile(u":/PNG/resources/icons/png/delete.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.botBorrar.setIcon(icon8)
-        self.botBorrar.setIconSize(QSize(24, 24))
-
-        self.verticalLayout.addWidget(self.botBorrar)
-
         self.btnExcepciones_3 = QPushButton(self.frame_16)
         self.btnExcepciones_3.setObjectName(u"btnExcepciones_3")
         self.btnExcepciones_3.setMinimumSize(QSize(0, 40))
-        icon9 = QIcon()
-        icon9.addFile(u":/Icons/PNG/excepciones.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnExcepciones_3.setIcon(icon9)
+        icon8 = QIcon()
+        icon8.addFile(u":/Icons/PNG/excepciones.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnExcepciones_3.setIcon(icon8)
         self.btnExcepciones_3.setIconSize(QSize(24, 24))
 
         self.verticalLayout.addWidget(self.btnExcepciones_3)
@@ -153,12 +142,27 @@ class Ui_FrmArticulos(object):
         self.btnKit = QPushButton(self.frame_16)
         self.btnKit.setObjectName(u"btnKit")
         self.btnKit.setMinimumSize(QSize(0, 40))
-        icon10 = QIcon()
-        icon10.addFile(u":/Icons/PNG/kits.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnKit.setIcon(icon10)
+        icon9 = QIcon()
+        icon9.addFile(u":/Icons/PNG/kits.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.btnKit.setIcon(icon9)
         self.btnKit.setIconSize(QSize(24, 24))
 
         self.verticalLayout.addWidget(self.btnKit)
+
+        self.verticalSpacer_5 = QSpacerItem(20, 40, QSizePolicy.Policy.Minimum, QSizePolicy.Policy.Expanding)
+
+        self.verticalLayout.addItem(self.verticalSpacer_5)
+
+        self.botBorrar = QPushButton(self.frame_16)
+        self.botBorrar.setObjectName(u"botBorrar")
+        self.botBorrar.setMinimumSize(QSize(115, 40))
+        self.botBorrar.setMaximumSize(QSize(118, 16777215))
+        icon10 = QIcon()
+        icon10.addFile(u":/PNG/resources/icons/png/delete.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
+        self.botBorrar.setIcon(icon10)
+        self.botBorrar.setIconSize(QSize(24, 24))
+
+        self.verticalLayout.addWidget(self.botBorrar)
 
         self.btn_cerrar = QPushButton(self.frame_16)
         self.btn_cerrar.setObjectName(u"btn_cerrar")
@@ -738,7 +742,7 @@ class Ui_FrmArticulos(object):
         self.btnBorrarDistribuidores.setObjectName(u"btnBorrarDistribuidores")
         self.btnBorrarDistribuidores.setEnabled(False)
         self.btnBorrarDistribuidores.setMaximumSize(QSize(25, 16777215))
-        self.btnBorrarDistribuidores.setIcon(icon8)
+        self.btnBorrarDistribuidores.setIcon(icon10)
         self.btnBorrarDistribuidores.setIconSize(QSize(15, 15))
 
         self.horizontalLayout_3.addWidget(self.btnBorrarDistribuidores)
@@ -1196,7 +1200,7 @@ class Ui_FrmArticulos(object):
 
         self.btnImg_web3_delete = QPushButton(self.tab_web)
         self.btnImg_web3_delete.setObjectName(u"btnImg_web3_delete")
-        self.btnImg_web3_delete.setIcon(icon8)
+        self.btnImg_web3_delete.setIcon(icon10)
 
         self.gridLayout_43.addWidget(self.btnImg_web3_delete, 6, 5, 1, 1)
 
@@ -1235,7 +1239,7 @@ class Ui_FrmArticulos(object):
 
         self.btnImg_web4_delete = QPushButton(self.tab_web)
         self.btnImg_web4_delete.setObjectName(u"btnImg_web4_delete")
-        self.btnImg_web4_delete.setIcon(icon8)
+        self.btnImg_web4_delete.setIcon(icon10)
 
         self.gridLayout_43.addWidget(self.btnImg_web4_delete, 8, 5, 1, 1)
 
@@ -1273,7 +1277,7 @@ class Ui_FrmArticulos(object):
 
         self.btnImg_web1_delete = QPushButton(self.tab_web)
         self.btnImg_web1_delete.setObjectName(u"btnImg_web1_delete")
-        self.btnImg_web1_delete.setIcon(icon8)
+        self.btnImg_web1_delete.setIcon(icon10)
 
         self.gridLayout_43.addWidget(self.btnImg_web1_delete, 6, 3, 1, 1)
 
@@ -1285,7 +1289,7 @@ class Ui_FrmArticulos(object):
 
         self.btnImg_web2_delete = QPushButton(self.tab_web)
         self.btnImg_web2_delete.setObjectName(u"btnImg_web2_delete")
-        self.btnImg_web2_delete.setIcon(icon8)
+        self.btnImg_web2_delete.setIcon(icon10)
 
         self.gridLayout_43.addWidget(self.btnImg_web2_delete, 8, 3, 1, 1)
 
@@ -1312,7 +1316,7 @@ class Ui_FrmArticulos(object):
         self.pushButton_5 = QPushButton(self.frame_21)
         self.pushButton_5.setObjectName(u"pushButton_5")
         self.pushButton_5.setGeometry(QRect(10, 100, 241, 30))
-        self.pushButton_5.setIcon(icon8)
+        self.pushButton_5.setIcon(icon10)
         self.checkBox = QCheckBox(self.frame_21)
         self.checkBox.setObjectName(u"checkBox")
         self.checkBox.setGeometry(QRect(10, 70, 241, 30))
@@ -1518,7 +1522,7 @@ class Ui_FrmArticulos(object):
         self.txtfecha_fecha_ultima_compra.setMaximumSize(QSize(120, 27))
         self.txtfecha_fecha_ultima_compra.setStyleSheet(u"")
         self.txtfecha_fecha_ultima_compra.setDateTime(QDateTime(QDate(2000, 9, 13), QTime(0, 0, 0)))
-        self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 11), QTime(0, 0, 0)))
+        self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 10), QTime(0, 0, 0)))
         self.txtfecha_fecha_ultima_compra.setCalendarPopup(True)
         self.txtfecha_fecha_ultima_compra.setDate(QDate(2000, 9, 13))
 
@@ -2323,8 +2327,7 @@ class Ui_FrmArticulos(object):
         QWidget.setTabOrder(self.btnBuscar, self.botEditar)
         QWidget.setTabOrder(self.botEditar, self.botGuardar)
         QWidget.setTabOrder(self.botGuardar, self.botDeshacer)
-        QWidget.setTabOrder(self.botDeshacer, self.botBorrar)
-        QWidget.setTabOrder(self.botBorrar, self.btnExcepciones_3)
+        QWidget.setTabOrder(self.botDeshacer, self.btnExcepciones_3)
         QWidget.setTabOrder(self.btnExcepciones_3, self.btnKit)
         QWidget.setTabOrder(self.btnKit, self.btn_cerrar)
         QWidget.setTabOrder(self.btn_cerrar, self.Pestanas)
@@ -2473,6 +2476,7 @@ class Ui_FrmArticulos(object):
         QWidget.setTabOrder(self.txtImporte_compras_octubre, self.txtImporte_compras_noviembre)
 
         self.retranslateUi(FrmArticulos)
+        self.btn_cerrar.clicked.connect(FrmArticulos.accept)
 
         self.stackedWidget.setCurrentIndex(0)
         self.Pestanas.setCurrentIndex(0)
@@ -2483,18 +2487,18 @@ class Ui_FrmArticulos(object):
 
     def retranslateUi(self, FrmArticulos):
         FrmArticulos.setWindowTitle(QCoreApplication.translate("FrmArticulos", u"Gesti\u00f3n de Art\u00edculos", None))
-        self.botAnadir.setText(QCoreApplication.translate("FrmArticulos", u"A\u00f1adir", None))
+        self.botAnadir.setText(QCoreApplication.translate("FrmArticulos", u"Nuevo", None))
         self.botSiguiente.setText(QCoreApplication.translate("FrmArticulos", u"Siguiente", None))
         self.botAnterior.setText(QCoreApplication.translate("FrmArticulos", u"Anterior", None))
         self.btnBuscar.setText(QCoreApplication.translate("FrmArticulos", u"Buscar", None))
         self.botEditar.setText(QCoreApplication.translate("FrmArticulos", u"Editar", None))
         self.botGuardar.setText(QCoreApplication.translate("FrmArticulos", u"Guardar", None))
         self.botDeshacer.setText(QCoreApplication.translate("FrmArticulos", u"Deshacer", None))
-        self.botBorrar.setText(QCoreApplication.translate("FrmArticulos", u"Borrar", None))
         self.btnExcepciones_3.setText(QCoreApplication.translate("FrmArticulos", u"Excepciones", None))
         self.btnKit.setText(QCoreApplication.translate("FrmArticulos", u" Ver/\n"
 "Editar\n"
 " Kit", None))
+        self.botBorrar.setText(QCoreApplication.translate("FrmArticulos", u"Borrar", None))
         self.btn_cerrar.setText(QCoreApplication.translate("FrmArticulos", u"Cerrar", None))
         self.lblkit.setText(QCoreApplication.translate("FrmArticulos", u"KIT", None))
         self.lbl_en_promocion.setText(QCoreApplication.translate("FrmArticulos", u"En Promoci\u00f3n", None))

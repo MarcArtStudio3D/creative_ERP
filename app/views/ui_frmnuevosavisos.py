@@ -19,7 +19,12 @@ from PySide6.QtWidgets import (QApplication, QComboBox, QDateEdit, QDialog,
     QFrame, QGridLayout, QLabel, QPushButton,
     QSizePolicy, QSpacerItem, QTextEdit, QTimeEdit,
     QWidget)
-import designer_rc
+try:
+    # Prefer packaged resource module under modules/ when present (compile_ui.sh writes this form)
+    from modules import designer_rc
+except Exception:
+    # Fallback to plain import if modules.designer_rc doesn't exist
+    import designer_rc
 
 class Ui_frmNuevosAvisos(object):
     def setupUi(self, frmNuevosAvisos):

@@ -270,7 +270,7 @@ if __name__ == "__main__":
         # Validar configuración
         validation = company_manager.validate_company_database(first_company['id'])
         if validation['valid']:
-                print("Configuration valid")
+            print("Configuration valid")
 
             # Seleccionar empresa
             success = company_manager.select_company(first_company['id'])
@@ -282,7 +282,7 @@ if __name__ == "__main__":
                 print(f"Current context: {context['company_name']}")
                 print(f"   Base de datos: {context['database_name']}")
         else:
-            print(f"❌ Configuración inválida: {validation['message']}")
+            print(f"Invalid DB configuration: {validation['message']}")
 
     print("\nNote: To integrate with Qt:")
     print("   1. Importar company_manager en tu módulo Qt")

@@ -1,5 +1,5 @@
 from PySide6.QtWidgets import QWidget, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QDate
 from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
 from PySide6.QtGui import QPainter, QShortcut, QKeySequence
 from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
@@ -343,7 +343,39 @@ class ArticulosView(QWidget):
         
         # Promociones - cargar estado del checkbox y configurar campos de fecha
         articulo_promocionado = article.get("articulo_promocionado", False)
-        self.ui.chkArticulo_promocionado.setChecked(articulo_promocionado)
+        # If oferta_activa exists and article flag is not set, prefer the oferta flag for UX consistency
+        oferta_activa = article.get('oferta_activa')
+        if oferta_activa is not None:
+            checked = bool(oferta_activa) or bool(articulo_promocionado)
+        else:
+            checked = bool(articulo_promocionado)
+
+        self.ui.chkArticulo_promocionado.setChecked(checked)
+
+        # Load date edits from oferta fields if present
+        fecha_ini = article.get('oferta_fecha_inicio')
+        fecha_fin = article.get('oferta_fecha_fin')
+
+        # Helper: convert Python date -> QDate
+        def _to_qdate(d):
+            if not d:
+                return QDate()
+            try:
+                # If it's already a QDate, return
+                if isinstance(d, QDate):
+                    return d
+                # Try to use attributes
+                return QDate(d.year, d.month, d.day)
+            except Exception:
+                try:
+                    return QDate(d.year, d.month, d.day)
+                except Exception:
+                    return QDate()
+
+        if hasattr(self.ui, 'txtOferta_Fecha_ini'):
+            self.ui.txtOferta_Fecha_ini.setDate(_to_qdate(fecha_ini))
+        if hasattr(self.ui, 'txtOferta_Fecha_fin'):
+            self.ui.txtOferta_Fecha_fin.setDate(_to_qdate(fecha_fin))
         # El signal toggled se encargará de habilitar/deshabilitar los campos de fecha
         
         # Update chart if on graphics tab
@@ -411,6 +443,38 @@ class ArticulosView(QWidget):
         # TODO: Get IVA type from combo
         # TODO: Get provider ID from lookup
         
+        # Promotion dates - QDateEdit -> Python date or None
+        try:
+            if hasattr(self.ui, 'txtOferta_Fecha_ini'):
+                qd = self.ui.txtOferta_Fecha_ini.date()
+                # Prefer toPython if available
+                try:
+                    py = qd.toPython()
+                except Exception:
+                    py = None
+                    try:
+                        py = __import__('datetime').date(qd.year(), qd.month(), qd.day())
+                    except Exception:
+                        py = None
+
+                data['oferta_fecha_inicio'] = py
+
+            if hasattr(self.ui, 'txtOferta_Fecha_fin'):
+                qd = self.ui.txtOferta_Fecha_fin.date()
+                try:
+                    py = qd.toPython()
+                except Exception:
+                    py = None
+                    try:
+                        py = __import__('datetime').date(qd.year(), qd.month(), qd.day())
+                    except Exception:
+                        py = None
+
+                data['oferta_fecha_fin'] = py
+        except Exception:
+            # Don't break saving if date conversion fails; just omit dates
+            pass
+
         return data
     
     def _clear_form(self):
@@ -988,8 +1052,19 @@ class ArticulosView(QWidget):
         Si chkArticulo_promocionado está marcado, habilitar txtOferta_Fecha_ini y txtOferta_Fecha_fin.
         Si está desmarcado, deshabilitar estos campos.
         """
-        self.ui.txtOferta_Fecha_ini.setEnabled(checked)
-        self.ui.txtOferta_Fecha_fin.setEnabled(checked)
+        # Only allow editing the date fields if the checkbox is checked AND
+        # we are in edit mode. Edit mode is determined by the 'Guardar'
+        # button being enabled (set by _lock_fields).
+        editing = False
+        if hasattr(self.ui, 'botGuardar'):
+            try:
+                editing = self.ui.botGuardar.isEnabled()
+            except Exception:
+                editing = False
+
+        enable_dates = checked and editing
+        self.ui.txtOferta_Fecha_ini.setEnabled(enable_dates)
+        self.ui.txtOferta_Fecha_fin.setEnabled(enable_dates)
         
         # Actualizar visibilidad del label de promoción en el header
         self.ui.lbl_en_promocion.setVisible(checked)

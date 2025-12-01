@@ -41,7 +41,26 @@ class ArticuloController:
         try:
             article = self.repository.get_by_id(articulo_id)
             if article:
+                # Load base article
                 self.current_article = article
+                # Load offer (promocion) for this article and merge useful fields
+                try:
+                    oferta = self.repository.get_oferta_for_article(articulo_id)
+                    if oferta:
+                        # Use unambiguous keys so UI can pick them up
+                        self.current_article['oferta_fecha_inicio'] = oferta.get('fecha_inicio')
+                        self.current_article['oferta_fecha_fin'] = oferta.get('fecha_fin')
+                        self.current_article['oferta_activa'] = oferta.get('activa')
+                    else:
+                        # Ensure keys exist
+                        self.current_article['oferta_fecha_inicio'] = None
+                        self.current_article['oferta_fecha_fin'] = None
+                        self.current_article['oferta_activa'] = False
+                except Exception:
+                    # If oferta table is not available or other DB errors, ignore and keep base article
+                    self.current_article['oferta_fecha_inicio'] = None
+                    self.current_article['oferta_fecha_fin'] = None
+                    self.current_article['oferta_activa'] = False
                 self.is_new = False
                 self.codigo_anterior = article.get("codigo")
                 return True
@@ -174,12 +193,78 @@ class ArticuloController:
             if "descripcion_reducida" in form_data:
                 form_data["slug"] = self._slugify(form_data["descripcion_reducida"])
             
-            # Update article
-            success = self.repository.update(self.current_article["id"], form_data)
+            # Separate out oferta (promotion) fields so we don't try to update them in articulos table
+            oferta_payload = {}
+            # Pull dates from form_data if present and remove them before updating articulos
+            if 'oferta_fecha_inicio' in form_data:
+                oferta_payload['fecha_inicio'] = form_data.pop('oferta_fecha_inicio')
+            if 'oferta_fecha_fin' in form_data:
+                oferta_payload['fecha_fin'] = form_data.pop('oferta_fecha_fin')
+
+            # Activa flag in articulos.controls whether the oferta is active
+            # Keep articulo_promocionado in article data (it's a column in articulos)
+
+            # Update article and oferta atomically in a single transaction
+            # Use a fresh Session instance (avoid scoped session which may already have an active transaction)
+            from core.db import get_engine
+            from sqlalchemy.orm import sessionmaker
+
+            engine = get_engine()
+
+            # include activa flag into oferta_payload (if present)
+            if 'articulo_promocionado' in form_data:
+                oferta_payload['activa'] = bool(form_data.get('articulo_promocionado'))
+
+            # Use a connection-level transaction so the update + upsert are atomic
+            try:
+                with engine.begin() as conn:
+                    Session = sessionmaker(bind=conn, autocommit=False, autoflush=False)
+                    session = Session()
+                    tx_repo = ArticuloRepository(session=session)
+
+                    tarifa_id = tx_repo.get_default_tarifa()
+
+                    # Perform update and upsert on the same connection/session
+                    success = tx_repo.update(self.current_article["id"], form_data)
+                    if not success:
+                        raise Exception("Error actualizando artículo")
+
+                    if oferta_payload:
+                        ok = tx_repo.upsert_oferta(self.current_article["id"], tarifa_id, oferta_payload)
+                        if not ok:
+                            raise Exception("Error guardando oferta")
+            except Exception as e:
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+                session.close()
+                return False, f"Error al guardar: {str(e)}"
+            finally:
+                # ensure session closed if not already
+                try:
+                    session.close()
+                except Exception:
+                    pass
             
             if success:
-                # Reload article to get updated data
+                # Reload article to get updated data (includes oferta merged)
                 self.current_article = self.repository.get_by_id(self.current_article["id"])
+                # Reload oferta data and merge again
+                try:
+                    oferta = self.repository.get_oferta_for_article(self.current_article["id"])
+                    if oferta:
+                        self.current_article['oferta_fecha_inicio'] = oferta.get('fecha_inicio')
+                        self.current_article['oferta_fecha_fin'] = oferta.get('fecha_fin')
+                        self.current_article['oferta_activa'] = oferta.get('activa')
+                    else:
+                        self.current_article['oferta_fecha_inicio'] = None
+                        self.current_article['oferta_fecha_fin'] = None
+                        self.current_article['oferta_activa'] = False
+                except Exception:
+                    self.current_article['oferta_fecha_inicio'] = None
+                    self.current_article['oferta_fecha_fin'] = None
+                    self.current_article['oferta_activa'] = False
                 self.is_new = False
                 return True, "Artículo guardado correctamente"
             else:

@@ -134,11 +134,16 @@ class ArticuloRepository:
                 return True
             
             sql = f"UPDATE articulos SET {', '.join(set_clauses)} WHERE id = :id"
+            pass
             session.execute(text(sql), params)
-            session.commit()
+            # Only commit when repository manages the session
+            if not self._external_session:
+                session.commit()
             return True
         except Exception as e:
-            session.rollback()
+            # Rollback only if repository manages the session
+            if not self._external_session:
+                session.rollback()
             raise e
         finally:
             if not self._external_session:
@@ -613,6 +618,119 @@ class ArticuloRepository:
             import traceback
             traceback.print_exc()
             return []
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Ofertas (Promociones) ====================
+
+    def get_oferta_for_article(self, articulo_id: int, id_tarifa: int = None) -> Optional[dict]:
+        """Return the oferta record for the given article and tarifa (or default tarifa)"""
+        session = self._session()
+        try:
+            if id_tarifa is None:
+                id_tarifa = self.get_default_tarifa()
+
+            result = session.execute(
+                text("SELECT * FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"),
+                {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+            )
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def upsert_oferta(self, articulo_id: int, id_tarifa: int, oferta_data: dict) -> bool:
+        """Insert or update an oferta for the given article/tarifa.
+
+        oferta_data may contain: fecha_inicio, fecha_fin, activa, descripcion, oferta_dto, precio_final, etc.
+        Only passed fields are updated/inserted.
+        """
+        session = self._session()
+        try:
+            # See if oferta exists
+            existing = session.execute(
+                text("SELECT id FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"),
+                {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+            ).fetchone()
+
+            params = {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+            # Prepare only recognized keys (avoid SQL injection)
+            allowed_keys = set([
+                'descripcion', 'activa', 'oferta32', 'oferta_dto', 'oferta_precio_final', 'oferta_web',
+                'unidades', 'regalo', 'dto_local', 'dto_web', 'precio_final',
+                'fecha_inicio', 'fecha_fin'
+            ])
+
+            if existing:
+                # Build update
+                set_clauses = []
+                for k, v in oferta_data.items():
+                    if k in allowed_keys:
+                        set_clauses.append(f"{k} = :{k}")
+                        # Coerce booleans to integers for databases that store booleans as tinyint
+                        params[k] = int(v) if isinstance(v, bool) else v
+
+                if not set_clauses:
+                    return True
+
+                sql = f"UPDATE articulos_ofertas SET {', '.join(set_clauses)} WHERE id = :id"
+                params['id'] = existing[0]
+                session.execute(text(sql), params)
+                # Debug: fetch back the saved row to inspect values
+                try:
+                    r = session.execute(text("SELECT id, fecha_inicio, fecha_fin, activa FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"), {"id_articulo": articulo_id, "id_tarifa": id_tarifa}).fetchone()
+                except Exception:
+                    pass
+            else:
+                # Insert new oferta - include required columns and fill defaults for missing fields
+                # Provide sane defaults for fields that the DB schema may not default
+                defaults = {
+                    'descripcion': None,
+                    'activa': False,
+                    'oferta32': False,
+                    'oferta_dto': False,
+                    'oferta_precio_final': False,
+                    'oferta_web': False,
+                    'unidades': 0.0,
+                    'regalo': 0.0,
+                    'dto_local': 0.0,
+                    'dto_web': 0.0,
+                    'precio_final': 0.0,
+                    'fecha_inicio': None,
+                    'fecha_fin': None
+                }
+
+                # Start with base columns
+                cols = ["id_articulo", "id_tarifa"]
+                vals = [":id_articulo", ":id_tarifa"]
+
+                # Merge defaults but allow oferta_data to override
+                merged = {**defaults, **{k: v for k, v in oferta_data.items() if k in allowed_keys}}
+
+                for k, v in merged.items():
+                    cols.append(k)
+                    vals.append(f":{k}")
+                    params[k] = int(v) if isinstance(v, bool) else v
+
+                sql = f"INSERT INTO articulos_ofertas ({', '.join(cols)}) VALUES ({', '.join(vals)})"
+                session.execute(text(sql), params)
+                # Debug: fetch back the saved row to inspect values
+                try:
+                    r = session.execute(text("SELECT id, fecha_inicio, fecha_fin, activa FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"), {"id_articulo": articulo_id, "id_tarifa": id_tarifa}).fetchone()
+                except Exception:
+                    pass
+
+            # Only commit when repository manages the session
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            # Rollback only if repository manages the session
+            if not self._external_session:
+                session.rollback()
+            raise
         finally:
             if not self._external_session:
                 session.close()

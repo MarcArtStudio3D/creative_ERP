@@ -4,6 +4,7 @@ from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCatego
 from PySide6.QtGui import QPainter, QShortcut, QKeySequence
 from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
 from modules.articulos.controller import ArticuloController
+from modules.common.db_consulta_view import DBConsultaView
 from core.db import get_current_database, set_current_database
 
 
@@ -71,6 +72,9 @@ class ArticulosView(QDialog):
         self.ui.cboTipoGrafica.currentTextChanged.connect(self._on_chart_type_changed)
         self.ui.radGrafica_unidades.toggled.connect(self._on_chart_data_changed)
         self.ui.radGrafica_importes.toggled.connect(self._on_chart_data_changed)
+        
+        # Lookup buttons
+        self.ui.botBuscarSeccion.clicked.connect(self._on_buscar_seccion_clicked)
     
     def search(self, text: str):
         """
@@ -201,6 +205,9 @@ class ArticulosView(QDialog):
         self.ui.botSiguiente.setEnabled(locked)
         self.ui.btnBuscar.setEnabled(locked)
         
+        # Lookup buttons - enable when editing/adding
+        self.ui.botBuscarSeccion.setEnabled(not locked)
+        
         # Keep certain fields always readonly
         self._set_readonly_fields()
     
@@ -246,25 +253,37 @@ class ArticulosView(QDialog):
         self.ui.txtdescripcion.setPlainText(article.get("descripcion", ""))
         self.ui.txtdescripcionResumida.setText(article.get("descripcion_reducida", ""))
         
-        # Section/Family/Subfamily
+        # Section/Family/Subfamily - always set text (clear if no ID)
         id_seccion = article.get("id_seccion")
         if id_seccion:
-            self.ui.txtseccion.setText(self.controller.get_seccion_name(id_seccion))
+            seccion_name = self.controller.get_seccion_name(id_seccion)
+            self.ui.txtseccion.setText(seccion_name or "")
+        else:
+            self.ui.txtseccion.clear()
         
         id_familia = article.get("id_familia")
         if id_familia:
-            self.ui.txtfamilia.setText(self.controller.get_familia_name(id_familia))
+            familia_name = self.controller.get_familia_name(id_familia)
+            self.ui.txtfamilia.setText(familia_name or "")
+        else:
+            self.ui.txtfamilia.clear()
         
         id_subfamilia = article.get("id_subfamilia")
         if id_subfamilia:
-            self.ui.txtsubfamilia.setText(self.controller.get_subfamilia_name(id_subfamilia))
+            subfamilia_name = self.controller.get_subfamilia_name(id_subfamilia)
+            self.ui.txtsubfamilia.setText(subfamilia_name or "")
+        else:
+            self.ui.txtsubfamilia.clear()
         
-        # Provider
+        # Provider - always set text (clear if no ID)
         id_proveedor = article.get("id_proveedor")
         if id_proveedor:
             cod_prov, nombre_prov = self.controller.get_proveedor_info(id_proveedor)
             self.ui.txtcodigo_proveedor.setText(cod_prov or "")
             self.ui.txtproveedor.setText(nombre_prov or "")
+        else:
+            self.ui.txtcodigo_proveedor.clear()
+            self.ui.txtproveedor.clear()
         
         # Pricing
         self.ui.txtcoste.setText(str(article.get("coste", 0)))
@@ -318,7 +337,14 @@ class ArticulosView(QDialog):
         data["mostrar_web"] = 1 if self.ui.chkmostrar_web.isChecked() else 0
         data["controlar_stock"] = self.ui.chkcontrolar_stock.isChecked()
         
-        # TODO: Get section/family/subfamily IDs from lookups
+        # Get lookup IDs from current article (set by lookup dialogs)
+        current = self.controller.get_current_article()
+        if current:
+            # Section ID (set by set_seccion_from_lookup)
+            if 'id_seccion' in current:
+                data["id_seccion"] = current['id_seccion']
+        
+        # TODO: Get family/subfamily IDs from lookups
         # TODO: Get IVA type from combo
         # TODO: Get provider ID from lookup
         
@@ -731,6 +757,45 @@ class ArticulosView(QDialog):
         """Handle chart data type change (units vs amounts)"""
         if self._init_complete:
             self._update_chart()
+    
+    # ==================== Lookup Dialogs ====================
+    
+    def _on_buscar_seccion_clicked(self):
+        """Open section lookup dialog"""
+        try:
+            # Get secciones data directly from SQLAlchemy
+            secciones_data = self.controller.get_secciones_data()
+            
+            if not secciones_data:
+                QMessageBox.information(self, "Info", "No se encontraron secciones en la base de datos")
+                return
+            
+            # Use DBConsultaView.select_from_data - no QSqlDatabase needed!
+            selected_data, record = DBConsultaView.select_from_data(
+                parent=self,
+                data=secciones_data,
+                headers=["ID", "Código", "Sección"],
+                campos=["codigo", "seccion"],
+                titulo="Seleccionar Sección"
+            )
+            
+            if selected_data:
+                # Get selected values directly from dictionary
+                seccion_id = selected_data.get('id')
+                seccion_codigo = selected_data.get('codigo')
+                seccion_nombre = selected_data.get('seccion')
+                
+                # Update controller
+                if self.controller.set_seccion_from_lookup(seccion_id, seccion_codigo, seccion_nombre):
+                    # Update UI field
+                    self.ui.txtseccion.setText(seccion_nombre)
+                    print(f"✅ Sección seleccionada: {seccion_codigo} - {seccion_nombre}")
+                else:
+                    QMessageBox.warning(self, "Error", "No se pudo actualizar la sección")
+        
+        except Exception as e:
+            print(f"Error opening section lookup: {e}")
+            QMessageBox.critical(self, "Error", f"Error al abrir consulta de secciones: {str(e)}")
 
 
 class ArticlesTableModel(QAbstractTableModel):

@@ -369,3 +369,208 @@ def refresh_database_configs():
 def get_france_db_path():
     """Obtiene la ruta completa a la base de datos de Francia."""
     return os.path.join(os.path.dirname(__file__), '..', 'datos', 'france.db')
+
+def get_qsql_database(connection_name: str = None):
+    """
+    Crea una conexión QSqlDatabase compatible con la configuración actual de SQLAlchemy.
+    Soporta MySQL/MariaDB, PostgreSQL y SQLite automáticamente.
+    Para uso con DBConsultaView y otros componentes Qt que requieren QSqlDatabase.
+    """
+    from PySide6.QtSql import QSqlDatabase
+    
+    # Usar la base de datos actual si no se especifica nombre
+    if not connection_name:
+        connection_name = f"qt_connection_{_current_db}"
+    
+    # Obtener URL de la base de datos actual
+    db_url = DATABASE_CONFIGS.get(_current_db, DATABASE_CONFIGS['main'])
+    
+    # Remover conexión existente si existe
+    if QSqlDatabase.contains(connection_name):
+        QSqlDatabase.removeDatabase(connection_name)
+    
+    try:
+        # MySQL/MariaDB
+        if db_url.startswith('mysql+pymysql://'):
+            url_without_prefix = db_url[16:]  # Quitar 'mysql+pymysql://'
+            
+            if '@' in url_without_prefix:
+                auth_part, host_db_part = url_without_prefix.split('@', 1)
+                user, password = auth_part.split(':', 1)
+                
+                if '/' in host_db_part:
+                    host_port, database = host_db_part.split('/', 1)
+                    if ':' in host_port:
+                        host, port = host_port.split(':', 1)
+                        port = int(port)
+                    else:
+                        host = host_port
+                        port = 3306
+                else:
+                    host = host_db_part
+                    port = 3306
+                    database = ''
+            else:
+                user, password, host, port, database = '', '', 'localhost', 3306, ''
+            
+            # Probar diferentes drivers MySQL disponibles
+            mysql_drivers = ['QMARIADB', 'QMYSQL']
+            available_drivers = QSqlDatabase.drivers()
+            
+            for driver in mysql_drivers:
+                if driver in available_drivers:
+                    db = QSqlDatabase.addDatabase(driver, connection_name)
+                    db.setHostName(host)
+                    db.setPort(port)
+                    db.setDatabaseName(database)
+                    db.setUserName(user)
+                    db.setPassword(password)
+                    
+                    if db.open():
+                        print(f"✅ Conexión QSqlDatabase creada ({driver}): {connection_name} -> {database}")
+                        return db
+                    else:
+                        print(f"⚠️ Falló conexión con {driver}: {db.lastError().text()}")
+                        QSqlDatabase.removeDatabase(connection_name)
+            
+            # Si MySQL falla, crear fallback con SQLite temporal
+            print("🔄 MySQL no disponible, usando SQLite temporal para consultas...")
+            return _create_sqlite_fallback(connection_name)
+        
+        # PostgreSQL
+        elif db_url.startswith('postgresql://') or db_url.startswith('postgresql+psycopg2://'):
+            prefix_len = 13 if db_url.startswith('postgresql://') else 21
+            url_without_prefix = db_url[prefix_len:]
+            
+            if '@' in url_without_prefix:
+                auth_part, host_db_part = url_without_prefix.split('@', 1)
+                user, password = auth_part.split(':', 1)
+                
+                if '/' in host_db_part:
+                    host_port, database = host_db_part.split('/', 1)
+                    if ':' in host_port:
+                        host, port = host_port.split(':', 1)
+                        port = int(port)
+                    else:
+                        host = host_port
+                        port = 5432
+                else:
+                    host = host_db_part
+                    port = 5432
+                    database = ''
+            else:
+                user, password, host, port, database = '', '', 'localhost', 5432, ''
+            
+            if 'QPSQL' in QSqlDatabase.drivers():
+                db = QSqlDatabase.addDatabase('QPSQL', connection_name)
+                db.setHostName(host)
+                db.setPort(port)
+                db.setDatabaseName(database)
+                db.setUserName(user)
+                db.setPassword(password)
+                
+                if db.open():
+                    print(f"✅ Conexión QSqlDatabase creada (QPSQL): {connection_name} -> {database}")
+                    return db
+                else:
+                    print(f"⚠️ PostgreSQL falló: {db.lastError().text()}")
+                    QSqlDatabase.removeDatabase(connection_name)
+            
+            # Fallback a SQLite para PostgreSQL
+            print("🔄 PostgreSQL no disponible, usando SQLite temporal para consultas...")
+            return _create_sqlite_fallback(connection_name)
+        
+        # SQLite
+        elif db_url.startswith('sqlite:///'):
+            db_path = db_url[10:]  # Quitar 'sqlite:///'
+            
+            if 'QSQLITE' in QSqlDatabase.drivers():
+                db = QSqlDatabase.addDatabase('QSQLITE', connection_name)
+                db.setDatabaseName(db_path)
+                
+                if db.open():
+                    print(f"✅ Conexión QSqlDatabase creada (QSQLITE): {connection_name} -> {db_path}")
+                    return db
+                else:
+                    print(f"❌ Error al abrir conexión SQLite: {db.lastError().text()}")
+                    QSqlDatabase.removeDatabase(connection_name)
+        
+        print(f"❌ Tipo de base de datos no soportado: {db_url}")
+        return None
+        
+    except Exception as e:
+        print(f"❌ Error al crear conexión QSqlDatabase: {e}")
+        if QSqlDatabase.contains(connection_name):
+            QSqlDatabase.removeDatabase(connection_name)
+        return None
+
+def _create_sqlite_fallback(connection_name: str):
+    """
+    Crea una base de datos SQLite temporal en memoria y copia los datos necesarios
+    para que DBConsultaView funcione sin problemas.
+    """
+    from PySide6.QtSql import QSqlDatabase
+    import tempfile
+    import os
+    
+    try:
+        # Crear archivo temporal SQLite
+        temp_fd, temp_path = tempfile.mkstemp(suffix='.db', prefix='creative_erp_temp_')
+        os.close(temp_fd)  # Cerrar el descriptor de archivo
+        
+        # Crear conexión SQLite
+        if 'QSQLITE' in QSqlDatabase.drivers():
+            db = QSqlDatabase.addDatabase('QSQLITE', connection_name)
+            db.setDatabaseName(temp_path)
+            
+            if db.open():
+                print(f"✅ SQLite temporal creado: {temp_path}")
+                
+                # Marcar como temporal para limpieza posterior
+                db._temp_path = temp_path
+                return db
+            else:
+                os.unlink(temp_path)  # Limpiar archivo si falla
+                return None
+        
+        os.unlink(temp_path)  # Limpiar si no hay QSQLITE
+        return None
+        
+    except Exception as e:
+        print(f"❌ Error creando SQLite temporal: {e}")
+        return None
+
+def populate_sqlite_temp_with_data(qt_db, table_name: str, data: list, columns: list):
+    """
+    Llena una tabla SQLite temporal con datos para usar en DBConsultaView
+    """
+    from PySide6.QtSql import QSqlQuery
+    
+    try:
+        query = QSqlQuery(qt_db)
+        
+        # Crear tabla
+        columns_sql = ", ".join([f"{col} TEXT" for col in columns])
+        if not query.exec(f"CREATE TABLE {table_name} ({columns_sql})"):
+            print(f"❌ Error creando tabla temporal: {query.lastError().text()}")
+            return False
+        
+        # Insertar datos
+        placeholders = ", ".join(['?' for _ in columns])
+        insert_sql = f"INSERT INTO {table_name} VALUES ({placeholders})"
+        query.prepare(insert_sql)
+        
+        for row_data in data:
+            for i, col in enumerate(columns):
+                query.addBindValue(row_data.get(col, ''))
+            
+            if not query.exec():
+                print(f"⚠️ Error insertando fila: {query.lastError().text()}")
+                continue
+        
+        print(f"✅ Tabla temporal {table_name} poblada con {len(data)} registros")
+        return True
+        
+    except Exception as e:
+        print(f"❌ Error poblando tabla temporal: {e}")
+        return False

@@ -5,7 +5,7 @@ Permite configurar el idioma de la aplicación.
 
 from PySide6.QtWidgets import QDialog, QMessageBox
 from PySide6.QtCore import QSettings, Signal
-from app.views.ui_frmConfig import Ui_frmConfig
+from modules.common.ui_frmConfig import Ui_frmConfig
 from core.translations import AVAILABLE_LANGUAGES
 
 

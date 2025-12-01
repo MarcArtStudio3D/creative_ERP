@@ -1,4 +1,4 @@
-from typing import Optional, List
+from typing import Optional, List, Dict
 
 from PySide6.QtWidgets import QDialog
 from PySide6.QtSql import QSqlQueryModel, QSqlDatabase
@@ -311,3 +311,156 @@ class DBConsultaView(QDialog):
         if tamanos:
             dlg.set_tamano_columnas(tamanos)
         return dlg.exec_select()
+    
+    @staticmethod
+    def select_from_data(parent, data: List[Dict], headers: List[str], 
+                        campos: Optional[List[str]] = None, titulo: Optional[str] = None):
+        """Convenience method to show dialog with dictionary data and return selected item.
+        
+        This is a direct alternative to select_from_sql that works with Python data
+        without requiring QSqlDatabase connections.
+        
+        Parameters:
+            parent: parent widget
+            data: list of dictionaries with the data to display
+            headers: column headers (strings) 
+            campos: optional list of fields for search combobox
+            titulo: optional window title
+        
+        Returns:
+            (selected_dict, None) if user selects, (None, None) if cancelled
+        """
+        from PySide6.QtCore import QAbstractTableModel, QModelIndex, Qt
+        from PySide6.QtSql import QSqlRecord
+        
+        class DataTableModel(QAbstractTableModel):
+            def __init__(self, data, headers):
+                super().__init__()
+                self._data = data
+                self._headers = headers
+                self._filtered_data = data.copy()
+                
+            def rowCount(self, parent=QModelIndex()):
+                return len(self._filtered_data)
+                
+            def columnCount(self, parent=QModelIndex()):
+                return len(self._headers)
+                
+            def data(self, index, role):
+                if not index.isValid() or index.row() >= len(self._filtered_data) or index.column() >= len(self._headers):
+                    return None
+                    
+                if role == Qt.ItemDataRole.DisplayRole:
+                    row_data = self._filtered_data[index.row()]
+                    col = index.column()
+                    
+                    # Simple mapping: column 0=id, column 1=codigo, column 2=seccion
+                    if col == 0:
+                        return str(row_data.get('id', ''))
+                    elif col == 1:
+                        return str(row_data.get('codigo', ''))
+                    elif col == 2:
+                        return str(row_data.get('seccion', ''))
+                    
+                return None
+                
+            def headerData(self, section, orientation, role):
+                if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+                    if 0 <= section < len(self._headers):
+                        return self._headers[section]
+                return None
+                
+            def filter_data(self, search_text, search_field=None):
+                self.beginResetModel()
+                
+                if not search_text:
+                    self._filtered_data = self._data.copy()
+                else:
+                    self._filtered_data = []
+                    search_lower = search_text.lower()
+                    
+                    for row in self._data:
+                        if search_field:
+                            # Search in specific field
+                            field_value = str(row.get(search_field, '')).lower()
+                            if search_lower in field_value:
+                                self._filtered_data.append(row)
+                        else:
+                            # Search in all fields
+                            found = False
+                            for key, value in row.items():
+                                if search_lower in str(value).lower():
+                                    found = True
+                                    break
+                            if found:
+                                self._filtered_data.append(row)
+                
+                self.endResetModel()
+        
+        # Create dialog
+        dlg = DBConsultaView(parent)
+        
+        # Set title
+        if titulo:
+            dlg.set_titulo(titulo)
+            
+        # Set search fields
+        if campos:
+            dlg.set_campoBusqueda(campos)
+            
+        # Create and set custom model
+        model = DataTableModel(data, headers)
+        dlg.modelo = model
+        dlg.ui.resultado_list.setModel(model)
+        
+        # Set headers
+        if headers:
+            dlg.set_headers(headers)
+            # Also set table headers directly for custom model
+            dlg.ui.resultado_list.model().headers = headers
+        
+        # Override filter method to work with our custom model
+        original_filter = dlg.set_filtro
+        def custom_filter(filtro_text):
+            search_field = dlg.ui.cboCampoBusqueda.currentText().strip()
+            if not search_field and campos:
+                search_field = campos[0] if campos else None
+            model.filter_data(filtro_text, search_field)
+        dlg.set_filtro = custom_filter
+        
+        # Override click handler to work with filtered data
+        def custom_click_handler():
+            current_index = dlg.ui.resultado_list.currentIndex()
+            if current_index.isValid():
+                row = current_index.row()
+                if 0 <= row < len(model._filtered_data):
+                    selected_data = model._filtered_data[row]
+                    # Create a mock QSqlRecord for compatibility
+                    from PySide6.QtSql import QSqlField
+                    record = QSqlRecord()
+                    for i, header in enumerate(headers):
+                        key = header.lower()
+                        if key == 'código':
+                            key = 'codigo'
+                        elif key == 'sección':
+                            key = 'seccion'
+                        
+                        field = QSqlField(key)
+                        field.setValue(str(selected_data.get(key, '')))
+                        record.append(field)
+                    
+                    dlg.id = selected_data.get('id', 0)
+                    dlg._r = record
+        
+        dlg.ui.resultado_list.clicked.connect(custom_click_handler)
+        dlg.ui.resultado_list.doubleClicked.connect(lambda: (custom_click_handler(), dlg.accept()))
+        
+        # Show dialog
+        if dlg.exec() == dlg.DialogCode.Accepted:
+            current_index = dlg.ui.resultado_list.currentIndex()
+            if current_index.isValid():
+                row = current_index.row()
+                if 0 <= row < len(model._filtered_data):
+                    return model._filtered_data[row], dlg._r
+        
+        return None, None

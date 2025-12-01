@@ -289,6 +289,27 @@ class ArticuloRepository:
             if not self._external_session:
                 session.close()
     
+    def get_secciones_for_lookup(self) -> str:
+        """Get SQL query for sections lookup in DBConsultaView"""
+        return "SELECT id, codigo, seccion FROM secciones ORDER BY codigo"
+    
+    def get_secciones_data(self) -> list:
+        """Get sections data as list of dictionaries"""
+        session = self._session()
+        try:
+            result = session.execute(
+                text("SELECT id, codigo, seccion FROM secciones ORDER BY codigo")
+            )
+            rows = result.fetchall()
+            return [{
+                'id': row[0],
+                'codigo': row[1], 
+                'seccion': row[2]
+            } for row in rows]
+        finally:
+            if not self._external_session:
+                session.close()
+    
     def get_familia(self, familia_id: int) -> Optional[str]:
         """Get family name by ID"""
         session = self._session()

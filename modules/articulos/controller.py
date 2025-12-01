@@ -50,6 +50,33 @@ class ArticuloController:
             print(f"Error loading article: {e}")
             return False
     
+    def get_secciones_sql(self) -> str:
+        """Get SQL for sections lookup"""
+        return self.repository.get_secciones_for_lookup()
+    
+    def set_seccion_from_lookup(self, seccion_id: int, seccion_codigo: str, seccion_nombre: str) -> bool:
+        """Set section from lookup selection"""
+        try:
+            if not self.current_article:
+                return False
+            
+            # Update current article data
+            self.current_article['id_seccion'] = seccion_id
+            
+            # Return success - the view will update the display fields
+            return True
+        except Exception as e:
+            print(f"Error setting section: {e}")
+            return False
+    
+    def get_secciones_data(self) -> list:
+        """Get sections data for lookup dialog"""
+        try:
+            return self.repository.get_secciones_data()
+        except Exception as e:
+            print(f"Error getting sections data: {e}")
+            return []
+    
     def next_article(self) -> bool:
         """Navigate to next article"""
         if not self.current_article:

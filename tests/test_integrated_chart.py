@@ -187,13 +187,16 @@ def test_integrated_chart():
         print("   - Pestaña 'Estadística/Gráfica' activada")
         print("   - Prueba los radio buttons para ver diferentes datos")
         
-        return app.exec()
+        # No arrancamos el bucle de eventos en pruebas automáticas; validamos que el gráfico se construyó
+        assert window.isVisible()
+        # Asegurar que el chart tiene al menos una serie tras actualización
+        assert len(window.chart.series()) > 0
         
     except Exception as e:
         print(f"❌ Error al probar gráfico integrado: {e}")
         import traceback
         traceback.print_exc()
-        return 1
+        assert False, f"Error al probar gráfico integrado: {e}"
 
 if __name__ == "__main__":
     sys.exit(test_integrated_chart())

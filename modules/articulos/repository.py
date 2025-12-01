@@ -328,13 +328,20 @@ class ArticuloRepository:
         """Get SQL query for families lookup in DBConsultaView"""
         return "SELECT id, codigo, familia FROM familias ORDER BY codigo"
 
-    def get_familias_data(self) -> list:
-        """Get families data as list of dictionaries"""
+    def get_familias_data(self, id_seccion: int = None) -> list:
+        """Get families data as list of dictionaries. Optionally filter by section id."""
         session = self._session()
         try:
-            result = session.execute(
-                text("SELECT id, codigo, familia FROM familias ORDER BY codigo")
-            )
+            if id_seccion:
+                result = session.execute(
+                    text("SELECT id, codigo, familia FROM familias WHERE id_seccion = :sid ORDER BY codigo"),
+                    {"sid": id_seccion}
+                )
+            else:
+                result = session.execute(
+                    text("SELECT id, codigo, familia FROM familias ORDER BY codigo")
+                )
+
             rows = result.fetchall()
             return [{
                 'id': row[0],

@@ -30,7 +30,8 @@ def test_divisiones_deselection():
     print("   - Los botones se habilitan/deshabilitan correctamente")
     print("   - Los campos se pueden editar después de deseleccionar")
     
-    return app.exec()
+    # No ejecutamos el bucle Qt; comprobamos que la ventana se ha creado correctamente
+    assert window.isVisible()
 
 if __name__ == "__main__":
     sys.exit(test_divisiones_deselection())

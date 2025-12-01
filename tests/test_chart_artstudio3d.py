@@ -44,7 +44,9 @@ def test_chart_with_artstudio3d():
     print("   - Datos mensuales simulados")
     print("   - Controles para cambiar unidades/importes")
     
-    return app.exec()
+    # No ejecutar el bucle de eventos; comprobamos que la ventana se ha creado y la pestaña de gráfica está activa
+    assert window.isVisible()
+    assert window.ui.Pestanas.currentIndex() == 6
 
 if __name__ == "__main__":
     sys.exit(test_chart_with_artstudio3d())

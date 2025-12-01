@@ -33,7 +33,8 @@ def test_articulos_seccion():
     print("     * 002 - Hogar") 
     print("     * 003 - Ropa")
     
-    return app.exec()
+    # No arrancamos el bucle de Qt en el test automático; comprobamos que la ventana se ha creado y es visible
+    assert window.isVisible()
 
 if __name__ == "__main__":
     sys.exit(test_articulos_seccion())

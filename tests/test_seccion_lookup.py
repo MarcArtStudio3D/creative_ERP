@@ -29,7 +29,8 @@ def test_seccion_lookup():
     print("   - Selecciona una sección de la lista")
     print("   - El valor debe aparecer en el campo txtseccion")
     
-    return app.exec()
+    # No ejecutamos el lazo de eventos en tests no interactivos; comprobamos que se creó la ventana
+    assert window.isVisible()
 
 if __name__ == "__main__":
     sys.exit(test_seccion_lookup())

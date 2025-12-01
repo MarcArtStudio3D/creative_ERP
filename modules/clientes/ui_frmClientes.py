@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QRadioButton, QSizePolicy, QSpacerItem, QSpinBox,
     QStackedWidget, QTabWidget, QTableView, QTextEdit,
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
-from modules import designer_rc
+import modules.designer_rc
 
 class Ui_frmClientes(object):
     def setupUi(self, frmClientes):
@@ -1089,6 +1089,8 @@ class Ui_frmClientes(object):
         self.txtfecha_ultima_compra.setObjectName(u"txtfecha_ultima_compra")
         self.txtfecha_ultima_compra.setEnabled(True)
         self.txtfecha_ultima_compra.setMaximumSize(QSize(100, 16777215))
+        self.txtfecha_ultima_compra.setStyleSheet(u"color: rgb(0, 0, 0);\n"
+"background-color: rgb(239, 239, 239);")
         self.txtfecha_ultima_compra.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.txtfecha_ultima_compra.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtfecha_ultima_compra.setCalendarPopup(True)
@@ -1426,6 +1428,8 @@ class Ui_frmClientes(object):
         self.txtfecha_alta = QDateEdit(self.frame_5)
         self.txtfecha_alta.setObjectName(u"txtfecha_alta")
         self.txtfecha_alta.setMaximumSize(QSize(100, 16777215))
+        self.txtfecha_alta.setStyleSheet(u"color: rgb(0, 0, 0);\n"
+"background-color: rgb(239, 239, 239);")
         self.txtfecha_alta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtfecha_alta.setCalendarPopup(True)
 
@@ -1664,9 +1668,6 @@ class Ui_frmClientes(object):
         self.tabla_busquedas = QTableView(self.paginaBisquedas)
         self.tabla_busquedas.setObjectName(u"tabla_busquedas")
         self.tabla_busquedas.setAutoFillBackground(True)
-        self.tabla_busquedas.setStyleSheet(u"alternate-\n"
-"background-color: rgb(248, 245, 194);\n"
-"font: 8pt \"Sans\";")
         self.tabla_busquedas.setAlternatingRowColors(True)
         self.tabla_busquedas.setSelectionMode(QAbstractItemView.SelectionMode.SingleSelection)
         self.tabla_busquedas.setSelectionBehavior(QAbstractItemView.SelectionBehavior.SelectRows)

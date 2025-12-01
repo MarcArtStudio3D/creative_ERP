@@ -125,7 +125,8 @@ def main():
     print("   - Botón para generar nuevos datos")
     print("   - Animaciones y colores")
     
-    return app.exec()
+    # No ejecutar el bucle de eventos en el test automatizado
+    assert window.isVisible()
 
 if __name__ == "__main__":
     sys.exit(main())

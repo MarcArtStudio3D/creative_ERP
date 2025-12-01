@@ -39,7 +39,8 @@ def test_chart():
     print("   - Gráfico de barras con datos de prueba")
     print("   - Controles para cambiar entre unidades e importes")
     
-    return app.exec()
+    # No ejecutar el bucle de eventos; comprobamos que la ventana y el gráfico se han creado
+    assert window.isVisible()
 
 if __name__ == "__main__":
     try:

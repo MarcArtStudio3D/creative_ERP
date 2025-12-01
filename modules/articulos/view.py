@@ -835,12 +835,8 @@ class ArticulosView(QDialog):
                     # Update UI field
                     self.ui.txtseccion.setText(seccion_nombre)
 
-                    # When the section changes, families/subfamilies should be reset
-                    # because families are dependent on sections. Clear previous family/subfamily
-                    if hasattr(self.controller, 'current_article') and isinstance(self.controller.current_article, dict):
-                        # Remove family/subfamily ids from the model
-                        self.controller.current_article.pop('id_familia', None)
-                        self.controller.current_article.pop('id_subfamilia', None)
+
+                    # Note: controller.set_seccion_from_lookup already clears dependent ids
 
                     # Clear family/subfamily UI fields
                     if hasattr(self.ui, 'txtfamilia'):
@@ -851,6 +847,7 @@ class ArticulosView(QDialog):
                     # Update family/subfamily button states: family enabled only if editing, subfamily disabled
                     editing = self.ui.botGuardar.isEnabled()
                     if hasattr(self.ui, 'botBuscarFamilia'):
+                        # family enabled only if editing (controller will ensure family None until selected)
                         self.ui.botBuscarFamilia.setEnabled(editing and True)
                     if hasattr(self.ui, 'botBuscarSubfamilia'):
                         self.ui.botBuscarSubfamilia.setEnabled(False)
@@ -866,7 +863,14 @@ class ArticulosView(QDialog):
     def _on_buscar_familia_clicked(self):
         """Abrir diálogo de búsqueda de familias y actualizar controller/modelo/vista (MVC)."""
         try:
-            familias_data = self.controller.get_familias_data()
+            # Families depend on section; obtain current article's section and filter families
+            current = self.controller.get_current_article() or {}
+            id_seccion = current.get('id_seccion')
+            if not id_seccion:
+                QMessageBox.information(self, "Info", "Seleccione primero una sección para listar las familias correspondientes")
+                return
+
+            familias_data = self.controller.get_familias_data(id_seccion)
 
             if not familias_data:
                 QMessageBox.information(self, "Info", "No se encontraron familias en la base de datos")
@@ -895,6 +899,9 @@ class ArticulosView(QDialog):
                     # locked True means fields are read-only; we want enabled when not locked
                     if hasattr(self.ui, 'botBuscarSubfamilia') and not locked:
                         self.ui.botBuscarSubfamilia.setEnabled(True)
+                    # Clear subfamily UI because a family change invalidates previous subfamily
+                    if hasattr(self.ui, 'txtsubfamilia'):
+                        self.ui.txtsubfamilia.clear()
                 else:
                     QMessageBox.warning(self, "Error", "No se pudo actualizar la familia")
 

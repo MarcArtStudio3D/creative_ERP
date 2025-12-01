@@ -1771,6 +1771,12 @@ color: rgb(255, 255, 255);</string>
            </item>
            <item row="0" column="5">
             <widget class="QDateEdit" name="txtOferta_Fecha_fin">
+             <property name="styleSheet">
+              <string notr="true">QDateEdit::up-button, QDateEdit::down-button {
+    width: 0px;
+    border: none;
+}</string>
+             </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
@@ -1794,6 +1800,12 @@ color: rgb(255, 255, 255);</string>
            </item>
            <item row="0" column="3">
             <widget class="QDateEdit" name="txtOferta_Fecha_ini">
+             <property name="styleSheet">
+              <string notr="true">QDateEdit::up-button, QDateEdit::down-button {
+    width: 0px;
+    border: none;
+}</string>
+             </property>
              <property name="alignment">
               <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
              </property>
@@ -3060,6 +3072,10 @@ Imagen.</string>
                   <height>27</height>
                  </size>
                 </property>
+                <property name="styleSheet">
+                 <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(239, 239, 239);</string>
+                </property>
                 <property name="dateTime">
                  <datetime>
                   <hour>0</hour>
@@ -3077,7 +3093,7 @@ Imagen.</string>
                   <second>0</second>
                   <year>1900</year>
                   <month>9</month>
-                  <day>12</day>
+                  <day>11</day>
                  </datetime>
                 </property>
                 <property name="displayFormat">
@@ -3176,6 +3192,10 @@ Imagen.</string>
                   <width>120</width>
                   <height>27</height>
                  </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(239, 239, 239);</string>
                 </property>
                 <property name="displayFormat">
                  <string>dd/MM/yyyy</string>
@@ -3414,6 +3434,10 @@ Imagen.</string>
                   <width>120</width>
                   <height>27</height>
                  </size>
+                </property>
+                <property name="styleSheet">
+                 <string notr="true">color: rgb(0, 0, 0);
+background-color: rgb(239, 239, 239);</string>
                 </property>
                 <property name="maximumDateTime">
                  <datetime>
@@ -4769,11 +4793,6 @@ background-color: rgb(239, 239, 239);</string>
        </property>
        <item row="0" column="0">
         <widget class="QTableView" name="tablaBusqueda">
-         <property name="styleSheet">
-          <string notr="true">alternate-background-color: rgb(255, 255, 255);
-font: 8pt &quot;Sans&quot;;
-background-color: rgb(248, 245, 194);</string>
-         </property>
          <property name="alternatingRowColors">
           <bool>true</bool>
          </property>

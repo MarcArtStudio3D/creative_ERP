@@ -62,6 +62,9 @@ class ArticuloController:
             
             # Update current article data
             self.current_article['id_seccion'] = seccion_id
+            # Changing section invalidates family/subfamily selection -> clear them
+            self.current_article['id_familia'] = None
+            self.current_article['id_subfamilia'] = None
             
             # Return success - the view will update the display fields
             return True
@@ -85,15 +88,19 @@ class ArticuloController:
 
             # Update current article data with selected family id
             self.current_article['id_familia'] = familia_id
+            # Changing family invalidates subfamily selection
+            self.current_article['id_subfamilia'] = None
             return True
         except Exception as e:
             print(f"Error setting familia: {e}")
             return False
 
-    def get_familias_data(self) -> list:
-        """Obtiene la lista de familias para el diálogo de búsqueda."""
+    def get_familias_data(self, id_seccion: int = None) -> list:
+        """Obtiene la lista de familias para el diálogo de búsqueda.
+        Si se pasa id_seccion, filtra familias pertenecientes a esa sección.
+        """
         try:
-            return self.repository.get_familias_data()
+            return self.repository.get_familias_data(id_seccion)
         except Exception as e:
             print(f"Error getting familias data: {e}")
             return []

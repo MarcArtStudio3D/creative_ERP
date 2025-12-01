@@ -20,11 +20,23 @@ def test_lookup_buttons_enabled():
     assert not view.ui.botBuscarFamilia.isEnabled()
     assert not view.ui.botBuscarSubfamilia.isEnabled()
 
-    # Modo edición -> desbloqueado (la subfamilia queda deshabilitada por defecto si no hay familia seleccionada)
+    # Modo edición -> desbloqueado.
+    # Observación: las familias dependen de la sección — por tanto el botón de buscar familia
+    # no debe activarse hasta que haya una sección seleccionada en el artículo.
     view._lock_fields(False)
     assert view.ui.botBuscarSeccion.isEnabled()
-    assert view.ui.botBuscarFamilia.isEnabled()
+    # No hay sección asignada por defecto -> familia no habilitada
+    assert not view.ui.botBuscarFamilia.isEnabled()
     assert not view.ui.botBuscarSubfamilia.isEnabled()
+
+    # Simular que el artículo actual obtiene una sección via lookup -> ahora la búsqueda de familia debe activarse
+    # Necesitamos asignar un current_article en el controller para que set_seccion_from_lookup funcione
+    # controller.current_article must be truthy for set_seccion_from_lookup to accept it
+    view.controller.current_article = {'id': -1}
+    view.controller.set_seccion_from_lookup(1, 'S1', 'GENERAL')
+    # Actualizar la vista desde el modelo
+    view._load_form_from_article()
+    assert view.ui.botBuscarFamilia.isEnabled()
 
     print('✅ lookup buttons enabled/disabled behavior OK')
 

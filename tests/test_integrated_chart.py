@@ -111,6 +111,30 @@ class MockController:
     def get_proveedor_info(self, id):
         return "PROV001", "Proveedor Demo"
 
+    # Lookup data helpers used by the view
+    def get_secciones_data(self):
+        return [
+            {'id': 1, 'codigo': 'S1', 'seccion': 'GENERAL'},
+            {'id': 2, 'codigo': 'S2', 'seccion': 'ESPECIAL'}
+        ]
+
+    def get_familias_data(self):
+        # families normally depend on section, return some generic ones
+        return [
+            {'id': 1, 'codigo': 'F1', 'familia': 'Electrónica', 'id_seccion': 1},
+            {'id': 2, 'codigo': 'F2', 'familia': 'Informática', 'id_seccion': 1},
+        ]
+
+    def get_subfamilias_data(self, id_familia=None):
+        # filter by id_familia when provided
+        data = [
+            {'id': 1, 'codigo': 'SF1', 'subfamilia': 'Smartphones', 'id_familia': 1},
+            {'id': 2, 'codigo': 'SF2', 'subfamilia': 'Portátiles', 'id_familia': 2},
+        ]
+        if id_familia is None:
+            return data
+        return [d for d in data if d.get('id_familia') == id_familia]
+
 def test_integrated_chart():
     """Probar el gráfico integrado en el módulo de artículos"""
     app = QApplication.instance() or QApplication(sys.argv)

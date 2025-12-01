@@ -4,6 +4,7 @@ Abre el diálogo de gestión de Secciones, Familias y Subfamilias
 """
 
 from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox
+from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt
 from modules.articulos.divisiones_view import DivisionesView
 
@@ -21,8 +22,8 @@ class DivisionesAlmacenView(QWidget):
         layout.setContentsMargins(40, 40, 40, 40)
         layout.setSpacing(20)
         
-        # Título
-        title = QLabel("📁 Divisiones del Almacén")
+        # Título (sin emojis)
+        title = QLabel("Divisiones del Almacén")
         title.setStyleSheet("font-size: 24px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
@@ -39,7 +40,11 @@ class DivisionesAlmacenView(QWidget):
         layout.addWidget(description)
         
         # Botón para abrir el diálogo
-        btn_abrir = QPushButton("🔧 Abrir Gestor de Divisiones")
+        btn_abrir = QPushButton("Abrir Gestor de Divisiones")
+        try:
+            btn_abrir.setIcon(QIcon(":/PNG/resources/icons/png/List.png"))
+        except Exception:
+            pass
         btn_abrir.setMinimumHeight(50)
         btn_abrir.setStyleSheet("""
             QPushButton {
@@ -65,7 +70,7 @@ class DivisionesAlmacenView(QWidget):
         
         # Información adicional
         info = QLabel(
-            "💡 Consejo: Organiza tus productos en secciones y familias\n"
+            "Consejo: Organiza tus productos en secciones y familias\n"
             "para facilitar su búsqueda y gestión."
         )
         info.setStyleSheet("font-size: 12px; color: #666; padding: 10px;")

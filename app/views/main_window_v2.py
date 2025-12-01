@@ -8,7 +8,7 @@ from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
                                QDateEdit, QMenu, QMenuBar, QToolButton, QMessageBox,
                                QScrollArea, QComboBox, QLineEdit)
 from PySide6.QtCore import Qt, QDate, Signal, QPropertyAnimation, QEasingCurve, Property, QPoint
-from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush, QShortcut, QKeySequence
+from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush, QShortcut, QKeySequence, QIcon
 
 
 from typing import Optional, Callable
@@ -35,6 +35,12 @@ class MainWindowV2(QMainWindow):
         self.session = session
         self.module_manager = ModuleManager()
         self.module_widgets = {}  # Caché de widgets de módulos
+        self.module_access_order = []  # Lista para rastrear orden de acceso (LRU)
+        
+        # Cargar configuración de caché desde QSettings
+        from PySide6.QtCore import QSettings
+        settings = QSettings()
+        self.max_cached_modules = settings.value("max_cached_modules", 5, type=int)
         
         self.setup_ui()
         self.create_menus()
@@ -204,37 +210,37 @@ class MainWindowV2(QMainWindow):
             ModuleCategory.VENTAS: {
                 "name": self.tr("Ventas"),
                 "description": self.tr("Gestión de clientes y facturación"),
-                "icon": "💼",
+                    "icon": ":/PNG/resources/icons/png/Pay.png",
                 "color": "#8B5CF6"  # Púrpura
             },
             ModuleCategory.COMPRAS: {
                 "name": self.tr("Compras"), 
                 "description": self.tr("Proveedores y facturas de compra"),
-                "icon": "🛒",
+                "icon": ":/PNG/resources/icons/png/Pay.png",
                 "color": "#3B82F6"  # Azul
             },
             ModuleCategory.ALMACEN: {
                 "name": self.tr("Almacén"),
                 "description": self.tr("Inventario y control de stock"),
-                "icon": "📦",
+                "icon": ":/PNG/resources/icons/png/List.png",
                 "color": "#F59E0B"  # Ámbar
             },
             ModuleCategory.FINANCIERO: {
                 "name": self.tr("Financiero"),
                 "description": self.tr("Contabilidad y tesorería"),
-                "icon": "💰",
+                    "icon": ":/PNG/resources/icons/png/Pay.png",
                 "color": "#10B981"  # Verde
             },
             ModuleCategory.PROYECTOS: {
                 "name": self.tr("Proyectos"),
                 "description": self.tr("Gestión de proyectos creativos"),
-                "icon": "📁",
+                    "icon": ":/PNG/resources/icons/png/List.png",
                 "color": "#EC4899"  # Rosa
             },
             ModuleCategory.ADMINISTRACION: {
                 "name": self.tr("Administración"),
                 "description": self.tr("Configuración y usuarios"),
-                "icon": "⚙️",
+                    "icon": ":/PNG/resources/icons/png/Edit.png",
                 "color": "#6B7280"  # Gris
             }
         }
@@ -324,12 +330,23 @@ class MainWindowV2(QMainWindow):
         """)
         icon_layout = QVBoxLayout(icon_container)
         icon_layout.setContentsMargins(0, 0, 0, 0)
-        icon_label = QLabel(icon)
-        icon_label.setStyleSheet("""
-            font-size: 20px;
-            background: transparent;
-            border: none;
-        """)
+        # Support resource path icons (:/...) — otherwise fall back to text
+        if icon and isinstance(icon, str) and icon.startswith(':/'):
+            icon_label = QLabel()
+            try:
+                pix = QPixmap(icon)
+                if not pix.isNull():
+                    icon_label.setPixmap(pix.scaled(20, 20, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            except Exception:
+                # fallback to text representation if something fails
+                icon_label = QLabel('')
+        else:
+            icon_label = QLabel(icon)
+            icon_label.setStyleSheet("""
+                font-size: 20px;
+                background: transparent;
+                border: none;
+            """)
         icon_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         icon_layout.addWidget(icon_label)
         
@@ -602,7 +619,8 @@ class MainWindowV2(QMainWindow):
             menu = menubar.addMenu(category_names[category])
             
             for module in categories[category]:
-                action = QAction(module.icon + " " + module.name, self)
+                action_text = f"{module.icon} {module.name}".strip()
+                action = QAction(action_text, self)
                 action.setStatusTip(module.description)
                 action.triggered.connect(lambda checked, m=module: self.open_module(m.id))  # type: ignore
                 menu.addAction(action)
@@ -610,7 +628,11 @@ class MainWindowV2(QMainWindow):
         # Menú Utilidades
         utils_menu = menubar.addMenu(self.tr("Utilidades"))
         
-        preferences_action = QAction(self.tr("⚙️ Preferencias"), self)
+        preferences_action = QAction(self.tr("Preferencias"), self)
+        try:
+            preferences_action.setIcon(QIcon(":/PNG/resources/icons/png/Edit.png"))
+        except Exception:
+            pass
         preferences_action.triggered.connect(self.open_preferences)
         utils_menu.addAction(preferences_action)
 
@@ -621,27 +643,28 @@ class MainWindowV2(QMainWindow):
                 gestor = m
                 break
         if gestor:
-            gestor_action = QAction(gestor.icon + " " + gestor.name, self)
+            gestor_action_text = f"{gestor.icon} {gestor.name}".strip()
+            gestor_action = QAction(gestor_action_text, self)
             gestor_action.setStatusTip(gestor.description)
             gestor_action.triggered.connect(lambda checked=False: self.open_module('gestor_modulos'))  # type: ignore
             utils_menu.addAction(gestor_action)
         
         utils_menu.addSeparator()
         
-        about_action = QAction(self.tr("ℹ️ Acerca de"), self)
+        about_action = QAction(self.tr("Acerca de"), self)
         about_action.triggered.connect(self.show_about)
         utils_menu.addAction(about_action)
         
         # Menú Sesión
         session_menu = menubar.addMenu(self.tr("Sesión"))
         
-        change_company_action = QAction(self.tr("🏢 Cambiar Empresa"), self)
+        change_company_action = QAction(self.tr("Cambiar Empresa"), self)
         change_company_action.triggered.connect(self.change_company)
         session_menu.addAction(change_company_action)
         
         session_menu.addSeparator()
         
-        logout_action = QAction(self.tr("🚺 Cerrar Sesión"), self)
+        logout_action = QAction(self.tr("Cerrar Sesión"), self)
         logout_action.triggered.connect(self.logout_requested.emit)
         session_menu.addAction(logout_action)
     
@@ -687,7 +710,7 @@ class MainWindowV2(QMainWindow):
         panel_layout.setSpacing(10)
         
         # Título
-        title_label = QLabel(self.tr("⚠️ AVISOS") if has_avisos else self.tr("✓ Sin Avisos"))
+        title_label = QLabel(self.tr("AVISOS") if has_avisos else self.tr("Sin Avisos"))
         title_font = QFont()
         title_font.setPointSize(12)
         title_font.setBold(True)
@@ -861,36 +884,118 @@ class MainWindowV2(QMainWindow):
     
     def open_module(self, module_id: str) -> None:
         """
-        Abre un módulo en el stacked widget.
+        Abre un módulo en el stacked widget con gestión de caché LRU.
         
-        Si el módulo ya está abierto, lo muestra.
-        Si no, lo crea dinámicamente.
+        Si el módulo ya está en caché, lo muestra y actualiza su posición en LRU.
+        Si no está en caché, lo crea y gestiona el límite de caché.
         """
-        # Si el módulo ya está abierto, simplemente lo muestra
+        # Si el módulo ya está en caché, simplemente lo muestra
         if module_id in self.module_widgets:
             widget = self.module_widgets[module_id]
             self.stacked_widget.setCurrentWidget(widget)
             
+            # Actualizar orden de acceso (mover al final = más reciente)
+            if module_id in self.module_access_order:
+                self.module_access_order.remove(module_id)
+            self.module_access_order.append(module_id)
+            
             msg = self.tr("Módulo {} activo").format(module_id)
             self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
             return
+        
+        # Verificar si necesitamos liberar memoria (límite de caché alcanzado)
+        if len(self.module_widgets) >= self.max_cached_modules:
+            self._cleanup_old_modules()
         
         # Crear el widget del módulo (carga bajo demanda)
         module_widget = self.create_module_widget(module_id)
         
         if module_widget:
             self.module_widgets[module_id] = module_widget
+            self.module_access_order.append(module_id)
             self.stacked_widget.addWidget(module_widget)
             self.stacked_widget.setCurrentWidget(module_widget)
             
             msg = self.tr("Módulo {} cargado").format(module_id)
             self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
+            
+            print(f"Módulos en caché: {len(self.module_widgets)}/{self.max_cached_modules}")
         else:
             QMessageBox.information(
                 self,
                 "Módulo en desarrollo",
                 f"El módulo '{module_id}' aún no está implementado."
             )
+    
+    def _cleanup_old_modules(self) -> None:
+        """
+        Libera memoria eliminando el módulo menos recientemente usado (LRU).
+        """
+        if not self.module_access_order:
+            return
+        
+        # Obtener el módulo menos recientemente usado (primero en la lista)
+        oldest_module_id = self.module_access_order[0]
+        
+        # Remover del stacked widget
+        if oldest_module_id in self.module_widgets:
+            widget = self.module_widgets[oldest_module_id]
+            self.stacked_widget.removeWidget(widget)
+            
+            # Eliminar el widget para liberar memoria
+            widget.deleteLater()
+            
+            # Remover de la caché
+            del self.module_widgets[oldest_module_id]
+            self.module_access_order.remove(oldest_module_id)
+            
+            print(f"Módulo '{oldest_module_id}' eliminado de caché para liberar memoria")
+            print(f"Módulos restantes en caché: {len(self.module_widgets)}/{self.max_cached_modules}")
+    
+    def set_max_cached_modules(self, max_modules: int) -> None:
+        """
+        Configura el número máximo de módulos a mantener en caché.
+        
+        Args:
+            max_modules: Número máximo de módulos (mínimo 1)
+        """
+        self.max_cached_modules = max(1, max_modules)
+        
+        # Si actualmente hay más módulos que el nuevo límite, limpiar
+        while len(self.module_widgets) > self.max_cached_modules:
+            self._cleanup_old_modules()
+        
+        print(f"Límite de caché configurado a {self.max_cached_modules} módulos")
+    
+    def clear_module_cache(self) -> None:
+        """
+        Limpia completamente la caché de módulos, liberando toda la memoria.
+        Útil para liberar recursos cuando el usuario lo solicite.
+        """
+        # Guardar el módulo actual para no cerrarlo
+        current_widget = self.stacked_widget.currentWidget()
+        current_module_id = None
+        
+        # Encontrar el ID del módulo actual
+        for module_id, widget in self.module_widgets.items():
+            if widget == current_widget:
+                current_module_id = module_id
+                break
+        
+        # Limpiar todos los módulos excepto el actual
+        modules_to_remove = [mid for mid in self.module_widgets.keys() if mid != current_module_id]
+        
+        for module_id in modules_to_remove:
+            widget = self.module_widgets[module_id]
+            self.stacked_widget.removeWidget(widget)
+            widget.deleteLater()
+            del self.module_widgets[module_id]
+            if module_id in self.module_access_order:
+                self.module_access_order.remove(module_id)
+        
+        print(f"Caché de módulos limpiada. Módulos eliminados: {len(modules_to_remove)}")
+        print(f"Módulos en caché: {len(self.module_widgets)}/{self.max_cached_modules}")
+
     
     def create_module_widget(self, module_id: str) -> Optional[QWidget]:
         """
@@ -1103,8 +1208,15 @@ class MainWindowV2(QMainWindow):
         """)
         logo_layout = QVBoxLayout()
         logo_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        logo_label = QLabel("🔍")
-        logo_label.setStyleSheet("font-size: 32px; background: transparent; border: none;")
+        # Use resource icon for module panel header instead of emoji
+        logo_label = QLabel()
+        try:
+            pix = QPixmap(":/PNG/resources/icons/png/search.png")
+            if not pix.isNull():
+                logo_label.setPixmap(pix.scaled(32, 32, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+        except Exception:
+            logo_label.setText("")
+            logo_label.setStyleSheet("font-size: 32px; background: transparent; border: none;")
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         logo_layout.addWidget(logo_label)
         id_label = QLabel(f"ID: {module_info.id.upper()[:3]}")
@@ -1115,7 +1227,11 @@ class MainWindowV2(QMainWindow):
         panel_layout.addWidget(logo_container)
         
         # Botón "Limpiar y Refrescar"
-        refresh_btn = QPushButton(self.tr("🔄 Limpiar y Refrescar"))
+        refresh_btn = QPushButton(self.tr("Limpiar y Refrescar"))
+        try:
+            refresh_btn.setIcon(QIcon(":/PNG/resources/icons/png/down_arrow.png"))
+        except Exception:
+            pass
         refresh_btn.setMinimumHeight(35)
         refresh_btn.setStyleSheet(self._get_panel_button_style())
         refresh_btn.clicked.connect(lambda: self.on_module_action(module_id, 'refresh'))  # type: ignore
@@ -1193,19 +1309,31 @@ class MainWindowV2(QMainWindow):
         panel_layout.addSpacing(20)
         
         # Botones de acción principales
-        add_btn = QPushButton(self.tr("➕ Añadir"))
+        add_btn = QPushButton(self.tr("Añadir"))
+        try:
+            add_btn.setIcon(QIcon(":/PNG/resources/icons/png/Add.png"))
+        except Exception:
+            pass
         add_btn.setMinimumHeight(40)
         add_btn.setStyleSheet(self._get_panel_button_style())
         add_btn.clicked.connect(lambda: self.on_module_action(module_id, 'new'))  # type: ignore
         panel_layout.addWidget(add_btn)
         
-        edit_btn = QPushButton(self.tr("📝 Editar"))
+        edit_btn = QPushButton(self.tr("Editar"))
+        try:
+            edit_btn.setIcon(QIcon(":/PNG/resources/icons/png/Edit.png"))
+        except Exception:
+            pass
         edit_btn.setMinimumHeight(40)
         edit_btn.setStyleSheet(self._get_panel_button_style())
         edit_btn.clicked.connect(lambda: self.on_module_action(module_id, 'edit'))  # type: ignore
         panel_layout.addWidget(edit_btn)
         
-        delete_btn = QPushButton(self.tr("🗑️ Borrar"))
+        delete_btn = QPushButton(self.tr("Borrar"))
+        try:
+            delete_btn.setIcon(QIcon(":/PNG/resources/icons/png/delete.png"))
+        except Exception:
+            pass
         delete_btn.setMinimumHeight(40)
         delete_btn.setStyleSheet(self._get_panel_button_style("#d63031"))
         delete_btn.clicked.connect(lambda: self.on_module_action(module_id, 'delete'))  # type: ignore
@@ -1214,7 +1342,11 @@ class MainWindowV2(QMainWindow):
         # Si estamos en un módulo de Administración, añadir acceso directo al Gestor de Módulos
         try:
             if getattr(module_info, 'category', None) == ModuleCategory.ADMINISTRACION:
-                gestor_btn = QPushButton(self.tr("🛠️ Gestor Módulos"))
+                gestor_btn = QPushButton(self.tr("Gestor Módulos"))
+                try:
+                    gestor_btn.setIcon(QIcon(":/PNG/resources/icons/png/List.png"))
+                except Exception:
+                    pass
                 gestor_btn.setMinimumHeight(40)
                 gestor_btn.setStyleSheet(self._get_panel_button_style())
                 gestor_btn.clicked.connect(lambda checked=False: self.open_module('gestor_modulos'))  # type: ignore
@@ -1225,7 +1357,11 @@ class MainWindowV2(QMainWindow):
         panel_layout.addStretch()
         
         # Botón Excepciones (abajo)
-        exceptions_btn = QPushButton(self.tr("📋 Excepciones"))
+        exceptions_btn = QPushButton(self.tr("Excepciones"))
+        try:
+            exceptions_btn.setIcon(QIcon(":/PNG/resources/icons/png/List.png"))
+        except Exception:
+            pass
         exceptions_btn.setMinimumHeight(40)
         exceptions_btn.setStyleSheet(self._get_panel_button_style())
         exceptions_btn.clicked.connect(lambda: self.on_module_action(module_id, 'exceptions'))  # type: ignore
@@ -1400,37 +1536,37 @@ class MainWindowV2(QMainWindow):
         # Acciones comunes para módulos de gestión
         common_actions = {
             'facturas': [
-                {'icon': '➕', 'label': self.tr('Nueva'), 'action': 'new', 'tooltip': self.tr('Crear nueva factura')},
-                {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar facturas')},
-                {'icon': '📄', 'label': self.tr('Listado'), 'action': 'list', 'tooltip': self.tr('Ver listado completo')},
-                {'icon': '🖨️', 'label': self.tr('Imprimir'), 'action': 'print', 'tooltip': self.tr('Imprimir factura')},
-                {'icon': '📤', 'label': self.tr('Exportar'), 'action': 'export', 'tooltip': self.tr('Exportar XML/PDF')},
+                {'icon': ':/PNG/resources/icons/png/Add.png', 'label': self.tr('Nueva'), 'action': 'new', 'tooltip': self.tr('Crear nueva factura')},
+                {'icon': ':/PNG/resources/icons/png/search.png', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar facturas')},
+                {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Listado'), 'action': 'list', 'tooltip': self.tr('Ver listado completo')},
+                {'icon': ':/PNG/resources/icons/png/Print.png', 'label': self.tr('Imprimir'), 'action': 'print', 'tooltip': self.tr('Imprimir factura')},
+                {'icon': ':/PNG/resources/icons/png/Save.png', 'label': self.tr('Exportar'), 'action': 'export', 'tooltip': self.tr('Exportar XML/PDF')},
             ],
             'clientes': [
-                {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo cliente')},
-                {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar clientes')},
-                {'icon': '📋', 'label': self.tr('Listado'), 'action': 'list', 'tooltip': self.tr('Ver todos los clientes')},
-                {'icon': '📊', 'label': self.tr('Estadísticas'), 'action': 'stats', 'tooltip': self.tr('Estadísticas de clientes')},
+                {'icon': ':/PNG/resources/icons/png/Add.png', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo cliente')},
+                {'icon': ':/PNG/resources/icons/png/search.png', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar clientes')},
+                {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Listado'), 'action': 'list', 'tooltip': self.tr('Ver todos los clientes')},
+                {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Estadísticas'), 'action': 'stats', 'tooltip': self.tr('Estadísticas de clientes')},
             ],
             'productos': [
-                {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo producto')},
-                {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar productos')},
-                {'icon': '📦', 'label': self.tr('Inventario'), 'action': 'inventory', 'tooltip': self.tr('Ver inventario')},
-                {'icon': '🏷️', 'label': self.tr('Categorías'), 'action': 'categories', 'tooltip': self.tr('Gestionar categorías')},
+                {'icon': ':/PNG/resources/icons/png/Add.png', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo producto')},
+                {'icon': ':/PNG/resources/icons/png/search.png', 'label': self.tr('Buscar'), 'action': 'search', 'tooltip': self.tr('Buscar productos')},
+                {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Inventario'), 'action': 'inventory', 'tooltip': self.tr('Ver inventario')},
+                {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Categorías'), 'action': 'categories', 'tooltip': self.tr('Gestionar categorías')},
             ],
             'proyectos': [
-                {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo proyecto')},
-                {'icon': '📊', 'label': self.tr('Dashboard'), 'action': 'dashboard', 'tooltip': self.tr('Panel de proyectos')},
-                {'icon': '📅', 'label': self.tr('Planificación'), 'action': 'planning', 'tooltip': self.tr('Planificar tareas')},
-                {'icon': '💰', 'label': self.tr('Presupuestos'), 'action': 'budgets', 'tooltip': self.tr('Gestionar presupuestos')},
+                {'icon': ':/PNG/resources/icons/png/Add.png', 'label': self.tr('Nuevo'), 'action': 'new', 'tooltip': self.tr('Crear nuevo proyecto')},
+                {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Dashboard'), 'action': 'dashboard', 'tooltip': self.tr('Panel de proyectos')},
+                {'icon': ':/PNG/resources/icons/png/Calendar.png', 'label': self.tr('Planificación'), 'action': 'planning', 'tooltip': self.tr('Planificar tareas')},
+                {'icon': ':/PNG/resources/icons/png/Pay.png', 'label': self.tr('Presupuestos'), 'action': 'budgets', 'tooltip': self.tr('Gestionar presupuestos')},
             ],
         }
         
         # Retornar acciones específicas o genéricas
         return common_actions.get(module_id, [
-            {'icon': '➕', 'label': self.tr('Nuevo'), 'action': 'new'},
-            {'icon': '🔍', 'label': self.tr('Buscar'), 'action': 'search'},
-            {'icon': '📋', 'label': self.tr('Listado'), 'action': 'list'},
+            {'icon': ':/PNG/resources/icons/png/Add.png', 'label': self.tr('Nuevo'), 'action': 'new'},
+            {'icon': ':/PNG/resources/icons/png/search.png', 'label': self.tr('Buscar'), 'action': 'search'},
+            {'icon': ':/PNG/resources/icons/png/List.png', 'label': self.tr('Listado'), 'action': 'list'},
         ])
     
     def _find_module_view(self, container: QWidget) -> Optional[QWidget]:
@@ -1691,13 +1827,13 @@ class MainWindowV2(QMainWindow):
     
     def update_user_info(self) -> None:
         """Actualiza la información del usuario en la barra superior."""
-        self.user_label.setText(f"👤 {self.session.user.username}")
+        self.user_label.setText(f"{self.session.user.username}")
         
         if self.session.company_context:
             company_text = self.session.company_context.company.nombre_comercial or self.session.company_context.company.nombre_fiscal
-            self.company_button.setText(f"🏢 {company_text}")
+            self.company_button.setText(f"{company_text}")
         else:
-            self.company_button.setText(self.tr("🏢 Sin empresa"))
+            self.company_button.setText(self.tr("Sin empresa"))
     
     def get_status_text(self) -> str:
         """Genera el texto de la barra de estado."""

@@ -34,7 +34,7 @@ for host_name, url in configs:
         inspector = inspect(engine)
         tables = inspector.get_table_names()
         
-        print(f"\n📋 Tablas encontradas: {len(tables)}")
+        print(f"\nTables found: {len(tables)}")
         
         if tables:
             total_records = 0
@@ -45,9 +45,9 @@ for host_name, url in configs:
                     total_records += count
                     print(f"   • {table}: {count} registros")
             
-            print(f"\n📊 Total de registros: {total_records}")
+            print(f"\nTotal records: {total_records}")
             print(f"\n✅ ¡LA MIGRACIÓN FUE EXITOSA!")
-            print(f"\n💡 Para conectarte con Antares/DBeaver usa:")
+            print(f"\nNote: To connect with Antares/DBeaver use:")
             print(f"   Host: {host_name}")
             print(f"   Puerto: 3306")
             print(f"   Usuario: root")

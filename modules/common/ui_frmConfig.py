@@ -16,7 +16,8 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
     QImage, QKeySequence, QLinearGradient, QPainter,
     QPalette, QPixmap, QRadialGradient, QTransform)
 from PySide6.QtWidgets import (QAbstractButton, QApplication, QComboBox, QDialog,
-    QDialogButtonBox, QGroupBox, QSizePolicy, QWidget)
+    QDialogButtonBox, QGroupBox, QLabel, QPushButton,
+    QSizePolicy, QSpinBox, QWidget)
 
 class Ui_frmConfig(object):
     def setupUi(self, frmConfig):
@@ -46,6 +47,28 @@ class Ui_frmConfig(object):
         self.cboValoresFiscales.addItem("")
         self.cboValoresFiscales.setObjectName(u"cboValoresFiscales")
         self.cboValoresFiscales.setGeometry(QRect(20, 40, 201, 32))
+        self.groupBox_3 = QGroupBox(frmConfig)
+        self.groupBox_3.setObjectName(u"groupBox_3")
+        self.groupBox_3.setGeometry(QRect(20, 150, 521, 161))
+        self.label = QLabel(self.groupBox_3)
+        self.label.setObjectName(u"label")
+        self.label.setGeometry(QRect(10, 30, 491, 31))
+        self.label.setWordWrap(True)
+        self.spinMaxModulos = QSpinBox(self.groupBox_3)
+        self.spinMaxModulos.setObjectName(u"spinMaxModulos")
+        self.spinMaxModulos.setGeometry(QRect(10, 65, 101, 32))
+        self.spinMaxModulos.setMinimum(1)
+        self.spinMaxModulos.setMaximum(20)
+        self.spinMaxModulos.setValue(5)
+        self.label_2 = QLabel(self.groupBox_3)
+        self.label_2.setObjectName(u"label_2")
+        self.label_2.setGeometry(QRect(120, 65, 381, 31))
+        self.btnLimpiarCache = QPushButton(self.groupBox_3)
+        self.btnLimpiarCache.setObjectName(u"btnLimpiarCache")
+        self.btnLimpiarCache.setGeometry(QRect(10, 110, 241, 35))
+        self.label_3 = QLabel(self.groupBox_3)
+        self.label_3.setObjectName(u"label_3")
+        self.label_3.setGeometry(QRect(260, 110, 251, 31))
 
         self.retranslateUi(frmConfig)
         self.buttonBox.accepted.connect(frmConfig.accept)
@@ -66,5 +89,10 @@ class Ui_frmConfig(object):
         self.cboValoresFiscales.setItemText(0, QCoreApplication.translate("frmConfig", u"Francia", None))
         self.cboValoresFiscales.setItemText(1, QCoreApplication.translate("frmConfig", u"Espa\u00f1a", None))
 
+        self.groupBox_3.setTitle(QCoreApplication.translate("frmConfig", u"Gesti\u00f3n de Memoria (Cach\u00e9 de M\u00f3dulos)", None))
+        self.label.setText(QCoreApplication.translate("frmConfig", u"N\u00famero m\u00e1ximo de m\u00f3dulos a mantener en memoria simult\u00e1neamente:", None))
+        self.label_2.setText(QCoreApplication.translate("frmConfig", u"m\u00f3dulos (Recomendado: 3-8)", None))
+        self.btnLimpiarCache.setText(QCoreApplication.translate("frmConfig", u"Limpiar Cach\u00e9 Ahora", None))
+        self.label_3.setText(QCoreApplication.translate("frmConfig", u"(Libera memoria de m\u00f3dulos no activos)", None))
     # retranslateUi
 

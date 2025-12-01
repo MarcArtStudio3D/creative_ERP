@@ -14,7 +14,7 @@ sys.path.insert(0, str(root_dir))
 def test_artstudio3d_database():
     """Prueba la conexión a la base de datos ArtStudio3D."""
 
-    print("🎨 Probando conexión a la base de datos 'ArtStudio3D'...")
+    print("Testing connection to the 'ArtStudio3D' database...")
 
     try:
         # Configurar la conexión a ArtStudio3D
@@ -29,25 +29,25 @@ def test_artstudio3d_database():
 
         # Probar consultas básicas
         with artstudio_engine.connect() as conn:
-            print("   🏷️  Consultando tipos de cliente...")
+            print("   Querying customer type records...")
             result = conn.execute(text("SELECT COUNT(*) FROM tipocliente_def"))
             row = result.fetchone()
             tipos_count = row[0] if row else 0
             print(f"      Encontrados: {tipos_count} tipos de cliente")
 
-            print("   🏷️  Consultando subtipos de cliente...")
+            print("   Querying customer subtype records...")
             result = conn.execute(text("SELECT COUNT(*) FROM tiposubcliente_def"))
             row = result.fetchone()
             subtipos_count = row[0] if row else 0
             print(f"      Encontrados: {subtipos_count} subtipos de cliente")
 
-            print("   👥 Consultando clientes...")
+            print("   Querying customers...")
             result = conn.execute(text("SELECT COUNT(*) FROM clientes"))
             row = result.fetchone()
             clientes_count = row[0] if row else 0
             print(f"      Encontrados: {clientes_count} clientes")
 
-            print("   📍 Consultando direcciones alternativas...")
+            print("   Querying alternate addresses...")
             result = conn.execute(text("SELECT COUNT(*) FROM direcciones_alternativas"))
             row = result.fetchone()
             direcciones_count = row[0] if row else 0
@@ -55,13 +55,13 @@ def test_artstudio3d_database():
 
             # Mostrar algunos ejemplos
             if tipos_count > 0:
-                print("\n   📋 Ejemplos de tipos de cliente:")
+                print("\n   Examples of customer types:")
                 result = conn.execute(text("SELECT id, nombre FROM tipocliente_def LIMIT 3"))
                 for row in result:
                     print(f"      - {row[0]}: {row[1]}")
 
             if clientes_count > 0:
-                print("\n   📋 Ejemplos de clientes:")
+                print("\n   Examples of customers:")
                 result = conn.execute(text("SELECT id, codigo_cliente, nombre_fiscal FROM clientes LIMIT 3"))
                 for row in result:
                     print(f"      - {row[1]}: {row[2] or 'Sin nombre fiscal'}")
@@ -76,13 +76,13 @@ def test_artstudio3d_database():
         return False
 
 if __name__ == "__main__":
-    print("🧪 Prueba de Base de Datos ArtStudio3D")
+    print("ARTSTUDIO3D DATABASE TEST")
     print("=" * 40)
 
     success = test_artstudio3d_database()
     if success:
         print("\n✅ La base de datos 'ArtStudio3D' está funcionando correctamente")
-        print("📝 La migración de las tablas específicas ha sido exitosa!")
+        print("Migration of specific tables: success!")
     else:
         print("\n❌ Hay problemas con la base de datos 'ArtStudio3D'")
         sys.exit(1)

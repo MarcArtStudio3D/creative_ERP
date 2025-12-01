@@ -61,6 +61,7 @@ class Ui_frmNuevosAvisos(object):
 
         self.txtFecha = QDateEdit(self.frame)
         self.txtFecha.setObjectName(u"txtFecha")
+        self.txtFecha.setStyleSheet(u"")
         self.txtFecha.setDateTime(QDateTime(QDate(2026, 1, 1), QTime(0, 0, 0)))
 
         self.gridLayout.addWidget(self.txtFecha, 2, 1, 1, 1)

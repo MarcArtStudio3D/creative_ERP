@@ -5,8 +5,8 @@
     <name>ClientesView</name>
     <message>
         <location filename="../modules/clientes/view.py" line="41"/>
-        <source>📋 Gestión de Clientes</source>
-        <translation>📋 Gestion des Clients</translation>
+        <source>Gestión de Clientes</source>
+        <translation>Gestion des Clients</translation>
     </message>
     <message>
         <location filename="../modules/clientes/view.py" line="51"/>
@@ -1263,13 +1263,13 @@ Configuration</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="580"/>
-        <source>⚙️ Preferencias</source>
-        <translation>⚙️ Préférences</translation>
+        <source>Preferencias</source>
+        <translation>Préférences</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="598"/>
-        <source>ℹ️ Acerca de</source>
-        <translation>ℹ️ À propos</translation>
+        <source>Acerca de</source>
+        <translation>À propos</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="603"/>
@@ -1278,23 +1278,23 @@ Configuration</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="605"/>
-        <source>🏢 Cambiar Empresa</source>
-        <translation>🏢 Changer d&apos;entreprise</translation>
+        <source>Cambiar Empresa</source>
+        <translation>Changer d&apos;entreprise</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="611"/>
-        <source>🚺 Cerrar Sesión</source>
-        <translation>🚺 Fermer la session</translation>
+        <source>Cerrar Sesión</source>
+        <translation>Fermer la session</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="657"/>
-        <source>⚠️ AVISOS</source>
-        <translation>⚠️ AVIS</translation>
+        <source>AVISOS</source>
+        <translation>AVIS</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="657"/>
-        <source>✓ Sin Avisos</source>
-        <translation>✓ Sans avis</translation>
+        <source>Sin Avisos</source>
+        <translation>Sans avis</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="669"/>
@@ -1313,8 +1313,8 @@ Configuration</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1059"/>
-        <source>🔄 Limpiar y Refrescar</source>
-        <translation>🔄 Nettoyer et rafraîchir</translation>
+        <source>Limpiar y Refrescar</source>
+        <translation>Nettoyer et rafraîchir</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1066"/>
@@ -1363,28 +1363,28 @@ Configuration</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1106"/>
-        <source>➕ Añadir</source>
-        <translation>➕ Ajouter</translation>
+        <source>Añadir</source>
+        <translation>Ajouter</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1112"/>
-        <source>📝 Editar</source>
-        <translation>📝 Modifier</translation>
+        <source>Editar</source>
+        <translation>Modifier</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1118"/>
-        <source>🗑️ Borrar</source>
-        <translation>🗑️ Supprimer</translation>
+        <source>Borrar</source>
+        <translation>Supprimer</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1127"/>
-        <source>🛠️ Gestor Módulos</source>
-        <translation>🛠️ Gestionnaire de modules</translation>
+        <source>Gestor Módulos</source>
+        <translation>Gestionnaire de modules</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1138"/>
-        <source>📋 Excepciones</source>
-        <translation>📋 Exceptions</translation>
+        <source>Excepciones</source>
+        <translation>Exceptions</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1269"/>
@@ -1582,7 +1582,7 @@ Configuration</translation>
     </message>
     <message>
         <location filename="../app/views/main_window_v2.py" line="1511"/>
-        <source>🏢 Sin empresa</source>
+        <source>Sin empresa</source>
         <translation type="unfinished"></translation>
     </message>
     <message>

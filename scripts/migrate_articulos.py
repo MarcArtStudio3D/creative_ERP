@@ -19,10 +19,10 @@ def migrate_articulos():
     # Get company ID from command line or use default
     company_id = int(sys.argv[1]) if len(sys.argv) > 1 else 1
     
-    print(f"\n📦 Configurando base de datos para empresa {company_id}...")
+    print(f"\nConfiguring database for company {company_id}...")
     set_database_for_company(company_id)
     
-    print(f"\n🔧 Creando tablas en: {get_current_database()}")
+    print(f"\nCreating tables in: {get_current_database()}")
     print("-" * 60)
     
     # Run migration

@@ -14,7 +14,7 @@ sys.path.insert(0, str(root_dir))
 def test_main_database():
     """Prueba la conexión a la base de datos principal."""
 
-    print("🔍 Probando conexión a la base de datos principal...")
+    print("Testing connection to the main database...")
 
     try:
         from core.db import get_session, init_main_db
@@ -27,15 +27,15 @@ def test_main_database():
         session = get_session()
 
         # Probar consultas básicas
-        print("   👤 Consultando usuarios...")
+        print("   Querying users...")
         users = session.query(User).all()
         print(f"      Encontrados: {len(users)} usuarios")
 
-        print("   🏢 Consultando grupos empresariales...")
+        print("   Querying company groups...")
         groups = session.query(BusinessGroup).all()
         print(f"      Encontrados: {len(groups)} grupos")
 
-        print("   🏭 Consultando empresas...")
+        print("   Querying companies...")
         empresas = session.query(Empresa).all()
         print(f"      Encontrados: {len(empresas)} empresas")
 
@@ -51,13 +51,13 @@ def test_main_database():
         return False
 
 if __name__ == "__main__":
-    print("🧪 Prueba de Base de Datos Principal")
+    print("MAIN DATABASE TEST")
     print("=" * 40)
 
     success = test_main_database()
     if success:
         print("\n✅ La base de datos principal está funcionando correctamente")
-        print("📝 La refactorización de la arquitectura de base de datos ha sido exitosa!")
+        print("Database architecture refactor check: success!")
     else:
         print("\n❌ Hay problemas con la base de datos principal")
         sys.exit(1)

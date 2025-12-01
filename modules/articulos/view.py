@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView
+from PySide6.QtWidgets import QWidget, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex
 from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
 from PySide6.QtGui import QPainter, QShortcut, QKeySequence
@@ -8,7 +8,7 @@ from modules.common.db_consulta_view import DBConsultaView
 from core.db import get_current_database, set_current_database
 
 
-class ArticulosView(QDialog):
+class ArticulosView(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_FrmArticulos()
@@ -39,7 +39,7 @@ class ArticulosView(QDialog):
             # For now, default to artstudio3d for articles
             try:
                 set_current_database('artstudio3d')
-                print(f"🔄 Switched to articles database: artstudio3d")
+                print(f"Switched to articles database: artstudio3d")
             except Exception as e:
                 print(f"❌ Error switching to articles database: {e}")
                 # Stay on current database if switch fails
@@ -77,6 +77,9 @@ class ArticulosView(QDialog):
         self.ui.botBuscarSeccion.clicked.connect(self._on_buscar_seccion_clicked)
         self.ui.botBuscarFamilia.clicked.connect(self._on_buscar_familia_clicked)
         self.ui.botBuscarSubfamilia.clicked.connect(self._on_buscar_subfamilia_clicked)
+        
+        # Promociones - control de campos de fecha según checkbox
+        self.ui.chkArticulo_promocionado.toggled.connect(self._on_articulo_promocionado_changed)
     
     def search(self, text: str):
         """
@@ -230,6 +233,15 @@ class ArticulosView(QDialog):
         
         # Keep certain fields always readonly
         self._set_readonly_fields()
+        
+        # Restaurar el estado correcto de los campos de fecha de oferta
+        # Estos campos deben seguir el estado del checkbox de promoción, no la lógica general
+        if hasattr(self.ui, 'chkArticulo_promocionado'):
+            promocionado = self.ui.chkArticulo_promocionado.isChecked()
+            # Solo habilitar los campos de fecha si estamos en modo edición Y el checkbox está marcado
+            enable_dates = (not locked) and promocionado
+            self.ui.txtOferta_Fecha_ini.setEnabled(enable_dates)
+            self.ui.txtOferta_Fecha_fin.setEnabled(enable_dates)
     
     def _set_readonly_fields(self):
         """Set fields that should always be readonly"""
@@ -329,6 +341,11 @@ class ArticulosView(QDialog):
         self.ui.chkmostrar_web.setChecked(article.get("mostrar_web", 0) == 1)
         self.ui.chkcontrolar_stock.setChecked(article.get("controlar_stock", False))
         
+        # Promociones - cargar estado del checkbox y configurar campos de fecha
+        articulo_promocionado = article.get("articulo_promocionado", False)
+        self.ui.chkArticulo_promocionado.setChecked(articulo_promocionado)
+        # El signal toggled se encargará de habilitar/deshabilitar los campos de fecha
+        
         # Update chart if on graphics tab
         if self.ui.Pestanas.currentIndex() == 6:  # Graphics tab (tab_grafica is index 6)
             self._update_chart()
@@ -369,6 +386,7 @@ class ArticulosView(QDialog):
         # Flags
         data["mostrar_web"] = 1 if self.ui.chkmostrar_web.isChecked() else 0
         data["controlar_stock"] = self.ui.chkcontrolar_stock.isChecked()
+        data["articulo_promocionado"] = self.ui.chkArticulo_promocionado.isChecked()
         
         # Get lookup IDs from current article (set by lookup dialogs)
         current = self.controller.get_current_article()
@@ -414,6 +432,7 @@ class ArticulosView(QDialog):
         self.ui.txtMargen_min.setValue(0)
         self.ui.chkmostrar_web.setChecked(False)
         self.ui.chkcontrolar_stock.setChecked(True)
+        self.ui.chkArticulo_promocionado.setChecked(False)  # Esto deshabilitará los campos de fecha
         
         self.ui.lblCodigo.setText("")
         self.ui.lblDescripcion.setText("Nuevo artículo")
@@ -960,6 +979,20 @@ class ArticulosView(QDialog):
         except Exception as e:
             print(f"Error opening subfamily lookup: {e}")
             QMessageBox.critical(self, "Error", f"Error al abrir consulta de subfamilias: {str(e)}")
+    
+    # ==================== Promociones Logic ====================
+    
+    def _on_articulo_promocionado_changed(self, checked: bool):
+        """
+        Habilitar/deshabilitar campos de fecha de oferta según el estado del checkbox.
+        Si chkArticulo_promocionado está marcado, habilitar txtOferta_Fecha_ini y txtOferta_Fecha_fin.
+        Si está desmarcado, deshabilitar estos campos.
+        """
+        self.ui.txtOferta_Fecha_ini.setEnabled(checked)
+        self.ui.txtOferta_Fecha_fin.setEnabled(checked)
+        
+        # Actualizar visibilidad del label de promoción en el header
+        self.ui.lbl_en_promocion.setVisible(checked)
 
 
 class ArticlesTableModel(QAbstractTableModel):

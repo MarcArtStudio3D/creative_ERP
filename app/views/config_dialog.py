@@ -20,6 +20,16 @@ class ConfigDialog(QDialog):
         self.ui = Ui_frmConfig()
         self.ui.setupUi(self)
         
+        # Referencia a la ventana principal para acceder a los métodos de caché
+        self.main_window = None
+        # Buscar la ventana principal en los ancestros
+        parent_widget = parent
+        while parent_widget is not None:
+            if hasattr(parent_widget, 'set_max_cached_modules'):
+                self.main_window = parent_widget
+                break
+            parent_widget = parent_widget.parent() if hasattr(parent_widget, 'parent') else None
+        
         # Mapeo de índices del ComboBox a códigos de idioma
         # El orden en el .ui es: Español, Française, Català, English
         self.language_map = {
@@ -35,10 +45,12 @@ class ConfigDialog(QDialog):
         # Cargar idioma actual y normativa fiscal
         self._load_current_language()
         self._load_fiscal_country()
+        self._load_cache_settings()
         
         # Conectar señales
         self.ui.buttonBox.accepted.connect(self._on_accept)
         self.ui.buttonBox.rejected.connect(self.reject)
+        self.ui.btnLimpiarCache.clicked.connect(self._on_clear_cache)
     
     def _load_current_language(self):
         """Carga el idioma actual desde QSettings."""
@@ -60,6 +72,13 @@ class ConfigDialog(QDialog):
         if hasattr(self.ui, 'cboValoresFiscales') and current_fiscal in fiscal_index_map:
             idx = fiscal_index_map[current_fiscal]
             self.ui.cboValoresFiscales.setCurrentIndex(idx)
+    
+    def _load_cache_settings(self):
+        """Carga la configuración de caché de módulos desde QSettings."""
+        settings = QSettings()
+        max_cached = settings.value("max_cached_modules", 5, type=int)
+        self.ui.spinMaxModulos.setValue(max_cached)
+
     
     def _on_accept(self):
         """Maneja el evento de aceptar el diálogo, guardando idioma y normativa fiscal."""
@@ -86,7 +105,44 @@ class ConfigDialog(QDialog):
         if selected_fiscal is not None:
             settings.setValue("fiscal_country", selected_fiscal)
         
+        # Guardar configuración de caché
+        max_cached = self.ui.spinMaxModulos.value()
+        settings.setValue("max_cached_modules", max_cached)
+        
+        # Aplicar el nuevo límite de caché si la ventana principal está disponible
+        if self.main_window:
+            self.main_window.set_max_cached_modules(max_cached)
+        
         self.accept()
+    
+    def _on_clear_cache(self):
+        """Maneja el evento del botón Limpiar Caché."""
+        if self.main_window:
+            reply = QMessageBox.question(
+                self,
+                "Limpiar Caché",
+                "¿Desea limpiar la caché de módulos?\n\n"
+                "Esto liberará memoria de todos los módulos no activos.\n"
+                "Los módulos se volverán a cargar automáticamente cuando los necesite.",
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No
+            )
+            
+            if reply == QMessageBox.StandardButton.Yes:
+                self.main_window.clear_module_cache()
+                QMessageBox.information(
+                    self,
+                    "Caché Limpiada",
+                    "La caché de módulos ha sido limpiada exitosamente.\n"
+                    "La memoria ha sido liberada."
+                )
+        else:
+            QMessageBox.warning(
+                self,
+                "No disponible",
+                "Esta función solo está disponible cuando la aplicación está en ejecución."
+            )
+
     
     def get_selected_language(self):
         """Retorna el código del idioma seleccionado."""

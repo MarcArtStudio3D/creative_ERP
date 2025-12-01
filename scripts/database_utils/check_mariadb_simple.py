@@ -16,7 +16,7 @@ print("=" * 60)
 print("VERIFICACIÓN MARIADB CON SQLALCHEMY")
 print("=" * 60)
 
-print("\n🔍 Intentando conectar a MariaDB...")
+print("\nAttempting to connect to MariaDB...")
 print(f"   URL: {MARIADB_URL}")
 
 try:
@@ -24,23 +24,23 @@ try:
     
     # Test connection
     with engine.connect() as connection:
-        print("\n✅ CONEXIÓN EXITOSA")
+        print("\nCONNECTION SUCCESSFUL")
         
         # Get current database
         result = connection.execute(text("SELECT DATABASE();"))
         db = result.fetchone()
-        print(f"\n📌 Base de datos actual: {db[0]}")
+        print(f"\nCurrent database: {db[0]}")
         
         # Get MariaDB version
         result = connection.execute(text("SELECT VERSION();"))
         version = result.fetchone()
-        print(f"📌 Versión: {version[0]}")
+        print(f"Version: {version[0]}")
     
     # Use inspector to get tables
     inspector = inspect(engine)
     tables = inspector.get_table_names()
     
-    print(f"\n📋 TABLAS ENCONTRADAS: {len(tables)}")
+    print(f"\nTABLES FOUND: {len(tables)}")
     if tables:
         for i, table in enumerate(tables, 1):
             print(f"   {i}. {table}")
@@ -51,8 +51,8 @@ try:
                 count = result.fetchone()[0]
                 print(f"      → {count} registros")
     else:
-        print("\n⚠️  NO SE ENCONTRARON TABLAS EN LA BASE DE DATOS")
-        print("\n💡 Posibles causas:")
+        print("\nWARNING: NO TABLES FOUND IN THE DATABASE")
+        print("\nPossible causes:")
         print("   1. La base de datos existe pero está vacía")
         print("   2. La migración no se ejecutó correctamente")
         print("   3. Las tablas se crearon en otra base de datos")
@@ -60,15 +60,15 @@ try:
     engine.dispose()
     
 except Exception as e:
-    print(f"\n❌ ERROR: {e}")
+    print(f"\nERROR: {e}")
     print(f"   Tipo: {type(e).__name__}")
     
     if "Unknown database" in str(e):
-        print("\n💡 La base de datos 'creative_erp' NO EXISTE")
+        print("\nNote: The 'creative_erp' database does NOT exist")
         print("   Necesitas crearla primero con:")
         print("   CREATE DATABASE creative_erp CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
     elif "Access denied" in str(e):
-        print("\n💡 Problema de autenticación")
-        print("   Verifica usuario/contraseña de MariaDB")
+        print("\nNote: Authentication problem")
+        print("   Check MariaDB username/password")
 
 print("\n" + "=" * 60)

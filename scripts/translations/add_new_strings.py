@@ -18,15 +18,15 @@ NEW_STRINGS = {
         "Empresa:",
         "Acceder",
         "Cerrar",
-        "⚙️\nConfiguración",
-        "🏢\nEmpresas",
+        "Configuración",
+        "Empresas",
         "Empresas",
         "Gestión de empresas (próximamente)",
     ],
     "MainWindowV2": [
         "Creative ERP - Sistema de Gestión Empresarial",
         "Buscar...",
-        "🏢 Sin empresa",
+        "Sin empresa",
     ],
 }
 
@@ -40,13 +40,13 @@ FRENCH_TRANSLATIONS = {
     "Empresa:": "Entreprise :",
     "Acceder": "Accéder",
     "Cerrar": "Fermer",
-    "⚙️\nConfiguración": "⚙️\nConfiguration",
-    "🏢\nEmpresas": "🏢\nEntreprises",
+    "Configuración": "Configuration",
+    "Empresas": "Entreprises",
     "Empresas": "Entreprises",
     "Gestión de empresas (próximamente)": "Gestion des entreprises (prochainement)",
     "Creative ERP - Sistema de Gestión Empresarial": "Creative ERP - Système de gestion d'entreprise",
     "Buscar...": "Rechercher...",
-    "🏢 Sin empresa": "🏢 Sans entreprise",
+    "Sin empresa": "Sans entreprise",
 }
 
 
@@ -125,7 +125,7 @@ def main():
             status = "✓" if lang_code == 'fr' else "○"
             print(f"{status} {ts_file.name}: {count} strings añadidos")
     
-    print("\n✓ Archivos .ts actualizados")
+    print("\nTranslation files updated")
     print("\nPróximo paso:")
     print("  python scripts/compile_translations.py")
 

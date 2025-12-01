@@ -36,10 +36,10 @@ if [ $? -eq 0 ]; then
         echo "✅ Las tablas EXISTEN en MariaDB local"
         echo "======================================================================"
         echo ""
-        echo "💡 PROBLEMA: El usuario 'root' usa autenticación por socket Unix"
+        echo "Note: Problem — user 'root' uses Unix socket authentication"
         echo "   No puedes conectarte con contraseña desde aplicaciones externas."
         echo ""
-        echo "🔧 SOLUCIÓN: Crear un nuevo usuario con autenticación por contraseña"
+        echo "SOLUTION: Create a new user with password authentication"
         echo ""
         read -p "¿Quieres crear un usuario 'admin' con contraseña 'admin123'? (s/n): " respuesta
         
@@ -57,7 +57,7 @@ if [ $? -eq 0 ]; then
             if [ $? -eq 0 ]; then
                 echo "✅ Usuario 'admin' creado exitosamente"
                 echo ""
-                echo "📋 Usa estos datos para conectarte con Antares/DBeaver:"
+                echo "Use these details to connect with Antares/DBeaver:"
                 echo "   Host: 127.0.0.1"
                 echo "   Puerto: 3306"
                 echo "   Usuario: admin"

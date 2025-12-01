@@ -114,7 +114,7 @@ def main():
 
         sys.exit(1)
     else:
-        print("All UI imports successful! 🎉")
+        print("All UI imports successful!")
 
 if __name__ == '__main__':
     main()

@@ -34,11 +34,11 @@ ADDITIONAL_STRINGS = {
         
         # Menús
         "Utilidades",
-        "⚙️ Preferencias",
-        "ℹ️ Acerca de",
+        "Preferencias",
+        "Acerca de",
         "Sesión",
-        "🏢 Cambiar Empresa",
-        "🚪 Cerrar Sesión",
+        "Cambiar Empresa",
+        "Cerrar Sesión",
     ],
 }
 
@@ -68,11 +68,11 @@ FRENCH_TRANSLATIONS = {
     
     # Menús
     "Utilidades": "Utilitaires",
-    "⚙️ Preferencias": "⚙️ Préférences",
-    "ℹ️ Acerca de": "ℹ️ À propos",
+    "Preferencias": "Préférences",
+    "Acerca de": "À propos",
     "Sesión": "Session",
-    "🏢 Cambiar Empresa": "🏢 Changer d'entreprise",
-    "🚪 Cerrar Sesión": "🚪 Fermer la session",
+    "Cambiar Empresa": "Changer d'entreprise",
+    "Cerrar Sesión": "Fermer la session",
 }
 
 
@@ -148,10 +148,10 @@ def main():
     for lang_code, ts_file in ts_files.items():
         if ts_file.exists():
             count = add_strings_to_ts(ts_file, lang_code)
-            status = "✓" if lang_code == 'fr' else "○"
+            status = "OK" if lang_code == 'fr' else "-"
             print(f"{status} {ts_file.name}: {count} strings añadidos")
     
-    print("\n✓ Archivos .ts actualizados")
+    print("\nTranslation files updated")
     print("\nPróximo paso:")
     print("  python scripts/compile_translations.py")
 

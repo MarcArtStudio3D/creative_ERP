@@ -27,7 +27,7 @@ def migrate_sqlite():
         cursor = conn.cursor()
         
         # 1. Añadir columna group_id si no existe
-        print("🛠️  Verificando columna group_id en empresas...")
+        print("Verificando columna group_id en empresas...")
         try:
             cursor.execute("ALTER TABLE empresas ADD COLUMN group_id INTEGER DEFAULT 1")
             print("   ✅ Columna añadida")
@@ -38,12 +38,12 @@ def migrate_sqlite():
                 raise e
         
         # 2. Actualizar group_id para registros existentes
-        print("🔄 Actualizando registros existentes...")
+        print("Updating existing records...")
         cursor.execute("UPDATE empresas SET group_id = 1 WHERE group_id IS NULL")
         print(f"   ✅ Registros actualizados: {cursor.rowcount}")
         
         # 3. Eliminar tabla companies
-        print("🗑️  Eliminando tabla companies...")
+        print("Eliminando tabla companies...")
         cursor.execute("DROP TABLE IF EXISTS companies")
         print("   ✅ Tabla eliminada")
             
@@ -63,7 +63,7 @@ def migrate_mariadb():
         engine = create_engine(MARIADB_URL)
         with engine.connect() as connection:
             # 1. Añadir columna group_id si no existe
-            print("🛠️  Verificando columna group_id en empresas...")
+            print("Verificando columna group_id en empresas...")
             try:
                 connection.execute(text("ALTER TABLE empresas ADD COLUMN group_id INTEGER DEFAULT 1"))
                 print("   ✅ Columna añadida")
@@ -75,12 +75,12 @@ def migrate_mariadb():
                     print(f"   ⚠️  Nota: {e}")
             
             # 2. Actualizar group_id para registros existentes
-            print("🔄 Actualizando registros existentes...")
+            print("Updating existing records...")
             result = connection.execute(text("UPDATE empresas SET group_id = 1 WHERE group_id IS NULL"))
             print(f"   ✅ Registros actualizados: {result.rowcount}")
             
             # 3. Eliminar tabla companies
-            print("🗑️  Eliminando tabla companies...")
+            print("Eliminando tabla companies...")
             connection.execute(text("DROP TABLE IF EXISTS companies"))
             print("   ✅ Tabla eliminada")
             

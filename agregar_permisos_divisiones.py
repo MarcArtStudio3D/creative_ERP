@@ -30,7 +30,7 @@ def agregar_permisos_divisiones():
         print("   Creando permisos para roles estándar...")
         roles = ['admin', 'sales', 'employee']
     
-    print(f"\n📋 Roles encontrados: {', '.join(roles)}")
+    print(f"\nRoles found: {', '.join(roles)}")
     
     # Permisos a otorgar (completos para admin, lectura para otros)
     permisos_completos = ['READ', 'CREATE', 'UPDATE', 'DELETE', 'ADMIN']
@@ -54,10 +54,10 @@ def agregar_permisos_divisiones():
     # Guardar cambios
     if manager.save():
         print(f"\n✅ Permisos guardados correctamente para {count} rol(es)")
-        print(f"📁 Archivo: {manager.file_path}")
+        print(f"File: {manager.file_path}")
         
         # Mostrar contenido del módulo en el archivo
-        print("\n📄 Configuración guardada:")
+        print("\nConfiguration saved:")
         for role in roles:
             perms = manager.get_module_permissions(role, 'divisiones_almacen')
             print(f"   {role}: {', '.join(perms)}")
@@ -65,7 +65,7 @@ def agregar_permisos_divisiones():
         print("\n" + "=" * 60)
         print("✓ PROCESO COMPLETADO")
         print("=" * 60)
-        print("\n💡 Ahora puedes:")
+        print("\nYou can now:")
         print("   1. Reiniciar la aplicación")
         print("   2. Seleccionar la categoría 'Almacén'")
         print("   3. Ver y usar el módulo 'Secciones Almacén'")

@@ -26,7 +26,7 @@ def clean_sqlite():
         cursor = conn.cursor()
         
         for table in TABLES_TO_DROP:
-            print(f"🗑️  Eliminando tabla: {table}")
+            print(f"Eliminando tabla: {table}")
             cursor.execute(f"DROP TABLE IF EXISTS {table}")
             print("   ✅ Eliminada")
             
@@ -46,7 +46,7 @@ def clean_mariadb():
         engine = create_engine(MARIADB_URL)
         with engine.connect() as connection:
             for table in TABLES_TO_DROP:
-                print(f"🗑️  Eliminando tabla: {table}")
+                print(f"Eliminando tabla: {table}")
                 connection.execute(text(f"DROP TABLE IF EXISTS `{table}`"))
                 print("   ✅ Eliminada")
             

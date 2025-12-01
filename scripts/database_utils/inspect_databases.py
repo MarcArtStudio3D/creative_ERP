@@ -22,7 +22,7 @@ for db_path in databases:
         print(f"\n❌ {db_path} - NO EXISTE")
         continue
     
-    print(f"\n📁 {db_path}")
+    print(f"\n{db_path}")
     print(f"   Ruta: {full_path}")
     print(f"   Tamaño: {full_path.stat().st_size / 1024:.2f} KB")
     
@@ -37,7 +37,7 @@ for db_path in databases:
         if not tables:
             print("   ⚠️  Base de datos vacía (sin tablas)")
         else:
-            print(f"   📊 Tablas encontradas ({len(tables)}):")
+            print(f"   Tables found ({len(tables)}):")
             for table in tables:
                 table_name = table[0]
                 # Contar registros

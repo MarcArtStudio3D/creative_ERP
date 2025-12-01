@@ -23,8 +23,8 @@ def debug_secciones_data():
     # Obtener datos
     secciones_data = controller.get_secciones_data()
     
-    print(f"📊 Número de secciones encontradas: {len(secciones_data)}")
-    print("📝 Datos de secciones:")
+    print(f"Number of sections found: {len(secciones_data)}")
+    print("Section data:")
     
     for i, seccion in enumerate(secciones_data):
         print(f"  [{i}] {seccion}")

@@ -17,7 +17,7 @@ def create_missing_tables():
         from core.db import get_session, init_db, get_engine
         from sqlalchemy import text, inspect
         
-        print("🔧 CREACIÓN DE TABLAS FALTANTES")
+        print("CREATING MISSING TABLES")
         print("=" * 40)
         
         # Configurar empresa
@@ -42,11 +42,11 @@ def create_missing_tables():
         engine = get_engine()
         inspector = inspect(engine)
         
-        print(f"🔍 Base de datos actual: {engine.url}")
-        print(f"📊 Tablas existentes: {inspector.get_table_names()}")
+        print(f"Database: {engine.url}")
+        print(f"Existing tables: {inspector.get_table_names()}")
         
         # Importar todos los modelos necesarios
-        print("\n🔄 Importando modelos...")
+        print("\nImporting models...")
         from modules.clientes import models as clientes_models
         from modules.tipo_cliente import models as tipo_cliente_models
         
@@ -72,11 +72,11 @@ def create_missing_tables():
                 print(f"✅ Tabla existe: {table_name}")
         
         if not missing_tables:
-            print("\n🎉 ¡Todas las tablas están presentes!")
+            print("\nAll tables are present!")
             return True
         
         print(f"\n⚠️  Se encontraron {len(missing_tables)} tablas faltantes")
-        print("🔄 Creando tablas faltantes...")
+        print("Creating missing tables...")
         
         # Crear todas las tablas
         try:
@@ -92,7 +92,7 @@ def create_missing_tables():
             print(f"❌ Error creando tablas de tipos de cliente: {e}")
         
         # Verificar que se crearon
-        print("\n🔍 Verificando tablas creadas...")
+        print("\nVerifying created tables...")
         inspector = inspect(engine)
         new_existing_tables = inspector.get_table_names()
         
@@ -114,7 +114,7 @@ def create_missing_tables():
 
 def main():
     if create_missing_tables():
-        print("\n🎉 ¡Todas las tablas han sido creadas correctamente!")
+        print("\nAll tables were created successfully!")
         print("✅ Ahora el guardado de clientes debería funcionar sin errores")
         return True
     else:

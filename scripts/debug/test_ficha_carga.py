@@ -99,11 +99,11 @@ def test_cliente_ficha_loading():
         return False
 
 def main():
-    print("🧪 PRUEBA DE CARGA DE FICHA DE CLIENTE")
+    print("TEST: Loading client form")
     print("=" * 45)
     
     if test_cliente_ficha_loading():
-        print("\n🎉 ¡PROBLEMA RESUELTO!")
+        print("\nProblem solved.")
         print("✅ La ficha de cliente se puede cargar sin errores")
         print("✅ El mapeo de campos está correcto")
         return True

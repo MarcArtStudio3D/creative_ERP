@@ -103,11 +103,11 @@ def test_clientes_view_full():
         return False
 
 def main():
-    print("🧪 PRUEBA DE CLIENTESVIEWFULL")
+    print("CLIENTESVIEWFULL TEST")
     print("=" * 35)
     
     if test_clientes_view_full():
-        print("\n🎉 ¡CLIENTESVIEWFULL FUNCIONA CORRECTAMENTE!")
+        print("\nCLIENTESVIEWFULL IS WORKING CORRECTLY!")
         print("✅ La UI generada desde frmClientes.ui está operativa")
         print("✅ StackedWidget para navegación lista ↔ ficha")
         print("✅ Tabla de clientes con datos cargados")

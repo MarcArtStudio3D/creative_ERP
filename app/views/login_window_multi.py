@@ -5,6 +5,7 @@ Basada en el diseño de RedFox SGC.
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
                                QLineEdit, QPushButton, QFrame, QComboBox)
+from PySide6.QtGui import QIcon
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtGui import QFont, QPixmap
 
@@ -31,6 +32,15 @@ class LoginWindowMultiCompany(QDialog):
         self.auth_manager = auth_manager
         self.setup_ui()
         self.load_demo_data()
+
+        # Ensure password field receives initial focus so the user can type the
+        # password immediately without using the mouse.
+        # Calling setFocus here is fine because the widget exists and Qt will
+        # apply focus when the dialog is shown; it's also safe to call even
+        # if the dialog is executed later.
+        # calling setFocus in __init__ may not always apply if the dialog is not
+        # yet shown — ensure focus is applied when the dialog actually appears
+        # by setting focus in showEvent (see below).
     
     def setup_ui(self):
         """Configura la interfaz tipo RedFox SGC."""
@@ -186,10 +196,17 @@ class LoginWindowMultiCompany(QDialog):
         layout.setContentsMargins(10, 20, 10, 20)
         
         # Botón Configuración
-        config_btn = QPushButton(self.tr("⚙️\nConfiguración"))
-        config_btn.setMinimumHeight(80)
-        config_btn.clicked.connect(self.open_config)
-        layout.addWidget(config_btn)
+        # Use a small PNG icon from resources rather than emoji text (safer)
+        self.config_btn = QPushButton(self.tr("Configuración"))
+        try:
+            # Resource path used by compiled resources: :/PNG/resources/icons/png/Edit.png
+            self.config_btn.setIcon(QIcon(":/PNG/resources/icons/png/Edit.png"))
+        except Exception:
+            # If resources are not available for some reason, ignore silently
+            pass
+        self.config_btn.setMinimumHeight(80)
+        self.config_btn.clicked.connect(self.open_config)
+        layout.addWidget(self.config_btn)
         
 
         
@@ -208,10 +225,25 @@ class LoginWindowMultiCompany(QDialog):
         layout.setContentsMargins(20, 20, 20, 20)
         
         # Aquí iría el logo/imagen corporativa
-        # Por ahora solo texto
-        image_label = QLabel("🎨\n\nArtStudio3D\n\nCreative Solutions")
-        image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        image_label.setWordWrap(True)
+        # Usamos el recurso `LogoIcono.png` en lugar de emoji para evitar problemas
+        image_label = QLabel()
+        # expose the widget for tests and future customization
+        self.login_logo = image_label
+        image_label.setObjectName('login_logo')
+        try:
+            pix = QPixmap(":/PNG/resources/icons/png/LogoIcono.png")
+            if not pix.isNull():
+                # ajustamos un tamaño razonable para la cabecera
+                image_label.setPixmap(pix.scaled(140, 140, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation))
+            else:
+                # fallback: texto si la imagen no está disponible
+                image_label.setText("ArtStudio3D\n\nCreative Solutions")
+                image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+                image_label.setWordWrap(True)
+        except Exception:
+            image_label.setText("ArtStudio3D\n\nCreative Solutions")
+            image_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            image_label.setWordWrap(True)
         layout.addWidget(image_label)
         
         panel.setLayout(layout)
@@ -381,6 +413,17 @@ class LoginWindowMultiCompany(QDialog):
                 self.tr("Cambio de idioma"),
                 self.tr("La aplicación debe reiniciarse para aplicar todos los cambios")
             )
+
+    def showEvent(self, event):
+        """Ensure the password input receives focus when the dialog is shown."""
+        try:
+            # Defer focus set to the next iteration of the event loop so it
+            # happens after Qt has finished processing the show sequence.
+            from PySide6.QtCore import QTimer
+            QTimer.singleShot(0, self.password_input.setFocus)
+        except Exception:
+            pass
+        super().showEvent(event)
 
     
 

@@ -26,7 +26,7 @@ from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
 
 def create_tables_for_company(empresa: Empresa):
     """Crea las tablas de clientes en la base de datos de una empresa."""
-    print(f"\n📊 Empresa: {empresa.nombre_fiscal} (ID: {empresa.id})")
+    print(f"\nCompany: {empresa.nombre_fiscal} (ID: {empresa.id})")
     print(f"   Motor: {empresa.motor_base_datos}")
     
     try:

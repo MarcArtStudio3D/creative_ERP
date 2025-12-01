@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QTextEdit, QVBoxLayout, QWidget)
 
 from modules.common.chartviewwidget import ChartViewWidget
-import modules.designer_rc
+from modules import designer_rc
 
 class Ui_FrmArticulos(object):
     def setupUi(self, FrmArticulos):
@@ -1516,8 +1516,7 @@ class Ui_FrmArticulos(object):
         sizePolicy6.setHeightForWidth(self.txtfecha_fecha_ultima_compra.sizePolicy().hasHeightForWidth())
         self.txtfecha_fecha_ultima_compra.setSizePolicy(sizePolicy6)
         self.txtfecha_fecha_ultima_compra.setMaximumSize(QSize(120, 27))
-        self.txtfecha_fecha_ultima_compra.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtfecha_fecha_ultima_compra.setStyleSheet(u"")
         self.txtfecha_fecha_ultima_compra.setDateTime(QDateTime(QDate(2000, 9, 13), QTime(0, 0, 0)))
         self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 11), QTime(0, 0, 0)))
         self.txtfecha_fecha_ultima_compra.setCalendarPopup(True)
@@ -1564,8 +1563,7 @@ class Ui_FrmArticulos(object):
         self.txtfechaUltimaVenta.setObjectName(u"txtfechaUltimaVenta")
         self.txtfechaUltimaVenta.setEnabled(True)
         self.txtfechaUltimaVenta.setMaximumSize(QSize(120, 27))
-        self.txtfechaUltimaVenta.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtfechaUltimaVenta.setStyleSheet(u"")
         self.txtfechaUltimaVenta.setCalendarPopup(True)
 
         self.gridLayout_12.addWidget(self.txtfechaUltimaVenta, 2, 3, 1, 1)
@@ -1682,8 +1680,7 @@ class Ui_FrmArticulos(object):
         sizePolicy6.setHeightForWidth(self.txtfecha_prevista_recepcion.sizePolicy().hasHeightForWidth())
         self.txtfecha_prevista_recepcion.setSizePolicy(sizePolicy6)
         self.txtfecha_prevista_recepcion.setMaximumSize(QSize(120, 27))
-        self.txtfecha_prevista_recepcion.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtfecha_prevista_recepcion.setStyleSheet(u"")
         self.txtfecha_prevista_recepcion.setMaximumDateTime(QDateTime(QDate(7999, 12, 31), QTime(23, 59, 59)))
         self.txtfecha_prevista_recepcion.setCalendarPopup(True)
 
@@ -1755,14 +1752,14 @@ class Ui_FrmArticulos(object):
         self.gridLayout_22.setObjectName(u"gridLayout_22")
         self.frame_14 = QFrame(self.cajaValores)
         self.frame_14.setObjectName(u"frame_14")
-        self.frame_14.setStyleSheet(u"background-color: rgb(170, 170, 127);")
+        self.frame_14.setStyleSheet(u"")
         self.frame_14.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_14.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_18 = QGridLayout(self.frame_14)
         self.gridLayout_18.setObjectName(u"gridLayout_18")
         self.label_25 = QLabel(self.frame_14)
         self.label_25.setObjectName(u"label_25")
-        self.label_25.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_25.setStyleSheet(u"")
 
         self.gridLayout_18.addWidget(self.label_25, 0, 0, 1, 1)
 
@@ -1771,8 +1768,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_enero = QLineEdit(self.frame_14)
         self.txtImporte_compras_enero.setObjectName(u"txtImporte_compras_enero")
         self.txtImporte_compras_enero.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_enero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_enero.setStyleSheet(u"")
         self.txtImporte_compras_enero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_enero, 1, 2, 1, 1)
@@ -1780,8 +1776,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_julio = QLineEdit(self.frame_14)
         self.txtImporte_compras_julio.setObjectName(u"txtImporte_compras_julio")
         self.txtImporte_compras_julio.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_julio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_julio.setStyleSheet(u"")
         self.txtImporte_compras_julio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_julio, 7, 2, 1, 1)
@@ -1789,8 +1784,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_marzo = QLineEdit(self.frame_14)
         self.txtImporte_compras_marzo.setObjectName(u"txtImporte_compras_marzo")
         self.txtImporte_compras_marzo.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_marzo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_marzo.setStyleSheet(u"")
         self.txtImporte_compras_marzo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_marzo, 3, 2, 1, 1)
@@ -1798,8 +1792,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_febrero = QLineEdit(self.frame_14)
         self.txtUnid_compras_febrero.setObjectName(u"txtUnid_compras_febrero")
         self.txtUnid_compras_febrero.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_febrero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_febrero.setStyleSheet(u"")
         self.txtUnid_compras_febrero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_febrero, 2, 1, 1, 1)
@@ -1807,8 +1800,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_marzo = QLineEdit(self.frame_14)
         self.txtUnid_compras_marzo.setObjectName(u"txtUnid_compras_marzo")
         self.txtUnid_compras_marzo.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_marzo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_marzo.setStyleSheet(u"")
         self.txtUnid_compras_marzo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_marzo, 3, 1, 1, 1)
@@ -1816,23 +1808,21 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_septiembre = QLineEdit(self.frame_14)
         self.txtImporte_compras_septiembre.setObjectName(u"txtImporte_compras_septiembre")
         self.txtImporte_compras_septiembre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_septiembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_septiembre.setStyleSheet(u"")
         self.txtImporte_compras_septiembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_septiembre, 9, 2, 1, 1)
 
         self.label_52 = QLabel(self.frame_14)
         self.label_52.setObjectName(u"label_52")
-        self.label_52.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_52.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_52, 0, 1, 1, 1)
 
         self.txtImporte_compras_diciembre = QLineEdit(self.frame_14)
         self.txtImporte_compras_diciembre.setObjectName(u"txtImporte_compras_diciembre")
         self.txtImporte_compras_diciembre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_diciembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_diciembre.setStyleSheet(u"")
         self.txtImporte_compras_diciembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_diciembre, 12, 2, 1, 1)
@@ -1840,8 +1830,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_agosto = QLineEdit(self.frame_14)
         self.txtUnid_compras_agosto.setObjectName(u"txtUnid_compras_agosto")
         self.txtUnid_compras_agosto.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_agosto.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_agosto.setStyleSheet(u"")
         self.txtUnid_compras_agosto.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_agosto, 8, 1, 1, 1)
@@ -1849,8 +1838,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_diciembre = QLineEdit(self.frame_14)
         self.txtUnid_compras_diciembre.setObjectName(u"txtUnid_compras_diciembre")
         self.txtUnid_compras_diciembre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_diciembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_diciembre.setStyleSheet(u"")
         self.txtUnid_compras_diciembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_diciembre, 12, 1, 1, 1)
@@ -1858,8 +1846,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_junio = QLineEdit(self.frame_14)
         self.txtUnid_compras_junio.setObjectName(u"txtUnid_compras_junio")
         self.txtUnid_compras_junio.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_junio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_junio.setStyleSheet(u"")
         self.txtUnid_compras_junio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_junio, 6, 1, 1, 1)
@@ -1867,8 +1854,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_mayo = QLineEdit(self.frame_14)
         self.txtUnid_compras_mayo.setObjectName(u"txtUnid_compras_mayo")
         self.txtUnid_compras_mayo.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_mayo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_mayo.setStyleSheet(u"")
         self.txtUnid_compras_mayo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_mayo, 5, 1, 1, 1)
@@ -1876,8 +1862,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_enero = QLineEdit(self.frame_14)
         self.txtUnid_compras_enero.setObjectName(u"txtUnid_compras_enero")
         self.txtUnid_compras_enero.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_enero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_enero.setStyleSheet(u"")
         self.txtUnid_compras_enero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_enero, 1, 1, 1, 1)
@@ -1885,8 +1870,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_octubre = QLineEdit(self.frame_14)
         self.txtImporte_compras_octubre.setObjectName(u"txtImporte_compras_octubre")
         self.txtImporte_compras_octubre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_octubre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_octubre.setStyleSheet(u"")
         self.txtImporte_compras_octubre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_octubre, 10, 2, 1, 1)
@@ -1894,8 +1878,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_noviembre = QLineEdit(self.frame_14)
         self.txtImporte_compras_noviembre.setObjectName(u"txtImporte_compras_noviembre")
         self.txtImporte_compras_noviembre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_noviembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_noviembre.setStyleSheet(u"")
         self.txtImporte_compras_noviembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_noviembre, 11, 2, 1, 1)
@@ -1903,8 +1886,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_noviembre = QLineEdit(self.frame_14)
         self.txtUnid_compras_noviembre.setObjectName(u"txtUnid_compras_noviembre")
         self.txtUnid_compras_noviembre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_noviembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_noviembre.setStyleSheet(u"")
         self.txtUnid_compras_noviembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_noviembre, 11, 1, 1, 1)
@@ -1912,8 +1894,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_agosto = QLineEdit(self.frame_14)
         self.txtImporte_compras_agosto.setObjectName(u"txtImporte_compras_agosto")
         self.txtImporte_compras_agosto.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_agosto.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_agosto.setStyleSheet(u"")
         self.txtImporte_compras_agosto.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_agosto, 8, 2, 1, 1)
@@ -1921,8 +1902,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_mayo = QLineEdit(self.frame_14)
         self.txtImporte_compras_mayo.setObjectName(u"txtImporte_compras_mayo")
         self.txtImporte_compras_mayo.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_mayo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_mayo.setStyleSheet(u"")
         self.txtImporte_compras_mayo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_mayo, 5, 2, 1, 1)
@@ -1930,8 +1910,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_septiembre = QLineEdit(self.frame_14)
         self.txtUnid_compras_septiembre.setObjectName(u"txtUnid_compras_septiembre")
         self.txtUnid_compras_septiembre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_septiembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_septiembre.setStyleSheet(u"")
         self.txtUnid_compras_septiembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_septiembre, 9, 1, 1, 1)
@@ -1939,8 +1918,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_febrero = QLineEdit(self.frame_14)
         self.txtImporte_compras_febrero.setObjectName(u"txtImporte_compras_febrero")
         self.txtImporte_compras_febrero.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_febrero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_febrero.setStyleSheet(u"")
         self.txtImporte_compras_febrero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_febrero, 2, 2, 1, 1)
@@ -1948,8 +1926,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_abril = QLineEdit(self.frame_14)
         self.txtUnid_compras_abril.setObjectName(u"txtUnid_compras_abril")
         self.txtUnid_compras_abril.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_abril.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_abril.setStyleSheet(u"")
         self.txtUnid_compras_abril.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_abril, 4, 1, 1, 1)
@@ -1957,23 +1934,21 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_abril = QLineEdit(self.frame_14)
         self.txtImporte_compras_abril.setObjectName(u"txtImporte_compras_abril")
         self.txtImporte_compras_abril.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_abril.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_abril.setStyleSheet(u"")
         self.txtImporte_compras_abril.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_abril, 4, 2, 1, 1)
 
         self.label_53 = QLabel(self.frame_14)
         self.label_53.setObjectName(u"label_53")
-        self.label_53.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_53.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_53, 0, 2, 1, 1)
 
         self.txtUnid_compras_julio = QLineEdit(self.frame_14)
         self.txtUnid_compras_julio.setObjectName(u"txtUnid_compras_julio")
         self.txtUnid_compras_julio.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_julio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_julio.setStyleSheet(u"")
         self.txtUnid_compras_julio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_julio, 7, 1, 1, 1)
@@ -1981,8 +1956,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_compras_junio = QLineEdit(self.frame_14)
         self.txtImporte_compras_junio.setObjectName(u"txtImporte_compras_junio")
         self.txtImporte_compras_junio.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_compras_junio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_compras_junio.setStyleSheet(u"")
         self.txtImporte_compras_junio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtImporte_compras_junio, 6, 2, 1, 1)
@@ -1990,81 +1964,80 @@ class Ui_FrmArticulos(object):
         self.txtUnid_compras_octubre = QLineEdit(self.frame_14)
         self.txtUnid_compras_octubre.setObjectName(u"txtUnid_compras_octubre")
         self.txtUnid_compras_octubre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_compras_octubre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_compras_octubre.setStyleSheet(u"")
         self.txtUnid_compras_octubre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_20.addWidget(self.txtUnid_compras_octubre, 10, 1, 1, 1)
 
         self.label_27 = QLabel(self.frame_14)
         self.label_27.setObjectName(u"label_27")
-        self.label_27.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_27.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_27, 1, 0, 1, 1)
 
         self.label_35 = QLabel(self.frame_14)
         self.label_35.setObjectName(u"label_35")
-        self.label_35.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_35.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_35, 2, 0, 1, 1)
 
         self.label_36 = QLabel(self.frame_14)
         self.label_36.setObjectName(u"label_36")
-        self.label_36.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_36.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_36, 3, 0, 1, 1)
 
         self.label_37 = QLabel(self.frame_14)
         self.label_37.setObjectName(u"label_37")
-        self.label_37.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_37.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_37, 4, 0, 1, 1)
 
         self.label_39 = QLabel(self.frame_14)
         self.label_39.setObjectName(u"label_39")
-        self.label_39.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_39.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_39, 5, 0, 1, 1)
 
         self.label_40 = QLabel(self.frame_14)
         self.label_40.setObjectName(u"label_40")
-        self.label_40.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_40.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_40, 6, 0, 1, 1)
 
         self.label_41 = QLabel(self.frame_14)
         self.label_41.setObjectName(u"label_41")
-        self.label_41.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_41.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_41, 7, 0, 1, 1)
 
         self.label_46 = QLabel(self.frame_14)
         self.label_46.setObjectName(u"label_46")
-        self.label_46.setStyleSheet(u"color: rgb(0, 0, 0)")
+        self.label_46.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_46, 8, 0, 1, 1)
 
         self.label_47 = QLabel(self.frame_14)
         self.label_47.setObjectName(u"label_47")
-        self.label_47.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_47.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_47, 9, 0, 1, 1)
 
         self.label_48 = QLabel(self.frame_14)
         self.label_48.setObjectName(u"label_48")
-        self.label_48.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_48.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_48, 10, 0, 1, 1)
 
         self.label_49 = QLabel(self.frame_14)
         self.label_49.setObjectName(u"label_49")
-        self.label_49.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_49.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_49, 11, 0, 1, 1)
 
         self.label_50 = QLabel(self.frame_14)
         self.label_50.setObjectName(u"label_50")
-        self.label_50.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_50.setStyleSheet(u"")
 
         self.gridLayout_20.addWidget(self.label_50, 12, 0, 1, 1)
 
@@ -2080,14 +2053,14 @@ class Ui_FrmArticulos(object):
 
         self.frame_15 = QFrame(self.cajaValores)
         self.frame_15.setObjectName(u"frame_15")
-        self.frame_15.setStyleSheet(u"background-color: rgb(170, 255, 127);")
+        self.frame_15.setStyleSheet(u"")
         self.frame_15.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_15.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_19 = QGridLayout(self.frame_15)
         self.gridLayout_19.setObjectName(u"gridLayout_19")
         self.label_26 = QLabel(self.frame_15)
         self.label_26.setObjectName(u"label_26")
-        self.label_26.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_26.setStyleSheet(u"")
 
         self.gridLayout_19.addWidget(self.label_26, 0, 0, 1, 1)
 
@@ -2095,21 +2068,20 @@ class Ui_FrmArticulos(object):
         self.gridLayout_21.setObjectName(u"gridLayout_21")
         self.label_54 = QLabel(self.frame_15)
         self.label_54.setObjectName(u"label_54")
-        self.label_54.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_54.setStyleSheet(u"")
 
         self.gridLayout_21.addWidget(self.label_54, 0, 0, 1, 1)
 
         self.label_55 = QLabel(self.frame_15)
         self.label_55.setObjectName(u"label_55")
-        self.label_55.setStyleSheet(u"color: rgb(0, 0, 0);")
+        self.label_55.setStyleSheet(u"")
 
         self.gridLayout_21.addWidget(self.label_55, 0, 1, 1, 1)
 
         self.txtUnid_ventas_enero = QLineEdit(self.frame_15)
         self.txtUnid_ventas_enero.setObjectName(u"txtUnid_ventas_enero")
         self.txtUnid_ventas_enero.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_enero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_enero.setStyleSheet(u"")
         self.txtUnid_ventas_enero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_enero, 1, 0, 1, 1)
@@ -2117,8 +2089,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_enero = QLineEdit(self.frame_15)
         self.txtImporte_ventas_enero.setObjectName(u"txtImporte_ventas_enero")
         self.txtImporte_ventas_enero.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_enero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_enero.setStyleSheet(u"")
         self.txtImporte_ventas_enero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_enero, 1, 1, 1, 1)
@@ -2126,8 +2097,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_febrero = QLineEdit(self.frame_15)
         self.txtUnid_ventas_febrero.setObjectName(u"txtUnid_ventas_febrero")
         self.txtUnid_ventas_febrero.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_febrero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_febrero.setStyleSheet(u"")
         self.txtUnid_ventas_febrero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_febrero, 2, 0, 1, 1)
@@ -2135,8 +2105,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_febrero = QLineEdit(self.frame_15)
         self.txtImporte_ventas_febrero.setObjectName(u"txtImporte_ventas_febrero")
         self.txtImporte_ventas_febrero.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_febrero.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_febrero.setStyleSheet(u"")
         self.txtImporte_ventas_febrero.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_febrero, 2, 1, 1, 1)
@@ -2144,8 +2113,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_marzo = QLineEdit(self.frame_15)
         self.txtUnid_ventas_marzo.setObjectName(u"txtUnid_ventas_marzo")
         self.txtUnid_ventas_marzo.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_marzo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_marzo.setStyleSheet(u"")
         self.txtUnid_ventas_marzo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_marzo, 3, 0, 1, 1)
@@ -2153,8 +2121,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_marzo = QLineEdit(self.frame_15)
         self.txtImporte_ventas_marzo.setObjectName(u"txtImporte_ventas_marzo")
         self.txtImporte_ventas_marzo.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_marzo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_marzo.setStyleSheet(u"")
         self.txtImporte_ventas_marzo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_marzo, 3, 1, 1, 1)
@@ -2162,8 +2129,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_abril = QLineEdit(self.frame_15)
         self.txtUnid_ventas_abril.setObjectName(u"txtUnid_ventas_abril")
         self.txtUnid_ventas_abril.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_abril.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_abril.setStyleSheet(u"")
         self.txtUnid_ventas_abril.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_abril, 4, 0, 1, 1)
@@ -2171,8 +2137,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_abril = QLineEdit(self.frame_15)
         self.txtImporte_ventas_abril.setObjectName(u"txtImporte_ventas_abril")
         self.txtImporte_ventas_abril.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_abril.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_abril.setStyleSheet(u"")
         self.txtImporte_ventas_abril.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_abril, 4, 1, 1, 1)
@@ -2180,8 +2145,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_mayo = QLineEdit(self.frame_15)
         self.txtUnid_ventas_mayo.setObjectName(u"txtUnid_ventas_mayo")
         self.txtUnid_ventas_mayo.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_mayo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_mayo.setStyleSheet(u"")
         self.txtUnid_ventas_mayo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_mayo, 5, 0, 1, 1)
@@ -2189,8 +2153,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_mayo = QLineEdit(self.frame_15)
         self.txtImporte_ventas_mayo.setObjectName(u"txtImporte_ventas_mayo")
         self.txtImporte_ventas_mayo.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_mayo.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_mayo.setStyleSheet(u"")
         self.txtImporte_ventas_mayo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_mayo, 5, 1, 1, 1)
@@ -2198,8 +2161,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_junio = QLineEdit(self.frame_15)
         self.txtUnid_ventas_junio.setObjectName(u"txtUnid_ventas_junio")
         self.txtUnid_ventas_junio.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_junio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_junio.setStyleSheet(u"")
         self.txtUnid_ventas_junio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_junio, 6, 0, 1, 1)
@@ -2207,8 +2169,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_junio = QLineEdit(self.frame_15)
         self.txtImporte_ventas_junio.setObjectName(u"txtImporte_ventas_junio")
         self.txtImporte_ventas_junio.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_junio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_junio.setStyleSheet(u"")
         self.txtImporte_ventas_junio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_junio, 6, 1, 1, 1)
@@ -2216,8 +2177,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_julio = QLineEdit(self.frame_15)
         self.txtUnid_ventas_julio.setObjectName(u"txtUnid_ventas_julio")
         self.txtUnid_ventas_julio.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_julio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_julio.setStyleSheet(u"")
         self.txtUnid_ventas_julio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_julio, 7, 0, 1, 1)
@@ -2225,8 +2185,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_julio = QLineEdit(self.frame_15)
         self.txtImporte_ventas_julio.setObjectName(u"txtImporte_ventas_julio")
         self.txtImporte_ventas_julio.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_julio.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_julio.setStyleSheet(u"")
         self.txtImporte_ventas_julio.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_julio, 7, 1, 1, 1)
@@ -2234,8 +2193,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_agosto = QLineEdit(self.frame_15)
         self.txtUnid_ventas_agosto.setObjectName(u"txtUnid_ventas_agosto")
         self.txtUnid_ventas_agosto.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_agosto.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_agosto.setStyleSheet(u"")
         self.txtUnid_ventas_agosto.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_agosto, 8, 0, 1, 1)
@@ -2243,8 +2201,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_agosto = QLineEdit(self.frame_15)
         self.txtImporte_ventas_agosto.setObjectName(u"txtImporte_ventas_agosto")
         self.txtImporte_ventas_agosto.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_agosto.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_agosto.setStyleSheet(u"")
         self.txtImporte_ventas_agosto.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_agosto, 8, 1, 1, 1)
@@ -2252,8 +2209,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_septiembre = QLineEdit(self.frame_15)
         self.txtUnid_ventas_septiembre.setObjectName(u"txtUnid_ventas_septiembre")
         self.txtUnid_ventas_septiembre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_septiembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_septiembre.setStyleSheet(u"")
         self.txtUnid_ventas_septiembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_septiembre, 9, 0, 1, 1)
@@ -2261,8 +2217,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_septiembre = QLineEdit(self.frame_15)
         self.txtImporte_ventas_septiembre.setObjectName(u"txtImporte_ventas_septiembre")
         self.txtImporte_ventas_septiembre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_septiembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_septiembre.setStyleSheet(u"")
         self.txtImporte_ventas_septiembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_septiembre, 9, 1, 1, 1)
@@ -2270,8 +2225,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_octubre = QLineEdit(self.frame_15)
         self.txtUnid_ventas_octubre.setObjectName(u"txtUnid_ventas_octubre")
         self.txtUnid_ventas_octubre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_octubre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_octubre.setStyleSheet(u"")
         self.txtUnid_ventas_octubre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_octubre, 10, 0, 1, 1)
@@ -2279,8 +2233,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_octubre = QLineEdit(self.frame_15)
         self.txtImporte_ventas_octubre.setObjectName(u"txtImporte_ventas_octubre")
         self.txtImporte_ventas_octubre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_octubre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_octubre.setStyleSheet(u"")
         self.txtImporte_ventas_octubre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_octubre, 10, 1, 1, 1)
@@ -2288,8 +2241,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_noviembre = QLineEdit(self.frame_15)
         self.txtUnid_ventas_noviembre.setObjectName(u"txtUnid_ventas_noviembre")
         self.txtUnid_ventas_noviembre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_noviembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_noviembre.setStyleSheet(u"")
         self.txtUnid_ventas_noviembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_noviembre, 11, 0, 1, 1)
@@ -2297,8 +2249,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_noviembre = QLineEdit(self.frame_15)
         self.txtImporte_ventas_noviembre.setObjectName(u"txtImporte_ventas_noviembre")
         self.txtImporte_ventas_noviembre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_noviembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_noviembre.setStyleSheet(u"")
         self.txtImporte_ventas_noviembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_noviembre, 11, 1, 1, 1)
@@ -2306,8 +2257,7 @@ class Ui_FrmArticulos(object):
         self.txtUnid_ventas_diciembre = QLineEdit(self.frame_15)
         self.txtUnid_ventas_diciembre.setObjectName(u"txtUnid_ventas_diciembre")
         self.txtUnid_ventas_diciembre.setMaximumSize(QSize(50, 16777215))
-        self.txtUnid_ventas_diciembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtUnid_ventas_diciembre.setStyleSheet(u"")
         self.txtUnid_ventas_diciembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtUnid_ventas_diciembre, 12, 0, 1, 1)
@@ -2315,8 +2265,7 @@ class Ui_FrmArticulos(object):
         self.txtImporte_ventas_diciembre = QLineEdit(self.frame_15)
         self.txtImporte_ventas_diciembre.setObjectName(u"txtImporte_ventas_diciembre")
         self.txtImporte_ventas_diciembre.setMaximumSize(QSize(98, 16777215))
-        self.txtImporte_ventas_diciembre.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtImporte_ventas_diciembre.setStyleSheet(u"")
         self.txtImporte_ventas_diciembre.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
         self.gridLayout_21.addWidget(self.txtImporte_ventas_diciembre, 12, 1, 1, 1)
@@ -2524,7 +2473,6 @@ class Ui_FrmArticulos(object):
         QWidget.setTabOrder(self.txtImporte_compras_octubre, self.txtImporte_compras_noviembre)
 
         self.retranslateUi(FrmArticulos)
-        self.btn_cerrar.clicked.connect(FrmArticulos.accept)
 
         self.stackedWidget.setCurrentIndex(0)
         self.Pestanas.setCurrentIndex(0)

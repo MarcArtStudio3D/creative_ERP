@@ -41,7 +41,7 @@ echo "6️⃣ Probando conexión con el nuevo usuario..."
 if mariadb -h 127.0.0.1 -u admin -padmin123 -e "SELECT 'Conexión exitosa' AS status;" 2>/dev/null; then
     echo "✅ ¡Conexión exitosa con usuario admin!"
     echo ""
-    echo "📋 Datos de conexión para Antares/DBeaver:"
+    echo "Connection details for Antares/DBeaver:"
     echo "   Host: 127.0.0.1"
     echo "   Puerto: 3306"
     echo "   Usuario: admin"
@@ -55,7 +55,7 @@ else
     echo "Verificando bind-address en configuración:"
     sudo grep -r "bind-address" /etc/mysql/ 2>/dev/null | grep -v "#"
     echo ""
-    echo "💡 Si bind-address está configurado como 127.0.0.1 o 0.0.0.0, está bien."
+    echo "Note: If bind-address is set to 127.0.0.1 or 0.0.0.0, that's fine."
     echo "   Si no aparece nada, también está bien (usa el valor por defecto)."
 fi
 

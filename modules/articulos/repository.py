@@ -564,7 +564,7 @@ class ArticuloRepository:
                         ).first()
                         if empresa:
                             pais = empresa.pais
-                            print(f"📍 País de la empresa: {pais}")
+                            print(f"Company country: {pais}")
                     finally:
                         set_current_database(original_db)
                         main_session.close()
@@ -572,7 +572,7 @@ class ArticuloRepository:
             # Default to España if still no country
             if not pais:
                 pais = 'España'
-                print(f"📍 Usando país por defecto: {pais}")
+                print(f"Using default country: {pais}")
             
             # First, check if table exists
             try:
@@ -602,9 +602,9 @@ class ArticuloRepository:
                 sql_all = "SELECT id, codigo, descripcion, porcentaje, pais FROM TVAIVA ORDER BY porcentaje ASC"
                 result_all = session.execute(text(sql_all))
                 all_iva = [dict(row._mapping) for row in result_all.fetchall()]
-                print(f"📊 Total de tipos de IVA en la tabla: {len(all_iva)}")
+                print(f"Total IVA types in table: {len(all_iva)}")
                 if all_iva:
-                    print(f"📋 Países disponibles: {set(row['pais'] for row in all_iva)}")
+                    print(f"Available countries: {set(row['pais'] for row in all_iva)}")
             
             return iva_types
             

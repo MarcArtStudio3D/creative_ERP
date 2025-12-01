@@ -19,7 +19,7 @@ def test_cliente_save():
         from modules.clientes.repository import ClienteRepository
         from datetime import date
         
-        print("🧪 PRUEBA DE GUARDADO DE CLIENTE")
+        print("TEST: Save client")
         print("=" * 40)
         
         # Configurar empresa
@@ -43,7 +43,7 @@ def test_cliente_save():
         session = get_session()
         repository = ClienteRepository(session)
         
-        print("🔍 Verificando tablas disponibles...")
+        print("Checking available tables...")
         from sqlalchemy import inspect
         from core.db import get_engine
         
@@ -61,7 +61,7 @@ def test_cliente_save():
         print("✅ Todas las tablas necesarias están presentes")
         
         # Crear un cliente de prueba
-        print("🔄 Creando cliente de prueba...")
+        print("Creating test client...")
         cliente_test = Cliente(
             codigo_cliente="TEST_001",
             nombre_fiscal="Cliente de Prueba Test",
@@ -77,7 +77,7 @@ def test_cliente_save():
         )
         
         # Intentar guardar el cliente
-        print("💾 Guardando cliente...")
+        print("Saving client...")
         try:
             cliente_guardado = repository.crear(cliente_test)
             print(f"✅ Cliente guardado con ID: {cliente_guardado.id}")
@@ -121,7 +121,7 @@ def test_cliente_save():
 
 def main():
     if test_cliente_save():
-        print("\n🎉 ¡PRUEBA EXITOSA!")
+        print("\nTEST PASSED")
         print("✅ El guardado de clientes funciona correctamente")
         print("✅ Las tablas necesarias están creadas")
         print("✅ El manejo de sesiones es correcto")

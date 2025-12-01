@@ -50,7 +50,7 @@ def verify_postgres():
         tables = cursor.fetchall()
         
         print(f"✅ Conexión exitosa")
-        print(f"📊 Tablas encontradas ({len(tables)}):\n")
+        print(f"Tables found ({len(tables)}):\n")
         
         total_records = 0
         for table in tables:
@@ -61,7 +61,7 @@ def verify_postgres():
             status = "✅" if count > 0 else "  "
             print(f"   {status} {table_name}: {count} registros")
         
-        print(f"\n📈 Total de registros: {total_records}")
+        print(f"\nTotal records: {total_records}")
         
         cursor.close()
         conn.close()
@@ -90,7 +90,7 @@ def verify_mariadb():
         
         if not db_exists:
             print("⚠️  La base de datos 'creative_erp' NO existe en MariaDB")
-            print("\n💡 Para crear la base de datos, ejecuta:")
+            print("\nNote: To create the database, run:")
             print("   CREATE DATABASE creative_erp;")
             print("   GRANT ALL PRIVILEGES ON creative_erp.* TO 'admin'@'%';")
             print("   FLUSH PRIVILEGES;")
@@ -103,7 +103,7 @@ def verify_mariadb():
         tables = cursor.fetchall()
         
         print(f"✅ Conexión exitosa")
-        print(f"📊 Tablas encontradas ({len(tables)}):\n")
+        print(f"Tables found ({len(tables)}):\n")
         
         total_records = 0
         for table in tables:
@@ -114,7 +114,7 @@ def verify_mariadb():
             status = "✅" if count > 0 else "  "
             print(f"   {status} {table_name}: {count} registros")
         
-        print(f"\n📈 Total de registros: {total_records}")
+        print(f"\nTotal records: {total_records}")
         
         cursor.close()
         conn.close()

@@ -20,7 +20,7 @@ try:
     cursor.execute("SELECT name FROM sqlite_master WHERE type='table' ORDER BY name;")
     tables = cursor.fetchall()
     
-    print(f"📋 Total de tablas: {len(tables)}\n")
+    print(f"Total tables: {len(tables)}\n")
     
     for i, (table_name,) in enumerate(tables, 1):
         # Contar registros

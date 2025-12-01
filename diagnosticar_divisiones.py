@@ -37,7 +37,7 @@ def diagnosticar():
     print("\n2️⃣  Verificando permisos en role_permissions.json...")
     rpm = RolePermissionsManager()
     roles = rpm.get_all_roles()
-    print(f"   📋 Roles encontrados: {', '.join(roles)}")
+    print(f"   Roles found: {', '.join(roles)}")
     
     for role in roles:
         perms = rpm.get_module_permissions(role, 'divisiones_almacen')
@@ -63,12 +63,12 @@ def diagnosticar():
         print("   ✅ Módulo disponible para admin")
     else:
         print("   ❌ Módulo NO disponible para admin")
-        print(f"   📋 Módulos disponibles: {', '.join(available_ids[:10])}...")
+        print(f"   Available modules: {', '.join(available_ids[:10])}...")
     
     # 4. Verificar módulos de ALMACEN
     print("\n4️⃣  Verificando módulos de la categoría ALMACEN...")
     almacen_modules = [m for m in available if m.category == ModuleCategory.ALMACEN]
-    print(f"   📦 Módulos ALMACEN encontrados: {len(almacen_modules)}")
+    print(f"   Almacen modules found: {len(almacen_modules)}")
     for mod in almacen_modules:
         print(f"      - {mod.icon} {mod.name} ({mod.id})")
     
@@ -100,11 +100,11 @@ def diagnosticar():
     print("✓ DIAGNÓSTICO COMPLETADO")
     print("=" * 70)
     
-    print("\n💡 SOLUCIÓN:")
+    print("\nSOLUTION:")
     print("   1. Asegúrate de haber reiniciado completamente la aplicación")
     print("   2. Verifica que iniciaste sesión con el usuario 'admin'")
     print("   3. Ve a la categoría 'Almacén' en la barra lateral")
-    print("   4. Deberías ver el botón '📁 Secciones Almacén'")
+    print("   4. You should see the 'Secciones Almacén' button")
     
     return True
 

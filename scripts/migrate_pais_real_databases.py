@@ -12,7 +12,7 @@ from pathlib import Path
 
 def migrate_mariadb(host, port, user, password, database):
     """Migrar base de datos MariaDB/MySQL"""
-    print(f"🔄 Migrando MariaDB: {database} en {host}:{port}")
+    print(f"Migrating MariaDB: {database} on {host}:{port}")
     
     try:
         conn = pymysql.connect(
@@ -44,7 +44,7 @@ def migrate_mariadb(host, port, user, password, database):
             print("  ❓ No tiene id_pais, estructura desconocida")
             return
         
-        print("  🔧 Aplicando migración...")
+        print("  Applying migration...")
         
         # Migrar tabla clientes
         if has_id_pais and not has_pais:
@@ -79,7 +79,7 @@ def migrate_mariadb(host, port, user, password, database):
 
 def migrate_postgresql(host, port, user, password, database):
     """Migrar base de datos PostgreSQL"""
-    print(f"🔄 Migrando PostgreSQL: {database} en {host}:{port}")
+    print(f"Migrating PostgreSQL: {database} on {host}:{port}")
     
     try:
         conn = psycopg2.connect(
@@ -111,7 +111,7 @@ def migrate_postgresql(host, port, user, password, database):
             print("  ❓ No tiene id_pais, estructura desconocida")
             return
         
-        print("  🔧 Aplicando migración...")
+        print("  Applying migration...")
         
         # Migrar tabla clientes
         if has_id_pais and not has_pais:
@@ -146,7 +146,7 @@ def migrate_postgresql(host, port, user, password, database):
 
 def migrate_sqlite(db_path):
     """Migrar base de datos SQLite"""
-    print(f"🔄 Migrando SQLite: {db_path}")
+    print(f"Migrating SQLite: {db_path}")
     
     if not os.path.exists(db_path):
         print(f"  ❌ Archivo no existe: {db_path}")
@@ -176,7 +176,7 @@ def migrate_sqlite(db_path):
             print("  ❓ No tiene id_pais, estructura desconocida")
             return
         
-        print("  🔧 Aplicando migración...")
+        print("  Applying migration...")
         
         # SQLite requiere recrear tabla para eliminar columna
         if has_id_pais and not has_pais:
@@ -239,7 +239,7 @@ def migrate_sqlite(db_path):
 
 def migrate_empresas_table():
     """Migrar la tabla empresas en creative_erp_main"""
-    print("🔄 Migrando tabla empresas en creative_erp_main...")
+    print("Migrating empresas table into creative_erp_main...")
     
     try:
         conn = pymysql.connect(
@@ -260,7 +260,7 @@ def migrate_empresas_table():
         if has_pais and not has_id_pais:
             print("  ✅ Tabla empresas ya migrada")
         elif has_id_pais and not has_pais:
-            print("  🔧 Migrando tabla empresas...")
+            print("  Applying empresas table migration...")
             cursor.execute("ALTER TABLE empresas ADD COLUMN pais VARCHAR(100)")
             cursor.execute("UPDATE empresas SET pais = CASE id_pais WHEN 1 THEN 'España' WHEN 7 THEN 'Francia' ELSE 'España' END")
             cursor.execute("ALTER TABLE empresas DROP COLUMN id_pais")
@@ -274,7 +274,7 @@ def migrate_empresas_table():
         print(f"  ❌ Error migrando empresas: {e}")
 
 def main():
-    print("🚀 INICIANDO MIGRACIÓN DE BASES DE DATOS REALES")
+    print("STARTING REAL DATABASE MIGRATION")
     print("=" * 50)
     
     # Primero migrar la tabla empresas
@@ -331,7 +331,7 @@ def main():
     except Exception as e:
         print(f"❌ Error obteniendo configuraciones: {e}")
     
-    print("\n🎉 MIGRACIÓN COMPLETADA")
+    print("\nMIGRATION COMPLETED")
     print("=" * 50)
 
 if __name__ == "__main__":

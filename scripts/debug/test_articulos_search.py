@@ -17,18 +17,18 @@ from core.db import init_database, set_current_database
 
 def test_search_integration():
     """Test the search dialog integration"""
-    print("🧪 Testing Articulos Search Integration...")
+    print("Testing Articulos Search Integration...")
     
     app = QApplication(sys.argv)
     
     try:
         # Initialize database
-        print("📊 Initializing database...")
+        print("Inicializando base de datos...")
         init_database()
         set_current_database('artstudio3d')
         
         # Create view
-        print("🎨 Creating Articulos view...")
+        print("Creando vista de Artículos...")
         view = ArticulosView()
         
         # Verify search shortcut exists
@@ -38,18 +38,18 @@ def test_search_integration():
         print("✅ Keyboard shortcut configured correctly")
         
         # Verify search button connection
-        print("🔍 Verifying search button connection...")
+        print("Verificando la conexión del botón de búsqueda...")
         assert view.ui.btnBuscar.receivers(view.ui.btnBuscar.clicked) > 0, "Search button not connected!"
         print("✅ Search button connected")
         
         # Show the view for manual testing
-        print("\n📋 Manual Testing Instructions:")
+        print("\nListado de instrucciones manuales:")
         print("   1. Click the 'Buscar' button or press Ctrl+F")
         print("   2. The search dialog should appear")
         print("   3. Type in the search box to filter articles")
         print("   4. Select an article and click 'Aceptar'")
         print("   5. The article should load in the form view")
-        print("\n🚀 Launching Articulos view for manual testing...")
+        print("\nLaunching Articulos view for manual testing...")
         
         view.show()
         sys.exit(app.exec())

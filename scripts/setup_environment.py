@@ -110,7 +110,7 @@ def create_env_files():
         # Entornos a generar
         environments = ["development", "testing", "production"]
 
-        print("🎨 Creative ERP - Generador de Variables de Entorno")
+            print("Creative ERP - Generador de Variables de Entorno")
         print("=" * 60)
 
         for env in environments:
@@ -132,7 +132,7 @@ def create_env_files():
             else:
                 print(f"⚠️  Configuración para entorno '{env}' no encontrada")
 
-        print(f"\n📝 Instrucciones:")
+        print(f"\nInstructions:")
         print(f"   1. Revisar y ajustar los valores en los archivos .env.* según su entorno")
         print(f"   2. Copiar el archivo apropiado a .env (ej: cp .env.development .env)")
         print(f"   3. Para producción, usar .env.production como base")
@@ -146,7 +146,7 @@ def create_env_files():
 
 def validate_env_files():
     """Valida que los archivos .env generados sean correctos."""
-    print("\n🔍 Validando archivos .env generados...")
+    print("\nChecking generated .env files...")
 
     environments = ["development", "testing", "production"]
     required_vars = [
@@ -248,7 +248,7 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 
 def main():
     """Función principal."""
-    print("🎨 Creative ERP - Configuración de Variables de Entorno")
+        print("Creative ERP - Configuración de Variables de Entorno")
     print("=" * 60)
 
     # Crear archivos .env
@@ -265,7 +265,7 @@ def main():
     # Crear archivo de ejemplo
     create_env_example()
 
-    print(f"\n📋 Resumen:")
+    print(f"\nSummary:")
     print(f"   - Archivos .env.* generados para development, testing, production")
     print(f"   - Archivo .env.example creado como referencia")
     print(f"   - Para usar: copiar el archivo apropiado a .env")

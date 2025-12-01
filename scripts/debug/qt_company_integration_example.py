@@ -99,7 +99,7 @@ class CompanySelectionWidget(QWidget):
     def load_companies(self):
         """Carga la lista de empresas disponibles."""
         try:
-            self.log_message("🔄 Cargando empresas disponibles...")
+            self.log_message("Cargando empresas disponibles...")
             setup_company_selection_combo(self.company_combo)
             self.log_message("✅ Empresas cargadas exitosamente")
         except Exception as e:
@@ -115,7 +115,7 @@ class CompanySelectionWidget(QWidget):
             self.update_company_info(None)
             return
 
-        self.log_message(f"🎯 Seleccionando empresa ID: {company_id}")
+        self.log_message(f"Selecting company ID: {company_id}")
 
         # Intentar seleccionar la empresa
         success = on_company_selected(company_id)
@@ -144,7 +144,7 @@ class CompanySelectionWidget(QWidget):
             QMessageBox.information(self, "Validación", "Seleccione una empresa primero.")
             return
 
-        self.log_message(f"🔍 Validando configuración de empresa ID: {company_id}")
+        self.log_message(f"Validando configuración de empresa ID: {company_id}")
 
         try:
             validation = company_manager.validate_company_database(company_id)
@@ -208,7 +208,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Título
-        title_label = QLabel("🎨 Creative ERP - Sistema Multi-Base de Datos")
+        title_label = QLabel("Creative ERP - Multi-Database System")
         title_font = QFont()
         title_font.setPointSize(14)
         title_font.setBold(True)
@@ -247,8 +247,8 @@ class MainWindow(QMainWindow):
             self.status_bar.showMessage(f"Empresa activa: {context['company_name']} - BD: {context['database_name']}")
 
             # Actualizar contenido de ejemplo
-            self.content_label.setText(f"🏢 Empresa: {context['company_name']}\n"
-                                     f"🗄️  Base de Datos: {context['database_name']}\n"
+            self.content_label.setText(f"Company: {context['company_name']}\n"
+                                     f"Database: {context['database_name']}\n"
                                      f"⚙️  Motor: {context['motor_bd']}\n\n"
                                      "¡Aquí puedes cargar los módulos específicos de esta empresa!")
         else:

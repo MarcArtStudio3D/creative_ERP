@@ -16,7 +16,7 @@ print("=" * 60)
 
 try:
     # Conectar a la base de datos por defecto 'postgres'
-    print(f"\n📌 Conectando a PostgreSQL en {HOST}:{PORT}...")
+    print(f"\nConnecting to PostgreSQL at {HOST}:{PORT}...")
     conn = psycopg2.connect(
         host=HOST,
         port=PORT,
@@ -30,7 +30,7 @@ try:
     cursor = conn.cursor()
     
     # Verificar si la base de datos ya existe
-    print(f"\n🔍 Verificando si '{DB_NAME}' existe...")
+    print(f"\nChecking if '{DB_NAME}' exists...")
     cursor.execute(
         "SELECT 1 FROM pg_database WHERE datname = %s",
         (DB_NAME,)
@@ -38,8 +38,8 @@ try:
     exists = cursor.fetchone()
     
     if exists:
-        print(f"   ⚠️  La base de datos '{DB_NAME}' ya existe")
-        print(f"   ℹ️  Verificando permisos...")
+        print(f"   WARNING: The database '{DB_NAME}' already exists")
+        print(f"   Checking permissions...")
         
         cursor.execute(
             "SELECT has_database_privilege(%s, %s, 'CONNECT')",
@@ -48,36 +48,36 @@ try:
         can_connect = cursor.fetchone()[0]
         
         if can_connect:
-            print(f"   ✅ El usuario '{USER}' puede conectarse a '{DB_NAME}'")
+            print(f"   User '{USER}' can connect to '{DB_NAME}'")
         else:
-            print(f"   ❌ El usuario '{USER}' NO puede conectarse a '{DB_NAME}'")
-            print(f"   🔧 Otorgando permisos...")
+            print(f"   User '{USER}' CANNOT connect to '{DB_NAME}'")
+            print(f"   Granting permissions...")
             cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {DB_NAME} TO {USER}")
             print(f"   ✅ Permisos otorgados")
     else:
-        print(f"   ❌ La base de datos '{DB_NAME}' NO existe")
-        print(f"\n🔨 Creando base de datos '{DB_NAME}'...")
+        print(f"   The database '{DB_NAME}' does NOT exist")
+        print(f"\nCreating database '{DB_NAME}'...")
         cursor.execute(f"CREATE DATABASE {DB_NAME}")
         print(f"   ✅ Base de datos creada exitosamente")
         
-        print(f"\n🔧 Otorgando permisos al usuario '{USER}'...")
+        print(f"\nGranting permissions to user '{USER}'...")
         cursor.execute(f"GRANT ALL PRIVILEGES ON DATABASE {DB_NAME} TO {USER}")
         print(f"   ✅ Permisos otorgados")
     
     # Listar todas las bases de datos
-    print(f"\n📋 Bases de datos disponibles:")
+    print(f"\nAvailable databases:")
     cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false ORDER BY datname")
     for row in cursor.fetchall():
-        marker = "👉" if row[0] == DB_NAME else "  "
+        marker = "->" if row[0] == DB_NAME else "  "
         print(f"   {marker} {row[0]}")
     
     cursor.close()
     conn.close()
     
     print("\n" + "=" * 60)
-    print("✅ PROCESO COMPLETADO")
+    print("PROCESS COMPLETED")
     print("=" * 60)
     
 except Exception as e:
-    print(f"\n❌ ERROR: {e}")
+    print(f"\nERROR: {e}")
     print(f"Tipo: {type(e).__name__}")

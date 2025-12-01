@@ -12,7 +12,7 @@ sys.path.insert(0, str(root_dir))
 
 def test_view_full_database_connection():
     """Prueba que view_full.py use la sesión de la base de datos correcta."""
-    print("🔍 Probando conexión de base de datos en view_full.py...")
+    print("Testing database connection in view_full.py...")
     
     try:
         # Configurar el sistema para usar la base de datos de empresa
@@ -23,7 +23,7 @@ def test_view_full_database_connection():
         
         # Listar empresas disponibles primero
         empresas = company_manager.get_available_companies()
-        print(f"📊 Empresas disponibles: {len(empresas)}")
+        print(f"Companies available: {len(empresas)}")
         
         for emp in empresas:
             print(f"   - ID: {emp['id']}, Nombre: {emp.get('nombre', 'N/A')}")
@@ -36,7 +36,7 @@ def test_view_full_database_connection():
         for empresa in empresas:
             db_info = company_manager.validate_company_database(empresa['id'])
             db_name = db_info.get('database_name', '')
-            print(f"🔍 Verificando empresa {empresa['id']}: BD={db_name}")
+            print(f"Checking company {empresa['id']}: DB={db_name}")
             if 'artstudio3d' in db_name.lower():
                 target_company = empresa
                 break
@@ -51,7 +51,7 @@ def test_view_full_database_connection():
             return False
         
         company_id = target_company['id']
-        print(f"🎯 Usando empresa: {company_id} (BD: {target_company.get('database_name')})")
+        print(f"Using company: {company_id} (DB: {target_company.get('database_name')})")
         
         # Seleccionar empresa
         success = company_manager.select_company(company_id)
@@ -107,11 +107,11 @@ def test_view_full_database_connection():
         return False
 
 def main():
-    print("🧪 PRUEBA DE CONEXIÓN DE BASE DE DATOS EN VIEW_FULL")
+    print("DATABASE CONNECTION TEST IN VIEW_FULL")
     print("=" * 55)
     
     if test_view_full_database_connection():
-        print("\n🎉 ¡PROBLEMA RESUELTO!")
+        print("\nProblem solved.")
         print("✅ view_full.py ahora usa la base de datos de empresa correcta")
         return True
     else:

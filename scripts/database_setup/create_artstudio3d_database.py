@@ -15,7 +15,7 @@ sys.path.insert(0, str(root_dir))
 def create_artstudio3d_database():
     """Crea la base de datos 'ArtStudio3D' y migra las tablas específicas."""
 
-    print("🎨 Creando base de datos 'ArtStudio3D'...")
+    print("Creating ArtStudio3D database...")
 
     # Configuración de la nueva base de datos ArtStudio3D
     artstudio_db_url = os.environ.get('ARTSTUDIO3D_DB',
@@ -48,7 +48,7 @@ def create_artstudio3d_database():
         current_engine = create_engine(current_db_url)
 
         # Crear tablas específicas en la nueva base de datos
-        print("📦 Creando tablas específicas...")
+        print("Creating specific tables...")
 
         # Tabla tipocliente_def
         with artstudio_engine.connect() as conn:
@@ -168,11 +168,11 @@ def create_artstudio3d_database():
             conn.commit()
 
         # Migrar datos desde la base de datos actual
-        print("📊 Migrando datos existentes...")
+        print("Migrating existing data...")
 
         with current_engine.connect() as source_conn, artstudio_engine.connect() as dest_conn:
             # Migrar tipos de cliente
-            print("   🏷️  Migrando tipos de cliente...")
+            print("   Migrating customer type records...")
             try:
                 result = source_conn.execute(text("SELECT * FROM tipocliente_def"))
                 tipos = result.fetchall()
@@ -190,7 +190,7 @@ def create_artstudio3d_database():
                 print(f"      ⚠️  Error migrando tipos de cliente: {e}")
 
             # Migrar subtipos de cliente
-            print("   🏷️  Migrando subtipos de cliente...")
+            print("   Migrating customer subtype records...")
             try:
                 result = source_conn.execute(text("SELECT * FROM tiposubcliente_def"))
                 subtipos = result.fetchall()
@@ -209,7 +209,7 @@ def create_artstudio3d_database():
                 print(f"      ⚠️  Error migrando subtipos de cliente: {e}")
 
             # Migrar clientes
-            print("   👥 Migrando clientes...")
+            print("   Migrating customers...")
             try:
                 result = source_conn.execute(text("SELECT * FROM clientes"))
                 clientes = result.fetchall()
@@ -294,7 +294,7 @@ def create_artstudio3d_database():
                 print(f"      ⚠️  Error migrando clientes: {e}")
 
         print("✅ Migración completada exitosamente!")
-        print("📋 Resumen:")
+        print("Summary:")
         print("   - Base de datos 'artstudio3d' creada")
         print("   - Tablas específicas migradas: clientes, tipocliente_def, tiposubcliente_def, direcciones_alternativas")
         print("   - Tabla direcciones_alternativas creada (vacía)")
@@ -308,7 +308,7 @@ def create_artstudio3d_database():
     return True
 
 if __name__ == "__main__":
-    print("🎨 Script de Creación de Base de Datos ArtStudio3D")
+    print("ArtStudio3D Database Creation Script")
     print("=" * 50)
 
     # Confirmar antes de proceder
@@ -319,7 +319,7 @@ if __name__ == "__main__":
 
     success = create_artstudio3d_database()
     if success:
-        print("\n📝 Próximos pasos:")
+        print("\nNext steps:")
         print("1. Actualizar la configuración para usar 'artstudio3d' cuando sea necesario")
         print("2. Probar la aplicación con las nuevas tablas")
         print("3. Poblar la tabla direcciones_alternativas según sea necesario")

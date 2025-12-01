@@ -58,22 +58,22 @@ def get_destination_url(arg: str) -> str:
 # ------------------------------
 
 def migrate(sqlite_url: str, dest_url: str):
-    print(f"📌 Cargando origen SQLite: {sqlite_url}")
+    print(f"Loading source SQLite: {sqlite_url}")
     source_engine = create_engine(sqlite_url)
     SourceSession = sessionmaker(bind=source_engine)
     source_session = SourceSession()
 
-    print(f"📌 Conectando a destino: {dest_url}")
+    print(f"Connecting to destination: {dest_url}")
     dest_engine = create_engine(dest_url)
     DestSession = sessionmaker(bind=dest_engine)
     dest_session = DestSession()
 
     # Limpiar tablas destino si existen (para evitar duplicados)
-    print("📌 Limpiando tablas destino existentes...")
+    print("Cleaning existing destination tables...")
     Base.metadata.drop_all(dest_engine)
     
     # Crear tablas destino
-    print("📌 Creando tablas destino...")
+    print("Creating destination tables...")
     Base.metadata.create_all(dest_engine)
 
     # Build a mapping of table names to model classes
@@ -154,7 +154,7 @@ def migrate(sqlite_url: str, dest_url: str):
         source_session.close()
         dest_session.close()
 
-    print("\n🎉 MIGRACIÓN COMPLETADA CON ÉXITO")
+    print("\nMIGRATION COMPLETED SUCCESSFULLY")
 
 
 # ------------------------------

@@ -15,7 +15,7 @@ sys.path.insert(0, str(root_dir))
 def create_main_database():
     """Crea la base de datos principal 'Creative_ERP' y migra las tablas globales."""
 
-    print("🚀 Creando base de datos principal 'Creative_ERP'...")
+    print("Creating main database 'Creative_ERP'...")
 
     # Configuración de la nueva base de datos principal
     main_db_url = os.environ.get('CREATIVE_ERP_MAIN_DB',
@@ -48,7 +48,7 @@ def create_main_database():
         current_engine = create_engine(current_db_url)
 
         # Crear tablas globales en la nueva base de datos
-        print("📦 Creando tablas globales...")
+        print("Creating global tables...")
 
         # Tabla users
         with main_engine.connect() as conn:
@@ -146,11 +146,11 @@ def create_main_database():
             conn.commit()
 
         # Migrar datos desde la base de datos actual
-        print("📊 Migrando datos existentes...")
+        print("Migrating existing data...")
 
         with current_engine.connect() as source_conn, main_engine.connect() as dest_conn:
             # Migrar usuarios
-            print("   👤 Migrando usuarios...")
+            print("   Migrating users...")
             result = source_conn.execute(text("SELECT * FROM users"))
             users = result.fetchall()
             for user in users:
@@ -166,7 +166,7 @@ def create_main_database():
             dest_conn.commit()
 
             # Migrar business_groups
-            print("   🏢 Migrando grupos empresariales...")
+            print("   Migrating company groups...")
             result = source_conn.execute(text("SELECT * FROM business_groups"))
             groups = result.fetchall()
             for group in groups:
@@ -181,7 +181,7 @@ def create_main_database():
             dest_conn.commit()
 
             # Migrar empresas
-            print("   🏭 Migrando empresas...")
+            print("   Migrating companies...")
             result = source_conn.execute(text("SELECT * FROM empresas"))
             empresas = result.fetchall()
             for empresa in empresas:
@@ -245,7 +245,7 @@ def create_main_database():
             dest_conn.commit()
 
         print("✅ Migración completada exitosamente!")
-        print("📋 Resumen:")
+        print("Summary:")
         print("   - Base de datos 'creative_erp_main' creada")
         print("   - Tablas globales (users, business_groups, empresas) migradas")
         print("   - Datos preservados")
@@ -264,7 +264,7 @@ def create_main_database():
             row = result.fetchone()
             empresas_count = row[0] if row else 0
 
-        print("📊 Estadísticas:")
+        print("Statistics:")
         print(f"   - Usuarios: {users_count}")
         print(f"   - Grupos empresariales: {groups_count}")
         print(f"   - Empresas: {empresas_count}")
@@ -278,7 +278,7 @@ def create_main_database():
     return True
 
 if __name__ == "__main__":
-    print("🔄 Script de Creación de Base de Datos Principal")
+    print("Main Database Creation Script")
     print("=" * 50)
 
     # Confirmar antes de proceder
@@ -289,7 +289,7 @@ if __name__ == "__main__":
 
     success = create_main_database()
     if success:
-        print("\n📝 Próximos pasos:")
+        print("\nNext steps:")
         print("1. Actualizar la configuración en core/db.py para usar 'creative_erp_main'")
         print("2. Probar la aplicación con la nueva base de datos")
         print("3. Una vez verificado, se pueden eliminar las tablas globales de 'creative_erp'")

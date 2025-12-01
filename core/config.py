@@ -326,7 +326,7 @@ def set_database_for_company(company_id: int):
     from core.db import init_db
     init_db()
 
-    print(f"🔄 Base de datos cambiada para empresa {company_id}: {url}")
+    print(f"Database switched for company {company_id}: {url}")
 
 if __name__ == "__main__":
     # Ejemplo de uso

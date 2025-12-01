@@ -21,7 +21,7 @@ def migrate_mariadb():
         engine = create_engine(MARIADB_URL)
         with engine.connect() as connection:
             # 1. Modificar columna id_pais
-            print("🛠️  Modificando columna id_pais a VARCHAR(100)...")
+            print("Modifying column id_pais to VARCHAR(100)...")
             try:
                 # En MariaDB/MySQL usamos MODIFY COLUMN
                 connection.execute(text("ALTER TABLE clientes MODIFY COLUMN id_pais VARCHAR(100) DEFAULT 'España'"))
@@ -31,7 +31,7 @@ def migrate_mariadb():
                 return False
             
             # 2. Actualizar valores numéricos antiguos (opcional, asumiendo 1=España)
-            print("🔄 Normalizando valores antiguos...")
+            print("Normalizing old values...")
             try:
                 result = connection.execute(text("UPDATE clientes SET id_pais = 'España' WHERE id_pais = '1'"))
                 print(f"   ✅ Registros actualizados ('1' -> 'España'): {result.rowcount}")

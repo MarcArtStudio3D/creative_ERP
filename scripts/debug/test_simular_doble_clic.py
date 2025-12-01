@@ -24,7 +24,7 @@ def simulate_double_click():
         if app is None:
             app = QApplication([])
         
-        print("🔍 Configurando empresa...")
+        print("Configuring company...")
         
         # Configurar empresa
         company_manager = CompanyDatabaseManager()
@@ -42,7 +42,7 @@ def simulate_double_click():
         session = get_session()
         view_full = ClientesViewFull(session=session)
         
-        print("🔍 Simulando doble clic...")
+        print("Simulating double click...")
         
         # Obtener tabla
         tabla = getattr(view_full.ui, 'tabla_busquedas', None)
@@ -67,14 +67,14 @@ def simulate_double_click():
         print("✅ Primera fila seleccionada")
         
         # Llamar directamente al método abrir_ficha_cliente
-        print("🔄 Llamando a abrir_ficha_cliente()...")
+        print("Calling abrir_ficha_cliente()...")
         view_full.abrir_ficha_cliente()
         
         print("✅ Método ejecutado")
         
         # Verificar el estado del StackedWidget
         current_page = view_full.ui.stackedWidget.currentIndex()
-        print(f"📊 Página actual del StackedWidget: {current_page}")
+        print(f"Current page of StackedWidget: {current_page}")
         
         session.close()
         return True
@@ -86,7 +86,7 @@ def simulate_double_click():
         return False
 
 def main():
-    print("🧪 SIMULACIÓN DE DOBLE CLIC")
+    print("DOUBLE CLICK SIMULATION")
     print("=" * 35)
     
     if simulate_double_click():

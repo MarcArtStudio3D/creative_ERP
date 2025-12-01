@@ -5005,22 +5005,5 @@ font: 14pt &quot;Sans Serif&quot;;</string>
  <resources>
   <include location="../designer.qrc"/>
  </resources>
- <connections>
-  <connection>
-   <sender>btn_cerrar</sender>
-   <signal>clicked()</signal>
-   <receiver>FrmArticulos</receiver>
-   <slot>accept()</slot>
-   <hints>
-    <hint type="sourcelabel">
-     <x>142</x>
-     <y>659</y>
-    </hint>
-    <hint type="destinationlabel">
-     <x>141</x>
-     <y>698</y>
-    </hint>
-   </hints>
-  </connection>
- </connections>
+ <connections/>
 </ui>

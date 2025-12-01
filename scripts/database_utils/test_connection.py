@@ -32,11 +32,11 @@ try:
     cursor = conn.cursor()
     cursor.execute("SELECT version();")
     version = cursor.fetchone()
-    print(f"   📌 Versión PostgreSQL: {version[0]}")
+    print(f"   PostgreSQL version: {version[0]}")
     
     cursor.execute("SELECT current_database();")
     db = cursor.fetchone()
-    print(f"   📌 Base de datos actual: {db[0]}")
+    print(f"   Current database: {db[0]}")
     
     cursor.close()
     conn.close()
@@ -58,12 +58,12 @@ try:
     cursor = conn.cursor()
     cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false;")
     databases = cursor.fetchall()
-    print("   📋 Bases de datos encontradas:")
+    print("   Databases found:")
     for db in databases:
         print(f"      - {db[0]}")
     
     # Verificar permisos del usuario admin
-    print("\n   🔐 Verificando permisos del usuario 'admin'...")
+    print("\n   Checking privileges for user 'admin'...")
     cursor.execute("""
         SELECT datname, has_database_privilege('admin', datname, 'CONNECT') as can_connect
         FROM pg_database 
@@ -88,7 +88,7 @@ try:
         result = connection.execute(text("SELECT current_database();"))
         db = result.fetchone()
         print(f"   ✅ Conexión exitosa con SQLAlchemy")
-        print(f"   📌 Base de datos: {db[0]}")
+        print(f"   Database: {db[0]}")
         
 except Exception as e:
     print(f"   ❌ Error con SQLAlchemy: {e}")

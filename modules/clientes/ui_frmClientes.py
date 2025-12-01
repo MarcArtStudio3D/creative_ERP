@@ -22,7 +22,7 @@ from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComb
     QRadioButton, QSizePolicy, QSpacerItem, QSpinBox,
     QStackedWidget, QTabWidget, QTableView, QTextEdit,
     QTreeWidget, QTreeWidgetItem, QVBoxLayout, QWidget)
-import modules.designer_rc
+from modules import designer_rc
 
 class Ui_frmClientes(object):
     def setupUi(self, frmClientes):
@@ -1089,8 +1089,7 @@ class Ui_frmClientes(object):
         self.txtfecha_ultima_compra.setObjectName(u"txtfecha_ultima_compra")
         self.txtfecha_ultima_compra.setEnabled(True)
         self.txtfecha_ultima_compra.setMaximumSize(QSize(100, 16777215))
-        self.txtfecha_ultima_compra.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtfecha_ultima_compra.setStyleSheet(u"")
         self.txtfecha_ultima_compra.setFocusPolicy(Qt.FocusPolicy.NoFocus)
         self.txtfecha_ultima_compra.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtfecha_ultima_compra.setCalendarPopup(True)
@@ -1428,8 +1427,7 @@ class Ui_frmClientes(object):
         self.txtfecha_alta = QDateEdit(self.frame_5)
         self.txtfecha_alta.setObjectName(u"txtfecha_alta")
         self.txtfecha_alta.setMaximumSize(QSize(100, 16777215))
-        self.txtfecha_alta.setStyleSheet(u"color: rgb(0, 0, 0);\n"
-"background-color: rgb(239, 239, 239);")
+        self.txtfecha_alta.setStyleSheet(u"")
         self.txtfecha_alta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
         self.txtfecha_alta.setCalendarPopup(True)
 

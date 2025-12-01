@@ -21,7 +21,7 @@ def drop_villes_table():
     try:
         engine = create_engine(MARIADB_URL)
         with engine.connect() as connection:
-            print("🗑️  Eliminando tabla 'villes'...")
+            print("Deleting table 'villes'...")
             try:
                 connection.execute(text("DROP TABLE IF EXISTS villes"))
                 print("   ✅ Tabla eliminada correctamente")

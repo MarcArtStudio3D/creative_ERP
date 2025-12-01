@@ -131,8 +131,8 @@ def main():
     
     count = translate_remaining(input_file)
     
-    print(f"\n✓ {count} traducciones adicionales aplicadas")
-    print(f"✓ Archivo actualizado: {input_file}")
+    print(f"\n{count} additional translations applied")
+    print(f"File updated: {input_file}")
     
     # Verificar cuántas quedan
     import subprocess
@@ -143,10 +143,10 @@ def main():
     )
     
     remaining = int(result.stdout.strip()) if result.returncode == 0 else 0
-    print(f"\n📊 Strings sin traducir restantes: {remaining}")
+    print(f"\nRemaining untranslated strings: {remaining}")
     
     if remaining == 0:
-        print("\n🎉 ¡Todas las traducciones completadas!")
+        print("\nAll translations completed!")
     
     print("\nPróximo paso:")
     print("  python scripts/compile_translations.py")

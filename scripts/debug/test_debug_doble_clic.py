@@ -23,7 +23,7 @@ def test_debug_double_click():
         if app is None:
             app = QApplication([])
         
-        print("🔍 DEBUG: Configurando empresa...")
+        print("DEBUG: Configuring company...")
         
         # Configurar empresa
         company_manager = CompanyDatabaseManager()
@@ -46,13 +46,13 @@ def test_debug_double_click():
         # Obtener sesión correcta
         session = get_session()
         
-        print("🔍 DEBUG: Creando ClientesViewFull...")
+        print("DEBUG: Creating ClientesViewFull...")
         
         # Crear ClientesViewFull con la sesión correcta
         view_full = ClientesViewFull(session=session)
         print("✅ ClientesViewFull creado")
         
-        print("🔍 DEBUG: Información sobre la vista creada:")
+        print("DEBUG: Info about created view:")
         
         # Verificar StackedWidget
         if hasattr(view_full.ui, 'stackedWidget'):
@@ -114,11 +114,11 @@ def test_debug_double_click():
         return False
 
 def main():
-    print("🧪 DEBUG: PROBLEMA DOBLE CLIC EN CLIENTES")
+    print("DEBUG: DOUBLE CLICK ISSUE IN CLIENTS")
     print("=" * 50)
     
     if test_debug_double_click():
-        print("\n🔍 Debug completado - revisar mensajes anteriores")
+        print("\nDebug complete - review messages above")
         return True
     else:
         print("\n❌ Error en debug")

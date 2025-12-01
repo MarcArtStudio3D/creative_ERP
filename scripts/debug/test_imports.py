@@ -47,11 +47,11 @@ def test_imports():
         return False
 
 if __name__ == "__main__":
-    print("🧪 Probando importaciones y funcionalidad...")
+    print("Testing imports and functionality...")
     success = test_imports()
     
     if success:
-        print("\n🎉 ¡Todo funciona correctamente!")
+        print("\nEverything is working correctly!")
         print("La aplicación principal debería funcionar.")
     else:
         print("\n❌ Hay problemas que resolver.")

@@ -28,7 +28,7 @@ def inspeccionar_tablas():
         tablas = ['secciones', 'familias', 'subfamilias']
         
         for tabla in tablas:
-            print(f"\n📋 Tabla: {tabla}")
+            print(f"\nTable: {tabla}")
             if not inspector.has_table(tabla):
                 print("   ❌ La tabla no existe")
                 continue

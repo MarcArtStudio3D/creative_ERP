@@ -38,7 +38,7 @@ def test_cliente_selected_signal():
         return False
 
 def main():
-    print("🧪 PRUEBAS DE FUNCIONALIDAD FICHA DE CLIENTE")
+    print("CLIENT FORM FUNCTIONALITY TESTS")
     print("=" * 50)
     
     tests = [
@@ -50,14 +50,14 @@ def main():
     total = len(tests)
     
     for test_name, test_func in tests:
-        print(f"\n🔍 {test_name}:")
+        print(f"\nChecking {test_name}:")
         if test_func():
             passed += 1
         
-    print(f"\n📊 RESULTADO FINAL: {passed}/{total} pruebas pasaron")
+    print(f"\nFINAL RESULT: {passed}/{total} tests passed")
     
     if passed == total:
-        print("🎉 ¡Todas las pruebas pasaron! La funcionalidad está lista.")
+        print("All tests passed — functionality is ready.")
     else:
         print("⚠️  Algunas pruebas fallaron. Revisar la implementación.")
     

@@ -33,9 +33,9 @@ class CompanyDatabaseManager:
             self.company_info = get_company_database_info(company_id)
             self.current_company_id = company_id
 
-            print(f"✅ Empresa {company_id} seleccionada: {self.company_info['company_name']}")
-            print(f"   Motor BD: {self.company_info['motor_base_datos']}")
-            print(f"   Base de datos: {self.company_info['database_name']}")
+            print(f"Company {company_id} selected: {self.company_info['company_name']}")
+            print(f"   DB engine: {self.company_info['motor_base_datos']}")
+            print(f"   Database: {self.company_info['database_name']}")
 
             return True
 
@@ -88,7 +88,7 @@ class CompanyDatabaseManager:
                 session.close()
 
         except Exception as e:
-            print(f"❌ Error obteniendo empresas: {e}")
+            print(f"ERROR getting companies: {e}")
             return []
 
     def validate_company_database(self, company_id: int) -> dict:
@@ -154,7 +154,7 @@ class CompanyDatabaseManager:
 
                 session.commit()
 
-                print(f"✅ Configuración de base de datos actualizada para empresa {company_id}")
+                print(f"Database configuration updated for company {company_id}")
                 return True
 
             finally:
@@ -162,7 +162,7 @@ class CompanyDatabaseManager:
                 session.close()
 
         except Exception as e:
-            print(f"❌ Error actualizando configuración: {e}")
+            print(f"ERROR updating configuration: {e}")
             return False
 
 
@@ -191,10 +191,10 @@ def setup_company_selection_combo(combo_box):
             display_text = f"{company['codigo']} - {company['nombre']}"
             combo_box.addItem(display_text, company['id'])
 
-        print(f"✅ Combo de empresas configurado con {len(companies)} empresas")
+        print(f"Company combo configured with {len(companies)} companies")
 
     except Exception as e:
-        print(f"❌ Error configurando combo de empresas: {e}")
+        print(f"ERROR configuring company combo: {e}")
 
 
 def on_company_selected(company_id: int) -> bool:
@@ -203,23 +203,23 @@ def on_company_selected(company_id: int) -> bool:
     Retorna True si la selección fue exitosa.
     """
     if not company_id:
-        print("ℹ️  Ninguna empresa seleccionada")
+        print("No company selected")
         return False
 
     # Validar configuración antes de seleccionar
     validation = company_manager.validate_company_database(company_id)
     if not validation['valid']:
-        print(f"⚠️  Configuración de BD inválida: {validation['message']}")
+        print(f"Invalid DB configuration: {validation['message']}")
         return False
 
     # Seleccionar empresa
     success = company_manager.select_company(company_id)
     if success:
         # Aquí se podría emitir una señal Qt para actualizar la UI
-        print("🎉 Empresa seleccionada exitosamente - BD configurada")
+        print("Company selected successfully - DB configured")
         return True
     else:
-        print("❌ Error seleccionando empresa")
+        print("ERROR selecting company")
         return False
 
 
@@ -248,11 +248,11 @@ def get_current_company_context() -> dict:
 
 if __name__ == "__main__":
     # Ejemplo de uso del gestor de empresas
-    print("🎨 Creative ERP - Gestor de Empresas y Bases de Datos")
+    print("Creative ERP - Company and Database Manager")
     print("=" * 60)
 
     # Listar empresas disponibles
-    print("🏢 Empresas disponibles:")
+    print("Available companies:")
     companies = company_manager.get_available_companies()
     for company in companies:
         print(f"  {company['id']}: {company['codigo']} - {company['nombre']}")
@@ -265,26 +265,26 @@ if __name__ == "__main__":
     if companies:
         # Seleccionar primera empresa como ejemplo
         first_company = companies[0]
-        print(f"\n🎯 Seleccionando empresa: {first_company['codigo']}")
+        print(f"\nSelecting company: {first_company['codigo']}")
 
         # Validar configuración
         validation = company_manager.validate_company_database(first_company['id'])
         if validation['valid']:
-            print("✅ Configuración válida")
+                print("Configuration valid")
 
             # Seleccionar empresa
             success = company_manager.select_company(first_company['id'])
             if success:
-                print("✅ Empresa seleccionada exitosamente")
+                print("Company selected successfully")
 
                 # Mostrar contexto actual
                 context = get_current_company_context()
-                print(f"📋 Contexto actual: {context['company_name']}")
+                print(f"Current context: {context['company_name']}")
                 print(f"   Base de datos: {context['database_name']}")
         else:
             print(f"❌ Configuración inválida: {validation['message']}")
 
-    print("\n💡 Para integrar con Qt:")
+    print("\nNote: To integrate with Qt:")
     print("   1. Importar company_manager en tu módulo Qt")
     print("   2. Usar setup_company_selection_combo() para configurar QComboBox")
     print("   3. Conectar señal currentIndexChanged a on_company_selected()")

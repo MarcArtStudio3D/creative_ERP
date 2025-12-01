@@ -22,7 +22,7 @@ def verificar_auth():
     
     if "divisiones_almacen" in perms:
         print("   ✅ 'divisiones_almacen' encontrado en permisos de ADMIN")
-        print(f"   📋 Permisos: {[p.value for p in perms['divisiones_almacen']]}")
+        print(f"   Permissions: {[p.value for p in perms['divisiones_almacen']]}")
     else:
         print("   ❌ 'divisiones_almacen' NO encontrado en permisos de ADMIN")
         return False
@@ -33,7 +33,7 @@ def verificar_auth():
     
     if "divisiones_almacen" in perms:
         print("   ✅ 'divisiones_almacen' encontrado en permisos de EMPLOYEE")
-        print(f"   📋 Permisos: {[p.value for p in perms['divisiones_almacen']]}")
+        print(f"   Permissions: {[p.value for p in perms['divisiones_almacen']]}")
     else:
         print("   ❌ 'divisiones_almacen' NO encontrado en permisos de EMPLOYEE")
         return False

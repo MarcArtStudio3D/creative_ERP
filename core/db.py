@@ -53,7 +53,7 @@ def set_current_database(db_name):
         sessionmaker(autocommit=False, autoflush=False, bind=_current_engine)
     )
 
-    print(f"🔄 Base de datos cambiada a: {_current_db} ({db_url})")
+    print(f"Database switched to: {_current_db} ({db_url})")
 
 def get_current_database():
     """Obtiene el nombre de la base de datos actual."""
@@ -130,9 +130,9 @@ def init_db(db_name=None):
         from . import models as core_models
         try:
             core_models.Base.metadata.create_all(bind=current_engine)
-            print("✅ Tablas globales creadas en la base de datos principal")
+            print("Global tables created in the main database")
         except Exception as e:
-            print(f"❌ Error creando tablas globales: {e}")
+            print(f"ERROR creating global tables: {e}")
             raise
 
     elif get_current_database() == 'artstudio3d' or _is_company_database_pointing_to_artstudio3d():
@@ -143,21 +143,21 @@ def init_db(db_name=None):
 
         try:
             clientes_models.Base.metadata.create_all(bind=current_engine)
-            print(f"✅ Tablas de clientes creadas en {get_current_database()}")
+            print(f"Customers tables created in {get_current_database()}")
         except Exception as e:
-            print(f"⚠️  Error creando tablas de clientes: {e}")
+            print(f"Error creating customer tables: {e}")
 
         try:
             tipo_cliente_models.Base.metadata.create_all(bind=current_engine)
-            print(f"✅ Tablas de tipos de cliente creadas en {get_current_database()}")
+            print(f"Customer type tables created in {get_current_database()}")
         except Exception as e:
-            print(f"⚠️  Error creando tablas de tipos de cliente: {e}")
+            print(f"Error creating customer type tables: {e}")
 
         try:
             articulos_models.Base.metadata.create_all(bind=current_engine)
-            print(f"✅ Tablas de artículos creadas en {get_current_database()}")
+            print(f"Article tables created in {get_current_database()}")
         except Exception as e:
-            print(f"⚠️  Error creando tablas de artículos: {e}")
+            print(f"Error creating article tables: {e}")
 
     else:
         # Otras bases de datos: tablas específicas de módulos
@@ -168,17 +168,17 @@ def init_db(db_name=None):
         try:
             clientes_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
-            print(f"⚠️  Error creando tablas de clientes: {e}")
+            print(f"Error creating customer tables: {e}")
 
         try:
             facturas_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
-            print(f"⚠️  Error creando tablas de facturas: {e}")
+            print(f"Error creating invoice tables: {e}")
 
         try:
             articulos_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
-            print(f"⚠️  Error creando tablas de artículos: {e}")
+            print(f"Error creating article tables: {e}")
 
     # Intentar agregar columnas faltantes (migración automática simple)
     db_url = get_database_url(get_current_database())
@@ -276,10 +276,10 @@ def _ensure_columns(base, dialect):
             try:
                 with engine.connect() as conn:
                     conn.execute(stmt)
-                    print(f"✅ Columna agregada: {table_name}.{col_name} ({sql_type})")
+                    print(f"Column added: {table_name}.{col_name} ({sql_type})")
             except Exception as e:
                 # best-effort: ignore failures to avoid breaking startup
-                print(f"⚠️  Error agregando columna {table_name}.{col_name}: {e}")
+                print(f"Error adding column {table_name}.{col_name}: {e}")
                 continue
 
 
@@ -301,10 +301,10 @@ def set_database_for_company(company_id: int):
         # Cambiar a la base de datos de la empresa
         set_current_database(db_key)
 
-        print(f"🔄 Base de datos cambiada para empresa {company_id}")
+        print(f"Database switched for company {company_id}")
 
     except Exception as e:
-        print(f"❌ Error configurando base de datos para empresa {company_id}: {e}")
+        print(f"ERROR configuring database for company {company_id}: {e}")
         raise
 
 def get_company_database_info(company_id: int) -> dict:
@@ -364,7 +364,7 @@ def refresh_database_configs():
         'current': env_config.get_database_url('main')
     })
 
-    print("🔄 Configuraciones de base de datos refrescadas")
+    print("Database configurations refreshed")
 
 def get_france_db_path():
     """Obtiene la ruta completa a la base de datos de Francia."""
@@ -427,14 +427,14 @@ def get_qsql_database(connection_name: str = None):
                     db.setPassword(password)
                     
                     if db.open():
-                        print(f"✅ Conexión QSqlDatabase creada ({driver}): {connection_name} -> {database}")
+                        print(f"QSqlDatabase connection created ({driver}): {connection_name} -> {database}")
                         return db
                     else:
-                        print(f"⚠️ Falló conexión con {driver}: {db.lastError().text()}")
+                        print(f"Connection failed with {driver}: {db.lastError().text()}")
                         QSqlDatabase.removeDatabase(connection_name)
             
             # Si MySQL falla, crear fallback con SQLite temporal
-            print("🔄 MySQL no disponible, usando SQLite temporal para consultas...")
+            print("MySQL not available, using SQLite fallback for queries...")
             return _create_sqlite_fallback(connection_name)
         
         # PostgreSQL
@@ -470,14 +470,14 @@ def get_qsql_database(connection_name: str = None):
                 db.setPassword(password)
                 
                 if db.open():
-                    print(f"✅ Conexión QSqlDatabase creada (QPSQL): {connection_name} -> {database}")
+                    print(f"QSqlDatabase connection created (QPSQL): {connection_name} -> {database}")
                     return db
                 else:
-                    print(f"⚠️ PostgreSQL falló: {db.lastError().text()}")
+                    print(f"PostgreSQL connection failed: {db.lastError().text()}")
                     QSqlDatabase.removeDatabase(connection_name)
             
             # Fallback a SQLite para PostgreSQL
-            print("🔄 PostgreSQL no disponible, usando SQLite temporal para consultas...")
+            print("PostgreSQL not available, using SQLite fallback for queries...")
             return _create_sqlite_fallback(connection_name)
         
         # SQLite
@@ -489,13 +489,13 @@ def get_qsql_database(connection_name: str = None):
                 db.setDatabaseName(db_path)
                 
                 if db.open():
-                    print(f"✅ Conexión QSqlDatabase creada (QSQLITE): {connection_name} -> {db_path}")
+                    print(f"QSqlDatabase connection created (QSQLITE): {connection_name} -> {db_path}")
                     return db
                 else:
-                    print(f"❌ Error al abrir conexión SQLite: {db.lastError().text()}")
+                    print(f"Error opening SQLite connection: {db.lastError().text()}")
                     QSqlDatabase.removeDatabase(connection_name)
         
-        print(f"❌ Tipo de base de datos no soportado: {db_url}")
+        print(f"Unsupported database type: {db_url}")
         return None
         
     except Exception as e:

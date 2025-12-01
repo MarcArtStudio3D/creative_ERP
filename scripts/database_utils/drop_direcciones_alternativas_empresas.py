@@ -56,7 +56,7 @@ def main():
             print("  ℹ️  No hay empresas registradas")
         else:
             for empresa in empresas:
-                print(f"\n  📊 Empresa: {empresa.nombre_fiscal} (ID: {empresa.id})")
+                print(f"\n  Empresa: {empresa.nombre_fiscal} (ID: {empresa.id})")
                 try:
                     # Obtener URL de la base de datos de la empresa
                     from core.config import get_database_url_for_company

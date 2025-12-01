@@ -27,18 +27,18 @@ try:
         
         result = connection.execute(text("SELECT VERSION();"))
         version = result.fetchone()
-        print(f"📌 Versión MariaDB: {version[0]}\n")
+        print(f"MariaDB version: {version[0]}\n")
     
     # Obtener lista de tablas
     inspector = inspect(engine)
     tables = inspector.get_table_names()
     
     if not tables:
-        print("⚠️  NO SE ENCONTRARON TABLAS")
+        print("WARNING: NO TABLES FOUND")
         print("\nLa base de datos existe pero está vacía.")
         print("Esto sugiere que la migración no se completó correctamente.")
     else:
-        print(f"📋 TOTAL DE TABLAS: {len(tables)}\n")
+        print(f"TOTAL TABLES: {len(tables)}\n")
         print("-" * 70)
         
         total_records = 0
@@ -65,7 +65,7 @@ try:
             print()
         
         print("-" * 70)
-        print(f"\n📊 RESUMEN:")
+        print(f"\nSUMMARY:")
         print(f"   • Total de tablas: {len(tables)}")
         print(f"   • Total de registros: {total_records}")
         
@@ -76,13 +76,13 @@ except Exception as e:
     print(f"   Tipo: {type(e).__name__}")
     
     if "Unknown database" in str(e):
-        print("\n💡 La base de datos 'creative_erp' NO EXISTE")
+        print("\nNote: The 'creative_erp' database DOES NOT EXIST")
         print("   Necesitas crearla primero.")
     elif "Access denied" in str(e):
-        print("\n💡 Problema de autenticación")
+        print("\nNote: Authentication problem")
         print("   Verifica usuario/contraseña de MariaDB")
     elif "Can't connect" in str(e):
-        print("\n💡 No se puede conectar al servidor MariaDB")
-        print("   Verifica que MariaDB esté corriendo en 127.0.0.1:3306")
+        print("\nNote: Cannot connect to the MariaDB server")
+        print("   Check that MariaDB is running at 127.0.0.1:3306")
 
 print("\n" + "=" * 70)

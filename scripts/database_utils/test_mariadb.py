@@ -32,14 +32,14 @@ try:
     cursor = conn.cursor()
     cursor.execute("SELECT VERSION();")
     version = cursor.fetchone()
-    print(f"   📌 Versión MariaDB: {version[0]}")
+    print(f"   MariaDB version: {version[0]}")
     
     cursor.execute("SELECT DATABASE();")
     db = cursor.fetchone()
-    print(f"   📌 Base de datos actual: {db[0]}")
+    print(f"   Current database: {db[0]}")
     
     # Listar tablas en la base de datos actual
-    print("\n   📋 Listando tablas en 'creative_erp':")
+    print("\n   Listing tables in 'creative_erp':")
     cursor.execute("SHOW TABLES;")
     tables = cursor.fetchall()
     if tables:
@@ -58,7 +58,7 @@ try:
 except pymysql.err.OperationalError as e:
     if e.args[0] == 1049:  # Unknown database error
         print(f"   ❌ La base de datos 'creative_erp' NO EXISTE")
-        print(f"   💡 Necesitas crear la base de datos primero")
+        print(f"   Note: You need to create the database first")
     else:
         print(f"   ❌ Error de conexión: {e}")
 except Exception as e:
@@ -77,7 +77,7 @@ try:
     cursor = conn.cursor()
     cursor.execute("SHOW DATABASES;")
     databases = cursor.fetchall()
-    print("   📋 Bases de datos encontradas:")
+    print("   Databases found:")
     for db in databases:
         print(f"      - {db[0]}")
     
@@ -95,12 +95,12 @@ try:
         result = connection.execute(text("SELECT DATABASE();"))
         db = result.fetchone()
         print(f"   ✅ Conexión exitosa con SQLAlchemy")
-        print(f"   📌 Base de datos: {db[0]}")
+        print(f"   Database: {db[0]}")
         
         # Usar inspector para ver tablas
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        print(f"\n   📋 Tablas detectadas por SQLAlchemy ({len(tables)}):")
+        print(f"\n   Tables detected by SQLAlchemy ({len(tables)}):")
         if tables:
             for table in tables:
                 print(f"      - {table}")
@@ -120,7 +120,7 @@ try:
         HistorialCliente, EstadisticaClienteMes, Ville, ClienteTipo
     )
     
-    print(f"   📌 Tablas definidas en Base.metadata ({len(Base.metadata.tables)}):")
+    print(f"   Tables defined in Base.metadata ({len(Base.metadata.tables)}):")
     for table_name in Base.metadata.tables.keys():
         print(f"      - {table_name}")
     

@@ -28,14 +28,14 @@ cursor.execute("""
 databases = cursor.fetchall()
 
 for db_name, size in databases:
-    marker = "👉" if db_name == 'creative_erp' else "  "
+    marker = "->" if db_name == 'creative_erp' else "  "
     print(f"{marker} {db_name:20} ({size})")
 
 cursor.close()
 conn.close()
 
 print("=" * 60)
-print("\n💡 Si no ves 'creative_erp' en Antares:")
+print("\nNote: If you don't see 'creative_erp' in Antares:")
 print("   1. Haz clic derecho en la conexión → Refresh/Reload")
 print("   2. O desconecta y reconecta")
 print("   3. O reinicia Antares")

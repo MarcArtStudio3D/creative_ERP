@@ -13,7 +13,7 @@ from core.db import set_current_database
 
 def test_divisiones_deselection():
     """Test de deselección en divisiones"""
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     
     # Configurar base de datos
     set_current_database('artstudio3d')

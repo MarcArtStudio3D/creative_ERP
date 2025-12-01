@@ -76,6 +76,27 @@ class ArticuloController:
         except Exception as e:
             print(f"Error getting sections data: {e}")
             return []
+
+    def set_familia_from_lookup(self, familia_id: int, familia_codigo: str, familia_nombre: str) -> bool:
+        """Establece la familia seleccionada desde el diálogo de búsqueda (MVC: sólo actualiza el modelo)."""
+        try:
+            if not self.current_article:
+                return False
+
+            # Update current article data with selected family id
+            self.current_article['id_familia'] = familia_id
+            return True
+        except Exception as e:
+            print(f"Error setting familia: {e}")
+            return False
+
+    def get_familias_data(self) -> list:
+        """Obtiene la lista de familias para el diálogo de búsqueda."""
+        try:
+            return self.repository.get_familias_data()
+        except Exception as e:
+            print(f"Error getting familias data: {e}")
+            return []
     
     def next_article(self) -> bool:
         """Navigate to next article"""
@@ -307,6 +328,26 @@ class ArticuloController:
     def get_subfamilia_name(self, subfamilia_id: int) -> str:
         """Get subfamily name"""
         return self.repository.get_subfamilia(subfamilia_id) or ""
+
+    def set_subfamilia_from_lookup(self, subfamilia_id: int, subfamilia_codigo: str, subfamilia_nombre: str) -> bool:
+        """Establece la subfamilia seleccionada desde el diálogo de búsqueda (sólo actualiza current_article)."""
+        try:
+            if not self.current_article:
+                return False
+
+            self.current_article['id_subfamilia'] = subfamilia_id
+            return True
+        except Exception as e:
+            print(f"Error setting subfamilia: {e}")
+            return False
+
+    def get_subfamilias_data(self, id_familia: int = None) -> list:
+        """Obtiene la lista de subfamilias para el diálogo de búsqueda (opcionalmente filtrada por familia)."""
+        try:
+            return self.repository.get_subfamilias_data(id_familia)
+        except Exception as e:
+            print(f"Error getting subfamilias data: {e}")
+            return []
     
     def get_proveedor_info(self, proveedor_id: int) -> tuple[str, str]:
         """Get provider code and name"""

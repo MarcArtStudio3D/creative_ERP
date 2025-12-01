@@ -113,7 +113,7 @@ class MockController:
 
 def test_integrated_chart():
     """Probar el gráfico integrado en el módulo de artículos"""
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     
     try:
         # Crear ventana de artículos

@@ -323,6 +323,27 @@ class ArticuloRepository:
         finally:
             if not self._external_session:
                 session.close()
+
+    def get_familias_for_lookup(self) -> str:
+        """Get SQL query for families lookup in DBConsultaView"""
+        return "SELECT id, codigo, familia FROM familias ORDER BY codigo"
+
+    def get_familias_data(self) -> list:
+        """Get families data as list of dictionaries"""
+        session = self._session()
+        try:
+            result = session.execute(
+                text("SELECT id, codigo, familia FROM familias ORDER BY codigo")
+            )
+            rows = result.fetchall()
+            return [{
+                'id': row[0],
+                'codigo': row[1],
+                'familia': row[2]
+            } for row in rows]
+        finally:
+            if not self._external_session:
+                session.close()
     
     def get_subfamilia(self, subfamilia_id: int) -> Optional[str]:
         """Get subfamily name by ID"""
@@ -334,6 +355,32 @@ class ArticuloRepository:
             )
             row = result.fetchone()
             return row[0] if row else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_subfamilias_for_lookup(self) -> str:
+        """Get SQL query for subfamilies lookup in DBConsultaView"""
+        return "SELECT id, codigo, subfamilia FROM subfamilias ORDER BY codigo"
+
+    def get_subfamilias_data(self, id_familia: int = None) -> list:
+        """Get subfamilias data as list of dictionaries. Optionally filter by family id."""
+        session = self._session()
+        try:
+            if id_familia:
+                result = session.execute(
+                    text("SELECT id, codigo, subfamilia FROM subfamilias WHERE id_familia = :fid ORDER BY codigo"),
+                    {"fid": id_familia}
+                )
+            else:
+                result = session.execute(text("SELECT id, codigo, subfamilia FROM subfamilias ORDER BY codigo"))
+
+            rows = result.fetchall()
+            return [{
+                'id': row[0],
+                'codigo': row[1],
+                'subfamilia': row[2]
+            } for row in rows]
         finally:
             if not self._external_session:
                 session.close()

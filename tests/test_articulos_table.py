@@ -13,7 +13,7 @@ from core.db import init_artstudio3d_db
 
 def test_articulos_table():
     """Probar que se cargan los artículos en la tabla"""
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     
     print("Inicializando base de datos...")
     init_artstudio3d_db()

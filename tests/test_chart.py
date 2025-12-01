@@ -9,7 +9,7 @@ from modules.articulos.view import ArticulosView
 
 def test_chart():
     """Probar la ventana de artículos con gráfico"""
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     
     # Crear y mostrar la ventana
     window = ArticulosView()

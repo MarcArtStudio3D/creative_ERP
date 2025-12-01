@@ -13,7 +13,7 @@ from core.db import set_current_database
 
 def test_chart_with_artstudio3d():
     """Test chart with artstudio3d database"""
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     
     # La base de datos se configurará automáticamente en ArticulosView
     print("✅ Iniciando aplicación de artículos")

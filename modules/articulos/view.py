@@ -75,6 +75,8 @@ class ArticulosView(QDialog):
         
         # Lookup buttons
         self.ui.botBuscarSeccion.clicked.connect(self._on_buscar_seccion_clicked)
+        self.ui.botBuscarFamilia.clicked.connect(self._on_buscar_familia_clicked)
+        self.ui.botBuscarSubfamilia.clicked.connect(self._on_buscar_subfamilia_clicked)
     
     def search(self, text: str):
         """
@@ -207,6 +209,24 @@ class ArticulosView(QDialog):
         
         # Lookup buttons - enable when editing/adding
         self.ui.botBuscarSeccion.setEnabled(not locked)
+        # También permitir buscar familia/subfamilia en modo edición
+        if hasattr(self.ui, 'botBuscarFamilia'):
+            # Only allow family lookup when editing AND there is a section selected
+            has_section = False
+            current = self.controller.get_current_article() if hasattr(self, 'controller') else None
+            if current and isinstance(current, dict) and current.get('id_seccion'):
+                has_section = True
+
+            self.ui.botBuscarFamilia.setEnabled(not locked and has_section)
+        if hasattr(self.ui, 'botBuscarSubfamilia'):
+            # Sólo habilitar búsqueda de subfamilia si estamos en modo edición
+            # y además hay una familia seleccionada (current_article tiene id_familia)
+            has_family = False
+            current = self.controller.get_current_article() if hasattr(self, 'controller') else None
+            if current and isinstance(current, dict) and current.get('id_familia'):
+                    has_family = True
+
+            self.ui.botBuscarSubfamilia.setEnabled(not locked and has_family)
         
         # Keep certain fields always readonly
         self._set_readonly_fields()
@@ -274,6 +294,19 @@ class ArticulosView(QDialog):
             self.ui.txtsubfamilia.setText(subfamilia_name or "")
         else:
             self.ui.txtsubfamilia.clear()
+
+        # Ajustar estado del botón de búsqueda de subfamilias según si hay familia y modo edición
+        if hasattr(self.ui, 'botBuscarSubfamilia'):
+            # Detectar si estamos en modo edición observando el botón Guardar
+            editing = self.ui.botGuardar.isEnabled()
+            has_family = bool(article.get('id_familia'))
+            self.ui.botBuscarSubfamilia.setEnabled(editing and has_family)
+
+        # Ajustar estado del botón de búsqueda de familias según si hay sección y modo edición
+        if hasattr(self.ui, 'botBuscarFamilia'):
+            editing = self.ui.botGuardar.isEnabled()
+            has_section = bool(article.get('id_seccion'))
+            self.ui.botBuscarFamilia.setEnabled(editing and has_section)
         
         # Provider - always set text (clear if no ID)
         id_proveedor = article.get("id_proveedor")
@@ -340,9 +373,21 @@ class ArticulosView(QDialog):
         # Get lookup IDs from current article (set by lookup dialogs)
         current = self.controller.get_current_article()
         if current:
-            # Section ID (set by set_seccion_from_lookup)
+            # ID de sección (establecido por set_seccion_from_lookup)
             if 'id_seccion' in current:
                 data["id_seccion"] = current['id_seccion']
+
+            # ID de familia (establecido por set_familia_from_lookup)
+            if 'id_familia' in current:
+                data["id_familia"] = current['id_familia']
+
+            # ID de subfamilia (si existe)
+            if 'id_subfamilia' in current:
+                data["id_subfamilia"] = current['id_subfamilia']
+
+            # Family ID (set by set_familia_from_lookup)
+            if 'id_familia' in current:
+                data["id_familia"] = current['id_familia']
         
         # TODO: Get family/subfamily IDs from lookups
         # TODO: Get IVA type from combo
@@ -761,7 +806,7 @@ class ArticulosView(QDialog):
     # ==================== Lookup Dialogs ====================
     
     def _on_buscar_seccion_clicked(self):
-        """Open section lookup dialog"""
+        """Abrir diálogo de búsqueda de secciones."""
         try:
             # Get secciones data directly from SQLAlchemy
             secciones_data = self.controller.get_secciones_data()
@@ -789,6 +834,27 @@ class ArticulosView(QDialog):
                 if self.controller.set_seccion_from_lookup(seccion_id, seccion_codigo, seccion_nombre):
                     # Update UI field
                     self.ui.txtseccion.setText(seccion_nombre)
+
+                    # When the section changes, families/subfamilies should be reset
+                    # because families are dependent on sections. Clear previous family/subfamily
+                    if hasattr(self.controller, 'current_article') and isinstance(self.controller.current_article, dict):
+                        # Remove family/subfamily ids from the model
+                        self.controller.current_article.pop('id_familia', None)
+                        self.controller.current_article.pop('id_subfamilia', None)
+
+                    # Clear family/subfamily UI fields
+                    if hasattr(self.ui, 'txtfamilia'):
+                        self.ui.txtfamilia.clear()
+                    if hasattr(self.ui, 'txtsubfamilia'):
+                        self.ui.txtsubfamilia.clear()
+
+                    # Update family/subfamily button states: family enabled only if editing, subfamily disabled
+                    editing = self.ui.botGuardar.isEnabled()
+                    if hasattr(self.ui, 'botBuscarFamilia'):
+                        self.ui.botBuscarFamilia.setEnabled(editing and True)
+                    if hasattr(self.ui, 'botBuscarSubfamilia'):
+                        self.ui.botBuscarSubfamilia.setEnabled(False)
+
                     print(f"✅ Sección seleccionada: {seccion_codigo} - {seccion_nombre}")
                 else:
                     QMessageBox.warning(self, "Error", "No se pudo actualizar la sección")
@@ -796,6 +862,97 @@ class ArticulosView(QDialog):
         except Exception as e:
             print(f"Error opening section lookup: {e}")
             QMessageBox.critical(self, "Error", f"Error al abrir consulta de secciones: {str(e)}")
+
+    def _on_buscar_familia_clicked(self):
+        """Abrir diálogo de búsqueda de familias y actualizar controller/modelo/vista (MVC)."""
+        try:
+            familias_data = self.controller.get_familias_data()
+
+            if not familias_data:
+                QMessageBox.information(self, "Info", "No se encontraron familias en la base de datos")
+                return
+
+            selected_data, record = DBConsultaView.select_from_data(
+                parent=self,
+                data=familias_data,
+                headers=["ID", "Código", "Familia"],
+                campos=["codigo", "familia"],
+                titulo="Seleccionar Familia"
+            )
+
+            if selected_data:
+                familia_id = selected_data.get('id')
+                familia_codigo = selected_data.get('codigo')
+                familia_nombre = selected_data.get('familia')
+
+                # Delegate state change to controller (MVC)
+                if self.controller.set_familia_from_lookup(familia_id, familia_codigo, familia_nombre):
+                    self.ui.txtfamilia.setText(familia_nombre)
+                    print(f"✅ Familia seleccionada: {familia_codigo} - {familia_nombre}")
+
+                    # Si estamos en modo edición, habilitar subfamilia (ahora que hay familia)
+                    locked = self.ui.botGuardar.isEnabled() == False
+                    # locked True means fields are read-only; we want enabled when not locked
+                    if hasattr(self.ui, 'botBuscarSubfamilia') and not locked:
+                        self.ui.botBuscarSubfamilia.setEnabled(True)
+                else:
+                    QMessageBox.warning(self, "Error", "No se pudo actualizar la familia")
+
+        except Exception as e:
+            print(f"Error opening family lookup: {e}")
+            QMessageBox.critical(self, "Error", f"Error al abrir consulta de familias: {str(e)}")
+
+    def _on_buscar_subfamilia_clicked(self):
+        """Abrir diálogo de búsqueda de subfamilias y actualizar controller/modelo/vista (MVC)."""
+        try:
+            # Si hay familia seleccionada, filtramos subfamilias por esa familia
+            current = self.controller.get_current_article() or {}
+            id_familia = current.get('id_familia')
+
+            # Si no hay familia seleccionada, mostrar hint y no abrir diálogo
+            if not id_familia:
+                # Mostrar mensaje orientativo al usuario
+                from PySide6.QtWidgets import QMessageBox
+                QMessageBox.information(
+                    self,
+                    "Info",
+                    "Antes de buscar subfamilias, seleccione primero una familia."
+                )
+
+                # Añadir tooltip informativo al botón para UX
+                if hasattr(self.ui, 'botBuscarSubfamilia'):
+                    self.ui.botBuscarSubfamilia.setToolTip("Seleccione una familia antes de buscar subfamilias")
+
+                return
+
+            subfamilias_data = self.controller.get_subfamilias_data(id_familia)
+
+            if not subfamilias_data:
+                QMessageBox.information(self, "Info", "No se encontraron subfamilias en la base de datos")
+                return
+
+            selected_data, record = DBConsultaView.select_from_data(
+                parent=self,
+                data=subfamilias_data,
+                headers=["ID", "Código", "Subfamilia"],
+                campos=["codigo", "subfamilia"],
+                titulo="Seleccionar Subfamilia"
+            )
+
+            if selected_data:
+                sub_id = selected_data.get('id')
+                sub_codigo = selected_data.get('codigo')
+                sub_nombre = selected_data.get('subfamilia')
+
+                if self.controller.set_subfamilia_from_lookup(sub_id, sub_codigo, sub_nombre):
+                    self.ui.txtsubfamilia.setText(sub_nombre)
+                    print(f"✅ Subfamilia seleccionada: {sub_codigo} - {sub_nombre}")
+                else:
+                    QMessageBox.warning(self, "Error", "No se pudo actualizar la subfamilia")
+
+        except Exception as e:
+            print(f"Error opening subfamily lookup: {e}")
+            QMessageBox.critical(self, "Error", f"Error al abrir consulta de subfamilias: {str(e)}")
 
 
 class ArticlesTableModel(QAbstractTableModel):

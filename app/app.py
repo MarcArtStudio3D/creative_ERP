@@ -49,6 +49,29 @@ class CreativeERPApp:
         except Exception as e:
             print(f"⚠ Error al cargar estilo: {e}")
         
+        # Set global application icon (try resource first, fallback to file path)
+        try:
+            from PySide6.QtGui import QIcon
+            # resource path will exist after compiling designer.qrc -> modules/designer_rc.py
+            # Try both prefixes in the qrc (some builds include it under PNG prefix)
+            icon = QIcon(":/ICO/LogoIconoCreative.ico")
+            if icon.isNull():
+                icon = QIcon(":/PNG/LogoIconoCreative.ico")
+            if icon.isNull():
+                # Fallback to filesystem path in repository
+                import os
+                ico_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resources', 'icons', 'ico', 'LogoIconoCreative.ico')
+                if os.path.exists(ico_path):
+                    icon = QIcon(ico_path)
+
+            if not icon.isNull():
+                self.qapp.setWindowIcon(icon)
+                print("✓ Application icon set from LogoIconoCreative.ico")
+            else:
+                print("⚠️ Application icon not found (resource and fallback missing)")
+        except Exception as e:
+            print(f"⚠️ Error setting application icon: {e}")
+
         # Inicializar base de datos
         print("Inicializando base de datos...")
         init_db()

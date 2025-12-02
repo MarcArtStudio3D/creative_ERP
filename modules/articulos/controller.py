@@ -14,8 +14,8 @@ class ArticuloController:
     
     def add_new(self) -> bool:
         """
-        Initialize a new article
-        Returns True if successful
+        Inicializar un nuevo artículo.
+        Devuelve True si se ha creado correctamente.
         """
         try:
             # Create article with temporary code
@@ -37,7 +37,7 @@ class ArticuloController:
             return False
     
     def load_by_id(self, articulo_id: int) -> bool:
-        """Load article by ID"""
+        """Cargar un artículo por su ID"""
         try:
             article = self.repository.get_by_id(articulo_id)
             if article:
@@ -70,11 +70,11 @@ class ArticuloController:
             return False
     
     def get_secciones_sql(self) -> str:
-        """Get SQL for sections lookup"""
+        """Devolver la consulta SQL para el lookup de secciones"""
         return self.repository.get_secciones_for_lookup()
     
     def set_seccion_from_lookup(self, seccion_id: int, seccion_codigo: str, seccion_nombre: str) -> bool:
-        """Set section from lookup selection"""
+        """Establecer la sección seleccionada desde el diálogo de búsqueda"""
         try:
             if not self.current_article:
                 return False
@@ -92,7 +92,7 @@ class ArticuloController:
             return False
     
     def get_secciones_data(self) -> list:
-        """Get sections data for lookup dialog"""
+        """Obtener datos de secciones para el diálogo de búsqueda"""
         try:
             return self.repository.get_secciones_data()
         except Exception as e:
@@ -125,7 +125,7 @@ class ArticuloController:
             return []
     
     def next_article(self) -> bool:
-        """Navigate to next article"""
+        """Navegar al siguiente artículo"""
         if not self.current_article:
             return False
         
@@ -142,7 +142,7 @@ class ArticuloController:
             return False
     
     def prev_article(self) -> bool:
-        """Navigate to previous article"""
+        """Navegar al artículo anterior"""
         if not self.current_article:
             return False
         
@@ -160,8 +160,8 @@ class ArticuloController:
     
     def save(self, form_data: Dict[str, Any]) -> tuple[bool, str]:
         """
-        Save article with form data
-        Returns (success, message)
+        Guardar un artículo usando los datos del formulario.
+        Devuelve (exito: bool, mensaje: str)
         """
         if not self.current_article:
             return False, "No article loaded"
@@ -275,8 +275,8 @@ class ArticuloController:
     
     def delete(self) -> tuple[bool, str]:
         """
-        Delete current article
-        Returns (success, message)
+        Eliminar el artículo actual.
+        Devuelve (exito: bool, mensaje: str)
         """
         if not self.current_article:
             return False, "No hay artículo seleccionado"
@@ -301,7 +301,7 @@ class ArticuloController:
             return False, f"Error al borrar: {str(e)}"
     
     def clear(self):
-        """Clear current article"""
+        """Limpiar el artículo actual en memoria (reset estado de edición)."""
         self.current_article = None
         self.is_new = False
         self.codigo_anterior = None
@@ -310,8 +310,8 @@ class ArticuloController:
     
     def _validate_form_data(self, form_data: Dict[str, Any]) -> Optional[str]:
         """
-        Validate form data
-        Returns error message if validation fails, None if OK
+        Validar los datos del formulario.
+        Devuelve un mensaje de error si la validación falla, o None si OK.
         """
         errors = []
         
@@ -334,7 +334,7 @@ class ArticuloController:
     
     def _generate_auto_code(self, form_data: Dict[str, Any]) -> str:
         """
-        Generate automatic code based on section/family/subfamily
+        Generar un código automático basado en sección/familia/subfamilia.
         """
         try:
             # Get configuration for code length
@@ -378,7 +378,7 @@ class ArticuloController:
             return f"ART{random.randint(10000, 99999)}"
     
     def _slugify(self, text: str) -> str:
-        """Convert text to URL-friendly slug"""
+        """Convertir texto a un slug compatible con URLs"""
         import re
         import unicodedata
         
@@ -396,29 +396,29 @@ class ArticuloController:
     # ==================== Getters ====================
     
     def get_current_article(self) -> Optional[Dict[str, Any]]:
-        """Get current article data"""
+        """Obtener los datos del artículo actualmente cargado"""
         return self.current_article
     
     def get_article_id(self) -> Optional[int]:
-        """Get current article ID"""
+        """Obtener el ID del artículo actualmente cargado"""
         return self.current_article.get("id") if self.current_article else None
     
     def is_editing_new(self) -> bool:
-        """Check if currently editing a new article"""
+        """Comprobar si se está editando un artículo nuevo (no persistido)"""
         return self.is_new
     
     # ==================== Lookups ====================
     
     def get_seccion_name(self, seccion_id: int) -> str:
-        """Get section name"""
+        """Obtener el nombre de la sección"""
         return self.repository.get_seccion(seccion_id) or ""
     
     def get_familia_name(self, familia_id: int) -> str:
-        """Get family name"""
+        """Obtener el nombre de la familia"""
         return self.repository.get_familia(familia_id) or ""
     
     def get_subfamilia_name(self, subfamilia_id: int) -> str:
-        """Get subfamily name"""
+        """Obtener el nombre de la subfamilia"""
         return self.repository.get_subfamilia(subfamilia_id) or ""
 
     def set_subfamilia_from_lookup(self, subfamilia_id: int, subfamilia_codigo: str, subfamilia_nombre: str) -> bool:
@@ -442,14 +442,14 @@ class ArticuloController:
             return []
     
     def get_proveedor_info(self, proveedor_id: int) -> tuple[str, str]:
-        """Get provider code and name"""
+        """Obtener código y nombre del proveedor"""
         return self.repository.get_proveedor(proveedor_id)
     
     # ==================== Search ====================
     
     def search_articles(self, search_term: str, field: str = "descripcion_reducida",
                        order_by: str = "descripcion_reducida", order_dir: str = "ASC") -> list:
-        """Search articles"""
+        """Buscar artículos (búsqueda parametrizada)"""
         try:
             return self.repository.search(search_term, field, order_by, order_dir)
         except Exception as e:
@@ -458,14 +458,14 @@ class ArticuloController:
     
     def filter_articles(self, filter_text: str = "") -> list:
         """
-        Filter articles by search term across multiple fields
-        Similar to clientes.controller.cargar_clientes with filtro parameter
-        
+        Filtrar artículos por término de búsqueda en varios campos.
+        Similar a clientes.controller.cargar_clientes con parámetro filtro.
+
         Args:
-            filter_text: Text to filter by (searches in codigo, descripcion_reducida, codigo_barras)
-            
+            filter_text: Texto a filtrar (busca en codigo, descripcion_reducida, codigo_barras)
+
         Returns:
-            List of filtered articles
+            Lista de artículos filtrados
         """
         try:
             if not filter_text or filter_text.strip() == "":
@@ -480,12 +480,12 @@ class ArticuloController:
     
     def get_iva_types(self, pais: str = None) -> List[dict]:
         """
-        Get IVA types for populating combo boxes
-        
+        Obtener tipos de IVA para rellenar comboboxes.
+
         Args:
-            pais: Optional country filter
-            
+            pais: Filtro de país opcional
+
         Returns:
-            List of IVA types
+            Lista de tipos de IVA
         """
         return self.repository.get_iva_types(pais)

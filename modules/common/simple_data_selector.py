@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Simple selector dialog for data lookup
+Selector sencillo para consultas/búsqueda de datos
 """
 
 from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QPushButton, 
@@ -10,7 +10,7 @@ from PySide6.QtCore import Qt
 
 
 class SimpleDataSelector(QDialog):
-    """Simple data selection dialog"""
+    """Diálogo sencillo para selección de datos"""
     
     def __init__(self, parent=None, title="Seleccionar elemento", headers=None):
         super().__init__(parent)
@@ -26,7 +26,7 @@ class SimpleDataSelector(QDialog):
         self._setup_ui()
         
     def _setup_ui(self):
-        """Setup the user interface"""
+        """Configurar la interfaz de usuario (UI)"""
         layout = QVBoxLayout(self)
         
         # Search section
@@ -62,7 +62,7 @@ class SimpleDataSelector(QDialog):
         layout.addLayout(button_layout)
         
     def set_data(self, data, headers=None):
-        """Set data to display"""
+        """Establecer los datos a mostrar"""
         self.data = data
         self.filtered_data = data.copy()
         if headers:
@@ -71,7 +71,7 @@ class SimpleDataSelector(QDialog):
         self._update_table()
         
     def _update_table(self):
-        """Update table with current filtered data"""
+        """Actualizar la tabla con los datos actualmente filtrados"""
         if not self.headers or not self.filtered_data:
             return
             
@@ -103,7 +103,7 @@ class SimpleDataSelector(QDialog):
             header.setSectionResizeMode(2, QHeaderView.ResizeMode.Stretch)
             
     def _filter_data(self, text):
-        """Filter data based on search text"""
+        """Filtrar datos según el texto de búsqueda"""
         text = text.lower()
         if not text:
             self.filtered_data = self.data.copy()
@@ -119,19 +119,19 @@ class SimpleDataSelector(QDialog):
         self._update_table()
         
     def _on_accept(self):
-        """Handle accept button"""
+        """Gestionar pulsación del botón aceptar"""
         current_row = self.table.currentRow()
         if current_row >= 0 and current_row < len(self.filtered_data):
             self.selected_data = self.filtered_data[current_row]
             self.accept()
         
     def get_selected_data(self):
-        """Get selected data"""
+        """Devolver los datos seleccionados"""
         return self.selected_data
     
     @staticmethod
     def select_data(parent, data, headers, title="Seleccionar elemento"):
-        """Static method to show dialog and return selected data"""
+        """Método estático que muestra el diálogo y devuelve la fila seleccionada"""
         dialog = SimpleDataSelector(parent, title, headers)
         dialog.set_data(data, headers)
         

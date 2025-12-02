@@ -13,6 +13,7 @@ from datetime import date
 import sqlite3
 import os
 from core.db import get_session
+from core.utils import format_decimal_value, get_company_decimal_settings, qdate_to_date
 from modules.clientes.models import Cliente, DireccionAlternativa
 from modules.clientes.repository import ClienteRepository
 from modules.clientes.controller import ClientesController
@@ -1633,10 +1634,18 @@ class ClientesView(QWidget):
             9: 'txtSeptiembre', 10: 'txtOctubre', 11: 'txtNoviembre', 12: 'txtDiciembre'
         }
         
+        # Determine decimals for totals display
+        decimals = 2
+        try:
+            vals = get_company_decimal_settings()
+            decimals = int(vals.get('decimales_totales', decimals))
+        except Exception:
+            pass
+
         for mes, nombre_campo in meses_map.items():
             if hasattr(self.ui, nombre_campo):
                 importe = stats.get(mes, 0.0)
-                getattr(self.ui, nombre_campo).setText(f"{importe:.2f}")
+                getattr(self.ui, nombre_campo).setText(format_decimal_value(importe, decimals, use_comma=True))
     
     def nuevo_cliente(self):
         """Crea un nuevo cliente"""
@@ -1805,9 +1814,8 @@ class ClientesView(QWidget):
                     w = getattr(self.ui, name, None)
                     if w is None:
                         return None
-                    from datetime import date as _date
                     d = w.date()
-                    return _date(d.year(), d.month(), d.day())
+                    return qdate_to_date(d)
                 except Exception:
                     return None
             # Validar campos antes de construir el mapeo (y antes de guardar)
@@ -2598,7 +2606,7 @@ class ClientesView(QWidget):
 
 
     def _handle_postal_code_alternativa_search(self):
-        """Handle postal code changes for direcciones alternativas"""
+        """Manejar cambios de código postal para direcciones alternativas"""
         # No ejecutar durante carga programática de datos
         if self._loading_data:
             return
@@ -2616,7 +2624,7 @@ class ClientesView(QWidget):
             self.controller.buscar_poblacion_por_cp_alternativa(cp, pais)
 
     def _handle_poblacion_alternativa_change(self):
-        """Handle población changes for direcciones alternativas - reverse lookup for postal code"""
+        """Manejar cambios en el campo población para direcciones alternativas - búsqueda inversa de código postal"""
         print("[DEBUG] _handle_poblacion_alternativa_change llamado")
         
         # No ejecutar durante carga programática de datos

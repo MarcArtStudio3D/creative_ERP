@@ -456,22 +456,22 @@ class Ui_FrmEmpresas(object):
 
         self.gridLayout_7.addWidget(self.label_222, 0, 0, 1, 1)
 
-        self.spinDecimales_create = QSpinBox(self.groupBox_12)
-        self.spinDecimales_create.setObjectName(u"spinDecimales_create")
-        self.spinDecimales_create.setValue(2)
+        self.txtDecimalesTotales = QSpinBox(self.groupBox_12)
+        self.txtDecimalesTotales.setObjectName(u"txtDecimalesTotales")
+        self.txtDecimalesTotales.setValue(2)
 
-        self.gridLayout_7.addWidget(self.spinDecimales_create, 0, 1, 1, 2)
+        self.gridLayout_7.addWidget(self.txtDecimalesTotales, 0, 1, 1, 2)
 
         self.label_85 = QLabel(self.groupBox_12)
         self.label_85.setObjectName(u"label_85")
 
         self.gridLayout_7.addWidget(self.label_85, 1, 0, 1, 1)
 
-        self.spinDecimales_precios_create = QSpinBox(self.groupBox_12)
-        self.spinDecimales_precios_create.setObjectName(u"spinDecimales_precios_create")
-        self.spinDecimales_precios_create.setValue(2)
+        self.txtDecimalesPrecios = QSpinBox(self.groupBox_12)
+        self.txtDecimalesPrecios.setObjectName(u"txtDecimalesPrecios")
+        self.txtDecimalesPrecios.setValue(2)
 
-        self.gridLayout_7.addWidget(self.spinDecimales_precios_create, 1, 1, 1, 2)
+        self.gridLayout_7.addWidget(self.txtDecimalesPrecios, 1, 1, 1, 2)
 
 
         self.gridLayout_21.addWidget(self.groupBox_12, 0, 2, 1, 1)
@@ -1368,9 +1368,9 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.chk_upate_divisas, self.cboDivisas)
         QWidget.setTabOrder(self.cboDivisas, self.spinDigitos)
         QWidget.setTabOrder(self.spinDigitos, self.cboSerie)
-        QWidget.setTabOrder(self.cboSerie, self.spinDecimales_create)
-        QWidget.setTabOrder(self.spinDecimales_create, self.spinDecimales_precios_create)
-        QWidget.setTabOrder(self.spinDecimales_precios_create, self.btnAddLogo)
+        QWidget.setTabOrder(self.cboSerie, self.txtDecimalesTotales)
+        QWidget.setTabOrder(self.txtDecimalesTotales, self.txtDecimalesPrecios)
+        QWidget.setTabOrder(self.txtDecimalesPrecios, self.btnAddLogo)
         QWidget.setTabOrder(self.btnAddLogo, self.btnDeleteLogo)
         QWidget.setTabOrder(self.btnDeleteLogo, self.txtcCometarioAlbaran)
         QWidget.setTabOrder(self.txtcCometarioAlbaran, self.txtccomentario_factura)
@@ -1437,12 +1437,12 @@ class Ui_FrmEmpresas(object):
 
         self.retranslateUi(FrmEmpresas)
         try:
-                self.btn_salir.clicked.connect(FrmEmpresas.accept)
+            self.btn_salir.clicked.connect(FrmEmpresas.accept)
         except Exception:
-                try:
-                        self.btn_salir.clicked.connect(FrmEmpresas.close)
-                except Exception:
-                        pass
+            try:
+                self.btn_salir.clicked.connect(FrmEmpresas.close)
+            except Exception:
+                pass
 
         self.stackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)

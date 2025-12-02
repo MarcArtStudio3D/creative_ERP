@@ -198,6 +198,23 @@ class LoginWindowMultiCompany(QDialog):
         forgot_link.clicked.connect(self.reject)  # Por ahora solo cierra
         links_layout.addWidget(forgot_link)
         
+        # Small configuration button (icon only) — kept for quick access from login
+        self.config_btn = QPushButton()
+        self.config_btn.setObjectName('configButton')
+        try:
+            cfg_icon = QIcon(":/PNG/resources/icons/png/LogoIcono.png")
+            self.config_btn.setIcon(cfg_icon)
+        except Exception:
+            # fallback to text if icon resource is missing
+            self.config_btn.setText("⚙️")
+
+        # keep it compact
+        self.config_btn.setMinimumHeight(30)
+        self.config_btn.setMaximumWidth(40)
+        self.config_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.config_btn.clicked.connect(self.open_config)
+        links_layout.addWidget(self.config_btn)
+        
         # Create Account (abre configuración)
         create_link = QPushButton("Create Account")
         create_link.setObjectName("linkButton")

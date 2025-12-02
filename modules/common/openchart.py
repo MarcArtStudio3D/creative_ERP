@@ -5,8 +5,8 @@ from PySide6.QtGui import QPainter
 
 class OpenChart(QChartView):
     """
-    Custom chart widget that wraps QChartView for use in Qt Designer.
-    This is a promoted widget that allows using charts in .ui files.
+    Widget personalizado que envuelve QChartView para uso en Qt Designer.
+    Es un widget promovido que permite usar gráficas en archivos .ui.
     """
     def __init__(self, parent=None):
         super().__init__(parent)

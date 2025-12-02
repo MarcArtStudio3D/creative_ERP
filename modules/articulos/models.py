@@ -78,6 +78,8 @@ class Articulo(Base):
     # Precios y márgenes
     coste: Mapped[float] = mapped_column(Float, default=0.0)
     coste_real: Mapped[float] = mapped_column(Float, default=0.0)
+    # Precio de venta base del artículo
+    precio_venta: Mapped[float] = mapped_column(Float, default=0.0)
     porc_dto: Mapped[float] = mapped_column(Float, default=0.0)  # Descuento del proveedor
     margen: Mapped[float] = mapped_column(Float, default=0.0)  # Margen de beneficio %
     margen_min: Mapped[float] = mapped_column(Float, default=0.0)  # Margen mínimo %

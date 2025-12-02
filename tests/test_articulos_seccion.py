@@ -13,7 +13,7 @@ from core.db import set_current_database
 
 def test_articulos_seccion():
     """Test de selección de sección en artículos"""
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or QApplication(sys.argv)
     
     # Configurar base de datos
     set_current_database('artstudio3d')

@@ -6,6 +6,7 @@ from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
 from modules.articulos.controller import ArticuloController
 from modules.common.db_consulta_view import DBConsultaView
 from core.db import get_current_database, set_current_database
+from core.utils import format_decimal_value, get_company_decimal_settings, parse_decimal_input, qdate_to_date
 
 
 class ArticulosView(QWidget):
@@ -13,9 +14,9 @@ class ArticulosView(QWidget):
         super().__init__(parent)
         self.ui = Ui_FrmArticulos()
         self.ui.setupUi(self)
-        # Ensure the 'Nuevo' button uses the centralized 'success' style from modern.qss
+        # Asegurar que el botón 'Nuevo' utilice el estilo centralizado 'success' desde modern.qss
         try:
-            # Set a dynamic property 'class' to match selectors like QPushButton[class="success"]
+            # Establecer una propiedad dinámica 'class' para que coincida con selectores tipo QPushButton[class="success"]
             self.ui.botAnadir.setProperty('class', 'success')
         except Exception:
             pass
@@ -24,6 +25,10 @@ class ArticulosView(QWidget):
         self._ensure_articles_database()
         
         self.controller = ArticuloController()
+        # Decimal formatting settings (populated from current company)
+        self.decimales_totales = 2
+        self.decimales_precios = 2
+
         self._init_complete = False
         
         # Initialize UI
@@ -35,13 +40,13 @@ class ArticulosView(QWidget):
     # ==================== Database Setup ====================
     
     def _ensure_articles_database(self):
-        """Ensure we're using the correct database for articles module"""
+        """Asegurar que se esté usando la base de datos correcta para el módulo de artículos"""
         current_db = get_current_database()
         
         # If we're on main database, we need to switch to articles database
-        # This should be the company's configured database (e.g., artstudio3d)
+        # Esto debería ser la base de datos configurada para la compañía (p.ej. artstudio3d)
         if current_db == 'main':
-            # TODO: In a full multi-company setup, this would get the company's DB
+            # TODO: En una configuración multi-empresa completa, aquí se obtendría la BD de la compañía
             # For now, default to artstudio3d for articles
             try:
                 set_current_database('artstudio3d')
@@ -53,7 +58,7 @@ class ArticulosView(QWidget):
     # ==================== Setup ====================
     
     def _setup_connections(self):
-        """Connect UI signals to slots"""
+        """Conectar señales de la UI a sus handlers (slots)"""
         # Navigation buttons
         self.ui.botAnadir.clicked.connect(self._on_add_clicked)
         self.ui.botSiguiente.clicked.connect(self._on_next_clicked)
@@ -86,34 +91,53 @@ class ArticulosView(QWidget):
         
         # Promociones - control de campos de fecha según checkbox
         self.ui.chkArticulo_promocionado.toggled.connect(self._on_articulo_promocionado_changed)
+
+        # Formatear campos numéricos al terminar la edición para que el usuario vea una representación normalizada (separador coma)
+        if hasattr(self.ui, 'txtPrecioVenta'):
+            try:
+                self.ui.txtPrecioVenta.editingFinished.connect(lambda: self._format_price_field(self.ui.txtPrecioVenta))
+            except Exception:
+                pass
+
+        if hasattr(self.ui, 'txtcoste'):
+            try:
+                self.ui.txtcoste.editingFinished.connect(lambda: self._format_price_field(self.ui.txtcoste))
+            except Exception:
+                pass
+
+        if hasattr(self.ui, 'txtCoste_real'):
+            try:
+                self.ui.txtCoste_real.editingFinished.connect(lambda: self._format_price_field(self.ui.txtCoste_real))
+            except Exception:
+                pass
     
     def search(self, text: str):
         """
-        Method called by main_window_v2.py side panel search
+        Método invocado por el panel lateral de búsqueda en main_window_v2.py
         """
         self._load_articles_data(text)
         
     def nuevo(self):
-        """Public method for 'New' action from side panel"""
+        """Método público para la acción 'Nuevo' desde el panel lateral"""
         self._on_add_clicked()
         
     def editar(self):
-        """Public method for 'Edit' action from side panel"""
+        """Método público para la acción 'Editar' desde el panel lateral"""
         self._on_edit_clicked()
         
     def borrar(self):
-        """Public method for 'Delete' action from side panel"""
+        """Método público para la acción 'Borrar' desde el panel lateral"""
         self._on_delete_clicked()
         
     def list(self):
-        """Public method to switch to list view"""
+        """Método público para cambiar a la vista de lista"""
         self.ui.stackedWidget.setCurrentIndex(1)
 
 
     def get_search_options(self) -> dict:
         """
-        Returns configuration for the side panel search options.
-        Used by main_window_v2.py to populate the sort combo box.
+        Devuelve la configuración para las opciones de búsqueda del panel lateral.
+        Usado por main_window_v2.py para rellenar el combo de ordenación.
         """
         return {
             'sort_fields': [
@@ -131,7 +155,7 @@ class ArticulosView(QWidget):
 
     
     def _setup_initial_state(self):
-        """Set initial UI state"""
+        """Establecer el estado inicial de la interfaz (vista, tablas, y configuraciones)"""
         # Show list view initially
         self.ui.stackedWidget.setCurrentIndex(1)
         
@@ -146,15 +170,93 @@ class ArticulosView(QWidget):
         
         # Lock fields initially
         self._lock_fields(True)
+
+        # Load company decimal formatting preferences (if any)
+        try:
+            vals = get_company_decimal_settings()
+            self.decimales_totales = vals.get('decimales_totales', self.decimales_totales)
+            self.decimales_precios = vals.get('decimales_precios', self.decimales_precios)
+        except Exception:
+            pass
         
         # Hide certain labels
         self.ui.lblkit.setVisible(False)
         self.ui.lbl_en_promocion.setVisible(False)
+
+    def _load_company_decimal_settings(self):
+        """Load company decimal settings (decimales_totales, decimales_precios)
+
+        This reads the Empresa record from the main DB for the currently selected company
+        and sets self.decimales_totales / self.decimales_precios. Keeps defaults on error.
+        """
+        try:
+            from core.company_manager import get_current_company_context
+            from core.db import get_current_database, set_current_database, get_session
+            from core.models import Empresa
+
+            ctx = get_current_company_context()
+            if not ctx.get('has_company'):
+                return
+
+            company_id = ctx.get('company_id')
+            if not company_id:
+                return
+
+            original_db = get_current_database()
+                # Asegurarnos de que estamos en 'main' para leer metadatos de la empresa
+            set_current_database('main')
+            session = get_session()
+            try:
+                empresa = session.query(Empresa).filter_by(id=company_id).first()
+                if empresa:
+                    self.decimales_totales = int(getattr(empresa, 'decimales_totales', 2) or 2)
+                    self.decimales_precios = int(getattr(empresa, 'decimales_precios', 2) or 2)
+            finally:
+                # restore previous DB and cleanup
+                set_current_database(original_db)
+                try:
+                    session.close()
+                except Exception:
+                    pass
+
+        except Exception:
+            # Keep default values on any error
+            pass
+
+    def _format_price_field(self, widget):
+        """Normalizar y formatear el QLineEdit de precio/importe para mostrar al usuario.
+
+        Utiliza parse_decimal_input -> format_decimal_value con separador coma.
+        """
+        try:
+            if not widget:
+                return
+
+            text = widget.text() if hasattr(widget, 'text') else ''
+            if text is None:
+                return
+
+            # Allow empty -> set to 0 with formatted display
+            if str(text).strip() == '':
+                widget.setText(format_decimal_value(0.0, self.decimales_precios, use_comma=True))
+                return
+
+            # Parse robustly and reformat for display
+            try:
+                val = parse_decimal_input(text)
+            except Exception:
+                # Leave original text if cannot parse
+                return
+
+            widget.setText(format_decimal_value(val, self.decimales_precios, use_comma=True))
+        except Exception:
+            # Don't propagate UI errors
+            return
     
     def _populate_iva_combo(self):
-        """Populate IVA types combo box from TVAIVA table"""
+        """Rellenar el combo de tipos de IVA desde la tabla TVAIVA"""
         try:
-            # Get IVA types from controller
+                # Obtener tipos de IVA desde el controlador
             iva_types = self.controller.get_iva_types()
             
             # Clear existing items
@@ -336,9 +438,34 @@ class ArticulosView(QWidget):
             self.ui.txtcodigo_proveedor.clear()
             self.ui.txtproveedor.clear()
         
-        # Pricing
-        self.ui.txtcoste.setText(str(article.get("coste", 0)))
-        self.ui.txtCoste_real.setText(str(article.get("coste_real", 0)))
+        # Precios: formatear según la configuración de decimales de la empresa
+        try:
+            coste_val = float(article.get("coste", 0) or 0)
+        except Exception:
+            coste_val = 0.0
+
+        try:
+            coste_real_val = float(article.get("coste_real", 0) or 0)
+        except Exception:
+            coste_real_val = 0.0
+
+        # Use decimals_precios for price-like fields (UI uses comma separator)
+        self.ui.txtcoste.setText(format_decimal_value(coste_val, self.decimales_precios, use_comma=True))
+        self.ui.txtCoste_real.setText(format_decimal_value(coste_real_val, self.decimales_precios, use_comma=True))
+        # Precio de venta (campo nuevo)
+        if hasattr(self.ui, 'txtPrecioVenta'):
+            # Mostrar como número formateado; preferir el valor existente del artículo o 0
+            try:
+                pv = article.get("precio_venta", 0)
+                # Keep consistent display like other price fields
+                try:
+                    pv_val = float(pv or 0)
+                except Exception:
+                    pv_val = 0.0
+
+                self.ui.txtPrecioVenta.setText(format_decimal_value(pv_val, self.decimales_precios, use_comma=True))
+            except Exception:
+                self.ui.txtPrecioVenta.setText("0")
         self.ui.txtdto.setText(str(article.get("porc_dto", 0)))
         self.ui.txtMargen.setValue(article.get("margen", 0))
         self.ui.txtMargen_min.setValue(article.get("margen_min", 0))
@@ -362,7 +489,7 @@ class ArticulosView(QWidget):
         fecha_ini = article.get('oferta_fecha_inicio')
         fecha_fin = article.get('oferta_fecha_fin')
 
-        # Helper: convert Python date -> QDate
+        # Ayudante: convertir fecha Python -> QDate
         def _to_qdate(d):
             if not d:
                 return QDate()
@@ -388,8 +515,8 @@ class ArticulosView(QWidget):
         if self.ui.Pestanas.currentIndex() == 6:  # Graphics tab (tab_grafica is index 6)
             self._update_chart()
         
-        # TODO: Set IVA combo box
-        # TODO: Load other tabs when implemented
+        # TODO: Establecer combo IVA
+        # TODO: Cargar otras pestañas cuando estén implementadas
     
     def _save_form_to_article(self) -> dict:
         """Get form data as dictionary"""
@@ -404,14 +531,22 @@ class ArticulosView(QWidget):
         
         # Pricing
         try:
-            data["coste"] = float(self.ui.txtcoste.text().replace(".", "").replace(",", "."))
-        except:
+            data["coste"] = parse_decimal_input(self.ui.txtcoste.text())
+        except Exception:
             data["coste"] = 0
         
         try:
-            data["coste_real"] = float(self.ui.txtCoste_real.text().replace(".", "").replace(",", "."))
-        except:
+            data["coste_real"] = parse_decimal_input(self.ui.txtCoste_real.text())
+        except Exception:
             data["coste_real"] = 0
+
+        # Precio de venta (nuevo campo)
+        if hasattr(self.ui, 'txtPrecioVenta'):
+            try:
+                data["precio_venta"] = parse_decimal_input(self.ui.txtPrecioVenta.text())
+            except Exception:
+                # Don't raise - default to 0.0 if parsing fails
+                data["precio_venta"] = 0.0
         
         try:
             data["porc_dto"] = float(self.ui.txtdto.text())
@@ -445,36 +580,21 @@ class ArticulosView(QWidget):
             if 'id_familia' in current:
                 data["id_familia"] = current['id_familia']
         
-        # TODO: Get family/subfamily IDs from lookups
-        # TODO: Get IVA type from combo
-        # TODO: Get provider ID from lookup
+        # TODO: Obtener IDs de familia/subfamilia desde los diálogos de búsqueda
+        # TODO: Obtener tipo de IVA desde el combo
+        # TODO: Obtener ID del proveedor desde el lookup
         
         # Promotion dates - QDateEdit -> Python date or None
         try:
             if hasattr(self.ui, 'txtOferta_Fecha_ini'):
                 qd = self.ui.txtOferta_Fecha_ini.date()
-                # Prefer toPython if available
-                try:
-                    py = qd.toPython()
-                except Exception:
-                    py = None
-                    try:
-                        py = __import__('datetime').date(qd.year(), qd.month(), qd.day())
-                    except Exception:
-                        py = None
+                py = qdate_to_date(qd)
 
                 data['oferta_fecha_inicio'] = py
 
             if hasattr(self.ui, 'txtOferta_Fecha_fin'):
                 qd = self.ui.txtOferta_Fecha_fin.date()
-                try:
-                    py = qd.toPython()
-                except Exception:
-                    py = None
-                    try:
-                        py = __import__('datetime').date(qd.year(), qd.month(), qd.day())
-                    except Exception:
-                        py = None
+                py = qdate_to_date(qd)
 
                 data['oferta_fecha_fin'] = py
         except Exception:
@@ -497,6 +617,8 @@ class ArticulosView(QWidget):
         self.ui.txtcodigo_proveedor.clear()
         self.ui.txtcoste.clear()
         self.ui.txtCoste_real.clear()
+        if hasattr(self.ui, 'txtPrecioVenta'):
+            self.ui.txtPrecioVenta.clear()
         self.ui.txtdto.clear()
         self.ui.txtMargen.setValue(0)
         self.ui.txtMargen_min.setValue(0)
@@ -510,8 +632,8 @@ class ArticulosView(QWidget):
     # ==================== Table Setup ====================
     
     def _setup_articles_table(self):
-        """Setup the articles list table"""
-        # Create and set model
+        """Configurar la tabla de lista de artículos"""
+        # Crear y asignar el modelo
         self.articles_model = ArticlesTableModel()
         self.ui.tablaBusqueda.setModel(self.articles_model)
         
@@ -531,10 +653,10 @@ class ArticulosView(QWidget):
         self.ui.tablaBusqueda.setColumnWidth(2, 80)   # Stock
         self.ui.tablaBusqueda.setColumnWidth(3, 100)  # PVP
         
-        # Connect double-click to edit
+        # Conectar doble clic para editar
         self.ui.tablaBusqueda.doubleClicked.connect(self._on_table_double_click)
         
-        # Load data
+        # Cargar datos
         self._load_articles_data()
     
     def _load_articles_data(self, filter_text: str = ""):
@@ -546,12 +668,12 @@ class ArticulosView(QWidget):
             print(f"Error loading articles: {e}")
     
     def _on_filter_changed(self, text: str):
-        """Handle filter text change - reload articles with filter"""
+        """Manejar cambio de filtro - recargar artículos con filtro"""
         self._load_articles_data(text)
 
     
     def _on_table_double_click(self, index: QModelIndex):
-        """Handle table double-click to edit article"""
+        """Manejar doble clic en la tabla para editar el artículo"""
         if not index.isValid():
             return
         
@@ -564,7 +686,7 @@ class ArticulosView(QWidget):
     # ==================== Button Handlers ====================
     
     def _on_add_clicked(self):
-        """Handle Add button click"""
+        """Manejar click en el botón Añadir"""
         success = self.controller.add_new()
         if success:
             self._clear_form()
@@ -572,14 +694,14 @@ class ArticulosView(QWidget):
             self.ui.stackedWidget.setCurrentIndex(0)  # Show form
             self.ui.Pestanas.setCurrentIndex(0)  # Article tab
             
-            # Focus on code field or barcode if auto-code
-            # TODO: Check auto_codigo configuration
+            # Poner foco en el campo código o código de barras si hay autocódigo
+            # TODO: Revisar la configuración de auto_codigo
             self.ui.txtcodigo.setFocus()
         else:
             QMessageBox.warning(self, "Error", "No se pudo crear el artículo")
     
     def _on_edit_clicked(self):
-        """Handle Edit button click"""
+        """Manejar click en el botón Editar"""
         # If we're already in form view with an article loaded, just unlock
         if self.controller.get_current_article() and self.ui.stackedWidget.currentIndex() == 0:
             self._lock_fields(False)
@@ -606,7 +728,7 @@ class ArticulosView(QWidget):
 
     
     def _on_save_clicked(self):
-        """Handle Save button click"""
+        """Manejar click en el botón Guardar"""
         form_data = self._save_form_to_article()
         success, message = self.controller.save(form_data)
         
@@ -618,7 +740,7 @@ class ArticulosView(QWidget):
             QMessageBox.warning(self, "Error", message)
     
     def _on_undo_clicked(self):
-        """Handle Undo button click"""
+        """Manejar click en el botón Deshacer"""
         if self.controller.is_editing_new():
             # If new article, delete it and go back to list
             self.controller.delete()
@@ -630,7 +752,7 @@ class ArticulosView(QWidget):
         self._lock_fields(True)
     
     def _on_delete_clicked(self):
-        """Handle Delete button click"""
+        """Manejar click en el botón Borrar"""
         reply = QMessageBox.question(
             self,
             "Borrar Artículo",
@@ -647,24 +769,24 @@ class ArticulosView(QWidget):
                 QMessageBox.warning(self, "Error", message)
     
     def _on_next_clicked(self):
-        """Handle Next button click"""
+        """Manejar click en el botón Siguiente"""
         if self.controller.next_article():
             self._load_form_from_article()
     
     def _on_prev_clicked(self):
-        """Handle Previous button click"""
+        """Manejar click en el botón Anterior"""
         if self.controller.prev_article():
             self._load_form_from_article()
     
     def _on_search_clicked(self):
-        """Handle Search button click - switch to list view"""
+        """Manejar click en Buscar - cambiar a la vista de lista"""
         # Simply switch to the list view (page_2 with tablaBusqueda)
         self.ui.stackedWidget.setCurrentIndex(1)
         # Set focus on the table for immediate keyboard navigation
         self.ui.tablaBusqueda.setFocus()
     
     def _on_tab_changed(self, index: int):
-        """Handle tab change"""
+        """Manejar cambio de pestaña"""
         # Reload data for the selected tab
         if not self._init_complete:
             return
@@ -676,7 +798,7 @@ class ArticulosView(QWidget):
     # ==================== Chart Methods ====================
     
     def _setup_chart(self):
-        """Initialize the chart widget"""
+        """Inicializar el widget de gráficas"""
         # Create chart
         self.chart = QChart()
         self.chart.setTitle("Estadísticas Mensuales")
@@ -690,7 +812,7 @@ class ArticulosView(QWidget):
         self.ui.ChartViewWidget.setChart(self.chart)
         self.ui.ChartViewWidget.setRenderHint(QPainter.RenderHint.Antialiasing)
         
-        # Initialize with empty data
+        # Inicializar con datos vacíos
         self._create_empty_chart()
     
     def _create_empty_chart(self):
@@ -775,8 +897,8 @@ class ArticulosView(QWidget):
         self.bar_series.attachAxis(self.axis_y)
     
     def _get_monthly_units_data(self, article):
-        """Get monthly units data from article"""
-        # Try to get data from UI text fields first (these are what the user sees)
+        """Obtener datos mensuales de unidades desde el artículo"""
+        # Intentar obtener datos desde los campos de la UI primero (lo que ve el usuario)
         ui_field_names = [
             "txtUnid_ventas_enero", "txtUnid_ventas_febrero", "txtUnid_ventas_marzo",
             "txtUnid_ventas_abril", "txtUnid_ventas_mayo", "txtUnid_ventas_junio",
@@ -796,7 +918,7 @@ class ArticulosView(QWidget):
             else:
                 data.append(0.0)
         
-        # If no data from UI, try database fields
+        # Si no hay datos en la UI, intentar obtenerlos desde la base de datos
         if all(x == 0 for x in data):
             months_units = [
                 "unidades_vendidas_enero", "unidades_vendidas_febrero", "unidades_vendidas_marzo",
@@ -812,7 +934,7 @@ class ArticulosView(QWidget):
                 except (ValueError, TypeError):
                     data.append(0.0)
         
-        # If still no data, create realistic sample data based on stock
+        # Si aún no hay datos, crear datos de ejemplo realistas basados en el stock
         if all(x == 0 for x in data):
             import random
             stock = float(article.get("stock_real", 25))
@@ -835,8 +957,8 @@ class ArticulosView(QWidget):
         return data, "Unidades Vendidas"
     
     def _get_monthly_amounts_data(self, article):
-        """Get monthly amounts data from article"""
-        # Try to get data from UI text fields first
+        """Obtener datos mensuales de importes desde el artículo"""
+        # Intentar obtener datos desde los campos de la UI primero
         ui_field_names = [
             "txtImporte_ventas_enero", "txtImporte_ventas_febrero", "txtImporte_ventas_marzo",
             "txtImporte_ventas_abril", "txtImporte_ventas_mayo", "txtImporte_ventas_junio",
@@ -856,7 +978,7 @@ class ArticulosView(QWidget):
             else:
                 data.append(0.0)
         
-        # If no data from UI, try database fields
+        # Si no hay datos en la UI, intentar obtenerlos desde la base de datos
         if all(x == 0 for x in data):
             months_amounts = [
                 "importe_ventas_enero", "importe_ventas_febrero", "importe_ventas_marzo",
@@ -872,7 +994,7 @@ class ArticulosView(QWidget):
                 except (ValueError, TypeError):
                     data.append(0.0)
         
-        # If still no data, calculate from units data and price
+        # Si aún no hay datos, calcular a partir de las unidades y el precio
         if all(x == 0 for x in data):
             units_data, _ = self._get_monthly_units_data(article)
             coste = float(article.get("coste", 25))
@@ -883,12 +1005,12 @@ class ArticulosView(QWidget):
         return data, "Importes de Ventas (€)"
     
     def _on_chart_type_changed(self):
-        """Handle chart type change"""
+        """Manejar cambio de tipo de gráfica"""
         # TODO: Implement when more chart types are added
         self._update_chart()
     
     def _on_chart_data_changed(self):
-        """Handle chart data type change (units vs amounts)"""
+        """Manejar cambio de tipo de datos de la gráfica (unidades vs importes)"""
         if self._init_complete:
             self._update_chart()
     
@@ -1077,15 +1199,31 @@ class ArticulosView(QWidget):
 
 
 class ArticlesTableModel(QAbstractTableModel):
-    """Table model for articles list"""
+    """Modelo de tabla para la lista de artículos"""
     
     def __init__(self):
         super().__init__()
         self.articles = []
         self.headers = ["Código", "Descripción", "Stock", "PVP"]
+        # Determine decimals for display
+        try:
+            vals = get_company_decimal_settings()
+            self.decimales_precios = vals.get('decimales_precios', 2)
+        except Exception:
+            self.decimales_precios = 2
     
     def set_articles(self, articles):
         """Set articles data"""
+        # Validar que la entrada contiene la columna precio_venta — fallar pronto si falta
+        if articles:
+            for art in articles:
+                # We require the key to be present in the returned rows
+                if 'precio_venta' not in art or art.get('precio_venta') is None:
+                    raise RuntimeError(
+                        "Missing required column 'precio_venta' in articulos results. "
+                        "Please add column precio_venta to the articulos table and run migrations before proceeding."
+                    )
+
         self.beginResetModel()
         self.articles = articles
         self.endResetModel()
@@ -1122,11 +1260,31 @@ class ArticlesTableModel(QAbstractTableModel):
             elif column == 2:  # Stock
                 stock = article.get("stock_real", 0)
                 return f"{stock:.0f}"
-            elif column == 3:  # PVP
-                coste = float(article.get("coste", 0))
-                margen = float(article.get("margen", 0))
-                pvp = coste * (1 + margen/100)
-                return f"€{pvp:.2f}"
+            elif column == 3:  # PVP / Precio venta
+                # Preferir la columna precio_venta explícita si está presente en el diccionario del artículo
+                # precio_venta debe estar presente y no ser NULL — fallar pronto
+                if 'precio_venta' not in article:
+                    raise RuntimeError(
+                        "Missing required column 'precio_venta' in articulos results. "
+                        "Please add column precio_venta to the articulos table and run migrations before proceeding."
+                    )
+
+                pv_val = article.get('precio_venta')
+                if pv_val is None:
+                    raise RuntimeError(
+                        "Column 'precio_venta' present but contains NULL for an article — this must be populated."
+                    )
+
+                try:
+                    pv_val = float(pv_val or 0)
+                except Exception:
+                    pv_val = 0.0
+
+                # Format using company decimal preferences with comma for display
+                pv_text = format_decimal_value(pv_val, self.decimales_precios, use_comma=True)
+                # Mostrar el símbolo de euro a la derecha según convención europea
+                # Ejemplo: "122,00 €"
+                return f"{pv_text} €"
         
         elif role == Qt.ItemDataRole.TextAlignmentRole:
             if column in [2, 3]:  # Stock y PVP alineados a la derecha

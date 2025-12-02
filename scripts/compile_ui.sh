@@ -83,6 +83,12 @@ compile_ui_file() {
         sed -i 's/\.setStyleSheet(u"color: rgb(0, 0, 0);")/.setStyleSheet(u"")/g' "$output_file"
         sed -i 's/\.setStyleSheet(u"color: rgb(0, 0, 0)")/.setStyleSheet(u"")/g' "$output_file"
     fi
+
+    # Post-process accept() connects to be robust (fallback to close())
+    if [ -f "$ROOT_DIR/scripts/ui_tools/fix_accept_connections.py" ]; then
+        echo "   - Post-processing $output_file to fix .accept() connects"
+        "$PYTHON" "$ROOT_DIR/scripts/ui_tools/fix_accept_connections.py" "$output_file" || true
+    fi
 }
 
 echo "Compiling UI files..."

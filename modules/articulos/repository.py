@@ -9,7 +9,7 @@ class ArticuloRepository:
         self._external_session = session
     
     def _session(self) -> Session:
-        """Get database session"""
+        """Obtener la sesión de base de datos a usar (internamente o externa si fue pasada)."""
         if self._external_session:
             return self._external_session
         return get_session()
@@ -17,7 +17,7 @@ class ArticuloRepository:
     # ==================== CRUD Operations ====================
     
     def get_by_id(self, articulo_id: int) -> Optional[dict]:
-        """Get article by ID"""
+        """Obtener un artículo por su ID"""
         session = self._session()
         try:
             result = session.execute(
@@ -31,7 +31,7 @@ class ArticuloRepository:
                 session.close()
     
     def get_next(self, current_id: int) -> Optional[dict]:
-        """Get next article after current ID"""
+        """Obtener el siguiente artículo después del ID actual"""
         session = self._session()
         try:
             result = session.execute(
@@ -45,7 +45,7 @@ class ArticuloRepository:
                 session.close()
     
     def get_prev(self, current_id: int) -> Optional[dict]:
-        """Get previous article before current ID"""
+        """Obtener el artículo anterior al ID actual"""
         session = self._session()
         try:
             result = session.execute(
@@ -59,7 +59,7 @@ class ArticuloRepository:
                 session.close()
     
     def get_all(self, limit: int = None, offset: int = 0, order_by: str = "descripcion_reducida", order_dir: str = "ASC") -> List[dict]:
-        """Get all articles with optional pagination and ordering"""
+        """Obtener todos los artículos con paginación y orden opcionales"""
         session = self._session()
         try:
             query = f"SELECT * FROM articulos ORDER BY {order_by} {order_dir}"
@@ -73,7 +73,7 @@ class ArticuloRepository:
                 session.close()
     
     def count_all(self) -> int:
-        """Get total count of articles"""
+        """Obtener el número total de artículos"""
         session = self._session()
         try:
             result = session.execute(text("SELECT COUNT(*) as total FROM articulos"))
@@ -84,8 +84,8 @@ class ArticuloRepository:
     
     def create(self, codigo: str = None) -> Optional[int]:
         """
-        Create new article with temporary code
-        Returns the new article ID
+        Crear un nuevo artículo con código temporal.
+        Devuelve el ID del artículo creado.
         """
         import random
         session = self._session()
@@ -119,7 +119,7 @@ class ArticuloRepository:
                 session.close()
     
     def update(self, articulo_id: int, data: dict) -> bool:
-        """Update article with given data"""
+        """Actualizar un artículo con los campos proporcionados en el diccionario data"""
         session = self._session()
         try:
             # Build SET clause dynamically
@@ -150,7 +150,7 @@ class ArticuloRepository:
                 session.close()
     
     def delete(self, articulo_id: int) -> bool:
-        """Delete article and related data"""
+        """Eliminar el artículo y los datos relacionados (tarifas, etc.)"""
         session = self._session()
         try:
             # Delete related tarifas first
@@ -180,14 +180,14 @@ class ArticuloRepository:
                order_by: str = "descripcion_reducida", order_dir: str = "ASC",
                limit: int = 500) -> List[dict]:
         """
-        Search articles by field
-        
+        Buscar artículos por un campo específico.
+
         Args:
-            search_term: Term to search for
-            field: Field to search in (descripcion_reducida, codigo, codigo_barras, codigo_fabricante)
-            order_by: Field to order by
-            order_dir: Order direction (ASC/DESC)
-            limit: Maximum results
+            search_term: Término a buscar
+            field: Campo donde buscar (descripcion_reducida, codigo, codigo_barras, codigo_fabricante)
+            order_by: Campo por el que ordenar
+            order_dir: Dirección de orden (ASC/DESC)
+            limit: Número máximo de resultados
         """
         session = self._session()
         try:
@@ -224,15 +224,15 @@ class ArticuloRepository:
     
     def search_multi_field(self, search_term: str, limit: int = 500) -> List[dict]:
         """
-        Search articles across multiple fields (codigo, descripcion_reducida, codigo_barras)
-        Similar to clientes.repository.obtener_todos with filtro parameter
-        
+        Buscar artículos en varios campos (codigo, descripcion_reducida, codigo_barras).
+        Similar a clientes.repository.obtener_todos con parámetro filtro.
+
         Args:
-            search_term: Term to search for
-            limit: Maximum results
-            
+            search_term: Término a buscar
+            limit: Número máximo de resultados
+
         Returns:
-            List of articles matching the search term in any field
+            Lista de artículos que coinciden con el término en cualquiera de los campos
         """
         session = self._session()
         try:
@@ -281,7 +281,7 @@ class ArticuloRepository:
     # ==================== Lookups ====================
     
     def get_seccion(self, seccion_id: int) -> Optional[str]:
-        """Get section name by ID"""
+        """Obtener el nombre de la sección por su ID"""
         session = self._session()
         try:
             result = session.execute(
@@ -295,11 +295,11 @@ class ArticuloRepository:
                 session.close()
     
     def get_secciones_for_lookup(self) -> str:
-        """Get SQL query for sections lookup in DBConsultaView"""
+        """Devolver la consulta SQL para listar secciones en DBConsultaView"""
         return "SELECT id, codigo, seccion FROM secciones ORDER BY codigo"
     
     def get_secciones_data(self) -> list:
-        """Get sections data as list of dictionaries"""
+        """Obtener datos de secciones como lista de diccionarios"""
         session = self._session()
         try:
             result = session.execute(
@@ -316,7 +316,7 @@ class ArticuloRepository:
                 session.close()
     
     def get_familia(self, familia_id: int) -> Optional[str]:
-        """Get family name by ID"""
+        """Obtener el nombre de la familia por su ID"""
         session = self._session()
         try:
             result = session.execute(
@@ -330,11 +330,11 @@ class ArticuloRepository:
                 session.close()
 
     def get_familias_for_lookup(self) -> str:
-        """Get SQL query for families lookup in DBConsultaView"""
+        """Devolver la consulta SQL para listar familias en DBConsultaView"""
         return "SELECT id, codigo, familia FROM familias ORDER BY codigo"
 
     def get_familias_data(self, id_seccion: int = None) -> list:
-        """Get families data as list of dictionaries. Optionally filter by section id."""
+        """Obtener datos de familias como lista de diccionarios. Filtrar por id_seccion opcionalmente."""
         session = self._session()
         try:
             if id_seccion:
@@ -358,7 +358,7 @@ class ArticuloRepository:
                 session.close()
     
     def get_subfamilia(self, subfamilia_id: int) -> Optional[str]:
-        """Get subfamily name by ID"""
+        """Obtener el nombre de la subfamilia por su ID"""
         session = self._session()
         try:
             result = session.execute(
@@ -372,11 +372,11 @@ class ArticuloRepository:
                 session.close()
 
     def get_subfamilias_for_lookup(self) -> str:
-        """Get SQL query for subfamilies lookup in DBConsultaView"""
+        """Devolver la consulta SQL para listar subfamilias en DBConsultaView"""
         return "SELECT id, codigo, subfamilia FROM subfamilias ORDER BY codigo"
 
     def get_subfamilias_data(self, id_familia: int = None) -> list:
-        """Get subfamilias data as list of dictionaries. Optionally filter by family id."""
+        """Obtener datos de subfamilias como lista de diccionarios. Filtrar por id_familia opcionalmente."""
         session = self._session()
         try:
             if id_familia:
@@ -398,7 +398,7 @@ class ArticuloRepository:
                 session.close()
     
     def get_proveedor(self, proveedor_id: int) -> Optional[Tuple[str, str]]:
-        """Get provider code and name by ID. Returns (codigo, proveedor)"""
+        """Obtener código y nombre del proveedor por ID. Devuelve (codigo, proveedor)"""
         session = self._session()
         try:
             result = session.execute(
@@ -416,8 +416,8 @@ class ArticuloRepository:
     def check_code_exists(self, codigo: str = None, codigo_barras: str = None,
                          codigo_fabricante: str = None, exclude_id: int = None) -> Optional[dict]:
         """
-        Check if article with given codes already exists
-        Returns the existing article if found
+        Comprobar si ya existe un artículo con los códigos indicados.
+        Devuelve el artículo existente si se encuentra.
         """
         session = self._session()
         try:
@@ -452,11 +452,11 @@ class ArticuloRepository:
     
     def get_next_code(self, prefix: str, code_length: int) -> str:
         """
-        Generate next sequential code with given prefix
-        
+        Generar el siguiente código secuencial con el prefijo dado.
+
         Args:
-            prefix: Code prefix (e.g., section+family+subfamily codes)
-            code_length: Total length of code
+            prefix: Prefijo del código (p.ej. código de sección+familia+subfamilia)
+            code_length: Longitud total del código
         """
         session = self._session()
         try:
@@ -488,8 +488,8 @@ class ArticuloRepository:
     
     def get_default_tarifa(self) -> int:
         """
-        Get default tarifa ID from configuration
-        Returns 1 if not configured
+        Obtener el ID de tarifa predeterminada desde la configuración.
+        Devuelve 1 si no está configurado.
         """
         session = self._session()
         try:
@@ -506,7 +506,7 @@ class ArticuloRepository:
                 session.close()
     
     def create_tarifas_for_article(self, articulo_id: int) -> bool:
-        """Create tarifa entries for new article based on codigotarifa"""
+        """Crear entradas de tarifas para un nuevo artículo basadas en codigotarifa"""
         session = self._session()
         try:
             # Get all tarifa codes
@@ -541,13 +541,13 @@ class ArticuloRepository:
     
     def get_iva_types(self, pais: str = None) -> List[dict]:
         """
-        Get IVA types from TVAIVA table, optionally filtered by country
-        
+        Obtener tipos de IVA desde la tabla TVAIVA, filtrando opcionalmente por país.
+
         Args:
-            pais: Country code/name to filter by. If None, gets from current company
-            
+            pais: Código/nombre de país para filtrar. Si es None, se obtiene del contexto de la compañía.
+
         Returns:
-            List of IVA types with id, codigo, descripcion, porcentaje
+            Lista de tipos de IVA con campos id, codigo, descripcion, porcentaje
         """
         session = self._session()
         try:
@@ -625,7 +625,7 @@ class ArticuloRepository:
     # ==================== Ofertas (Promociones) ====================
 
     def get_oferta_for_article(self, articulo_id: int, id_tarifa: int = None) -> Optional[dict]:
-        """Return the oferta record for the given article and tarifa (or default tarifa)"""
+        """Devolver el registro de oferta para el artículo y tarifa indicados (o tarifa por defecto)"""
         session = self._session()
         try:
             if id_tarifa is None:
@@ -642,10 +642,10 @@ class ArticuloRepository:
                 session.close()
 
     def upsert_oferta(self, articulo_id: int, id_tarifa: int, oferta_data: dict) -> bool:
-        """Insert or update an oferta for the given article/tarifa.
+        """Insertar o actualizar una oferta para el artículo/tarifa indicados.
 
-        oferta_data may contain: fecha_inicio, fecha_fin, activa, descripcion, oferta_dto, precio_final, etc.
-        Only passed fields are updated/inserted.
+        oferta_data puede contener: fecha_inicio, fecha_fin, activa, descripcion, oferta_dto, precio_final, etc.
+        Solo los campos presentes se actualizan/insertan.
         """
         session = self._session()
         try:

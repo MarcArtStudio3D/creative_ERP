@@ -411,6 +411,28 @@ class LoginWindowMultiCompany(QDialog):
         users = UserRepository.get_all_users()
         for user in users:
             self.user_combo.addItem(user.username, user)  # type: ignore
+
+        # Seleccionar el usuario por defecto (preferir sesión actual si existe)
+        try:
+            session = None
+            if hasattr(self.auth_manager, 'get_current_session'):
+                session = self.auth_manager.get_current_session()
+            if users:
+                if session and getattr(session, 'user', None):
+                    # buscar el índice del usuario en la lista
+                    for i in range(self.user_combo.count()):
+                        data = self.user_combo.itemData(i)
+                        if data and getattr(data, 'username', None) == session.user.username:
+                            self.user_combo.setCurrentIndex(i)
+                            break
+                    else:
+                        # no encontrado, seleccionar el primero
+                        self.user_combo.setCurrentIndex(0)
+                else:
+                    self.user_combo.setCurrentIndex(0)
+        except Exception:
+            # no bloquear si algo falla al aplicar la selección por defecto
+            pass
         
         # Cargar grupos empresariales
         groups = BusinessGroupRepository.get_all_groups()
@@ -419,7 +441,31 @@ class LoginWindowMultiCompany(QDialog):
         
         # Las empresas se cargarán al seleccionar grupo
         if groups:
-            self.on_group_changed(0)
+            # seleccionar grupo por defecto: preferir el grupo de la sesión si existe
+            try:
+                # obtener session si está disponible
+                session = None
+                if hasattr(self.auth_manager, 'get_current_session'):
+                    session = self.auth_manager.get_current_session()
+
+                if session and getattr(session, 'company_context', None) and getattr(session.company_context, 'group', None):
+                    target_group_id = session.company_context.group.id
+                    for i in range(self.group_combo.count()):
+                        data = self.group_combo.itemData(i)
+                        if data and getattr(data, 'id', None) == target_group_id:
+                            self.group_combo.setCurrentIndex(i)
+                            break
+                    else:
+                        self.group_combo.setCurrentIndex(0)
+                else:
+                    # no session info -> select first
+                    self.group_combo.setCurrentIndex(0)
+
+            except Exception:
+                self.group_combo.setCurrentIndex(0)
+
+            # Forzar carga de empresas del grupo seleccionado
+            self.on_group_changed(self.group_combo.currentIndex())
     
     def on_group_changed(self, index: int):
         """Cuando cambia el grupo, cargar las empresas de ese grupo."""
@@ -434,6 +480,44 @@ class LoginWindowMultiCompany(QDialog):
         for company in companies:
             name = getattr(company, 'nombre_comercial', '') or getattr(company, 'nombre_fiscal', 'Empresa')
             self.company_combo.addItem(name, company)  # type: ignore
+
+        # Intentar seleccionar la empresa por defecto:
+        # 1) Preferir company del session (si existe)
+        # 2) Preferir company_manager.current_company_id si está configurado
+        # 3) Sino seleccionar la primera empresa
+        try:
+            desired_company_id = None
+            session = None
+            if hasattr(self.auth_manager, 'get_current_session'):
+                session = self.auth_manager.get_current_session()
+
+            if session and getattr(session, 'company_context', None) and getattr(session.company_context, 'company', None):
+                desired_company_id = session.company_context.company.id
+            else:
+                try:
+                    # company_manager puede contener la última empresa seleccionada en la sesión actual
+                    if hasattr(company_manager, 'current_company_id') and company_manager.current_company_id:
+                        desired_company_id = company_manager.current_company_id
+                except Exception:
+                    desired_company_id = None
+
+            if desired_company_id is not None:
+                # buscar y seleccionar
+                for idx in range(self.company_combo.count()):
+                    data = self.company_combo.itemData(idx)
+                    if data and getattr(data, 'id', None) == desired_company_id:
+                        self.company_combo.setCurrentIndex(idx)
+                        break
+                else:
+                    if self.company_combo.count() > 0:
+                        self.company_combo.setCurrentIndex(0)
+            else:
+                if self.company_combo.count() > 0:
+                    self.company_combo.setCurrentIndex(0)
+        except Exception:
+            # no bloquear si falla la selección por defecto
+            if self.company_combo.count() > 0:
+                self.company_combo.setCurrentIndex(0)
     
     def on_login_clicked(self):
         """Maneja el click en Acceder."""

@@ -2476,7 +2476,13 @@ class Ui_FrmArticulos(object):
         QWidget.setTabOrder(self.txtImporte_compras_octubre, self.txtImporte_compras_noviembre)
 
         self.retranslateUi(FrmArticulos)
-        self.btn_cerrar.clicked.connect(FrmArticulos.accept)
+        # El widget padre de este UI es un QWidget (ArticulosView) que implementa .close()
+        # accept no existe en QWidget; conectar a close() para cerrar la vista.
+        try:
+            self.btn_cerrar.clicked.connect(FrmArticulos.close)
+        except Exception:
+            # Fallback: si FrmArticulos no tiene close, no hacemos nada
+            pass
 
         self.stackedWidget.setCurrentIndex(0)
         self.Pestanas.setCurrentIndex(0)

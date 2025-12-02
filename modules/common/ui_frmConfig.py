@@ -71,7 +71,13 @@ class Ui_frmConfig(object):
         self.label_3.setGeometry(QRect(260, 110, 251, 31))
 
         self.retranslateUi(frmConfig)
-        self.buttonBox.accepted.connect(frmConfig.accept)
+        try:
+            self.buttonBox.accepted.connect(frmConfig.accept)
+        except Exception:
+            try:
+                self.buttonBox.accepted.connect(frmConfig.close)
+            except Exception:
+                pass
         self.buttonBox.rejected.connect(frmConfig.reject)
 
         QMetaObject.connectSlotsByName(frmConfig)

@@ -335,7 +335,13 @@ class Ui_FrmKit(object):
         QWidget.setTabOrder(self.btnQuitar, self.tabla)
 
         self.retranslateUi(FrmKit)
-        self.pushButton.clicked.connect(FrmKit.accept)
+        try:
+            self.pushButton.clicked.connect(FrmKit.accept)
+        except Exception:
+            try:
+                self.pushButton.clicked.connect(FrmKit.close)
+            except Exception:
+                pass
 
         QMetaObject.connectSlotsByName(FrmKit)
     # setupUi

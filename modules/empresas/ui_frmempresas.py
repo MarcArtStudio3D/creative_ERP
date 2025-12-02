@@ -1436,7 +1436,13 @@ class Ui_FrmEmpresas(object):
         QWidget.setTabOrder(self.tableView, self.tabWidget)
 
         self.retranslateUi(FrmEmpresas)
-        self.btn_salir.clicked.connect(FrmEmpresas.accept)
+        try:
+                self.btn_salir.clicked.connect(FrmEmpresas.accept)
+        except Exception:
+                try:
+                        self.btn_salir.clicked.connect(FrmEmpresas.close)
+                except Exception:
+                        pass
 
         self.stackedWidget.setCurrentIndex(0)
         self.tabWidget.setCurrentIndex(0)

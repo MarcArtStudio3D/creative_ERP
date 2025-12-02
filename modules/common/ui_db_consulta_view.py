@@ -131,7 +131,13 @@ class Ui_db_consulta_view(object):
 
         self.retranslateUi(db_consulta_view)
         self.btn_cancelar.clicked.connect(db_consulta_view.close)
-        self.btn_aceptar.clicked.connect(db_consulta_view.accept)
+        try:
+            self.btn_aceptar.clicked.connect(db_consulta_view.accept)
+        except Exception:
+            try:
+                self.btn_aceptar.clicked.connect(db_consulta_view.close)
+            except Exception:
+                pass
 
         QMetaObject.connectSlotsByName(db_consulta_view)
     # setupUi

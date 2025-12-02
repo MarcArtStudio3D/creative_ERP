@@ -128,7 +128,13 @@ class Ui_frmNuevosAvisos(object):
         QWidget.setTabOrder(self.btnCancelar, self.btnAceptar)
 
         self.retranslateUi(frmNuevosAvisos)
-        self.btnAceptar.clicked.connect(frmNuevosAvisos.accept)
+        try:
+            self.btnAceptar.clicked.connect(frmNuevosAvisos.accept)
+        except Exception:
+            try:
+                self.btnAceptar.clicked.connect(frmNuevosAvisos.close)
+            except Exception:
+                pass
         self.btnCancelar.clicked.connect(frmNuevosAvisos.close)
 
         QMetaObject.connectSlotsByName(frmNuevosAvisos)

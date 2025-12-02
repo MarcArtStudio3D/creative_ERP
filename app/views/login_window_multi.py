@@ -101,6 +101,7 @@ class LoginWindowMultiCompany(QDialog):
         self.user_combo.setObjectName("loginCombo")
         self.user_combo.setMinimumHeight(50)
         self.user_combo.setPlaceholderText("Username")
+        self._setup_combo_popup(self.user_combo)
         user_layout.addWidget(self.user_combo)
         
         main_layout.addWidget(user_container)
@@ -144,6 +145,7 @@ class LoginWindowMultiCompany(QDialog):
         self.group_combo.setMinimumHeight(50)
         self.group_combo.setPlaceholderText("Business Group")
         self.group_combo.currentIndexChanged.connect(self.on_group_changed)
+        self._setup_combo_popup(self.group_combo)
         group_layout.addWidget(self.group_combo)
         
         main_layout.addWidget(group_container)
@@ -164,6 +166,7 @@ class LoginWindowMultiCompany(QDialog):
         self.company_combo.setObjectName("loginCombo")
         self.company_combo.setMinimumHeight(50)
         self.company_combo.setPlaceholderText("Company")
+        self._setup_combo_popup(self.company_combo)
         company_layout.addWidget(self.company_combo)
         
         main_layout.addWidget(company_container)
@@ -211,6 +214,101 @@ class LoginWindowMultiCompany(QDialog):
         # Aplicar estilos
         self.apply_styles()
     
+    
+    def _setup_combo_popup(self, combo: QComboBox):
+        """Configura el popup del combobox con un diseño personalizado."""
+        from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton
+        from PySide6.QtCore import QPoint
+        
+        # Guardar el showPopup original
+        original_show_popup = combo.showPopup
+        
+        def custom_show_popup():
+            # Crear un frame personalizado para el popup
+            popup_frame = QFrame()
+            popup_frame.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+            popup_frame.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
+            popup_frame.setObjectName("customPopup")
+            
+            # Layout para los items
+            layout = QVBoxLayout(popup_frame)
+            layout.setContentsMargins(0, 0, 0, 0)
+            layout.setSpacing(0)
+            
+            # Container con borde redondeado
+            container = QFrame()
+            container.setObjectName("popupContainer")
+            container_layout = QVBoxLayout(container)
+            container_layout.setContentsMargins(8, 8, 8, 8)
+            container_layout.setSpacing(2)
+            
+            # Añadir items
+            for i in range(combo.count()):
+                item_btn = QPushButton(combo.itemText(i))
+                item_btn.setObjectName("popupItem")
+                item_btn.setCursor(Qt.CursorShape.PointingHandCursor)
+                item_btn.setMinimumHeight(40)
+                
+                # Marcar el item seleccionado
+                if i == combo.currentIndex():
+                    item_btn.setProperty("selected", True)
+                
+                # Conectar el click
+                item_btn.clicked.connect(lambda checked=False, idx=i: (combo.setCurrentIndex(idx), popup_frame.close()))
+                
+                container_layout.addWidget(item_btn)
+            
+            layout.addWidget(container)
+            
+            # Aplicar estilos
+            popup_frame.setStyleSheet("""
+                QFrame#customPopup {
+                    background: transparent;
+                }
+                QFrame#popupContainer {
+                    background-color: white;
+                    border: 2px solid #021323;
+                    border-radius: 10px;
+                }
+                QPushButton#popupItem {
+                    background: transparent;
+                    border: none;
+                    border-radius: 6px;
+                    color: #2c3e50;
+                    font-size: 14px;
+                    font-weight: 500;
+                    text-align: left;
+                    padding-left: 15px;
+                    margin: 2px 4px;
+                }
+                QPushButton#popupItem:hover {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                        stop:0 rgba(255, 140, 66, 0.15),
+                        stop:1 rgba(255, 140, 66, 0.1));
+                }
+                QPushButton#popupItem[selected="true"] {
+                    background: qlineargradient(x1:0, y1:0, x2:1, y2:0,
+                        stop:0 #ff8c42,
+                        stop:1 #ff7a28);
+                    color: white;
+                }
+            """)
+            
+            # Posicionar el popup
+            global_pos = combo.mapToGlobal(QPoint(0, combo.height()))
+            popup_frame.move(global_pos)
+            popup_frame.setMinimumWidth(combo.width())
+            
+            # Mostrar
+            popup_frame.show()
+        
+        # Reemplazar el método showPopup
+        combo.showPopup = custom_show_popup
+    
+    
+    
+    
+    
     def apply_styles(self):
         """Aplica los estilos CSS basados en la imagen de referencia."""
         self.setStyleSheet("""
@@ -236,29 +334,32 @@ class LoginWindowMultiCompany(QDialog):
                 border: none;
                 color: #2c3e50;
                 font-size: 14px;
+                font-weight: 500;
                 padding-left: 5px;
+                padding-right: 35px;
             }
             
             QComboBox#loginCombo::drop-down {
                 border: none;
-                width: 30px;
+                width: 35px;
                 background: transparent;
+                border-radius: 6px;
+                margin: 4px;
+            }
+            
+            QComboBox#loginCombo::drop-down:hover {
+                background: rgba(2, 19, 35, 0.05);
             }
             
             QComboBox#loginCombo::down-arrow {
-                image: none;
-                border-left: 5px solid transparent;
-                border-right: 5px solid transparent;
-                border-top: 6px solid #95a5a6;
-                margin-right: 10px;
+                image: url(resources/icons/chevron-down-dark.svg);
+                width: 14px;
+                height: 14px;
+                margin-right: 8px;
             }
             
-            QComboBox#loginCombo QAbstractItemView {
-                background: white;
-                color: #2c3e50;
-                border: 1px solid #dee2e6;
-                selection-background-color: #ff8c42;
-                selection-color: white;
+            QComboBox#loginCombo::down-arrow:hover {
+                /* El hover ya está manejado por el contenedor */
             }
             
             QLineEdit#loginInput {

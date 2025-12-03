@@ -45,6 +45,7 @@ class TarifasBaseView(QDialog):
                 pass
 
     def _setup_connections(self):
+        print("DEBUG: _setup_connections iniciando...")
         self.ui.btnAnadir.clicked.connect(self._on_add)
         self.ui.btnSiguente.clicked.connect(self._on_next)
         self.ui.btnAnterior.clicked.connect(self._on_prev)
@@ -56,27 +57,80 @@ class TarifasBaseView(QDialog):
         self.ui.pushButton.clicked.connect(self.close)
 
         # Table selection: double-click or selection to load
-        self.ui.tableWidget.cellDoubleClicked.connect(self._on_table_double_click)
+        # Connect all three available double-click signals to be robust
+        print(f"DEBUG: tableWidget type: {type(self.ui.tableWidget)}")
+        print(f"DEBUG: Conectando señales de doble click...")
+        try:
+            self.ui.tableWidget.cellDoubleClicked.connect(self._on_table_double_click)
+            print("✓ cellDoubleClicked conectado")
+        except Exception as e:
+            print(f"✗ Warning: No se pudo conectar cellDoubleClicked: {e}")
+        try:
+            # map QModelIndex -> (row, col)
+            self.ui.tableWidget.doubleClicked.connect(lambda idx: self._on_table_double_click(idx.row(), idx.column()))
+            print("✓ doubleClicked conectado")
+        except Exception as e:
+            print(f"✗ Warning: No se pudo conectar doubleClicked: {e}")
+        try:
+            # itemDoubleClicked provides the QTableWidgetItem directly
+            self.ui.tableWidget.itemDoubleClicked.connect(lambda item: self._on_table_double_click(item.row(), item.column()))
+            print("✓ itemDoubleClicked conectado")
+        except Exception as e:
+            print(f"✗ Warning: No se pudo conectar itemDoubleClicked: {e}")
 
         # Mark search fields as dirty when the user edits them explicitly
         if hasattr(self.ui, 'lineEdit'):
             try:
+                # mark dirty when user edits
                 self.ui.lineEdit.textEdited.connect(lambda *_: self._mark_search_dirty(True))
+                # real-time filtering: when the user changes the text (typing) or finishes editing,
+                # run the search so the list updates immediately.
+                def _lineedit_search(_=None):
+                    if getattr(self, '_suppress_search_dirty', False):
+                        return
+                    # mark as user-modified and search (but don't switch pages during typing)
+                    self._mark_search_dirty(True)
+                    self._on_search(switch_to_list=False)
+
+                self.ui.lineEdit.textChanged.connect(_lineedit_search)
+                try:
+                    # When user finishes editing, keep filtering only (don't switch pages)
+                    self.ui.lineEdit.editingFinished.connect(lambda: self._on_search(switch_to_list=False))
+                except Exception:
+                    pass
             except Exception:
                 pass
         if hasattr(self.ui, 'lineEdit_2'):
             try:
                 self.ui.lineEdit_2.textEdited.connect(lambda *_: self._mark_search_dirty(True))
+                def _lineedit2_search(_=None):
+                    if getattr(self, '_suppress_search_dirty', False):
+                        return
+                    self._mark_search_dirty(True)
+                    self._on_search(switch_to_list=False)
+                self.ui.lineEdit_2.textChanged.connect(_lineedit2_search)
+                try:
+                    self.ui.lineEdit_2.editingFinished.connect(lambda: self._on_search(switch_to_list=False))
+                except Exception:
+                    pass
             except Exception:
                 pass
         if hasattr(self.ui, 'plainTextEdit'):
             try:
                 self.ui.plainTextEdit.textChanged.connect(lambda *_: self._mark_search_dirty(True))
+                # PlainTextEdit emits textChanged frequently; use it to trigger live search as well
+                def _plaintext_search():
+                    if getattr(self, '_suppress_search_dirty', False):
+                        return
+                    self._mark_search_dirty(True)
+                    self._on_search(switch_to_list=False)
+                self.ui.plainTextEdit.textChanged.connect(_plaintext_search)
             except Exception:
                 pass
         if hasattr(self.ui, 'comboBox'):
             try:
                 self.ui.comboBox.currentTextChanged.connect(lambda *_: self._mark_search_dirty(True))
+                self.ui.comboBox.currentTextChanged.connect(lambda *_: self._on_search(switch_to_list=False))
             except Exception:
                 pass
 
@@ -108,6 +162,13 @@ class TarifasBaseView(QDialog):
         # column indexes: 0=ID(hidden), 1=Código, 2=Nombre
         header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
         header.setSectionResizeMode(2, QHeaderView.Stretch)
+        
+        # Ensure the table allows selection and editing
+        from PySide6.QtWidgets import QAbstractItemView
+        self.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
+        
+        print("DEBUG: _setup_table completed, signals should be connected")
 
     def _load_table(self, data: list | None = None):
         # Suppress dirty signals while we populate the table (programmatic update)
@@ -206,7 +267,13 @@ class TarifasBaseView(QDialog):
 
     # ==================== Handlers ====================
 
-    def _on_search(self):
+    def _on_search(self, switch_to_list=True):
+        """Filter table based on search fields.
+        
+        Args:
+            switch_to_list: If True, switch to list page after filtering.
+                           If False, only update the table data without changing pages.
+        """
         # Simple filter using provided fields
         try:
             all_items = self.controller.list_all()
@@ -232,23 +299,96 @@ class TarifasBaseView(QDialog):
                     return True
                 filtered = [i for i in all_items if match(i)]
             self._load_table(filtered)
-            self.ui.stackedWidget.setCurrentIndex(1)
+            # Only switch to list page if explicitly requested (e.g., "Buscar" button clicked)
+            # Don't switch during real-time filtering while editing
+            if switch_to_list:
+                self.ui.stackedWidget.setCurrentIndex(1)
         except Exception as e:
             QMessageBox.critical(self, self.tr("Error"), str(e))
 
     def _on_table_double_click(self, row, col):
+        print(f"DEBUG: _on_table_double_click called with row={row}, col={col}")
         try:
+            # Try to obtain the internal ID from hidden column 0
             id_item = self.ui.tableWidget.item(row, 0)
-            if not id_item:
-                return
-            tipo_id = int(id_item.text())
-            ok = self.controller.load_by_id(tipo_id)
-            if ok:
+            print(f"DEBUG: id_item = {id_item}")
+            tipo_id = None
+            if id_item and id_item.text():
+                try:
+                    tipo_id = int(id_item.text())
+                    print(f"DEBUG: tipo_id extraído = {tipo_id}")
+                except Exception as e:
+                    # If the hidden column wasn't numeric, leave tipo_id None
+                    print(f"DEBUG: Error extrayendo tipo_id: {e}")
+                    tipo_id = None
+            else:
+                print(f"DEBUG: id_item es None o vacío")
+
+            # Primary path: try to load by ID
+            loaded = False
+            if tipo_id is not None:
+                print(f"DEBUG: Intentando cargar por ID {tipo_id}...")
+                loaded = self.controller.load_by_id(tipo_id)
+                print(f"DEBUG: load_by_id result = {loaded}")
+            else:
+                print(f"DEBUG: tipo_id es None, saltando a fallback")
+
+            # Fallback: try to match the row by codigo or nombre within cached list
+            if not loaded:
+                print(f"DEBUG: Entrando en fallback...")
+                # Attempt to get codigo or nombre from visible columns
+                codigo_item = self.ui.tableWidget.item(row, 1)
+                nombre_item = self.ui.tableWidget.item(row, 2)
+                codigo_val = codigo_item.text().strip() if codigo_item and codigo_item.text() else ''
+                nombre_val = nombre_item.text().strip() if nombre_item and nombre_item.text() else ''
+
+                # Ensure we have a fresh list to search in (controller may have cached list)
+                try:
+                    candidates = self.controller.index_list or self.controller.list_all() or []
+                except Exception:
+                    candidates = []
+
+                found_id = None
+                for itm in candidates:
+                    # Match on codigo or nombre (case-insensitive, substring)
+                    try:
+                        if codigo_val and codigo_val.lower() in str(itm.get('codigo', '') or '').lower():
+                            found_id = itm.get('id')
+                            break
+                        if nombre_val and nombre_val.lower() in str(itm.get('nombre', '') or '').lower():
+                            found_id = itm.get('id')
+                            break
+                    except Exception:
+                        continue
+
+                if found_id is not None:
+                    print(f"DEBUG: Fallback encontró ID {found_id}, cargando...")
+                    loaded = self.controller.load_by_id(found_id)
+                    print(f"DEBUG: Fallback load_by_id result = {loaded}")
+                else:
+                    print(f"DEBUG: Fallback no encontró ningún ID")
+
+            print(f"DEBUG: loaded final = {loaded}")
+            if loaded:
+                # We have loaded the record successfully — populate the form and switch to edit
+                print(f"DEBUG: Registro cargado, llenando formulario...")
+                print(f"DEBUG: controller.current = {self.controller.current}")
                 self._fill_form(self.controller.current)
+                print(f"DEBUG: Bloqueando campos...")
                 self._lock_fields(True)
                 self.is_new = False
+                print(f"DEBUG: Cambiando a página 0...")
+                print(f"DEBUG: stackedWidget.currentIndex antes = {self.ui.stackedWidget.currentIndex()}")
                 self.ui.stackedWidget.setCurrentIndex(0)
+                print(f"DEBUG: stackedWidget.currentIndex después = {self.ui.stackedWidget.currentIndex()}")
+            else:
+                # Inform the user if we couldn't load the record — prevents silent failures
+                print(f"DEBUG: No se pudo cargar el registro, mostrando advertencia")
+                QMessageBox.warning(self, self.tr("No encontrado"), self.tr("No se pudo cargar el registro para edición"))
         except Exception as e:
+            print(f"DEBUG: EXCEPCIÓN en _on_table_double_click: {e}")
+            import traceback
+            traceback.print_exc()
             QMessageBox.critical(self, self.tr("Error"), str(e))
 
     def _on_add(self):
@@ -366,3 +506,78 @@ class TarifasBaseView(QDialog):
         if self.controller.prev():
             self._fill_form(self.controller.current)
             self.ui.stackedWidget.setCurrentIndex(0)
+
+    # ------------------ Public API for MainWindow side-panel ------------------
+    def list(self):
+        """Public method to switch to list view (used by main_window side-panel)."""
+        try:
+            self.ui.stackedWidget.setCurrentIndex(1)
+        except Exception:
+            pass
+
+    def nuevo(self):
+        """Public alias for creating a new record (panel action 'Nuevo')."""
+        self._on_add()
+        # Ensure the public flag remains set after internal handlers which may
+        # reset it (e.g. _mark_search_dirty). Keep the external contract: nuevo()
+        # sets is_new True.
+        try:
+            self.is_new = True
+        except Exception:
+            pass
+
+    def editar(self):
+        """Public alias for edit action (panel action 'Editar')."""
+        self._on_edit()
+
+    def borrar(self):
+        """Public alias for delete action (panel action 'Borrar')."""
+        self._on_delete()
+
+    def search(self, text: str):
+        """Search API intended to be invoked by side-panel search field.
+
+        The main window will pass a single free-text string — here we perform a
+        simple substring match across codigo, nombre, descripcion and moneda.
+        """
+        try:
+            q = (text or '').strip().lower()
+            all_items = self.controller.list_all()
+            if not q:
+                self._load_table(all_items)
+                return
+
+            def match(item: dict) -> bool:
+                for k in ('codigo', 'nombre', 'descripcion', 'moneda'):
+                    if q in str(item.get(k, '') or '').lower():
+                        return True
+                return False
+
+            filtered = [itm for itm in all_items if match(itm)]
+            self._load_table(filtered)
+            self.ui.stackedWidget.setCurrentIndex(1)
+        except Exception:
+            # Keep robust — panel should not break the module
+            pass
+
+    def filtrar(self, text: str):
+        """Spanish alias for search()."""
+        self.search(text)
+
+    def filter_records(self, text: str, order_by: str | None = None, order_mode: str | None = None):
+        """More advanced search signature used from main_window if available.
+
+        This implementation currently ignores order_by / order_mode and delegates
+        to the simple search() behaviour.
+        """
+        self.search(text)
+
+    def get_search_options(self) -> dict:
+        """Expose search options for the side-panel (labels and placeholders)."""
+        return {
+            'sort_fields': [
+                ("Código", "codigo"),
+                ("Nombre", "nombre"),
+            ],
+            'search_placeholder': self.tr("Buscar por código, nombre o descripción...")
+        }

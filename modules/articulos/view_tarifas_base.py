@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QSizePolicy
 
 from modules.articulos.ui_frmTarifasBase import Ui_Dialog
 from modules.articulos.tarifa_tipo_controller import TarifaTipoController
@@ -18,17 +19,18 @@ class TarifasBaseView(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
+        # When embedded inside MainWindow, ensure this view behaves as a widget
+        # and not as a floating dialog (which would resist layout stretching).
+        self.setWindowFlags(Qt.Widget)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+
         # Ensure DB points to artstudio3d for tarifa types
         self._ensure_tarifas_database()
 
         self.controller = TarifaTipoController()
         self.is_new = False
         # Track whether the user has edited search/form fields since last navigation/load
-        # This allows 'Buscar' to show all records by default unless the user explicitly
-        # modified the search fields.
         self._search_dirty = False
-        # Internal flag to suppress marking search fields dirty while programmatic
-        # updates are performed (e.g. when navigating records).
         self._suppress_search_dirty = False
 
         self._setup_connections()

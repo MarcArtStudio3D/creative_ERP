@@ -22,15 +22,15 @@ class ArticuloController:
             new_id = self.repository.create()
             if not new_id:
                 return False
-            
+
             # Create tarifas for the new article
             self.repository.create_tarifas_for_article(new_id)
-            
+
             # Load the new article
             self.current_article = self.repository.get_by_id(new_id)
             self.is_new = True
             self.codigo_anterior = self.current_article.get("codigo")
-            
+
             return True
         except Exception as e:
             print(f"Error creating article: {e}")

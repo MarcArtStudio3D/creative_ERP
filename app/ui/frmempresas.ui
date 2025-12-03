@@ -1836,29 +1836,12 @@ color: rgb(255, 255, 255);</string>
               <property name="geometry">
                <rect>
                 <x>100</x>
-                <y>50</y>
-                <width>367</width>
-                <height>188</height>
+                <y>40</y>
+                <width>373</width>
+                <height>201</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_19">
-               <item row="0" column="3">
-                <widget class="QLabel" name="label_84">
-                 <property name="text">
-                  <string>Puerto:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="4" column="0" colspan="5">
-                <widget class="QPushButton" name="btnTestBDMariaDB">
-                 <property name="text">
-                  <string>Test Database conexion</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="2" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtUsuarioMariaDB"/>
-               </item>
                <item row="1" column="0" colspan="2">
                 <widget class="QLabel" name="label_82">
                  <property name="text">
@@ -1866,15 +1849,8 @@ color: rgb(255, 255, 255);</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="0">
-                <widget class="QLabel" name="label_86">
-                 <property name="text">
-                  <string>Host:</string>
-                 </property>
-                </widget>
-               </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="txtHostMariaDB"/>
+               <item row="2" column="3" colspan="2">
+                <widget class="QLineEdit" name="txtUsuarioMariaDB"/>
                </item>
                <item row="0" column="4">
                 <widget class="QLineEdit" name="txtPortMariadb"/>
@@ -1892,10 +1868,41 @@ color: rgb(255, 255, 255);</string>
                <item row="1" column="3" colspan="2">
                 <widget class="QLineEdit" name="txtNombreBD_MariaDB"/>
                </item>
+               <item row="0" column="0">
+                <widget class="QLabel" name="label_86">
+                 <property name="text">
+                  <string>Host:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="txtHostMariaDB"/>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLabel" name="label_84">
+                 <property name="text">
+                  <string>Puerto:</string>
+                 </property>
+                </widget>
+               </item>
                <item row="3" column="0" colspan="2">
                 <widget class="QLabel" name="label_83">
                  <property name="text">
                   <string>Password:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="3" colspan="2">
+                <widget class="QPushButton" name="btnTestBDMariaDB">
+                 <property name="text">
+                  <string>Test Database conexion</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="5" column="0" colspan="2">
+                <widget class="QPushButton" name="btnCrearDBMariaDb">
+                 <property name="text">
+                  <string>Crear DB</string>
                  </property>
                 </widget>
                </item>
@@ -2024,26 +2031,27 @@ color: rgb(255, 255, 255);</string>
              <widget class="QWidget" name="gridLayoutWidget">
               <property name="geometry">
                <rect>
-                <x>90</x>
-                <y>50</y>
+                <x>80</x>
+                <y>40</y>
                 <width>471</width>
-                <height>188</height>
+                <height>201</height>
                </rect>
               </property>
               <layout class="QGridLayout" name="gridLayout_18">
-               <item row="2" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtUsuarioPostgreSQL"/>
-               </item>
-               <item row="1" column="3" colspan="2">
-                <widget class="QLineEdit" name="txtNombreBD_PostgreSQL"/>
-               </item>
-               <item row="0" column="4">
-                <widget class="QLineEdit" name="lineEdit"/>
+               <item row="0" column="1">
+                <widget class="QLineEdit" name="txtHostPostgreSQL"/>
                </item>
                <item row="1" column="0" colspan="2">
                 <widget class="QLabel" name="label_79">
                  <property name="text">
                   <string>Nombre Base de Datos:</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="0" column="3">
+                <widget class="QLabel" name="label_78">
+                 <property name="text">
+                  <string>Puerto:</string>
                  </property>
                 </widget>
                </item>
@@ -2054,18 +2062,11 @@ color: rgb(255, 255, 255);</string>
                  </property>
                 </widget>
                </item>
-               <item row="0" column="1">
-                <widget class="QLineEdit" name="txtHostPostgreSQL"/>
-               </item>
                <item row="3" column="3" colspan="2">
                 <widget class="QLineEdit" name="txtPasswordPostgreSQL"/>
                </item>
-               <item row="0" column="3">
-                <widget class="QLabel" name="label_78">
-                 <property name="text">
-                  <string>Puerto:</string>
-                 </property>
-                </widget>
+               <item row="0" column="4">
+                <widget class="QLineEdit" name="lineEdit"/>
                </item>
                <item row="0" column="0">
                 <widget class="QLabel" name="label_56">
@@ -2074,6 +2075,9 @@ color: rgb(255, 255, 255);</string>
                  </property>
                 </widget>
                </item>
+               <item row="1" column="3" colspan="2">
+                <widget class="QLineEdit" name="txtNombreBD_PostgreSQL"/>
+               </item>
                <item row="2" column="0" colspan="2">
                 <widget class="QLabel" name="label_80">
                  <property name="text">
@@ -2081,7 +2085,17 @@ color: rgb(255, 255, 255);</string>
                  </property>
                 </widget>
                </item>
-               <item row="4" column="0" colspan="5">
+               <item row="2" column="3" colspan="2">
+                <widget class="QLineEdit" name="txtUsuarioPostgreSQL"/>
+               </item>
+               <item row="4" column="0" colspan="2">
+                <widget class="QPushButton" name="btnCrearDBPostgreSQL">
+                 <property name="text">
+                  <string>Crear BD</string>
+                 </property>
+                </widget>
+               </item>
+               <item row="4" column="3" colspan="2">
                 <widget class="QPushButton" name="btnTestDBPostgreSQL">
                  <property name="text">
                   <string>Test Database conexion</string>
@@ -2233,13 +2247,11 @@ color: rgb(255, 255, 255);</string>
   <tabstop>txtNombreBD_MariaDB</tabstop>
   <tabstop>txtUsuarioMariaDB</tabstop>
   <tabstop>txtPasswordMariaDB</tabstop>
-  <tabstop>btnTestBDMariaDB</tabstop>
   <tabstop>txtHostPostgreSQL</tabstop>
   <tabstop>lineEdit</tabstop>
   <tabstop>txtNombreBD_PostgreSQL</tabstop>
   <tabstop>txtUsuarioPostgreSQL</tabstop>
   <tabstop>txtPasswordPostgreSQL</tabstop>
-  <tabstop>btnTestDBPostgreSQL</tabstop>
   <tabstop>btn_guardar_nuevo</tabstop>
   <tabstop>pushButton</tabstop>
   <tabstop>btn_salir</tabstop>

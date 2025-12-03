@@ -80,6 +80,16 @@
       "READ",
       "UPDATE"
     ],
+    "tarifas_maestras": [
+      "ADMIN",
+      "CREATE",
+      "DELETE",
+      "EXPORT",
+      "IMPORT",
+      "PRINT",
+      "READ",
+      "UPDATE"
+    ],
     "almacen": [
       "ADMIN",
       "CREATE",
@@ -239,6 +249,9 @@
       "READ",
       "UPDATE"
     ],
+    "tarifas_maestras": [
+      "READ"
+    ],
     "almacen": [
       "CREATE",
       "DELETE",
@@ -263,11 +276,23 @@
     "divisiones_almacen": [
       "READ",
       "UPDATE"
+    ],
+    "tarifas_maestras": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
     ]
   },
   "accountant": {
     "divisiones_almacen": [
       "CREATE",
+      "READ",
+      "UPDATE"
+    ],
+    "tarifas_maestras": [
+      "CREATE",
+      "DELETE",
       "READ",
       "UPDATE"
     ]

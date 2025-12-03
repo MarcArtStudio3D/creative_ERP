@@ -72,10 +72,10 @@ class CreativeERPApp:
         except Exception as e:
             print(f"⚠️ Error setting application icon: {e}")
 
-        # Inicializar base de datos
-        print("Inicializando base de datos...")
-        init_db()
-        print("✓ Base de datos lista")
+        # Nota: crear tablas en la base de datos es una acción explícita y
+        # potencialmente destructiva. No la ejecutamos automáticamente al
+        # iniciar la aplicación; la creación/migración de esquemas debe ser
+        # una acción manual (admin) o parte de un flujo controlado.
         
         # Inicializar CompanyManager
         from core.company_manager import company_manager

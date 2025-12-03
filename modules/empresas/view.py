@@ -58,6 +58,12 @@ class EmpresasView(QWidget):
             self.ui.btnTestBDMariaDB.clicked.connect(self.test_mariadb_connection)
         if hasattr(self.ui, 'btnTestDBPostgreSQL'):
             self.ui.btnTestDBPostgreSQL.clicked.connect(self.test_postgresql_connection)
+
+        # Conectar botones de creación de base de datos (solo disponibles en la UI admin)
+        if hasattr(self.ui, 'btnCrearDBMariaDb'):
+            self.ui.btnCrearDBMariaDb.clicked.connect(lambda: self._on_create_db('mariadb'))
+        if hasattr(self.ui, 'btnCrearDBPostgreSQL'):
+            self.ui.btnCrearDBPostgreSQL.clicked.connect(lambda: self._on_create_db('postgresql'))
         
     def cargar_paises(self):
         """Carga los países usando el controlador."""
@@ -124,6 +130,51 @@ class EmpresasView(QWidget):
                     
             except Exception as e:
                 QMessageBox.warning(self, "Error", f"Error al procesar doble click: {e}")
+
+    def _on_create_db(self, engine_type: str):
+        """Handler for Create DB buttons (mariadb/postgresql).
+
+        Requires user confirmation by typing CONFIRM_CREATE_DB and will try to
+        create the database and initialize schema for the selected company.
+        """
+        # Determine target company: prefer loaded company in the form, else selected row
+        company_id = None
+        if self.controller.empresa_actual and getattr(self.controller.empresa_actual, 'id', None):
+            company_id = self.controller.empresa_actual.id
+        else:
+            company_id = self._get_selected_id()
+
+        if not company_id:
+            QMessageBox.warning(self, self.tr("Selecciona"), self.tr("Selecciona una empresa primero"))
+            return
+
+        # Ask for confirmation (text)
+        from PySide6.QtWidgets import QInputDialog
+        text, ok = QInputDialog.getText(self, self.tr("Confirmar creación"), self.tr("Escribe CONFIRM_CREATE_DB para confirmar la creación de la base de datos:"))
+        if not ok or (text or '').strip() != 'CONFIRM_CREATE_DB':
+            QMessageBox.information(self, self.tr("Cancelado"), self.tr("Acción cancelada por el usuario"))
+            return
+
+        # Determine initiator name (current session if available)
+        initiator = None
+        try:
+            sess = getattr(self, 'session', None)
+            if sess and getattr(sess, 'user', None):
+                initiator = getattr(sess.user, 'username', None)
+        except Exception:
+            initiator = None
+
+        # Call controller to create and initialize the DB
+        try:
+            ok = self.controller.crear_y_inicializar_db(company_id, engine_type, initiator=initiator)
+            if ok:
+                QMessageBox.information(self, self.tr("Hecho"), self.tr("Base de datos creada e inicializada (si fue posible). Revisa logs para detalles."))
+                # refresh list to reflect any changes
+                self.controller.cargar_empresas()
+            else:
+                QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo crear o inicializar la base de datos. Revisa logs para más detalles."))
+        except Exception as e:
+            QMessageBox.critical(self, self.tr("Error"), str(e))
 
     def _get_selected_id(self) -> Optional[int]:
         sel = self.ui.tableView.selectionModel()

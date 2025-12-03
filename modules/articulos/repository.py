@@ -396,6 +396,94 @@ class ArticuloRepository:
         finally:
             if not self._external_session:
                 session.close()
+
+    # ==================== Tarifas tipo (lookup) ====================
+
+    def get_tarifa_tipos(self) -> list:
+        """Obtener todos los tipos de tarifa (tabla tarifas_tipo)"""
+        session = self._session()
+        try:
+            # Table tarifas_tipo does not include an 'activo' column in this schema.
+            result = session.execute(text("SELECT id, codigo, nombre, descripcion FROM tarifas_tipo ORDER BY nombre"))
+            return [dict(row._mapping) for row in result.fetchall()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_tarifa_tipo(self, tipo_id: int) -> dict | None:
+        session = self._session()
+        try:
+            result = session.execute(text("SELECT id, codigo, nombre, descripcion FROM tarifas_tipo WHERE id = :id LIMIT 1"), {"id": tipo_id})
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def create_tarifa_tipo(self, payload: dict) -> int:
+        """Crear un nuevo tipo de tarifa. payload: {'codigo', 'nombre', 'descripcion', 'activo'}"""
+        session = self._session()
+        try:
+            result = session.execute(
+                text("INSERT INTO tarifas_tipo (codigo, nombre, descripcion) VALUES (:codigo, :nombre, :descripcion)"),
+                {
+                    "codigo": payload.get("codigo"),
+                    "nombre": payload.get("nombre"),
+                    "descripcion": payload.get("descripcion"),
+                }
+            )
+            if not self._external_session:
+                session.commit()
+            return result.lastrowid
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def update_tarifa_tipo(self, tipo_id: int, data: dict) -> bool:
+        session = self._session()
+        try:
+            if not data:
+                return True
+            set_clauses = []
+            params = {"id": tipo_id}
+            for key, val in data.items():
+                # Avoid trying to update nonexistent 'activo' column
+                if key == 'activo':
+                    continue
+                set_clauses.append(f"{key} = :{key}")
+                params[key] = val
+
+            sql = f"UPDATE tarifas_tipo SET {', '.join(set_clauses)} WHERE id = :id"
+            session.execute(text(sql), params)
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_tarifa_tipo(self, tipo_id: int) -> bool:
+        session = self._session()
+        try:
+            session.execute(text("DELETE FROM tarifas_tipo WHERE id = :id"), {"id": tipo_id})
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
     
     def get_proveedor(self, proveedor_id: int) -> Optional[Tuple[str, str]]:
         """Obtener código y nombre del proveedor por ID. Devuelve (codigo, proveedor)"""

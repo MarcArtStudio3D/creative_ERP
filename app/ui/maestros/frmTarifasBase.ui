@@ -226,6 +226,9 @@
        <height>491</height>
       </rect>
      </property>
+     <attribute name="verticalHeaderVisible">
+      <bool>false</bool>
+     </attribute>
     </widget>
    </widget>
   </widget>

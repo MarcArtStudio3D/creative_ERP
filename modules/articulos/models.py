@@ -154,6 +154,24 @@ class Tarifa(Base):
         return f"<Tarifa(id={self.id}, id_articulo={self.id_articulo}, pvp={self.pvp})>"
 
 
+class TarifaTipo(Base):
+    """Tipos de tarifa / códigos de tarifa (lookup)"""
+    __tablename__ = 'tarifas_tipo'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    codigo: Mapped[Optional[str]] = mapped_column(String(50), unique=True, nullable=True)
+    nombre: Mapped[str] = mapped_column(String(100), nullable=False)
+    descripcion: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    __table_args__ = (
+        {'sqlite_autoincrement': True},
+    )
+
+    def __repr__(self):
+        return f"<TarifaTipo(id={self.id}, codigo='{self.codigo}', nombre='{self.nombre}')>"
+
+
 class ProveedorFrecuente(Base):
     """Proveedores frecuentes de un artículo"""
     __tablename__ = 'proveedores_frecuentes'

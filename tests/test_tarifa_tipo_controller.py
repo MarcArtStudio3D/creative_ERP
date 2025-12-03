@@ -1,4 +1,4 @@
-from modules.articulos.controller import TarifaTipoController
+from modules.articulos.tarifa_tipo_controller import TarifaTipoController
 
 
 def test_tarifa_tipo_controller_methods_exist():

@@ -2,7 +2,7 @@ from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem
 from PySide6.QtCore import Qt
 
 from modules.articulos.ui_frmTarifasBase import Ui_Dialog
-from modules.articulos.controller import TarifaTipoController
+from modules.articulos.tarifa_tipo_controller import TarifaTipoController
 from core.db import get_current_database, set_current_database
 
 

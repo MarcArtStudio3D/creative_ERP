@@ -31,3 +31,9 @@ def test_tarifas_form_and_table_expandable():
     tpol = v.ui.tableWidget.sizePolicy()
     assert tpol.horizontalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
     assert tpol.verticalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+
+    # stackedWidget should have been added to a layout with expanding policy
+    assert hasattr(v.ui, 'stackedWidget')
+    sp = v.ui.stackedWidget.sizePolicy()
+    assert sp.horizontalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+    assert sp.verticalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)

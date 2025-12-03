@@ -19,6 +19,27 @@ class TarifasBaseView(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
+            # When embedded inside MainWindow, ensure this view behaves as a widget
+            # and not as a floating dialog (which would resist layout stretching).
+            try:
+                # Remove dialog window flags so it's treated as a child widget
+                self.setWindowFlags(Qt.Widget)
+            except Exception:
+                pass
+
+            # Ensure stackedWidget is managed by a layout so it will expand to fill
+            try:
+                layout = QVBoxLayout(self)
+                layout.setContentsMargins(0, 0, 0, 0)
+                layout.setSpacing(0)
+                # stackedWidget is created by the UI and is a child of this widget
+                if hasattr(self.ui, 'stackedWidget'):
+                    sw = self.ui.stackedWidget
+                    sw.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+                    layout.addWidget(sw)
+            except Exception:
+                pass
+
         # Make the dialog and key child widgets expand so they fill available space
         try:
             self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)

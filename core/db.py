@@ -190,20 +190,20 @@ def init_db(db_name=None):
         
         if get_current_database() == 'artstudio3d':
             try:
-                _ensure_columns(clientes_models.Base, dialect)
+                _ensure_columns(clientes_models.Base, dialect, engine=current_engine)
             except Exception:
                 pass
             try:
-                _ensure_columns(tipo_cliente_models.Base, dialect)
+                _ensure_columns(tipo_cliente_models.Base, dialect, engine=current_engine)
             except Exception:
                 pass
         else:
             try:
-                _ensure_columns(clientes_models.Base, dialect)
+                _ensure_columns(clientes_models.Base, dialect, engine=current_engine)
             except Exception:
                 pass
             try:
-                _ensure_columns(facturas_models.Base, dialect)
+                _ensure_columns(facturas_models.Base, dialect, engine=current_engine)
             except Exception:
                 pass
 
@@ -245,8 +245,16 @@ def _get_sql_type(sa_type, dialect):
     return 'TEXT'
 
 
-def _ensure_columns(base, dialect):
-    """Asegura que las columnas del modelo existan en la base de datos."""
+def _ensure_columns(base, dialect, engine=None):
+    """Asegura que las columnas del modelo existan en la base de datos.
+
+    Use the `engine` passed in; default to get_engine(). Using a specific engine
+    avoids accidentally operating on the global `engine` variable bound at import
+    time and prevents unintended writes to the wrong DB.
+    """
+    if engine is None:
+        engine = get_engine()
+
     inspector = inspect(engine)
     for table_name, table_obj in base.metadata.tables.items():
         if not inspector.has_table(table_name):

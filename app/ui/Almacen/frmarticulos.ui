@@ -2108,7 +2108,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item row="0" column="0">
-               <widget class="QPushButton" name="btnAnadir_oferta">
+               <widget class="QPushButton" name="btnAnadirOferta">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
@@ -2162,7 +2162,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QPushButton" name="btnDeshacer_oferta">
+               <widget class="QPushButton" name="btnDeshacerOferta">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
@@ -3174,7 +3174,7 @@ background-color: rgb(239, 239, 239);</string>
                   <second>0</second>
                   <year>1900</year>
                   <month>9</month>
-                  <day>7</day>
+                  <day>6</day>
                  </datetime>
                 </property>
                 <property name="displayFormat">
@@ -4962,10 +4962,10 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>chkMostrar_en_cuadro</tabstop>
   <tabstop>txtOferta_Fecha_ini</tabstop>
   <tabstop>txtOferta_Fecha_fin</tabstop>
-  <tabstop>btnAnadir_oferta</tabstop>
+  <tabstop>btnAnadirOferta</tabstop>
   <tabstop>btnguardar_oferta</tabstop>
   <tabstop>btnEditarOferta</tabstop>
-  <tabstop>btnDeshacer_oferta</tabstop>
+  <tabstop>btnDeshacerOferta</tabstop>
   <tabstop>txtOferta_Descripcion_promocion</tabstop>
   <tabstop>chkOferta_32</tabstop>
   <tabstop>chkOferta_web</tabstop>

@@ -309,11 +309,45 @@ class ArticulosView(QWidget):
             spin_box.setReadOnly(locked)
         
         # Button states
+        # Restore default: main Add/Edit buttons follow locked state (enabled when not editing)
+        promo_tab_active = False
+        try:
+            if hasattr(self.ui, 'Pestanas') and self.ui.Pestanas.currentWidget() is not None:
+                promo_tab_active = (self.ui.Pestanas.currentWidget().objectName() == 'tab_promociones')
+        except Exception:
+            promo_tab_active = False
+
         self.ui.botAnadir.setEnabled(locked)
         self.ui.botAnterior.setEnabled(locked)
         self.ui.botBorrar.setEnabled(locked)
         self.ui.botDeshacer.setEnabled(not locked)
         self.ui.botEditar.setEnabled(locked)
+
+        # Promotions-specific buttons: enabled only when editing and on the promotions tab
+        try:
+            editing = (not locked)
+            # Enable/disable entire promotions frame so children follow suit
+            if hasattr(self.ui, 'framePromocion'):
+                try:
+                    self.ui.framePromocion.setEnabled(editing and promo_tab_active)
+                except Exception:
+                    pass
+            # Explicitly set children states as some UI generators set widgets disabled
+            if hasattr(self.ui, 'btnAnadirOferta'):
+                try:
+                    self.ui.btnAnadirOferta.setEnabled(editing and promo_tab_active)
+                except Exception:
+                    pass
+            if hasattr(self.ui, 'btnEditarOferta'):
+                try:
+                    self.ui.btnEditarOferta.setEnabled(editing and promo_tab_active)
+                except Exception:
+                    pass
+            # Some older UI variants may use btnEditartarifa — keep compatibility
+            if hasattr(self.ui, 'btnEditartarifa'):
+                self.ui.btnEditartarifa.setEnabled(editing and promo_tab_active)
+        except Exception:
+            pass
         self.ui.botGuardar.setEnabled(not locked)
         self.ui.botSiguiente.setEnabled(locked)
         self.ui.btnBuscar.setEnabled(locked)

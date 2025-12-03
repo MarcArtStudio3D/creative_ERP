@@ -162,7 +162,6 @@ class TarifaTipo(Base):
     codigo: Mapped[Optional[str]] = mapped_column(String(50), unique=True, nullable=True)
     nombre: Mapped[str] = mapped_column(String(100), nullable=False)
     descripcion: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    activo: Mapped[bool] = mapped_column(Boolean, default=True)
 
     __table_args__ = (
         {'sqlite_autoincrement': True},

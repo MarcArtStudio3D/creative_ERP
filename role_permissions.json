@@ -250,10 +250,7 @@
       "UPDATE"
     ],
     "tarifas_maestras": [
-      "CREATE",
-      "DELETE",
-      "READ",
-      "UPDATE"
+      "READ"
     ],
     "almacen": [
       "CREATE",
@@ -279,11 +276,23 @@
     "divisiones_almacen": [
       "READ",
       "UPDATE"
+    ],
+    "tarifas_maestras": [
+      "CREATE",
+      "DELETE",
+      "READ",
+      "UPDATE"
     ]
   },
   "accountant": {
     "divisiones_almacen": [
       "CREATE",
+      "READ",
+      "UPDATE"
+    ],
+    "tarifas_maestras": [
+      "CREATE",
+      "DELETE",
       "READ",
       "UPDATE"
     ]

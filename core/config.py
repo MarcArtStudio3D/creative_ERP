@@ -306,7 +306,7 @@ def get_database_url_for_company(company_id: int) -> str:
             set_current_database(original_db)
         session.close()
 
-def set_database_for_company(company_id: int):
+def set_database_for_company(company_id: int, init: bool = False):
     """
     Configura la base de datos actual según la empresa seleccionada.
     Esta función actualiza el sistema de base de datos para usar la BD de la empresa.
@@ -322,9 +322,11 @@ def set_database_for_company(company_id: int):
     from core.db import set_current_database
     set_current_database(f'company_{company_id}')
 
-    # Asegurar que las tablas existan en la base de datos de la empresa
-    from core.db import init_db
-    init_db()
+    # No creamos automáticamente tablas por defecto — la creación de esquema
+    # debe ser una acción explícita y deliberada (p. ej. flujo admin con confirmación).
+    if init:
+        from core.db import init_db
+        init_db()
 
     print(f"Database switched for company {company_id}: {url}")
 

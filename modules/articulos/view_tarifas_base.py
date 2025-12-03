@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem
+from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import Qt
 
 from modules.articulos.ui_frmTarifasBase import Ui_Dialog
@@ -23,6 +23,13 @@ class TarifasBaseView(QDialog):
 
         self.controller = TarifaTipoController()
         self.is_new = False
+        # Track whether the user has edited search/form fields since last navigation/load
+        # This allows 'Buscar' to show all records by default unless the user explicitly
+        # modified the search fields.
+        self._search_dirty = False
+        # Internal flag to suppress marking search fields dirty while programmatic
+        # updates are performed (e.g. when navigating records).
+        self._suppress_search_dirty = False
 
         self._setup_connections()
         self._setup_initial_state()
@@ -49,6 +56,28 @@ class TarifasBaseView(QDialog):
         # Table selection: double-click or selection to load
         self.ui.tableWidget.cellDoubleClicked.connect(self._on_table_double_click)
 
+        # Mark search fields as dirty when the user edits them explicitly
+        if hasattr(self.ui, 'lineEdit'):
+            try:
+                self.ui.lineEdit.textEdited.connect(lambda *_: self._mark_search_dirty(True))
+            except Exception:
+                pass
+        if hasattr(self.ui, 'lineEdit_2'):
+            try:
+                self.ui.lineEdit_2.textEdited.connect(lambda *_: self._mark_search_dirty(True))
+            except Exception:
+                pass
+        if hasattr(self.ui, 'plainTextEdit'):
+            try:
+                self.ui.plainTextEdit.textChanged.connect(lambda *_: self._mark_search_dirty(True))
+            except Exception:
+                pass
+        if hasattr(self.ui, 'comboBox'):
+            try:
+                self.ui.comboBox.currentTextChanged.connect(lambda *_: self._mark_search_dirty(True))
+            except Exception:
+                pass
+
     def _setup_initial_state(self):
         # show list initially
         try:
@@ -64,24 +93,39 @@ class TarifasBaseView(QDialog):
         self._lock_fields(True)
 
     def _setup_table(self):
-        headers = ["ID", "Código", "Nombre", "Moneda", "Descripción"]
+        # Show two visible columns: Código and Nombre. Keep an ID column hidden so we can
+        # identify records when users select rows (used by edit/delete handlers).
+        headers = ["ID", "Código", "Nombre"]
         self.ui.tableWidget.setColumnCount(len(headers))
         self.ui.tableWidget.setHorizontalHeaderLabels(headers)
-        self.ui.tableWidget.setColumnHidden(0, True)  # hide id
+        # Hide the internal ID column (index 0) -- UI shows only Código and Nombre
+        self.ui.tableWidget.setColumnHidden(0, True)
+
+        # Make 'Código' column fit its contents and let 'Nombre' take remaining width
+        header = self.ui.tableWidget.horizontalHeader()
+        # column indexes: 0=ID(hidden), 1=Código, 2=Nombre
+        header.setSectionResizeMode(1, QHeaderView.ResizeToContents)
+        header.setSectionResizeMode(2, QHeaderView.Stretch)
 
     def _load_table(self, data: list | None = None):
-        if data is None:
-            data = self.controller.list_all()
+        # Suppress dirty signals while we populate the table (programmatic update)
+        self._suppress_search_dirty = True
+        try:
+            if data is None:
+                data = self.controller.list_all()
 
-        self.ui.tableWidget.setRowCount(0)
-        for row in data:
-            r = self.ui.tableWidget.rowCount()
-            self.ui.tableWidget.insertRow(r)
-            self.ui.tableWidget.setItem(r, 0, QTableWidgetItem(str(row.get('id', ''))))
-            self.ui.tableWidget.setItem(r, 1, QTableWidgetItem(row.get('codigo') or ''))
-            self.ui.tableWidget.setItem(r, 2, QTableWidgetItem(row.get('nombre') or ''))
-            self.ui.tableWidget.setItem(r, 3, QTableWidgetItem(str(row.get('moneda') or '')))
-            self.ui.tableWidget.setItem(r, 4, QTableWidgetItem(row.get('descripcion') or ''))
+            self.ui.tableWidget.setRowCount(0)
+            for row in data:
+                r = self.ui.tableWidget.rowCount()
+                self.ui.tableWidget.insertRow(r)
+                # Column 0 is internal ID (hidden), 1 -> Código, 2 -> Nombre
+                self.ui.tableWidget.setItem(r, 0, QTableWidgetItem(str(row.get('id', ''))))
+                self.ui.tableWidget.setItem(r, 1, QTableWidgetItem(row.get('codigo') or ''))
+                self.ui.tableWidget.setItem(r, 2, QTableWidgetItem(row.get('nombre') or ''))
+        finally:
+            # After loading a full list, the search fields are considered clean (not dirty)
+            self._suppress_search_dirty = False
+            self._mark_search_dirty(False)
 
     def _lock_fields(self, locked: bool):
         # Map fields prepared in UI
@@ -111,7 +155,6 @@ class TarifasBaseView(QDialog):
             'nombre': self.ui.lineEdit_2.text().strip() if hasattr(self.ui, 'lineEdit_2') else None,
             'moneda': self.ui.comboBox.currentText() if hasattr(self.ui, 'comboBox') else None,
             'descripcion': self.ui.plainTextEdit.toPlainText().strip() if hasattr(self.ui, 'plainTextEdit') else None,
-            'activo': True
         }
         return payload
 
@@ -126,25 +169,38 @@ class TarifasBaseView(QDialog):
                 self.ui.comboBox.setCurrentIndex(-1)
             if hasattr(self.ui, 'plainTextEdit'):
                 self.ui.plainTextEdit.clear()
+            # If we clear the form, treat as user editing (dirty)
+            self._mark_search_dirty(True)
             return
 
-        if hasattr(self.ui, 'lineEdit'):
-            self.ui.lineEdit.setText(str(data.get('codigo', '') or ''))
-        if hasattr(self.ui, 'lineEdit_2'):
-            self.ui.lineEdit_2.setText(str(data.get('nombre', '') or ''))
-        if hasattr(self.ui, 'comboBox'):
-            # try to match text
-            value = str(data.get('moneda', '') or '')
-            idx = self.ui.comboBox.findText(value)
-            if idx >= 0:
-                self.ui.comboBox.setCurrentIndex(idx)
-            else:
-                # append if not present
-                if value:
-                    self.ui.comboBox.addItem(value)
-                    self.ui.comboBox.setCurrentText(value)
-        if hasattr(self.ui, 'plainTextEdit'):
-            self.ui.plainTextEdit.setPlainText(str(data.get('descripcion', '') or ''))
+        # When loading a record from controller (navigation) we want to suppress
+        # any signal that would mark the search as dirty (user edits). Set suppression
+        # while we programmatically populate fields.
+        self._suppress_search_dirty = True
+        try:
+            if hasattr(self.ui, 'lineEdit'):
+                self.ui.lineEdit.setText(str(data.get('codigo', '') or ''))
+            if hasattr(self.ui, 'lineEdit_2'):
+                self.ui.lineEdit_2.setText(str(data.get('nombre', '') or ''))
+            if hasattr(self.ui, 'comboBox'):
+                # try to match text
+                value = str(data.get('moneda', '') or '')
+                idx = self.ui.comboBox.findText(value)
+                if idx >= 0:
+                    self.ui.comboBox.setCurrentIndex(idx)
+                else:
+                    # append if not present
+                    if value:
+                        self.ui.comboBox.addItem(value)
+                        self.ui.comboBox.setCurrentText(value)
+
+            if hasattr(self.ui, 'plainTextEdit'):
+                self.ui.plainTextEdit.setPlainText(str(data.get('descripcion', '') or ''))
+
+            # Loading a record should not mark the search as dirty so Buscar shows all rows.
+            self._mark_search_dirty(False)
+        finally:
+            self._suppress_search_dirty = False
 
     # ==================== Handlers ====================
 
@@ -157,18 +213,22 @@ class TarifasBaseView(QDialog):
             moneda_q = self.ui.comboBox.currentText().strip() if hasattr(self.ui, 'comboBox') else ''
             desc_q = self.ui.plainTextEdit.toPlainText().strip() if hasattr(self.ui, 'plainTextEdit') else ''
 
-            def match(item):
-                if code_q and code_q.lower() not in str(item.get('codigo', '')).lower():
-                    return False
-                if name_q and name_q.lower() not in str(item.get('nombre', '')).lower():
-                    return False
-                if moneda_q and moneda_q.lower() not in str(item.get('moneda', '')).lower():
-                    return False
-                if desc_q and desc_q.lower() not in str(item.get('descripcion', '')).lower():
-                    return False
-                return True
-
-            filtered = [i for i in all_items if match(i)]
+            # If the user hasn't explicitly edited the search fields (not dirty),
+            # show all records by default instead of filtering by current form values.
+            if not getattr(self, '_search_dirty', False):
+                filtered = all_items
+            else:
+                def match(item):
+                    if code_q and code_q.lower() not in str(item.get('codigo', '')).lower():
+                        return False
+                    if name_q and name_q.lower() not in str(item.get('nombre', '')).lower():
+                        return False
+                    if moneda_q and moneda_q.lower() not in str(item.get('moneda', '')).lower():
+                        return False
+                    if desc_q and desc_q.lower() not in str(item.get('descripcion', '')).lower():
+                        return False
+                    return True
+                filtered = [i for i in all_items if match(i)]
             self._load_table(filtered)
             self.ui.stackedWidget.setCurrentIndex(1)
         except Exception as e:
@@ -251,6 +311,21 @@ class TarifasBaseView(QDialog):
         else:
             self._fill_form(self.controller.current)
         self._lock_fields(True)
+
+    def _mark_search_dirty(self, value: bool):
+        """Set internal dirty flag which signals the user has modified search fields.
+
+        When False: Buscar will show all records by default.
+        When True: Buscar will apply the current field values as filters.
+        """
+        # If suppression is active, ignore attempts to mark the search as dirty
+        # coming from programmatic updates. Allow clearing (False) though.
+        if getattr(self, '_suppress_search_dirty', False) and value:
+            return
+        try:
+            self._search_dirty = bool(value)
+        except Exception:
+            self._search_dirty = False
         self.is_new = False
 
     def _on_delete(self):

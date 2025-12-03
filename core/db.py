@@ -4,6 +4,8 @@
 """Gestión de base de datos con SQLAlchemy."""
 
 from sqlalchemy import create_engine
+import logging
+import os
 from sqlalchemy.orm import sessionmaker, scoped_session
 from core.models import Base
 import os
@@ -115,8 +117,30 @@ def _is_company_database_pointing_to_artstudio3d() -> bool:
         return False
 
 
-def init_db(db_name=None):
-    """Crea todas las tablas específicas de módulos en la base de datos especificada."""
+def init_db(db_name=None, initiator: str | None = None):
+    """Crea todas las tablas específicas de módulos en la base de datos especificada.
+
+    Argumentos:
+    - db_name: si se proporciona, usa esa BD; por defecto usa la BD actual.
+    - initiator: (opcional) nombre/identificador de usuario que solicitó la operación
+      (este valor se registra en logs para auditoría).
+    """
+    # Setup logger for init_db actions
+    logger = logging.getLogger('core.db.init')
+    if not logger.handlers:
+        # Ensure logs dir exists
+        logs_dir = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'logs')
+        try:
+            os.makedirs(logs_dir, exist_ok=True)
+            fh = logging.FileHandler(os.path.join(logs_dir, 'init_db.log'))
+            fmt = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+            fh.setFormatter(fmt)
+            logger.addHandler(fh)
+            logger.setLevel(logging.INFO)
+        except Exception:
+            # fallback to default logger configuration
+            logging.basicConfig()
+
     if db_name:
         original_db = get_current_database()
         set_current_database(db_name)
@@ -125,6 +149,7 @@ def init_db(db_name=None):
         current_engine = get_engine()
 
     # Crear tablas según la base de datos actual
+    logger.info(f"init_db requested for database: {get_current_database()} by {initiator}")
     if get_current_database() == 'main':
         # Base de datos principal: tablas globales
         from . import models as core_models
@@ -132,7 +157,7 @@ def init_db(db_name=None):
             core_models.Base.metadata.create_all(bind=current_engine)
             print("Global tables created in the main database")
         except Exception as e:
-            print(f"ERROR creating global tables: {e}")
+            logger.exception(f"ERROR creating global tables: {e}")
             raise
 
     elif get_current_database() == 'artstudio3d' or _is_company_database_pointing_to_artstudio3d():
@@ -143,21 +168,21 @@ def init_db(db_name=None):
 
         try:
             clientes_models.Base.metadata.create_all(bind=current_engine)
-            print(f"Customers tables created in {get_current_database()}")
+            logger.info(f"Customers tables created in {get_current_database()}")
         except Exception as e:
-            print(f"Error creating customer tables: {e}")
+            logger.exception(f"Error creating customer tables: {e}")
 
         try:
             tipo_cliente_models.Base.metadata.create_all(bind=current_engine)
-            print(f"Customer type tables created in {get_current_database()}")
+            logger.info(f"Customer type tables created in {get_current_database()}")
         except Exception as e:
-            print(f"Error creating customer type tables: {e}")
+            logger.exception(f"Error creating customer type tables: {e}")
 
         try:
             articulos_models.Base.metadata.create_all(bind=current_engine)
-            print(f"Article tables created in {get_current_database()}")
+            logger.info(f"Article tables created in {get_current_database()}")
         except Exception as e:
-            print(f"Error creating article tables: {e}")
+            logger.exception(f"Error creating article tables: {e}")
 
     else:
         # Otras bases de datos: tablas específicas de módulos
@@ -168,17 +193,17 @@ def init_db(db_name=None):
         try:
             clientes_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
-            print(f"Error creating customer tables: {e}")
+            logger.exception(f"Error creating customer tables: {e}")
 
         try:
             facturas_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
-            print(f"Error creating invoice tables: {e}")
+            logger.exception(f"Error creating invoice tables: {e}")
 
         try:
             articulos_models.Base.metadata.create_all(bind=current_engine)
         except Exception as e:
-            print(f"Error creating article tables: {e}")
+            logger.exception(f"Error creating article tables: {e}")
 
     # Intentar agregar columnas faltantes (migración automática simple)
     db_url = get_database_url(get_current_database())
@@ -192,20 +217,20 @@ def init_db(db_name=None):
             try:
                 _ensure_columns(clientes_models.Base, dialect, engine=current_engine)
             except Exception:
-                pass
+                logger.exception("Error ensuring columns for clientes")
             try:
                 _ensure_columns(tipo_cliente_models.Base, dialect, engine=current_engine)
             except Exception:
-                pass
+                logger.exception("Error ensuring columns for tipo_cliente")
         else:
             try:
                 _ensure_columns(clientes_models.Base, dialect, engine=current_engine)
             except Exception:
-                pass
+                logger.exception("Error ensuring columns for clientes (other)")
             try:
                 _ensure_columns(facturas_models.Base, dialect, engine=current_engine)
             except Exception:
-                pass
+                logger.exception("Error ensuring columns for facturas (other)")
 
     # Restaurar base de datos original si se cambió
     if db_name:
@@ -292,7 +317,7 @@ def _ensure_columns(base, dialect, engine=None):
 
 
 # Funciones para gestión dinámica de bases de datos por empresa
-def set_database_for_company(company_id: int):
+def set_database_for_company(company_id: int, init: bool = False, initiator: str | None = None):
     """
     Configura la base de datos actual según la empresa seleccionada.
     Busca la configuración en la tabla empresas y cambia dinámicamente.
@@ -310,6 +335,12 @@ def set_database_for_company(company_id: int):
         set_current_database(db_key)
 
         print(f"Database switched for company {company_id}")
+
+        # Optionally initialize the DB for the company (explicit init only)
+        if init:
+            logger = logging.getLogger('core.db.init')
+            logger.info(f"init_db will run for company_{company_id} requested by {initiator}")
+            init_db(initiator=initiator)
 
     except Exception as e:
         print(f"ERROR configuring database for company {company_id}: {e}")

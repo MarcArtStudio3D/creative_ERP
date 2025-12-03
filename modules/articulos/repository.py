@@ -403,7 +403,8 @@ class ArticuloRepository:
         """Obtener todos los tipos de tarifa (tabla tarifas_tipo)"""
         session = self._session()
         try:
-            result = session.execute(text("SELECT id, codigo, nombre, descripcion, activo FROM tarifas_tipo ORDER BY nombre"))
+            # Table tarifas_tipo does not include an 'activo' column in this schema.
+            result = session.execute(text("SELECT id, codigo, nombre, descripcion FROM tarifas_tipo ORDER BY nombre"))
             return [dict(row._mapping) for row in result.fetchall()]
         finally:
             if not self._external_session:
@@ -412,7 +413,7 @@ class ArticuloRepository:
     def get_tarifa_tipo(self, tipo_id: int) -> dict | None:
         session = self._session()
         try:
-            result = session.execute(text("SELECT id, codigo, nombre, descripcion, activo FROM tarifas_tipo WHERE id = :id LIMIT 1"), {"id": tipo_id})
+            result = session.execute(text("SELECT id, codigo, nombre, descripcion FROM tarifas_tipo WHERE id = :id LIMIT 1"), {"id": tipo_id})
             row = result.fetchone()
             return dict(row._mapping) if row else None
         finally:
@@ -424,12 +425,11 @@ class ArticuloRepository:
         session = self._session()
         try:
             result = session.execute(
-                text("INSERT INTO tarifas_tipo (codigo, nombre, descripcion, activo) VALUES (:codigo, :nombre, :descripcion, :activo)"),
+                text("INSERT INTO tarifas_tipo (codigo, nombre, descripcion) VALUES (:codigo, :nombre, :descripcion)"),
                 {
                     "codigo": payload.get("codigo"),
                     "nombre": payload.get("nombre"),
                     "descripcion": payload.get("descripcion"),
-                    "activo": payload.get("activo", True),
                 }
             )
             if not self._external_session:
@@ -451,6 +451,9 @@ class ArticuloRepository:
             set_clauses = []
             params = {"id": tipo_id}
             for key, val in data.items():
+                # Avoid trying to update nonexistent 'activo' column
+                if key == 'activo':
+                    continue
                 set_clauses.append(f"{key} = :{key}")
                 params[key] = val
 

@@ -14,7 +14,7 @@ from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrus
 from typing import Optional, Callable
 
 from core.auth import Session, UserRole
-from core.module_manager import ModuleManager, ModuleCategory
+from core.module_manager import ModuleManager, ModuleCategory, Permission
 
 
 class MainWindowV2(QMainWindow):
@@ -658,6 +658,17 @@ class MainWindowV2(QMainWindow):
             utils_menu.addAction(gestor_action)
         
         utils_menu.addSeparator()
+
+        # Acción administrativa: inicializar BD de una empresa (solo administradores)
+        try:
+            if self.session.has_permission('empresas', Permission.ADMIN) or self.session.user.role == UserRole.ADMIN:
+                init_company_action = QAction(self.tr("Inicializar BD de Empresa..."), self)
+                init_company_action.setStatusTip(self.tr("Inicializa el esquema de base de datos para una empresa (acción admin)"))
+                init_company_action.triggered.connect(lambda *_: self.open_admin_init_dialog())
+                utils_menu.addAction(init_company_action)
+        except Exception:
+            # En casos de error de permisos, no añadir la acción
+            pass
         
         about_action = QAction(self.tr("Acerca de"), self)
         about_action.triggered.connect(self.show_about)
@@ -934,6 +945,15 @@ class MainWindowV2(QMainWindow):
                 "Módulo en desarrollo",
                 f"El módulo '{module_id}' aún no está implementado."
             )
+
+    def open_admin_init_dialog(self) -> None:
+        """Abrir diálogo administrativo para inicializar la BD de una empresa."""
+        try:
+            from app.views.admin_init_company_db import AdminInitCompanyDBDialog
+            dialog = AdminInitCompanyDBDialog(self, current_session=self.session)
+            dialog.exec()
+        except Exception as e:
+            QMessageBox.critical(self, self.tr("Error"), str(e))
     
     def _cleanup_old_modules(self) -> None:
         """

@@ -6,6 +6,9 @@ from PySide6.QtWidgets import QMessageBox
 from modules.empresas.repository import EmpresaRepository
 from core.models import Empresa, BusinessGroup
 from core.db import get_session
+from sqlalchemy import create_engine, text
+from core.db import set_database_for_company
+import logging
 
 
 class EmpresasController(QObject):
@@ -125,3 +128,108 @@ class EmpresasController(QObject):
     def buscar_codigos_postales(self, poblacion: str, pais: str):
         """Busca códigos postales por nombre de población."""
         return self.repo.buscar_codigos_postales(poblacion, pais)
+
+    def crear_y_inicializar_db(self, company_id: int, engine_type: str, initiator: str | None = None) -> bool:
+        """Crea la base de datos en el motor especificado y la inicializa (init_db).
+
+        engine_type: 'mariadb' or 'postgresql'
+        initiator: username or id for audit logs
+        Returns True on success, False on failure.
+        """
+        logger = logging.getLogger('modules.empresas.controller')
+
+        try:
+            empresa = self.obtener_por_id_internal(company_id)
+            if not empresa:
+                self.error_occurred.emit(self.tr("Empresa no encontrada"))
+                return False
+
+            # Pick DB connection info depending on engine type
+            if engine_type == 'mariadb':
+                host = getattr(empresa, 'host_mariadb', None)
+                port = int(getattr(empresa, 'puerto_mariadb', 3306) or 3306)
+                dbname = getattr(empresa, 'nombre_base_datos_maria_db', None)
+                user = getattr(empresa, 'usuario_mariadb', None)
+                pwd = getattr(empresa, 'password_mariadb', None)
+                default_db = 'mysql'
+                driver = 'mysql+pymysql'
+            else:
+                # default to postgresql
+                host = getattr(empresa, 'host_postgresql', None)
+                port = int(getattr(empresa, 'puerto_postgresql', 5432) or 5432)
+                dbname = getattr(empresa, 'nombre_base_datos_postgresql', None)
+                user = getattr(empresa, 'usuario_postgresql', None)
+                pwd = getattr(empresa, 'password_postgresql', None)
+                default_db = 'postgres'
+                driver = 'postgresql+psycopg2'
+
+            if not host or not dbname:
+                self.error_occurred.emit(self.tr("Faltan datos de conexión para crear la BD"))
+                return False
+
+            # Try to connect to the server (default database) and create the DB
+            try:
+                # If credentials missing, try using main DB admin credentials from config
+                if not user:
+                    from core.config import config as env_config
+                    # attempt to use main database credentials as fallback
+                    main_url = env_config.get_database_url('main')
+                    # parse main_url (simple split) to extract user/pwd
+                    # format: driver://user:pass@host:port/db
+                    try:
+                        suffix = main_url.split('://', 1)[1]
+                        creds_host = suffix.split('@', 1)[0]
+                        if ':' in creds_host:
+                            u, p = creds_host.split(':', 1)
+                            user = user or u
+                            pwd = pwd or p
+                    except Exception:
+                        pass
+
+                engine_url = f"{driver}://{user}:{pwd}@{host}:{port}/{default_db}"
+
+                tmp_engine = create_engine(engine_url)
+                with tmp_engine.connect() as conn:
+                    # Create database for MariaDB/Postgres with safe charset/collation for MySQL
+                    if engine_type == 'mariadb':
+                        stmt = text(f"CREATE DATABASE IF NOT EXISTS `{dbname}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
+                    else:
+                        # PostgreSQL: try to create database (requires superuser normally)
+                        stmt = text(f"CREATE DATABASE \"{dbname}\";")
+                    try:
+                        conn.execute(stmt)
+                    except Exception as e:
+                        # Some servers may disallow CREATE DATABASE in transactions; log and continue
+                        logger.info(f"DB create stmt failed: {e}")
+                        # attempt raw SQL execution
+                        try:
+                            conn.execute(text(str(stmt)))
+                        except Exception as e2:
+                            logger.exception("Failed to create database (may need admin privileges)")
+                            # continue, maybe DB exists or admin required
+
+            except Exception as outer_e:
+                logger.exception(f"Error conectando al servidor para crear la BD: {outer_e}")
+                # still proceed to initialization attempt (it may already exist)
+
+            # Now initialize schema in the target DB (this will create tables via init_db)
+            try:
+                set_database_for_company(company_id, init=True, initiator=initiator)
+                self.operation_success.emit(self.tr("Base de datos creada/inicializada"))
+                return True
+            except Exception as e:
+                logger.exception(f"Error inicializando BD para la empresa: {e}")
+                self.error_occurred.emit(str(e))
+                return False
+
+        except Exception as e:
+            logger.exception(f"Unexpected error en crear_y_inicializar_db: {e}")
+            self.error_occurred.emit(str(e))
+            return False
+
+    def obtener_por_id_internal(self, id_: int) -> Optional[Empresa]:
+        """Helper internal: obtiene empresa sin emitir señales."""
+        try:
+            return self.repo.obtener_por_id(id_)
+        except Exception:
+            return None

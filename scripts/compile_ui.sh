@@ -102,6 +102,7 @@ declare -A UI_MODULE_MAP=(
     ["/Almacen/frmarticulos.ui"]="articulos"
     ["/Almacen/frmkit.ui"]="articulos"
     ["/Almacen/frmDivisiones.ui"]="articulos"
+    ["/maestros/frmTarifasBase.ui"]="articulos"
     ["db_consulta_view.ui"]="common"
     ["frmConfig.ui"]="common"
     ["frmeditaravisos.ui"]="common"

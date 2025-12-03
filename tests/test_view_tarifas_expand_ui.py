@@ -37,3 +37,12 @@ def test_tarifas_form_and_table_expandable():
     sp = v.ui.stackedWidget.sizePolicy()
     assert sp.horizontalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
     assert sp.verticalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+
+    # The view itself should be expanding
+    vp = v.sizePolicy()
+    assert vp.horizontalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+    assert vp.verticalPolicy() in (QSizePolicy.Expanding, QSizePolicy.MinimumExpanding)
+
+    # Verify pages have proper layouts
+    assert v.ui.page.layout() is not None, "Page 1 should have a layout"
+    assert v.ui.page_2.layout() is not None, "Page 2 should have a layout"

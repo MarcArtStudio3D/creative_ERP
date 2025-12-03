@@ -1,4 +1,4 @@
-from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem, QHeaderView
+from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem, QHeaderView, QVBoxLayout, QWidget
 from PySide6.QtCore import Qt
 from PySide6.QtWidgets import QSizePolicy
 
@@ -19,68 +19,14 @@ class TarifasBaseView(QDialog):
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
 
-            # When embedded inside MainWindow, ensure this view behaves as a widget
-            # and not as a floating dialog (which would resist layout stretching).
-            try:
-                # Remove dialog window flags so it's treated as a child widget
-                self.setWindowFlags(Qt.Widget)
-            except Exception:
-                pass
+        # When embedded inside MainWindow, ensure this view behaves as a widget
+        # and not as a floating dialog (which would resist layout stretching).
+        self.setWindowFlags(Qt.Widget)
+        self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
 
-            # Ensure stackedWidget is managed by a layout so it will expand to fill
-            try:
-                layout = QVBoxLayout(self)
-                layout.setContentsMargins(0, 0, 0, 0)
-                layout.setSpacing(0)
-                # stackedWidget is created by the UI and is a child of this widget
-                if hasattr(self.ui, 'stackedWidget'):
-                    sw = self.ui.stackedWidget
-                    sw.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-                    layout.addWidget(sw)
-            except Exception:
-                pass
-
-        # Make the dialog and key child widgets expand so they fill available space
-        try:
-            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-        except Exception:
-            pass
-
-        # Promote the form area to expand vertically so fields and description grow
-        if hasattr(self.ui, 'gridLayoutWidget'):
-            try:
-                self.ui.gridLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            except Exception:
-                pass
-
-        # Ensure the description (plainTextEdit) expands and the grid allocates stretch
-        if hasattr(self.ui, 'plainTextEdit'):
-            try:
-                self.ui.plainTextEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            except Exception:
-                pass
-        if hasattr(self.ui, 'gridLayout'):
-            try:
-                # row 2 contains the description/plainTextEdit: give it stretch
-                self.ui.gridLayout.setRowStretch(2, 1)
-                # make name column stretch horizontally
-                self.ui.gridLayout.setColumnStretch(4, 1)
-            except Exception:
-                pass
-
-        # Ensure the buttons row remains horizontally expanding but fixed vertically
-        if hasattr(self.ui, 'horizontalLayoutWidget'):
-            try:
-                self.ui.horizontalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
-            except Exception:
-                pass
-
-        # Table page should also expand to fill available space inside the stacked widget
-        if hasattr(self.ui, 'tableWidget'):
-            try:
-                self.ui.tableWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
-            except Exception:
-                pass
+        # The generated UI uses absolute positioning (setGeometry).
+        # We need to reorganize widgets into proper layouts so they expand.
+        self._setup_dynamic_layouts()
 
         # Ensure DB points to artstudio3d for tarifa types
         self._ensure_tarifas_database()
@@ -97,6 +43,55 @@ class TarifasBaseView(QDialog):
 
         self._setup_connections()
         self._setup_initial_state()
+
+    def _setup_dynamic_layouts(self):
+        """Reorganize widgets from absolute positioning to proper expanding layouts."""
+        # Main layout for this dialog/widget
+        main_layout = QVBoxLayout(self)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
+
+        sw = self.ui.stackedWidget
+        sw.setParent(self)
+        sw.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        main_layout.addWidget(sw)
+
+        # --- Page 1 (form): reorganize gridLayoutWidget and horizontalLayoutWidget ---
+        page1 = self.ui.page
+        page1_layout = QVBoxLayout(page1)
+        page1_layout.setContentsMargins(10, 10, 10, 10)
+        page1_layout.setSpacing(10)
+
+        # The form grid
+        grid_widget = self.ui.gridLayoutWidget
+        grid_widget.setParent(page1)
+        grid_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        page1_layout.addWidget(grid_widget, 1)  # stretch factor 1 to expand
+
+        # Make plainTextEdit (description) expand
+        if hasattr(self.ui, 'plainTextEdit'):
+            self.ui.plainTextEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        # Give row 2 (description) stretch in the grid
+        if hasattr(self.ui, 'gridLayout'):
+            self.ui.gridLayout.setRowStretch(2, 1)
+            self.ui.gridLayout.setColumnStretch(4, 1)
+
+        # The buttons bar at bottom
+        buttons_widget = self.ui.horizontalLayoutWidget
+        buttons_widget.setParent(page1)
+        buttons_widget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        page1_layout.addWidget(buttons_widget, 0)  # no stretch, fixed height
+
+        # --- Page 2 (table): reorganize tableWidget ---
+        page2 = self.ui.page_2
+        page2_layout = QVBoxLayout(page2)
+        page2_layout.setContentsMargins(0, 0, 0, 0)
+        page2_layout.setSpacing(0)
+
+        table = self.ui.tableWidget
+        table.setParent(page2)
+        table.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        page2_layout.addWidget(table)
 
     def _ensure_tarifas_database(self):
         current = get_current_database()

@@ -45,7 +45,6 @@ class TarifasBaseView(QDialog):
                 pass
 
     def _setup_connections(self):
-        print("DEBUG: _setup_connections iniciando...")
         self.ui.btnAnadir.clicked.connect(self._on_add)
         self.ui.btnSiguente.clicked.connect(self._on_next)
         self.ui.btnAnterior.clicked.connect(self._on_prev)
@@ -58,23 +57,22 @@ class TarifasBaseView(QDialog):
 
         # Table selection: double-click or selection to load
         # Connect all three available double-click signals to be robust
-        print(f"DEBUG: tableWidget type: {type(self.ui.tableWidget)}")
-        print(f"DEBUG: Conectando señales de doble click...")
+        # connect double-click signals (no debug prints)
         try:
             self.ui.tableWidget.cellDoubleClicked.connect(self._on_table_double_click)
-            print("✓ cellDoubleClicked conectado")
+            pass
         except Exception as e:
             print(f"✗ Warning: No se pudo conectar cellDoubleClicked: {e}")
         try:
             # map QModelIndex -> (row, col)
             self.ui.tableWidget.doubleClicked.connect(lambda idx: self._on_table_double_click(idx.row(), idx.column()))
-            print("✓ doubleClicked conectado")
+            pass
         except Exception as e:
             print(f"✗ Warning: No se pudo conectar doubleClicked: {e}")
         try:
             # itemDoubleClicked provides the QTableWidgetItem directly
             self.ui.tableWidget.itemDoubleClicked.connect(lambda item: self._on_table_double_click(item.row(), item.column()))
-            print("✓ itemDoubleClicked conectado")
+            pass
         except Exception as e:
             print(f"✗ Warning: No se pudo conectar itemDoubleClicked: {e}")
 
@@ -168,7 +166,7 @@ class TarifasBaseView(QDialog):
         self.ui.tableWidget.setSelectionBehavior(QAbstractItemView.SelectRows)
         self.ui.tableWidget.setSelectionMode(QAbstractItemView.SingleSelection)
         
-        print("DEBUG: _setup_table completed, signals should be connected")
+        # setup complete
 
     def _load_table(self, data: list | None = None):
         # Suppress dirty signals while we populate the table (programmatic update)
@@ -307,19 +305,18 @@ class TarifasBaseView(QDialog):
             QMessageBox.critical(self, self.tr("Error"), str(e))
 
     def _on_table_double_click(self, row, col):
-        print(f"DEBUG: _on_table_double_click called with row={row}, col={col}")
+        # called when a user double-clicks a row; attempt to load the corresponding record
         try:
             # Try to obtain the internal ID from hidden column 0
             id_item = self.ui.tableWidget.item(row, 0)
-            print(f"DEBUG: id_item = {id_item}")
             tipo_id = None
             if id_item and id_item.text():
                 try:
                     tipo_id = int(id_item.text())
-                    print(f"DEBUG: tipo_id extraído = {tipo_id}")
+                    pass
                 except Exception as e:
                     # If the hidden column wasn't numeric, leave tipo_id None
-                    print(f"DEBUG: Error extrayendo tipo_id: {e}")
+                    pass
                     tipo_id = None
             else:
                 print(f"DEBUG: id_item es None o vacío")
@@ -331,11 +328,11 @@ class TarifasBaseView(QDialog):
                 loaded = self.controller.load_by_id(tipo_id)
                 print(f"DEBUG: load_by_id result = {loaded}")
             else:
-                print(f"DEBUG: tipo_id es None, saltando a fallback")
+                pass
 
             # Fallback: try to match the row by codigo or nombre within cached list
             if not loaded:
-                print(f"DEBUG: Entrando en fallback...")
+                # fallback: try to find by visible values
                 # Attempt to get codigo or nombre from visible columns
                 codigo_item = self.ui.tableWidget.item(row, 1)
                 nombre_item = self.ui.tableWidget.item(row, 2)
@@ -362,31 +359,25 @@ class TarifasBaseView(QDialog):
                         continue
 
                 if found_id is not None:
-                    print(f"DEBUG: Fallback encontró ID {found_id}, cargando...")
+                    pass
                     loaded = self.controller.load_by_id(found_id)
-                    print(f"DEBUG: Fallback load_by_id result = {loaded}")
+                    pass
                 else:
-                    print(f"DEBUG: Fallback no encontró ningún ID")
+                    pass
 
-            print(f"DEBUG: loaded final = {loaded}")
             if loaded:
                 # We have loaded the record successfully — populate the form and switch to edit
-                print(f"DEBUG: Registro cargado, llenando formulario...")
-                print(f"DEBUG: controller.current = {self.controller.current}")
                 self._fill_form(self.controller.current)
-                print(f"DEBUG: Bloqueando campos...")
                 self._lock_fields(True)
                 self.is_new = False
-                print(f"DEBUG: Cambiando a página 0...")
-                print(f"DEBUG: stackedWidget.currentIndex antes = {self.ui.stackedWidget.currentIndex()}")
+                # switch to edit page
                 self.ui.stackedWidget.setCurrentIndex(0)
-                print(f"DEBUG: stackedWidget.currentIndex después = {self.ui.stackedWidget.currentIndex()}")
+                pass
             else:
                 # Inform the user if we couldn't load the record — prevents silent failures
-                print(f"DEBUG: No se pudo cargar el registro, mostrando advertencia")
+                # inform the user if loading failed
                 QMessageBox.warning(self, self.tr("No encontrado"), self.tr("No se pudo cargar el registro para edición"))
         except Exception as e:
-            print(f"DEBUG: EXCEPCIÓN en _on_table_double_click: {e}")
             import traceback
             traceback.print_exc()
             QMessageBox.critical(self, self.tr("Error"), str(e))

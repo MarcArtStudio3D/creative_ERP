@@ -6,7 +6,7 @@ Usa QStackedWidget para módulos dinámicos con barra superior personalizada.
 from PySide6.QtWidgets import (QMainWindow, QWidget, QVBoxLayout, QHBoxLayout, 
                                QLabel, QPushButton, QFrame, QStackedWidget, 
                                QDateEdit, QMenu, QMenuBar, QToolButton, QMessageBox,
-                               QScrollArea, QComboBox, QLineEdit)
+                               QScrollArea, QComboBox, QLineEdit, QSizePolicy)
 from PySide6.QtCore import Qt, QDate, Signal, QPropertyAnimation, QEasingCurve, Property, QPoint
 from PySide6.QtGui import QFont, QPixmap, QAction, QPainter, QPen, QColor, QBrush, QShortcut, QKeySequence, QIcon
 
@@ -1034,27 +1034,33 @@ class MainWindowV2(QMainWindow):
         if not module_info:
             return None
         
-        # Contenedor principal
+        # Contenedor principal con layout para que el contenido se expanda
         container = QWidget()
         container.setMinimumSize(800, 600)
+        container.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        # Layout principal que permite al contenido expandirse
+        main_layout = QVBoxLayout(container)
+        main_layout.setContentsMargins(0, 0, 0, 0)
+        main_layout.setSpacing(0)
         
         # ========== CONTENIDO PRINCIPAL (fondo) ==========
         module_content = self.load_module_view(module_id)
         if not module_content:
             module_content = self.create_placeholder_content(module_info)
         
-        module_content.setParent(container)
+        # Asegurar que el contenido del módulo se expanda
+        module_content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        
+        # Añadir al layout para que ocupe todo el espacio disponible
+        main_layout.addWidget(module_content)
         
         # ========== PANEL DERECHO SUPERPUESTO ==========
         actions_panel = self.create_module_side_panel(module_id, module_info, module_view=module_content)
         actions_panel.setParent(container)
-
         
-        # Función para posicionar elementos
+        # Función para posicionar el panel superpuesto
         def update_positions() -> None:
-            # Contenido ocupa todo el espacio
-            module_content.setGeometry(0, 0, container.width(), container.height())
-            
             # Panel derecho: actualizar posición
             if hasattr(actions_panel, 'update_position'):
                 actions_panel.update_position()  # type: ignore

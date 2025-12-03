@@ -165,6 +165,16 @@ AVAILABLE_MODULES = {
         required_permissions=[Permission.READ],
         dependencies=[]
     ),
+
+    "tarifas_maestras": Module(
+        id="tarifas_maestras",
+        name="Tarifas maestras",
+        description="Gestión de tarifas maestras",
+        icon="",
+        category=ModuleCategory.ALMACEN,
+        required_permissions=[Permission.READ],
+        dependencies=[]
+    ),
     
     "almacen": Module(
         id="almacen",
@@ -397,3 +407,5 @@ def _dummy_translations():
     QCoreApplication.translate("Modules", "Informes y estadísticas")
     QCoreApplication.translate("Modules", "Ver módulos y otorgar permisos por rol")
     QCoreApplication.translate("Modules", "Gestión de Secciones, Familias y Subfamilias")
+    QCoreApplication.translate("Modules", "Tarifas maestras")
+    QCoreApplication.translate("Modules", "Gestión de tarifas maestras")

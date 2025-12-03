@@ -91,6 +91,27 @@ class ArticulosView(QWidget):
         
         # Promociones - control de campos de fecha según checkbox
         self.ui.chkArticulo_promocionado.toggled.connect(self._on_articulo_promocionado_changed)
+        # Promociones action buttons
+        try:
+            if hasattr(self.ui, 'btnAnadirOferta'):
+                self.ui.btnAnadirOferta.clicked.connect(self._on_add_oferta)
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'btnEditarOferta'):
+                self.ui.btnEditarOferta.clicked.connect(self._on_edit_oferta)
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'btnguardar_oferta'):
+                self.ui.btnguardar_oferta.clicked.connect(self._on_save_oferta)
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'btnDeshacerOferta'):
+                self.ui.btnDeshacerOferta.clicked.connect(self._on_undo_oferta)
+        except Exception:
+            pass
 
         # Formatear campos numéricos al terminar la edición para que el usuario vea una representación normalizada (separador coma)
         if hasattr(self.ui, 'txtPrecioVenta'):
@@ -1230,6 +1251,111 @@ class ArticulosView(QWidget):
         
         # Actualizar visibilidad del label de promoción en el header
         self.ui.lbl_en_promocion.setVisible(checked)
+
+    # ==================== Promotions button handlers ====================
+    def _enable_oferta_editing(self, enable: bool):
+        """Toggle UI state for editing a promotion within the promotions frame."""
+        # Note: do not disable/enable the whole frame here; _lock_fields controls framePromocion
+
+        try:
+            if hasattr(self.ui, 'btnguardar_oferta'):
+                self.ui.btnguardar_oferta.setEnabled(enable)
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'btnDeshacerOferta'):
+                self.ui.btnDeshacerOferta.setEnabled(enable)
+        except Exception:
+            pass
+
+        # When editing we must disable the add/edit buttons to prevent nested operations
+        try:
+            if hasattr(self.ui, 'btnAnadirOferta'):
+                # If disabling editing, re-enable add/edit according to overall edit state
+                if not enable:
+                    # add/edit should be active if article is in edit mode and promotions tab active
+                    promo_tab_active = False
+                    try:
+                        if hasattr(self.ui, 'Pestanas') and self.ui.Pestanas.currentWidget() is not None:
+                            promo_tab_active = (self.ui.Pestanas.currentWidget().objectName() == 'tab_promociones')
+                    except Exception:
+                        promo_tab_active = False
+                    article_editing = self.ui.botGuardar.isEnabled()
+                    self.ui.btnAnadirOferta.setEnabled(article_editing and promo_tab_active)
+                else:
+                    self.ui.btnAnadirOferta.setEnabled(False)
+        except Exception:
+            pass
+        try:
+            if hasattr(self.ui, 'btnEditarOferta'):
+                if not enable:
+                    promo_tab_active = False
+                    try:
+                        if hasattr(self.ui, 'Pestanas') and self.ui.Pestanas.currentWidget() is not None:
+                            promo_tab_active = (self.ui.Pestanas.currentWidget().objectName() == 'tab_promociones')
+                    except Exception:
+                        promo_tab_active = False
+                    article_editing = self.ui.botGuardar.isEnabled()
+                    self.ui.btnEditarOferta.setEnabled(article_editing and promo_tab_active)
+                else:
+                    self.ui.btnEditarOferta.setEnabled(False)
+        except Exception:
+            pass
+
+    def _on_add_oferta(self):
+        """User clicked 'Añadir oferta' — enter oferta edit mode (new oferta).
+
+        Enable save/undo and disable add/edit controls until saved or undone.
+        """
+        # Mark internal state (optional)
+        self._editing_oferta = True
+
+        # Clear oferta form fields if present and enable editing
+        try:
+            if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                self.ui.txtOferta_Descripcion_promocion.clear()
+        except Exception:
+            pass
+
+        self._enable_oferta_editing(True)
+
+    def _on_edit_oferta(self):
+        """User clicked 'Editar oferta' — enable editing existing oferta."""
+        self._editing_oferta = True
+        self._enable_oferta_editing(True)
+
+    def _on_save_oferta(self):
+        """User clicked 'Guardar oferta' — perform basic save workflow and exit edit mode.
+
+        Note: detailed persistence is handled when the article is saved via self._on_save_clicked
+        — this handler toggles UI state only.
+        """
+        try:
+            # For UX: disable editing buttons immediately to prevent double clicks while saving
+            self._enable_oferta_editing(False)
+        finally:
+            self._editing_oferta = False
+
+    def _on_undo_oferta(self):
+        """User clicked 'Deshacer oferta' — cancel changes and exit edit mode."""
+        # Reload oferta values from controller (if available) — otherwise just disable editing
+        try:
+            current = None
+            if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
+                current = self.controller.get_current_article()
+            # If we have loaded data, restore description and dates
+            if current and isinstance(current, dict):
+                if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                    try:
+                        self.ui.txtOferta_Descripcion_promocion.setText(str(current.get('descripcion', '') or ''))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        # Exit editing
+        self._editing_oferta = False
+        self._enable_oferta_editing(False)
 
 
 class ArticlesTableModel(QAbstractTableModel):

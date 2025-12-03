@@ -1,5 +1,6 @@
 from PySide6.QtWidgets import QDialog, QMessageBox, QTableWidgetItem, QHeaderView
 from PySide6.QtCore import Qt
+from PySide6.QtWidgets import QSizePolicy
 
 from modules.articulos.ui_frmTarifasBase import Ui_Dialog
 from modules.articulos.tarifa_tipo_controller import TarifaTipoController
@@ -17,6 +18,48 @@ class TarifasBaseView(QDialog):
         super().__init__(parent)
         self.ui = Ui_Dialog()
         self.ui.setupUi(self)
+
+        # Make the dialog and key child widgets expand so they fill available space
+        try:
+            self.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+        except Exception:
+            pass
+
+        # Promote the form area to expand vertically so fields and description grow
+        if hasattr(self.ui, 'gridLayoutWidget'):
+            try:
+                self.ui.gridLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            except Exception:
+                pass
+
+        # Ensure the description (plainTextEdit) expands and the grid allocates stretch
+        if hasattr(self.ui, 'plainTextEdit'):
+            try:
+                self.ui.plainTextEdit.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            except Exception:
+                pass
+        if hasattr(self.ui, 'gridLayout'):
+            try:
+                # row 2 contains the description/plainTextEdit: give it stretch
+                self.ui.gridLayout.setRowStretch(2, 1)
+                # make name column stretch horizontally
+                self.ui.gridLayout.setColumnStretch(4, 1)
+            except Exception:
+                pass
+
+        # Ensure the buttons row remains horizontally expanding but fixed vertically
+        if hasattr(self.ui, 'horizontalLayoutWidget'):
+            try:
+                self.ui.horizontalLayoutWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+            except Exception:
+                pass
+
+        # Table page should also expand to fill available space inside the stacked widget
+        if hasattr(self.ui, 'tableWidget'):
+            try:
+                self.ui.tableWidget.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
+            except Exception:
+                pass
 
         # Ensure DB points to artstudio3d for tarifa types
         self._ensure_tarifas_database()

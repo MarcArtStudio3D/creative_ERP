@@ -19,6 +19,33 @@ from sqlalchemy import inspect, text
 from core.db import list_available_databases, set_current_database, get_engine, get_database_url, get_session
 
 
+def select_targets(available, requested_list=None, include_companies=None, allow_main=False):
+    """Return targets filtered from available.
+
+    - available: list of db keys
+    - requested_list: list of requested keys (from --dbs)
+    - include_companies: optional list of company db keys to include (when --all-companies)
+    - allow_main: bool, allow including 'main'/'current'
+
+    This helper is intentionally module-level so unit tests can ensure the script's default
+    behavior is safe (it excludes 'main' by default).
+    """
+    chosen = list(available)
+
+    if requested_list:
+        chosen = [d for d in chosen if d in requested_list]
+
+    if include_companies:
+        for c in include_companies:
+            if c not in chosen:
+                chosen.append(c)
+
+    if not allow_main:
+        chosen = [t for t in chosen if t not in ('main', 'current')]
+
+    return chosen
+
+
 def detect_column(engine, table_name: str, column_name: str) -> bool:
     inspector = inspect(engine)
     if not inspector.has_table(table_name):
@@ -46,12 +73,14 @@ def main():
     parser.add_argument('--apply', action='store_true', help='Aplicar los cambios (por defecto dry-run)')
     parser.add_argument('--dbs', help='Lista separada por comas de DBs a afectar (ej: artstudio3d,company_1)')
     parser.add_argument('--all-companies', action='store_true', help='Detectar y añadir empresas (company_*) desde la BD principal')
+    parser.add_argument('--allow-main', action='store_true', help='Permite incluir la base de datos `main` en las operaciones (por defecto está excluida)')
     args = parser.parse_args()
 
-    targets = list_available_databases()
-    if args.dbs:
-        requested = [d.strip() for d in args.dbs.split(',') if d.strip()]
-        targets = [d for d in targets if d in requested]
+    # By default avoid touching the `main` database when doing mass schema changes.
+    # We'll use select_targets() (module-level) to compute the final list (testable and safer).
+
+    # Initial available targets
+    targets = select_targets(list_available_databases(), requested_list=[d.strip() for d in args.dbs.split(',')] if args.dbs else None, allow_main=args.allow_main)
 
     if args.all_companies:
         # Query main DB for companies and add their DB keys dynamically
@@ -71,8 +100,11 @@ def main():
                     # ignore; we only want to populate DATABASE_CONFIGS
                     pass
 
-            # refresh targets after adding companies
-            targets = list_available_databases()
+            # refresh targets after adding companies. Respect --allow-main.
+            # compute company keys discovered from main DB then include into targets
+            discovered = list_available_databases()
+            company_keys = [f'company_{cid}' for cid in company_ids]
+            targets = select_targets(discovered, include_companies=company_keys, allow_main=args.allow_main)
         except Exception as e:
             print(f'Error fetching companies from main DB: {e}')
 

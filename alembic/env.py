@@ -1,7 +1,9 @@
 from logging.config import fileConfig
 from sqlalchemy import create_engine, pool
 from alembic import context
+import os
 from core.models import Base  # Tus modelos
+from core.alembic_utils import ensure_not_running_migrations_on_main
 
 # Alembic config
 config = context.config
@@ -22,6 +24,23 @@ def get_url():
     return url
 
 
+def _ensure_not_running_migrations_on_main(url: str):
+    """Block running Alembic migrations against the global `main` DB by default.
+
+    This prevents accidental application of module migrations in the `creative_erp_main`
+    database. To override intentionally, set the env var ALLOW_ALMIGRATE_MAIN=1.
+    """
+    # simple check: if database name includes the known main DB name
+    if 'creative_erp_main' in (url or ''):
+        allow = os.environ.get('ALLOW_ALMIGRATE_MAIN', '')
+        if allow.lower() not in ('1', 'true', 'yes'):
+            raise RuntimeError(
+                "Refusing to run Alembic migrations against 'creative_erp_main' by default. "
+                "If you intentionally want to run migrations against main, set the environment "
+                "variable ALLOW_ALMIGRATE_MAIN=1 and re-run the command."
+            )
+
+
 def run_migrations_offline():
     """Modo offline: genera SQL sin ejecutar."""
     url = get_url()
@@ -40,7 +59,12 @@ def run_migrations_offline():
 
 def run_migrations_online():
     """Modo online: ejecuta migraciones."""
-    engine = create_engine(get_url())
+    url = get_url()
+
+    # Safety: do not allow running migrations on the 'main' DB unless explicitly authorised
+    ensure_not_running_migrations_on_main(url)
+
+    engine = create_engine(url)
 
     with engine.connect() as connection:
         context.configure(

@@ -1270,36 +1270,94 @@ class ArticulosView(QWidget):
 
         # When editing we must disable the add/edit buttons to prevent nested operations
         try:
+            # Primary action buttons inside the promotions frame
+            if hasattr(self.ui, 'btnguardar_oferta'):
+                self.ui.btnguardar_oferta.setEnabled(enable)
+
+            if hasattr(self.ui, 'btnDeshacerOferta'):
+                self.ui.btnDeshacerOferta.setEnabled(enable)
+
+            # Decide whether the article itself is in edit mode and whether promotions tab is active
+            promo_tab_active = False
+            try:
+                if hasattr(self.ui, 'Pestanas') and self.ui.Pestanas.currentWidget() is not None:
+                    promo_tab_active = (self.ui.Pestanas.currentWidget().objectName() == 'tab_promociones')
+            except Exception:
+                promo_tab_active = False
+
+            article_editing = False
+            try:
+                article_editing = bool(self.ui.botGuardar.isEnabled())
+            except Exception:
+                article_editing = False
+
+            # Toggle the add/edit offer buttons: enabled only when NOT editing an oferta and
+            # the article is in edit mode and the promotions tab is active
+            add_edit_enabled = (not enable) and article_editing and promo_tab_active
             if hasattr(self.ui, 'btnAnadirOferta'):
-                # If disabling editing, re-enable add/edit according to overall edit state
-                if not enable:
-                    # add/edit should be active if article is in edit mode and promotions tab active
-                    promo_tab_active = False
-                    try:
-                        if hasattr(self.ui, 'Pestanas') and self.ui.Pestanas.currentWidget() is not None:
-                            promo_tab_active = (self.ui.Pestanas.currentWidget().objectName() == 'tab_promociones')
-                    except Exception:
-                        promo_tab_active = False
-                    article_editing = self.ui.botGuardar.isEnabled()
-                    self.ui.btnAnadirOferta.setEnabled(article_editing and promo_tab_active)
-                else:
-                    self.ui.btnAnadirOferta.setEnabled(False)
-        except Exception:
-            pass
-        try:
+                self.ui.btnAnadirOferta.setEnabled(add_edit_enabled)
             if hasattr(self.ui, 'btnEditarOferta'):
-                if not enable:
-                    promo_tab_active = False
+                self.ui.btnEditarOferta.setEnabled(add_edit_enabled)
+            if hasattr(self.ui, 'btnEditartarifa'):
+                self.ui.btnEditartarifa.setEnabled(add_edit_enabled)
+
+            # Enable/disable common promotion input widgets in one pass
+            from PySide6.QtWidgets import QLineEdit, QDateEdit, QCheckBox, QRadioButton, QComboBox, QDoubleSpinBox, QTextEdit
+
+            frame = getattr(self.ui, 'framePromocion', None)
+            tab = getattr(self.ui, 'tab_promociones', None)
+
+            target_widgets = []
+            classes = (QLineEdit, QDateEdit, QCheckBox, QRadioButton, QComboBox, QDoubleSpinBox, QTextEdit)
+            if frame is not None:
+                for cls in classes:
                     try:
-                        if hasattr(self.ui, 'Pestanas') and self.ui.Pestanas.currentWidget() is not None:
-                            promo_tab_active = (self.ui.Pestanas.currentWidget().objectName() == 'tab_promociones')
+                        target_widgets.extend(frame.findChildren(cls))
                     except Exception:
-                        promo_tab_active = False
-                    article_editing = self.ui.botGuardar.isEnabled()
-                    self.ui.btnEditarOferta.setEnabled(article_editing and promo_tab_active)
-                else:
-                    self.ui.btnEditarOferta.setEnabled(False)
+                        pass
+            if tab is not None:
+                for cls in classes:
+                    try:
+                        target_widgets.extend(tab.findChildren(cls))
+                    except Exception:
+                        pass
+
+            # Toggle known sub-frames too (some elements live inside these frame containers)
+            for fname in ('frame_pvp_fijo', 'frame_tipo_32', 'frame_dto', 'frame_ofertaweb', 'frame_comentarios'):
+                frm = getattr(self.ui, fname, None)
+                if frm is not None:
+                    try:
+                        frm.setEnabled(enable)
+                    except Exception:
+                        pass
+
+            for w in target_widgets:
+                try:
+                    w.setEnabled(enable)
+                except Exception:
+                    try:
+                        # Some widgets don't support setEnabled in a uniform way; try readOnly
+                        w.setReadOnly(not enable)
+                    except Exception:
+                        pass
+
+            # Master promotion checkbox: should be enabled when the article is in edit mode
+            try:
+                if hasattr(self.ui, 'chkArticulo_promocionado'):
+                    self.ui.chkArticulo_promocionado.setEnabled(article_editing)
+            except Exception:
+                pass
+
+            # Give focus to description field if enabling
+            if enable:
+                try:
+                    if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                        self.ui.txtOferta_Descripcion_promocion.setFocus()
+                except Exception:
+                    pass
+
         except Exception:
+            # Fail safe: don't let UI errors break the application
             pass
 
     def _on_add_oferta(self):
@@ -1307,10 +1365,9 @@ class ArticulosView(QWidget):
 
         Enable save/undo and disable add/edit controls until saved or undone.
         """
-        # Mark internal state (optional)
         self._editing_oferta = True
 
-        # Clear oferta form fields if present and enable editing
+        # Clear oferta form fields and enable editing
         try:
             if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
                 self.ui.txtOferta_Descripcion_promocion.clear()
@@ -1325,16 +1382,127 @@ class ArticulosView(QWidget):
         self._enable_oferta_editing(True)
 
     def _on_save_oferta(self):
+        """User clicked 'Guardar oferta' — save oferta using controller and exit edit mode."""
+        payload = {}
+        try:
+            if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                try:
+                    payload['descripcion'] = self.ui.txtOferta_Descripcion_promocion.text() or None
+                except Exception:
+                    pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_Fecha_ini'):
+                    d1 = self.ui.txtOferta_Fecha_ini.date()
+                    payload['fecha_inicio'] = qdate_to_date(d1) if d1 is not None else None
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_Fecha_fin'):
+                    d2 = self.ui.txtOferta_Fecha_fin.date()
+                    payload['fecha_fin'] = qdate_to_date(d2) if d2 is not None else None
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'chkArticulo_promocionado'):
+                    payload['activa'] = bool(self.ui.chkArticulo_promocionado.isChecked())
+            except Exception:
+                pass
+
+            if hasattr(self, 'controller') and hasattr(self.controller, 'save_oferta'):
+                success, message = self.controller.save_oferta(payload)
+                if not success:
+                    try:
+                        QMessageBox.warning(self, 'Error', f'No se pudo guardar la oferta: {message}')
+                    except Exception:
+                        pass
+
+        finally:
+            self._editing_oferta = False
+            self._enable_oferta_editing(False)
+
+    def _on_undo_oferta(self):
+        """User clicked 'Deshacer oferta' — restore values and exit edit mode."""
+        try:
+            current = None
+            if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
+                current = self.controller.get_current_article()
+
+            if current and isinstance(current, dict):
+                if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                    try:
+                        self.ui.txtOferta_Descripcion_promocion.setText(str(current.get('descripcion', '') or ''))
+                    except Exception:
+                        pass
+        except Exception:
+            pass
+
+        self._editing_oferta = False
+        self._enable_oferta_editing(False)
+        self._enable_oferta_editing(True)
+
+    def _on_edit_oferta(self):
+        """User clicked 'Editar oferta' — enable editing existing oferta."""
+        self._editing_oferta = True
+        self._enable_oferta_editing(True)
+
+    def _on_save_oferta(self):
         """User clicked 'Guardar oferta' — perform basic save workflow and exit edit mode.
 
         Note: detailed persistence is handled when the article is saved via self._on_save_clicked
         — this handler toggles UI state only.
         """
+        # Gather oferta payload from UI and persist using controller
+        payload = {}
         try:
-            # For UX: disable editing buttons immediately to prevent double clicks while saving
-            self._enable_oferta_editing(False)
-        finally:
+            # Description
+            if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                try:
+                    payload['descripcion'] = self.ui.txtOferta_Descripcion_promocion.text() or None
+                except Exception:
+                    pass
+
+            # Dates
+            try:
+                if hasattr(self.ui, 'txtOferta_Fecha_ini'):
+                    d1 = self.ui.txtOferta_Fecha_ini.date()
+                    dt = qdate_to_date(d1) if d1 is not None else None
+                    payload['fecha_inicio'] = dt
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_Fecha_fin'):
+                    d2 = self.ui.txtOferta_Fecha_fin.date()
+                    dt2 = qdate_to_date(d2) if d2 is not None else None
+                    payload['fecha_fin'] = dt2
+            except Exception:
+                pass
+
+            # Activa flag - use article-level checkbox if present
+            try:
+                if hasattr(self.ui, 'chkArticulo_promocionado'):
+                    payload['activa'] = bool(self.ui.chkArticulo_promocionado.isChecked())
+            except Exception:
+                pass
+
+            # Attempt to persist via controller
+            if hasattr(self, 'controller') and hasattr(self.controller, 'save_oferta'):
+                success, message = self.controller.save_oferta(payload)
+                if not success:
+                    try:
+                        QMessageBox.warning(self, 'Error', f'No se pudo guardar la oferta: {message}')
+                    except Exception:
+                        pass
+            # Finally disable editing UI and clear editing flag
             self._editing_oferta = False
+            self._enable_oferta_editing(False)
+        except Exception:
+            # Ensure we reset editing state even on unexpected exceptions
+            self._editing_oferta = False
+            self._enable_oferta_editing(False)
 
     def _on_undo_oferta(self):
         """User clicked 'Deshacer oferta' — cancel changes and exit edit mode."""

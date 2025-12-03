@@ -37,11 +37,27 @@ class TarifasBaseView(QDialog):
         self._setup_initial_state()
 
     def _ensure_tarifas_database(self):
+        """
+        Ensure the view is using the correct articles database for the currently
+        selected company. In a multi-company setup the database name should come
+        from the company context and must NOT be hard-coded.
+
+        Behavior:
+        - If current DB is 'main' and a company is selected, switch to that
+          company's database (company context returns 'database_name').
+        - Otherwise do nothing and keep current database.
+        """
         current = get_current_database()
         if current == 'main':
             try:
-                set_current_database('artstudio3d')
+                # Use company_manager to find the company DB name rather than hardcoding
+                from core.company_manager import get_current_company_context
+
+                ctx = get_current_company_context()
+                if ctx.get('has_company') and ctx.get('database_name'):
+                    set_current_database(ctx.get('database_name'))
             except Exception:
+                # If anything goes wrong, don't crash the view — leave the current DB
                 pass
 
     def _setup_connections(self):

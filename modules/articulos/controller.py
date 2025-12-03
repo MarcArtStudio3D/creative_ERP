@@ -398,6 +398,66 @@ class ArticuloController:
     def get_current_article(self) -> Optional[Dict[str, Any]]:
         """Obtener los datos del artículo actualmente cargado"""
         return self.current_article
+
+    def save_oferta(self, oferta_payload: Dict[str, Any]) -> tuple[bool, str]:
+        """
+        Guardar (insertar o actualizar) una oferta independiente para el artículo actualmente cargado.
+        oferta_payload puede contener: fecha_inicio, fecha_fin, activa, descripcion, etc.
+
+        Devuelve (success: bool, message: str)
+        """
+        if not self.current_article:
+            return False, "No article loaded"
+
+        try:
+            from core.db import get_engine
+            from sqlalchemy.orm import sessionmaker
+
+            engine = get_engine()
+
+            # Use a short transaction to upsert oferta only
+            try:
+                with engine.begin() as conn:
+                    Session = sessionmaker(bind=conn, autocommit=False, autoflush=False)
+                    session = Session()
+                    tx_repo = ArticuloRepository(session=session)
+
+                    tarifa_id = tx_repo.get_default_tarifa()
+
+                    ok = tx_repo.upsert_oferta(self.current_article['id'], tarifa_id, oferta_payload)
+                    if not ok:
+                        raise Exception('Repository upsert failed')
+            except Exception as e:
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+                session.close()
+                return False, f"Error guardando oferta: {e}"
+            finally:
+                try:
+                    session.close()
+                except Exception:
+                    pass
+
+            # Refresh current_article oferta fields
+            try:
+                oferta = self.repository.get_oferta_for_article(self.current_article['id'])
+                if oferta:
+                    self.current_article['oferta_fecha_inicio'] = oferta.get('fecha_inicio')
+                    self.current_article['oferta_fecha_fin'] = oferta.get('fecha_fin')
+                    self.current_article['oferta_activa'] = oferta.get('activa')
+                else:
+                    self.current_article['oferta_fecha_inicio'] = None
+                    self.current_article['oferta_fecha_fin'] = None
+                    self.current_article['oferta_activa'] = False
+            except Exception:
+                # Non-fatal: ignore refresh errors
+                pass
+
+            return True, "Oferta guardada correctamente"
+        except Exception as e:
+            return False, f"Error guardando oferta: {e}"
     
     def get_article_id(self) -> Optional[int]:
         """Obtener el ID del artículo actualmente cargado"""

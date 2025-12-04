@@ -77,16 +77,42 @@ def show_question(parent, title: str, message: str, buttons=None, default=None):
         pass
 
     try:
-        if buttons is None and default is None:
-            return QMessageBox.question(parent, title, message)
+        # Build a user-friendly, translatable question dialog using explicit button labels.
+        # This ensures we show localized labels such as 'Sí' / 'No' instead of raw 'Yes' / 'No'.
+        from PySide6.QtCore import QCoreApplication
 
-        # If buttons/default provided, pass them through
-        if buttons is None:
-            buttons = QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
-        if default is None:
-            default = QMessageBox.StandardButton.No
+        # If caller did not request custom buttons, provide localized Yes/No buttons.
+        yes_label = QCoreApplication.translate("core.ui_helpers", "Sí")
+        no_label = QCoreApplication.translate("core.ui_helpers", "No")
 
-        return QMessageBox.question(parent, title, message, buttons, default)
+        # Create message box and add translated buttons. Use default role mapping to return StandardButton values.
+        msg = QMessageBox(parent)
+        msg.setIcon(QMessageBox.Question)
+        msg.setWindowTitle(title)
+        msg.setText(message)
+
+        # Add custom translated buttons and keep references
+        yes_btn = msg.addButton(yes_label, QMessageBox.AcceptRole)
+        no_btn = msg.addButton(no_label, QMessageBox.RejectRole)
+
+        # Choose default shown button
+        try:
+            if default == QMessageBox.StandardButton.Yes:
+                msg.setDefaultButton(yes_btn)
+            elif default == QMessageBox.StandardButton.No:
+                msg.setDefaultButton(no_btn)
+            else:
+                # fallback default behaviour — choose No as safer default
+                msg.setDefaultButton(no_btn)
+        except Exception:
+            pass
+
+        msg.exec()
+        clicked = msg.clickedButton()
+        if clicked == yes_btn:
+            return QMessageBox.StandardButton.Yes
+        else:
+            return QMessageBox.StandardButton.No
     except Exception:
         # If the dialog fails, fall back to returning default or Yes
         return default if default is not None else QMessageBox.StandardButton.Yes

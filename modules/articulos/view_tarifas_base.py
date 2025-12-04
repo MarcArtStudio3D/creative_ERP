@@ -6,6 +6,7 @@ from modules.articulos.ui_frmTarifasBase import Ui_Dialog
 from modules.articulos.tarifa_tipo_controller import TarifaTipoController
 from core.ui_helpers import show_warning, show_info, show_critical, show_question
 from core.db import get_current_database, set_current_database
+import logging
 
 
 class TarifasBaseView(QDialog):
@@ -78,20 +79,20 @@ class TarifasBaseView(QDialog):
         try:
             self.ui.tableWidget.cellDoubleClicked.connect(self._on_table_double_click)
             pass
-        except Exception as e:
-            print(f"✗ Warning: No se pudo conectar cellDoubleClicked: {e}")
+        except Exception:
+            logging.getLogger(__name__).warning("✗ Warning: No se pudo conectar cellDoubleClicked")
         try:
             # map QModelIndex -> (row, col)
             self.ui.tableWidget.doubleClicked.connect(lambda idx: self._on_table_double_click(idx.row(), idx.column()))
             pass
-        except Exception as e:
-            print(f"✗ Warning: No se pudo conectar doubleClicked: {e}")
+        except Exception:
+            logging.getLogger(__name__).warning("✗ Warning: No se pudo conectar doubleClicked")
         try:
             # itemDoubleClicked provides the QTableWidgetItem directly
             self.ui.tableWidget.itemDoubleClicked.connect(lambda item: self._on_table_double_click(item.row(), item.column()))
             pass
-        except Exception as e:
-            print(f"✗ Warning: No se pudo conectar itemDoubleClicked: {e}")
+        except Exception:
+            logging.getLogger(__name__).warning("✗ Warning: No se pudo conectar itemDoubleClicked")
 
         # Mark search fields as dirty when the user edits them explicitly
         if hasattr(self.ui, 'lineEdit'):
@@ -337,14 +338,14 @@ class TarifasBaseView(QDialog):
                     pass
                     tipo_id = None
             else:
-                print(f"DEBUG: id_item es None o vacío")
+                logging.getLogger(__name__).debug("DEBUG: id_item es None o vacío")
 
             # Primary path: try to load by ID
             loaded = False
             if tipo_id is not None:
-                print(f"DEBUG: Intentando cargar por ID {tipo_id}...")
+                logging.getLogger(__name__).debug(f"DEBUG: Intentando cargar por ID {tipo_id}...")
                 loaded = self.controller.load_by_id(tipo_id)
-                print(f"DEBUG: load_by_id result = {loaded}")
+                logging.getLogger(__name__).debug(f"DEBUG: load_by_id result = {loaded}")
             else:
                 pass
 
@@ -396,8 +397,7 @@ class TarifasBaseView(QDialog):
                 # inform the user if loading failed
                 show_warning(self, self.tr("No encontrado"), self.tr("No se pudo cargar el registro para edición"))
         except Exception as e:
-            import traceback
-            traceback.print_exc()
+            logging.getLogger(__name__).exception("Error handling double click in tarifas base")
             show_critical(self, self.tr("Error"), str(e))
 
     def _on_add(self):

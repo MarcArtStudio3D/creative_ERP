@@ -1,5 +1,6 @@
 from typing import Optional
 from modules.articulos.repository import ArticuloRepository
+import logging
 
 
 class TarifaTipoController:
@@ -17,8 +18,8 @@ class TarifaTipoController:
             self.current_index = 0 if res else -1
             self.current = res[0] if res else None
             return res
-        except Exception as e:
-            print(f"Error listing tarifa tipos: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error listing tarifa tipos")
             return []
 
     def load_by_id(self, tipo_id: int) -> bool:
@@ -33,8 +34,8 @@ class TarifaTipoController:
                         break
                 return True
             return False
-        except Exception as e:
-            print(f"Error loading tarifa tipo {tipo_id}: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception(f"Error loading tarifa tipo {tipo_id}")
             return False
 
     def create(self, payload: dict) -> int | None:
@@ -46,8 +47,8 @@ class TarifaTipoController:
             if new_id:
                 self.load_by_id(int(new_id))
             return new_id
-        except Exception as e:
-            print(f"Error creating tarifa tipo: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error creating tarifa tipo")
             return None
 
     def update(self, tipo_id: int, payload: dict) -> bool:
@@ -57,8 +58,8 @@ class TarifaTipoController:
                 self.list_all()
                 self.load_by_id(tipo_id)
             return ok
-        except Exception as e:
-            print(f"Error updating tarifa tipo: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error updating tarifa tipo")
             return False
 
     def delete(self, tipo_id: int) -> bool:
@@ -74,8 +75,8 @@ class TarifaTipoController:
                     self.current_index = -1
                     self.current = None
             return ok
-        except Exception as e:
-            print(f"Error deleting tarifa tipo: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error deleting tarifa tipo")
             return False
 
     def next(self) -> bool:

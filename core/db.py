@@ -55,7 +55,8 @@ def set_current_database(db_name):
         sessionmaker(autocommit=False, autoflush=False, bind=_current_engine)
     )
 
-    print(f"Database switched to: {_current_db} ({db_url})")
+    logger = logging.getLogger(__name__)
+    logger.debug("Database switched to: %s (%s)", _current_db, db_url)
 
 def get_current_database():
     """Obtiene el nombre de la base de datos actual."""
@@ -155,7 +156,7 @@ def init_db(db_name=None, initiator: str | None = None):
         from . import models as core_models
         try:
             core_models.Base.metadata.create_all(bind=current_engine)
-            print("Global tables created in the main database")
+            logger.info("Global tables created in the main database")
         except Exception as e:
             logger.exception(f"ERROR creating global tables: {e}")
             raise
@@ -309,10 +310,10 @@ def _ensure_columns(base, dialect, engine=None):
             try:
                 with engine.connect() as conn:
                     conn.execute(stmt)
-                    print(f"Column added: {table_name}.{col_name} ({sql_type})")
+                    logging.getLogger(__name__).info("Column added: %s.%s (%s)", table_name, col_name, sql_type)
             except Exception as e:
                 # best-effort: ignore failures to avoid breaking startup
-                print(f"Error adding column {table_name}.{col_name}: {e}")
+                logging.getLogger(__name__).warning("Error adding column %s.%s: %s", table_name, col_name, e)
                 continue
 
 
@@ -334,7 +335,7 @@ def set_database_for_company(company_id: int, init: bool = False, initiator: str
         # Cambiar a la base de datos de la empresa
         set_current_database(db_key)
 
-        print(f"Database switched for company {company_id}")
+        logging.getLogger(__name__).debug("Database switched for company %s", company_id)
 
         # Optionally initialize the DB for the company (explicit init only)
         if init:
@@ -343,7 +344,7 @@ def set_database_for_company(company_id: int, init: bool = False, initiator: str
             init_db(initiator=initiator)
 
     except Exception as e:
-        print(f"ERROR configuring database for company {company_id}: {e}")
+        logging.getLogger(__name__).exception("ERROR configuring database for company %s: %s", company_id, e)
         raise
 
 def get_company_database_info(company_id: int) -> dict:
@@ -403,7 +404,7 @@ def refresh_database_configs():
         'current': env_config.get_database_url('main')
     })
 
-    print("Database configurations refreshed")
+    logging.getLogger(__name__).debug("Database configurations refreshed")
 
 def get_france_db_path():
     """Obtiene la ruta completa a la base de datos de Francia."""

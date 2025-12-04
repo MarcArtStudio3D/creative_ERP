@@ -9,6 +9,7 @@ from PySide6.QtCore import QSettings
 import sys
 
 from core.db import init_db
+import logging
 from core.auth import AuthenticationManager
 from core.module_manager import ModuleManager
 from core.translations import load_translation  # NUEVO
@@ -55,9 +56,9 @@ class CreativeERPApp:
         # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
         
         # Inicializar base de datos
-        print("Inicializando base de datos...")
+        logging.getLogger(__name__).info("Inicializando base de datos...")
         init_db()
-        print("✓ Base de datos lista")
+        logging.getLogger(__name__).info("✓ Base de datos lista")
         
         return True
     
@@ -87,8 +88,8 @@ class CreativeERPApp:
             self.show_login()
             return
         
-        print(f"\n✓ Usuario: {session.user.full_name}")
-        print(f"✓ Rol: {session.user.role.value}")
+        logging.getLogger(__name__).info(f"\n✓ Usuario: {session.user.full_name}")
+        logging.getLogger(__name__).info(f"✓ Rol: {session.user.role.value}")
         
         self.main_window = MainWindowV2(session)
         self.main_window.logout_requested.connect(self.on_logout)
@@ -120,8 +121,8 @@ class CreativeERPApp:
             
             # Recargar ventanas para aplicar traducciones
             # (Esto requeriría cerrar y reabrir las ventanas)
-            print(f"Idioma cambiado a: {language_code}")
-            print("Nota: Reinicia la aplicación para ver todos los cambios")
+            logging.getLogger(__name__).info(f"Idioma cambiado a: {language_code}")
+            logging.getLogger(__name__).info("Nota: Reinicia la aplicación para ver todos los cambios")
     # =======================================================
     
     def run(self):

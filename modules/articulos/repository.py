@@ -703,7 +703,7 @@ class ArticuloRepository:
                         ).first()
                         if empresa:
                             pais = empresa.pais
-                            print(f"Company country: {pais}")
+                            logging.getLogger(__name__).debug(f"Company country: {pais}")
                     finally:
                         set_current_database(original_db)
                         main_session.close()
@@ -711,7 +711,7 @@ class ArticuloRepository:
             # Default to España if still no country
             if not pais:
                 pais = 'España'
-                print(f"Using default country: {pais}")
+                logging.getLogger(__name__).debug(f"Using default country: {pais}")
             
             # First, check if table exists
             try:
@@ -719,9 +719,9 @@ class ArticuloRepository:
                     SELECT COUNT(*) as count FROM TVAIVA LIMIT 1
                 """
                 check_result = session.execute(text(check_sql))
-                print(f"✓ Tabla TVAIVA existe")
+                logging.getLogger(__name__).debug("✓ Tabla TVAIVA existe")
             except Exception as table_error:
-                print(f"❌ Tabla TVAIVA no existe o error: {table_error}")
+                logging.getLogger(__name__).warning(f"❌ Tabla TVAIVA no existe o error: {table_error}")
                 return []
             
             # Query TVAIVA table (case-insensitive comparison)
@@ -737,20 +737,18 @@ class ArticuloRepository:
             
             if not iva_types:
                 # Try without country filter to see if there's any data
-                print(f"⚠️ No se encontraron tipos de IVA para país '{pais}', intentando sin filtro...")
+                logging.getLogger(__name__).warning(f"⚠️ No se encontraron tipos de IVA para país '{pais}', intentando sin filtro...")
                 sql_all = "SELECT id, codigo, descripcion, porcentaje, pais FROM TVAIVA ORDER BY porcentaje ASC"
                 result_all = session.execute(text(sql_all))
                 all_iva = [dict(row._mapping) for row in result_all.fetchall()]
-                print(f"Total IVA types in table: {len(all_iva)}")
+                logging.getLogger(__name__).debug(f"Total IVA types in table: {len(all_iva)}")
                 if all_iva:
-                    print(f"Available countries: {set(row['pais'] for row in all_iva)}")
+                    logging.getLogger(__name__).debug(f"Available countries: {set(row['pais'] for row in all_iva)}")
             
             return iva_types
             
-        except Exception as e:
-            print(f"❌ Error getting IVA types: {e}")
-            import traceback
-            traceback.print_exc()
+        except Exception:
+            logging.getLogger(__name__).exception("❌ Error getting IVA types")
             return []
         finally:
             if not self._external_session:
@@ -1031,6 +1029,25 @@ class ArticuloRepository:
             if not self._external_session:
                 session.commit()
 
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_ofertas_for_article(self, articulo_id: int) -> bool:
+        """Delete all ofertas for the given article id (any tarifa)."""
+        session = self._session()
+        try:
+            session.execute(
+                text("DELETE FROM articulos_ofertas WHERE id_articulo = :id_articulo"),
+                { 'id_articulo': articulo_id }
+            )
+            if not self._external_session:
+                session.commit()
             return True
         except Exception:
             if not self._external_session:

@@ -1,0 +1,23 @@
+name: No stray prints
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-print-usage:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'
+      - name: Make script executable
+        run: |
+          chmod +x scripts/check_no_prints.sh
+      - name: Run stray-print check
+        run: |
+          ./scripts/check_no_prints.sh

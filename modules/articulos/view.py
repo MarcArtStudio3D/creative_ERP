@@ -6,6 +6,7 @@ from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
 from modules.articulos.controller import ArticuloController
 from modules.common.db_consulta_view import DBConsultaView
 from core.db import get_current_database, set_current_database
+import logging
 from core.utils import format_decimal_value, get_company_decimal_settings, parse_decimal_input, qdate_to_date
 
 
@@ -57,9 +58,9 @@ class ArticulosView(QWidget):
             # For now, default to artstudio3d for articles
             try:
                 set_current_database('artstudio3d')
-                print(f"Switched to articles database: artstudio3d")
+                logging.getLogger(__name__).debug("Switched to articles database: artstudio3d")
             except Exception as e:
-                print(f"❌ Error switching to articles database: {e}")
+                logging.getLogger(__name__).exception("Error switching to articles database: %s", e)
                 # Stay on current database if switch fails
     
     # ==================== Setup ====================
@@ -148,7 +149,7 @@ class ArticulosView(QWidget):
         except Exception:
             # Fallback to simple print in any unexpected error
             try:
-                print(f"{title}: {message}")
+                logging.getLogger(__name__).warning(f"{title}: {message}")
             except Exception:
                 pass
 
@@ -241,10 +242,10 @@ class ArticulosView(QWidget):
                 # Store the ID as user data
                 self.ui.cboTipoIVA.addItem(display_text, iva['id'])
             
-            print(f"✓ Loaded {len(iva_types)} IVA types")
+            logging.getLogger(__name__).info(f"✓ Loaded {len(iva_types)} IVA types")
             
-        except Exception as e:
-            print(f"Error populating IVA combo: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error populating IVA combo")
             # Add a default option if error
             self.ui.cboTipoIVA.clear()
             self.ui.cboTipoIVA.addItem(self.tr("Error cargando tipos IVA"), None)
@@ -680,17 +681,30 @@ class ArticulosView(QWidget):
         
         # Promotion dates - QDateEdit -> Python date or None
         try:
-            if hasattr(self.ui, 'txtOferta_Fecha_ini'):
-                qd = self.ui.txtOferta_Fecha_ini.date()
-                py = qdate_to_date(qd)
+            # Only include oferta date fields when the article is explicitly marked as
+            # promoted or the promotions editor is active — avoid inserting empty oferta rows
+            # just because QDateEdit controls contain default dates.
+            include_oferta_dates = False
+            try:
+                if hasattr(self.ui, 'chkArticulo_promocionado') and self.ui.chkArticulo_promocionado.isChecked():
+                    include_oferta_dates = True
+            except Exception:
+                include_oferta_dates = include_oferta_dates
 
-                data['oferta_fecha_inicio'] = py
+            # Also include dates when we are editing/creating an oferta (explicit user action)
+            if getattr(self, '_editing_oferta', False) or getattr(self, '_creating_oferta', False) or getattr(self, '_current_oferta_id', None):
+                include_oferta_dates = True
 
-            if hasattr(self.ui, 'txtOferta_Fecha_fin'):
-                qd = self.ui.txtOferta_Fecha_fin.date()
-                py = qdate_to_date(qd)
+            if include_oferta_dates:
+                if hasattr(self.ui, 'txtOferta_Fecha_ini'):
+                    qd = self.ui.txtOferta_Fecha_ini.date()
+                    py = qdate_to_date(qd)
+                    data['oferta_fecha_inicio'] = py
 
-                data['oferta_fecha_fin'] = py
+                if hasattr(self.ui, 'txtOferta_Fecha_fin'):
+                    qd = self.ui.txtOferta_Fecha_fin.date()
+                    py = qdate_to_date(qd)
+                    data['oferta_fecha_fin'] = py
         except Exception:
             # Don't break saving if date conversion fails; just omit dates
             pass
@@ -803,8 +817,8 @@ class ArticulosView(QWidget):
         try:
             articles = self.controller.filter_articles(filter_text)
             self.articles_model.set_articles(articles)
-        except Exception as e:
-            print(f"Error loading articles: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error loading articles")
     
     def _on_filter_changed(self, text: str):
         """Manejar cambio de filtro - recargar artículos con filtro"""
@@ -1363,12 +1377,12 @@ class ArticulosView(QWidget):
                     if hasattr(self.ui, 'botBuscarSubfamilia'):
                         self.ui.botBuscarSubfamilia.setEnabled(False)
 
-                    print(f"✅ Sección seleccionada: {seccion_codigo} - {seccion_nombre}")
+                    logging.getLogger(__name__).info(f"✅ Sección seleccionada: {seccion_codigo} - {seccion_nombre}")
                 else:
                     self._maybe_warn(self.tr("Error"), self.tr("No se pudo actualizar la sección"))
         
-        except Exception as e:
-            print(f"Error opening section lookup: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error opening section lookup")
             from core.ui_helpers import show_critical
             show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de secciones: {}").format(str(e)))
 
@@ -1406,7 +1420,7 @@ class ArticulosView(QWidget):
                 # Delegate state change to controller (MVC)
                 if self.controller.set_familia_from_lookup(familia_id, familia_codigo, familia_nombre):
                     self.ui.txtfamilia.setText(familia_nombre)
-                    print(f"✅ Familia seleccionada: {familia_codigo} - {familia_nombre}")
+                    logging.getLogger(__name__).info(f"✅ Familia seleccionada: {familia_codigo} - {familia_nombre}")
 
                     # Si estamos en modo edición, habilitar subfamilia (ahora que hay familia)
                     locked = self.ui.botGuardar.isEnabled() == False
@@ -1419,8 +1433,8 @@ class ArticulosView(QWidget):
                 else:
                     self._maybe_warn(self.tr("Error"), self.tr("No se pudo actualizar la familia"))
 
-        except Exception as e:
-            print(f"Error opening family lookup: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error opening family lookup")
             from core.ui_helpers import show_critical
             show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de familias: {}").format(str(e)))
 
@@ -1469,12 +1483,12 @@ class ArticulosView(QWidget):
 
                 if self.controller.set_subfamilia_from_lookup(sub_id, sub_codigo, sub_nombre):
                     self.ui.txtsubfamilia.setText(sub_nombre)
-                    print(f"✅ Subfamilia seleccionada: {sub_codigo} - {sub_nombre}")
+                    logging.getLogger(__name__).info(f"✅ Subfamilia seleccionada: {sub_codigo} - {sub_nombre}")
                 else:
                     self._maybe_warn("Error", "No se pudo actualizar la subfamilia")
 
-        except Exception as e:
-            print(f"Error opening subfamily lookup: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error opening subfamily lookup")
             from core.ui_helpers import show_critical
             show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de subfamilias: {}").format(str(e)))
     
@@ -1609,6 +1623,12 @@ class ArticulosView(QWidget):
                 # UI generator uses 'btnBorrar_oferta' for the delete button
                 if hasattr(self.ui, 'btnBorrar_oferta'):
                     self.ui.btnBorrar_oferta.setEnabled(enable)
+                    try:
+                        if not getattr(self.ui.btnBorrar_oferta, '_delete_connected', False):
+                            self.ui.btnBorrar_oferta.clicked.connect(self._on_borrar_oferta)
+                            setattr(self.ui.btnBorrar_oferta, '_delete_connected', True)
+                    except Exception:
+                        pass
             except Exception:
                 pass
 
@@ -2146,6 +2166,89 @@ class ArticulosView(QWidget):
 
         except Exception:
             # Don't allow activation flow to crash the UI
+            return
+
+    def _on_borrar_oferta(self):
+        """Handler for delete oferta button: ask confirmation and delete the selected oferta."""
+        try:
+            from core.ui_helpers import show_question, show_info, show_critical
+            from PySide6.QtWidgets import QMessageBox
+
+            oferta_id = getattr(self, '_current_oferta_id', None)
+            if not oferta_id:
+                try:
+                    show_info(self, self.tr("Borrar Oferta"), self.tr("Por favor, selecciona una oferta de la lista para borrar"))
+                except Exception:
+                    pass
+                return
+
+            reply = show_question(
+                self,
+                self.tr("Borrar Oferta"),
+                self.tr("¿Desea borrar la oferta seleccionada?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                QMessageBox.StandardButton.No,
+            )
+
+            if reply != QMessageBox.StandardButton.Yes:
+                return
+
+            # Attempt deletion
+            deleted = False
+            try:
+                # Prefer controller.delete_oferta when the controller's current article points to same oferta
+                current = None
+                try:
+                    current = self.controller.get_current_article()
+                except Exception:
+                    current = None
+
+                if current and current.get('oferta_id') == oferta_id:
+                    ok, msg = self.controller.delete_oferta()
+                    deleted = ok
+                else:
+                    # Fall back to repository-level deletion by primary key
+                    if hasattr(self.controller, 'repository') and getattr(self.controller, 'repository'):
+                        deleted = self.controller.repository.delete_oferta_by_id(oferta_id)
+            except Exception:
+                deleted = False
+
+            if not deleted:
+                try:
+                    show_critical(self, self.tr("Error"), self.tr("Ocurrió un error al borrar la oferta"))
+                except Exception:
+                    pass
+                return
+
+            # Refresh UI and clear selection
+            try:
+                try:
+                    art = self.controller.get_current_article()
+                    if art and isinstance(art, dict) and art.get('id'):
+                        self.controller.load_by_id(art.get('id'))
+                except Exception:
+                    pass
+
+                try:
+                    self._refresh_ofertas_table()
+                except Exception:
+                    pass
+
+                try:
+                    self._current_oferta_id = None
+                    if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                        self.ui.txtOferta_Descripcion_promocion.clear()
+                except Exception:
+                    pass
+
+                try:
+                    show_info(self, self.tr("Borrar Oferta"), self.tr("Oferta borrada correctamente"))
+                except Exception:
+                    pass
+            except Exception:
+                pass
+
+        except Exception:
             return
 
 

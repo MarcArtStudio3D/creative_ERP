@@ -11,13 +11,14 @@ import json
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 from modules.gestor_modulos.model import RolePermissionsManager
+import logging
 
 
 def agregar_permisos_divisiones():
     """Agrega los permisos del módulo divisiones_almacen a todos los roles"""
-    print("=" * 60)
-    print("AGREGANDO PERMISOS PARA MÓDULO: divisiones_almacen")
-    print("=" * 60)
+    logging.getLogger(__name__).info("=" * 60)
+    logging.getLogger(__name__).info("AGREGANDO PERMISOS PARA MÓDULO: divisiones_almacen")
+    logging.getLogger(__name__).info("=" * 60)
     
     # Cargar el gestor de permisos
     manager = RolePermissionsManager()
@@ -26,11 +27,11 @@ def agregar_permisos_divisiones():
     roles = manager.get_all_roles()
     
     if not roles:
-        print("\n⚠️  No se encontraron roles en el sistema.")
-        print("   Creando permisos para roles estándar...")
+        logging.getLogger(__name__).warning("\n⚠️  No se encontraron roles en el sistema.")
+        logging.getLogger(__name__).info("   Creando permisos para roles estándar...")
         roles = ['admin', 'sales', 'employee']
     
-    print(f"\nRoles found: {', '.join(roles)}")
+    logging.getLogger(__name__).debug(f"\nRoles found: {', '.join(roles)}")
     
     # Permisos a otorgar (completos para admin, lectura para otros)
     permisos_completos = ['READ', 'CREATE', 'UPDATE', 'DELETE', 'ADMIN']
@@ -48,31 +49,31 @@ def agregar_permisos_divisiones():
         
         # Establecer permisos
         manager.set_module_permissions(role, 'divisiones_almacen', permisos)
-        print(f"   ✅ Rol '{role}': permisos {tipo} configurados")
+        logging.getLogger(__name__).info(f"   ✅ Rol '{role}': permisos {tipo} configurados")
         count += 1
     
     # Guardar cambios
     if manager.save():
-        print(f"\n✅ Permisos guardados correctamente para {count} rol(es)")
-        print(f"File: {manager.file_path}")
+        logging.getLogger(__name__).info(f"\n✅ Permisos guardados correctamente para {count} rol(es)")
+        logging.getLogger(__name__).info(f"File: {manager.file_path}")
         
         # Mostrar contenido del módulo en el archivo
-        print("\nConfiguration saved:")
+        logging.getLogger(__name__).info("\nConfiguration saved:")
         for role in roles:
             perms = manager.get_module_permissions(role, 'divisiones_almacen')
-            print(f"   {role}: {', '.join(perms)}")
+            logging.getLogger(__name__).info(f"   {role}: {', '.join(perms)}")
         
-        print("\n" + "=" * 60)
-        print("✓ PROCESO COMPLETADO")
-        print("=" * 60)
-        print("\nYou can now:")
-        print("   1. Reiniciar la aplicación")
-        print("   2. Seleccionar la categoría 'Almacén'")
-        print("   3. Ver y usar el módulo 'Secciones Almacén'")
+        logging.getLogger(__name__).info("\n" + "=" * 60)
+        logging.getLogger(__name__).info("✓ PROCESO COMPLETADO")
+        logging.getLogger(__name__).info("=" * 60)
+        logging.getLogger(__name__).info("\nYou can now:")
+        logging.getLogger(__name__).info("   1. Reiniciar la aplicación")
+        logging.getLogger(__name__).info("   2. Seleccionar la categoría 'Almacén'")
+        logging.getLogger(__name__).info("   3. Ver y usar el módulo 'Secciones Almacén'")
         
         return True
     else:
-        print("\n❌ Error al guardar los permisos")
+        logging.getLogger(__name__).error("\n❌ Error al guardar los permisos")
         return False
 
 
@@ -80,8 +81,6 @@ if __name__ == "__main__":
     try:
         exito = agregar_permisos_divisiones()
         sys.exit(0 if exito else 1)
-    except Exception as e:
-        print(f"\n❌ ERROR: {e}")
-        import traceback
-        traceback.print_exc()
+    except Exception:
+        logging.getLogger(__name__).exception("\n❌ ERROR agregar_permisos_divisiones")
         sys.exit(1)

@@ -5,6 +5,7 @@ colores alternativos neutros como en clientes y empresas modernos.
 """
 
 import sys
+import logging
 import re
 import os
 
@@ -90,24 +91,25 @@ def process_file(filepath):
             return True
         return False
 
-    except Exception as e:
-        print(f"Error processing {filepath}: {e}", file=sys.stderr)
+    except Exception:
+        import traceback
+        logging.getLogger(__name__).exception(f"Error processing {filepath}")
         return False
 
 def main():
     if len(sys.argv) != 2:
-        print("Usage: python clean_ui_colors.py <ui_python_file>", file=sys.stderr)
+        logging.getLogger(__name__).error("Usage: python clean_ui_colors.py <ui_python_file>")
         sys.exit(1)
 
     filepath = sys.argv[1]
     if not os.path.exists(filepath):
-        print(f"File not found: {filepath}", file=sys.stderr)
+        logging.getLogger(__name__).error(f"File not found: {filepath}")
         sys.exit(1)
 
     if process_file(filepath):
-        print(f"Cleaned hardcoded colors from {filepath}")
+        logging.getLogger(__name__).info(f"Cleaned hardcoded colors from {filepath}")
     else:
-        print(f"No hardcoded colors found in {filepath}")
+        logging.getLogger(__name__).info(f"No hardcoded colors found in {filepath}")
 
 if __name__ == "__main__":
     main()

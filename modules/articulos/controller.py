@@ -1,6 +1,7 @@
 from typing import Optional, Dict, Any, List
 from datetime import date
 from modules.articulos.repository import ArticuloRepository
+import logging
 
 
 class ArticuloController:
@@ -32,8 +33,8 @@ class ArticuloController:
             self.codigo_anterior = self.current_article.get("codigo")
 
             return True
-        except Exception as e:
-            print(f"Error creating article: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error creating article")
             return False
     
     def load_by_id(self, articulo_id: int) -> bool:
@@ -76,8 +77,8 @@ class ArticuloController:
                 self.codigo_anterior = article.get("codigo")
                 return True
             return False
-        except Exception as e:
-            print(f"Error loading article: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error loading article")
             return False
     
     def get_secciones_sql(self) -> str:
@@ -98,16 +99,16 @@ class ArticuloController:
             
             # Return success - the view will update the display fields
             return True
-        except Exception as e:
-            print(f"Error setting section: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error setting section")
             return False
     
     def get_secciones_data(self) -> list:
         """Obtener datos de secciones para el diálogo de búsqueda"""
         try:
             return self.repository.get_secciones_data()
-        except Exception as e:
-            print(f"Error getting sections data: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error getting sections data")
             return []
 
     def set_familia_from_lookup(self, familia_id: int, familia_codigo: str, familia_nombre: str) -> bool:
@@ -121,8 +122,8 @@ class ArticuloController:
             # Changing family invalidates subfamily selection
             self.current_article['id_subfamilia'] = None
             return True
-        except Exception as e:
-            print(f"Error setting familia: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error setting familia")
             return False
 
     def get_familias_data(self, id_seccion: int = None) -> list:
@@ -131,8 +132,8 @@ class ArticuloController:
         """
         try:
             return self.repository.get_familias_data(id_seccion)
-        except Exception as e:
-            print(f"Error getting familias data: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error getting familias data")
             return []
     
     def next_article(self) -> bool:
@@ -148,8 +149,8 @@ class ArticuloController:
                 self.codigo_anterior = next_art.get("codigo")
                 return True
             return False
-        except Exception as e:
-            print(f"Error navigating to next article: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error navigating to next article")
             return False
     
     def prev_article(self) -> bool:
@@ -165,8 +166,8 @@ class ArticuloController:
                 self.codigo_anterior = prev_art.get("codigo")
                 return True
             return False
-        except Exception as e:
-            print(f"Error navigating to previous article: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error navigating to previous article")
             return False
     
     def save(self, form_data: Dict[str, Any]) -> tuple[bool, str]:
@@ -241,7 +242,39 @@ class ArticuloController:
                         raise Exception("Error actualizando artículo")
 
                     if oferta_payload:
-                        ok = tx_repo.upsert_oferta(self.current_article["id"], tarifa_id, oferta_payload)
+                        # Only create/insert an oferta row when there is meaningful data or an
+                        # existing oferta already exists for this article+tarifa. This prevents
+                        # accidental creation of empty oferta rows when saving article form
+                        # that contains only None/empty placeholder keys.
+                        try:
+                            existing = tx_repo.get_oferta_for_article(self.current_article["id"], tarifa_id)
+                        except Exception:
+                            existing = None
+
+                        def _meaningful(v):
+                            # treat None, empty-string, False and numeric 0 as not meaningful
+                            if v is None:
+                                return False
+                            if isinstance(v, str) and v.strip() == "":
+                                return False
+                            if isinstance(v, bool) and v is False:
+                                return False
+                            try:
+                                if isinstance(v, (int, float)) and float(v) == 0.0:
+                                    return False
+                            except Exception:
+                                pass
+                            return True
+
+                        has_meaningful = any(_meaningful(val) for val in oferta_payload.values())
+
+                        # If there is no existing oferta and there is no meaningful data, skip upsert
+                        if not existing and not has_meaningful:
+                            # nothing to do — avoid creating empty oferta rows
+                            ok = True
+                        else:
+                            ok = tx_repo.upsert_oferta(self.current_article["id"], tarifa_id, oferta_payload)
+
                         if not ok:
                             raise Exception("Error guardando oferta")
             except Exception as e:
@@ -383,7 +416,7 @@ class ArticuloController:
             return self.repository.get_next_code(prefix, code_length)
             
         except Exception as e:
-            print(f"Error generating auto code: {e}")
+            logging.getLogger(__name__).exception("Error generating auto code")
             # Fallback to simple sequential number
             import random
             return f"ART{random.randint(10000, 99999)}"
@@ -631,16 +664,16 @@ class ArticuloController:
 
             self.current_article['id_subfamilia'] = subfamilia_id
             return True
-        except Exception as e:
-            print(f"Error setting subfamilia: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error setting subfamilia")
             return False
 
     def get_subfamilias_data(self, id_familia: int = None) -> list:
         """Obtiene la lista de subfamilias para el diálogo de búsqueda (opcionalmente filtrada por familia)."""
         try:
             return self.repository.get_subfamilias_data(id_familia)
-        except Exception as e:
-            print(f"Error getting subfamilias data: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error getting subfamilias data")
             return []
     
     def get_proveedor_info(self, proveedor_id: int) -> tuple[str, str]:
@@ -654,8 +687,8 @@ class ArticuloController:
         """Buscar artículos (búsqueda parametrizada)"""
         try:
             return self.repository.search(search_term, field, order_by, order_dir)
-        except Exception as e:
-            print(f"Error searching articles: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error searching articles")
             return []
     
     def filter_articles(self, filter_text: str = "") -> list:
@@ -676,8 +709,8 @@ class ArticuloController:
             
             # Search across multiple fields
             return self.repository.search_multi_field(filter_text.strip())
-        except Exception as e:
-            print(f"Error filtering articles: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error filtering articles")
             return []
     
     def get_iva_types(self, pais: str = None) -> List[dict]:

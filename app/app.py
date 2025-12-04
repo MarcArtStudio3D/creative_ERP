@@ -8,6 +8,7 @@ from PySide6.QtCore import QSettings
 import sys
 
 from core.db import init_db
+import logging
 from core.auth import AuthenticationManager
 from core.module_manager import ModuleManager
 
@@ -43,11 +44,11 @@ class CreativeERPApp:
             if os.path.exists(style_path):
                 with open(style_path, 'r') as f:
                     self.qapp.setStyleSheet(f.read())
-                print(f"✓ Estilo moderno cargado desde {style_path}")
+                    logging.getLogger(__name__).info(f"✓ Estilo moderno cargado desde {style_path}")
             else:
-                print(f"⚠ No se encontró el archivo de estilo: {style_path}")
+                    logging.getLogger(__name__).warning(f"⚠ No se encontró el archivo de estilo: {style_path}")
         except Exception as e:
-            print(f"⚠ Error al cargar estilo: {e}")
+            logging.getLogger(__name__).exception(f"⚠ Error al cargar estilo: {e}")
         
         # Set global application icon (try resource first, fallback to file path)
         try:
@@ -66,11 +67,11 @@ class CreativeERPApp:
 
             if not icon.isNull():
                 self.qapp.setWindowIcon(icon)
-                print("✓ Application icon set from LogoIconoCreative.ico")
+                logging.getLogger(__name__).info("✓ Application icon set from LogoIconoCreative.ico")
             else:
-                print("⚠️ Application icon not found (resource and fallback missing)")
+                logging.getLogger(__name__).warning("⚠️ Application icon not found (resource and fallback missing)")
         except Exception as e:
-            print(f"⚠️ Error setting application icon: {e}")
+            logging.getLogger(__name__).exception(f"⚠️ Error setting application icon: {e}")
 
         # Nota: crear tablas en la base de datos es una acción explícita y
         # potencialmente destructiva. No la ejecutamos automáticamente al
@@ -79,7 +80,7 @@ class CreativeERPApp:
         
         # Inicializar CompanyManager
         from core.company_manager import company_manager
-        print("✓ CompanyManager inicializado")
+        logging.getLogger(__name__).info("✓ CompanyManager inicializado")
         
         return True
     
@@ -109,8 +110,8 @@ class CreativeERPApp:
             self.show_login()
             return
         
-        print(f"\n✓ Usuario: {session.user.full_name}")
-        print(f"✓ Rol: {session.user.role.value}")
+        logging.getLogger(__name__).info(f"\n✓ Usuario: {session.user.full_name}")
+        logging.getLogger(__name__).info(f"✓ Rol: {session.user.role.value}")
         
         self.main_window = MainWindowV2(session)
         self.main_window.logout_requested.connect(self.on_logout)

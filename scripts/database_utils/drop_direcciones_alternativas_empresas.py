@@ -13,6 +13,7 @@ project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
 from core.db import get_session, get_engine, get_database_url
+import logging
 from sqlalchemy import text, inspect
 
 
@@ -21,24 +22,24 @@ def drop_table_if_exists(engine, table_name: str):
     inspector = inspect(engine)
     
     if table_name in inspector.get_table_names():
-        print(f"  ✓ Tabla '{table_name}' encontrada, eliminando...")
+        logging.getLogger(__name__).info(f"  ✓ Tabla '{table_name}' encontrada, eliminando...")
         with engine.connect() as conn:
             conn.execute(text(f"DROP TABLE {table_name}"))
             conn.commit()
-        print(f"  ✅ Tabla '{table_name}' eliminada correctamente")
+        logging.getLogger(__name__).info(f"  ✅ Tabla '{table_name}' eliminada correctamente")
     else:
-        print(f"  ℹ️  Tabla '{table_name}' no existe, nada que hacer")
+        logging.getLogger(__name__).info(f"  ℹ️  Tabla '{table_name}' no existe, nada que hacer")
 
 
 def main():
     """Elimina la tabla direcciones_alternativas_empresas de todas las bases de datos."""
     
-    print("=" * 60)
-    print("Eliminando tabla 'direcciones_alternativas_empresas'")
-    print("=" * 60)
+    logging.getLogger(__name__).info("=" * 60)
+    logging.getLogger(__name__).info("Eliminando tabla 'direcciones_alternativas_empresas'")
+    logging.getLogger(__name__).info("=" * 60)
     
     # 1. Base de datos principal (main)
-    print("\n1️⃣  Base de datos MAIN:")
+    logging.getLogger(__name__).info("\n1️⃣  Base de datos MAIN:")
     try:
         main_engine = get_engine('main')
         drop_table_if_exists(main_engine, 'direcciones_alternativas_empresas')
@@ -46,17 +47,17 @@ def main():
         print(f"  ❌ Error en base de datos main: {e}")
     
     # 2. Obtener todas las empresas para limpiar sus bases de datos
-    print("\n2️⃣  Bases de datos de EMPRESAS:")
+    logging.getLogger(__name__).info("\n2️⃣  Bases de datos de EMPRESAS:")
     try:
         from core.models import Empresa
         session = get_session()
         empresas = session.query(Empresa).all()
         
         if not empresas:
-            print("  ℹ️  No hay empresas registradas")
+            logging.getLogger(__name__).info("  ℹ️  No hay empresas registradas")
         else:
             for empresa in empresas:
-                print(f"\n  Empresa: {empresa.nombre_fiscal} (ID: {empresa.id})")
+                logging.getLogger(__name__).info(f"\n  Empresa: {empresa.nombre_fiscal} (ID: {empresa.id})")
                 try:
                     # Obtener URL de la base de datos de la empresa
                     from core.config import get_database_url_for_company
@@ -71,16 +72,16 @@ def main():
                     empresa_engine.dispose()
                     
                 except Exception as e:
-                    print(f"    ❌ Error procesando empresa {empresa.id}: {e}")
+                    logging.getLogger(__name__).exception(f"    ❌ Error procesando empresa {empresa.id}")
         
         session.close()
         
-    except Exception as e:
-        print(f"  ❌ Error obteniendo empresas: {e}")
+    except Exception:
+        logging.getLogger(__name__).exception("  ❌ Error obteniendo empresas")
     
-    print("\n" + "=" * 60)
-    print("✅ Proceso completado")
-    print("=" * 60)
+    logging.getLogger(__name__).info("\n" + "=" * 60)
+    logging.getLogger(__name__).info("✅ Proceso completado")
+    logging.getLogger(__name__).info("=" * 60)
 
 
 if __name__ == "__main__":

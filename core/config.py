@@ -120,7 +120,8 @@ class EnvironmentConfig:
                     custom_config = json.load(f)
                     self._merge_config(config, custom_config)
             except Exception as e:
-                print(f"⚠️  Error cargando configuración personalizada: {e}")
+                import logging
+                logging.getLogger(__name__).warning("Error cargando configuración personalizada: %s", e)
 
         # Sobrescribir con variables de entorno
         self._override_with_env_vars(config)
@@ -227,7 +228,8 @@ class EnvironmentConfig:
         if not config_file.exists():
             with open(config_file, 'w', encoding='utf-8') as f:
                 json.dump({}, f, indent=2, ensure_ascii=False)
-            print(f"✅ Archivo de configuración creado: {config_file}")
+            import logging
+            logging.getLogger(__name__).info("Archivo de configuración creado: %s", config_file)
 
 # Instancia global de configuración
 config = EnvironmentConfig()
@@ -328,16 +330,18 @@ def set_database_for_company(company_id: int, init: bool = False):
         from core.db import init_db
         init_db()
 
-    print(f"Database switched for company {company_id}: {url}")
+    import logging
+    logging.getLogger(__name__).debug("Database switched for company %s: %s", company_id, url)
 
 if __name__ == "__main__":
     # Ejemplo de uso
-    print(f"Entorno actual: {config.get_current_env()}")
-    print(f"URL BD main: {config.get_database_url('main')}")
-    print(f"URL BD artstudio3d: {config.get_database_url('artstudio3d')}")
+    import logging
+    logging.getLogger(__name__).info("Entorno actual: %s", config.get_current_env())
+    logging.getLogger(__name__).info("URL BD main: %s", config.get_database_url('main'))
+    logging.getLogger(__name__).info("URL BD artstudio3d: %s", config.get_database_url('artstudio3d'))
 
     # Listar entornos disponibles
-    print(f"Entornos disponibles: {config.list_available_envs()}")
+    logging.getLogger(__name__).info("Entornos disponibles: %s", config.list_available_envs())
 
     # Crear archivo de configuración para desarrollo si no existe
     config.create_env_file('development')

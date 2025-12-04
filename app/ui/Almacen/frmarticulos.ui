@@ -503,7 +503,7 @@ color: rgb(255, 255, 255);</string>
           </font>
          </property>
          <property name="currentIndex">
-          <number>0</number>
+          <number>3</number>
          </property>
          <widget class="QWidget" name="tab_articulo">
           <property name="styleSheet">
@@ -2305,7 +2305,7 @@ color: rgb(255, 255, 255);</string>
                    <bool>false</bool>
                   </property>
                   <property name="text">
-                   <string>Activar</string>
+                   <string>Activar/Desactivar Oferta</string>
                   </property>
                   <property name="icon">
                    <iconset>
@@ -2333,7 +2333,7 @@ color: rgb(255, 255, 255);</string>
                  </widget>
                 </item>
                 <item row="3" column="3" colspan="2">
-                 <widget class="QPushButton" name="btnBorrar_oferta">
+                 <widget class="QPushButton" name="btnBorrarOferta">
                   <property name="enabled">
                    <bool>false</bool>
                   </property>
@@ -4979,7 +4979,7 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>cboTarifaOferta</tabstop>
   <tabstop>tabla_ofertas</tabstop>
   <tabstop>btnActivarOferta</tabstop>
-  <tabstop>btnBorrar_oferta</tabstop>
+  <tabstop>btnBorrarOferta</tabstop>
   <tabstop>txtOferta_comentarios_promocion</tabstop>
   <tabstop>tablaPaises_web</tabstop>
   <tabstop>cboIdiomasweb</tabstop>

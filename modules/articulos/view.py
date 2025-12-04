@@ -1596,6 +1596,13 @@ class ArticulosView(QWidget):
             try:
                 if hasattr(self.ui, 'btnActivarOferta'):
                     self.ui.btnActivarOferta.setEnabled(enable)
+                    try:
+                        # Connect activation toggle handler once (test-friendly via core.ui_helpers)
+                        if not getattr(self.ui.btnActivarOferta, '_toggle_connected', False):
+                            self.ui.btnActivarOferta.clicked.connect(self._on_toggle_oferta_activa)
+                            setattr(self.ui.btnActivarOferta, '_toggle_connected', True)
+                    except Exception:
+                        pass
             except Exception:
                 pass
             try:
@@ -2045,6 +2052,101 @@ class ArticulosView(QWidget):
             self._refresh_ofertas_table()
         except Exception:
             pass
+
+    def _on_toggle_oferta_activa(self):
+        """Handle btnActivarOferta — confirm with the user then toggle oferta.activa."""
+        try:
+            from PySide6.QtWidgets import QMessageBox
+            from core.ui_helpers import show_question, show_info, show_critical
+
+            # Determine which oferta is selected
+            oferta_id = getattr(self, '_current_oferta_id', None)
+            if not oferta_id:
+                # No selection — ask user to pick an oferta from the table
+                try:
+                    show_info(self, self.tr("Activar"), self.tr("Por favor, selecciona una oferta de la lista"))
+                except Exception:
+                    pass
+                return
+
+            # Try to obtain the current oferta dict from the model first (best-effort), then fall back to repository
+            current = None
+            try:
+                if hasattr(self, 'ofertas_model') and getattr(self, 'ofertas_model') is not None:
+                    for of in getattr(self.ofertas_model, 'offers', []):
+                        if of and isinstance(of, dict) and of.get('id') == oferta_id:
+                            current = of
+                            break
+            except Exception:
+                current = None
+
+            try:
+                if current is None and hasattr(self, 'controller') and getattr(self.controller, 'repository', None):
+                    try:
+                        current = self.controller.repository.get_oferta_by_id(oferta_id)
+                    except Exception:
+                        current = None
+            except Exception:
+                current = None
+
+            if current is None:
+                try:
+                    show_critical(self, self.tr("Activar"), self.tr("No se pudo localizar la oferta seleccionada"))
+                except Exception:
+                    pass
+                return
+
+            current_state = bool(current.get('activa'))
+
+            # Show confirmation dialog
+            reply = show_question(
+                self,
+                self.tr("Cambiar estado de oferta"),
+                self.tr("¿Desea cambiar estado de oferta?"),
+                QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                # default to No so destructive actions require explicit confirmation in UI
+                QMessageBox.StandardButton.No,
+            )
+
+            if reply != QMessageBox.StandardButton.Yes:
+                # canceled
+                return
+
+            # Toggle value
+            payload = {'id': oferta_id, 'activa': (not current_state)}
+            try:
+                ok, msg = self.controller.save_oferta(payload)
+            except Exception as e:
+                ok = False
+                msg = str(e)
+
+            if not ok:
+                try:
+                    self._maybe_warn(self.tr("Error"), self.tr("Ocurrió un error al modificar la oferta activa:%1").format(str(msg)))
+                except Exception:
+                    pass
+                return
+
+            # Refresh UI, keep selection and reflect checkbox state
+            try:
+                self._refresh_ofertas_table()
+            except Exception:
+                pass
+
+            try:
+                # Update currently loaded article / oferta flags
+                # controller.save_oferta refreshes controller.current_article, but ensure checkbox is synced
+                if hasattr(self.ui, 'chkArticulo_promocionado'):
+                    try:
+                        self.ui.chkArticulo_promocionado.setChecked(not current_state)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
+
+        except Exception:
+            # Don't allow activation flow to crash the UI
+            return
 
 
 class OffersTableModel(QAbstractTableModel):

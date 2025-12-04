@@ -84,8 +84,8 @@ def test_view_save_creates_new_oferta(qapp):
     v.ui.txtOferta_Fecha_ini.setDate(QDate(2025, 1, 1))
     v.ui.txtOferta_Fecha_fin.setDate(QDate(2025, 1, 31))
     # set unidades (por cada N)
-    if hasattr(v.ui, 'txtOferta_por_cada'):
-        v.ui.txtOferta_por_cada.setText('3')
+    if hasattr(v.ui, 'txtOfertaPorCada'):
+        v.ui.txtOfertaPorCada.setText('3')
 
     # Save oferta via view handler (this should update the existing oferta row)
     v._on_save_oferta()
@@ -140,8 +140,8 @@ def test_view_save_updates_existing_oferta(qapp):
     v.ui.chkArticulo_promocionado.setChecked(False)
     v.ui.txtOferta_Fecha_ini.setDate(QDate(2026, 2, 2))
     v.ui.txtOferta_Fecha_fin.setDate(QDate(2026, 2, 28))
-    if hasattr(v.ui, 'txtOferta_por_cada'):
-        v.ui.txtOferta_por_cada.setText('5')
+    if hasattr(v.ui, 'txtOfertaPorCada'):
+        v.ui.txtOfertaPorCada.setText('5')
 
     v._on_save_oferta()
 

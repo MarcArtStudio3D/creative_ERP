@@ -83,10 +83,8 @@ class ArticulosView(QWidget):
                 self.ui.chkOferta_dto.toggled.connect(self._sync_oferta_type_fields)
             if hasattr(self.ui, 'chkOferta_web'):
                 self.ui.chkOferta_web.toggled.connect(self._sync_oferta_type_fields)
-            # Support both naming variants for the PVP radio (some UI versions use chkOferta_pvp, others chkOfertaPvp)
-            if hasattr(self.ui, 'chkOferta_pvp'):
-                self.ui.chkOferta_pvp.toggled.connect(self._sync_oferta_type_fields)
-            elif hasattr(self.ui, 'chkOfertaPvp'):
+            # Normalized PVP radio name (from generated UI)
+            if hasattr(self.ui, 'chkOfertaPvp'):
                 self.ui.chkOfertaPvp.toggled.connect(self._sync_oferta_type_fields)
             # Promotions frame action buttons
             if hasattr(self.ui, 'btnAnadirOferta'):
@@ -98,7 +96,8 @@ class ArticulosView(QWidget):
             if hasattr(self.ui, 'btnDeshacerOferta'):
                 self.ui.btnDeshacerOferta.clicked.connect(self._on_undo_oferta)
             # Ensure PVP fixed-price widgets normalize/format on editing finished
-            for candidate in ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo'):
+            # Normalized PVP fixed-price widget name
+            for candidate in ('txtofertaPvpFijo',):
                 w = getattr(self.ui, candidate, None)
                 if w is not None:
                     try:
@@ -527,31 +526,26 @@ class ArticulosView(QWidget):
                 except Exception:
                     pass
 
-            if hasattr(self.ui, 'txtOferta_por_cada'):
+            if hasattr(self.ui, 'txtOfertaPorCada'):
                 try:
                     v = curr.get('oferta_unidades')
                     if v is None:
                         v = ''
                     else:
                         v = str(int(v)) if float(v).is_integer() else str(v)
-                    self.ui.txtOferta_por_cada.setText(v)
+                    self.ui.txtOfertaPorCada.setText(v)
                 except Exception:
                     pass
 
-            if hasattr(self.ui, 'txtOfertaregalo_de'):
+            if hasattr(self.ui, 'txtOfertaregaloUnidades'):
                 try:
                     v = curr.get('oferta_regalo')
-                    self.ui.txtOfertaregalo_de.setText(str(int(v)) if v and float(v).is_integer() else (str(v) if v is not None else ''))
+                    self.ui.txtOfertaregaloUnidades.setText(str(int(v)) if v and float(v).is_integer() else (str(v) if v is not None else ''))
                 except Exception:
                     pass
 
-            # price/pvp fixed field may exist under several name variants; set whichever exists
-            pwp_names = ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp')
-            pvp_widget = None
-            for nm in pwp_names:
-                if hasattr(self.ui, nm):
-                    pvp_widget = getattr(self.ui, nm)
-                    break
+            # price/pvp fixed field canonical name
+            pvp_widget = getattr(self.ui, 'txtofertaPvpFijo', None)
             if pvp_widget is not None:
                 try:
                     v = curr.get('oferta_precio_final')
@@ -897,33 +891,28 @@ class ArticulosView(QWidget):
                 pass
 
             try:
-                if hasattr(self.ui, 'txtOferta_por_cada'):
+                if hasattr(self.ui, 'txtOfertaPorCada'):
                     v = offer.get('unidades')
                     if v is None:
-                        self.ui.txtOferta_por_cada.setText('')
+                        self.ui.txtOfertaPorCada.setText('')
                     else:
-                        self.ui.txtOferta_por_cada.setText(str(int(v)) if float(v).is_integer() else str(v))
+                        self.ui.txtOfertaPorCada.setText(str(int(v)) if float(v).is_integer() else str(v))
             except Exception:
                 pass
 
             try:
-                if hasattr(self.ui, 'txtOfertaregalo_de'):
+                if hasattr(self.ui, 'txtOfertaregaloUnidades'):
                     v = offer.get('regalo')
                     if v is None:
-                        self.ui.txtOfertaregalo_de.setText('')
+                        self.ui.txtOfertaregaloUnidades.setText('')
                     else:
-                        self.ui.txtOfertaregalo_de.setText(str(int(v)) if float(v).is_integer() else str(v))
+                        self.ui.txtOfertaregaloUnidades.setText(str(int(v)) if float(v).is_integer() else str(v))
             except Exception:
                 pass
 
             try:
-                # support multiple variants for the pvp fixed-price input
-                pwp_names = ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp')
-                pvp_widget = None
-                for nm in pwp_names:
-                    if hasattr(self.ui, nm):
-                        pvp_widget = getattr(self.ui, nm)
-                        break
+                # canonical pvp fixed-price input
+                pvp_widget = getattr(self.ui, 'txtofertaPvpFijo', None)
 
                 if pvp_widget is not None:
                     v = offer.get('precio_final')
@@ -937,12 +926,12 @@ class ArticulosView(QWidget):
                         elif 'oferta_precio_final' in offer:
                             value = offer.get('oferta_precio_final')
                         if value is None:
-                            self.ui.txtoferta_pvp_fijo.setText('')
+                            pvp_widget.setText('')
                         else:
                             try:
                                 pvp_widget.setText(format_decimal_value(float(value), self.decimales_precios, use_comma=True))
                             except Exception:
-                                self.ui.txtoferta_pvp_fijo.setText(str(value))
+                                pvp_widget.setText(str(value))
             except Exception:
                 pass
 
@@ -1603,6 +1592,19 @@ class ArticulosView(QWidget):
                     except Exception:
                         pass
 
+            # Ensure activation / delete buttons on the promotions table are toggled
+            try:
+                if hasattr(self.ui, 'btnActivarOferta'):
+                    self.ui.btnActivarOferta.setEnabled(enable)
+            except Exception:
+                pass
+            try:
+                # UI generator uses 'btnBorrar_oferta' for the delete button
+                if hasattr(self.ui, 'btnBorrar_oferta'):
+                    self.ui.btnBorrar_oferta.setEnabled(enable)
+            except Exception:
+                pass
+
             # Master promotion checkbox: should be enabled when the article is in edit mode
             try:
                 if hasattr(self.ui, 'chkArticulo_promocionado'):
@@ -1643,18 +1645,8 @@ class ArticulosView(QWidget):
             is_32 = getattr(self.ui, 'chkOferta_32', None) and bool(self.ui.chkOferta_32.isChecked())
             is_dto = getattr(self.ui, 'chkOferta_dto', None) and bool(self.ui.chkOferta_dto.isChecked())
             is_web = getattr(self.ui, 'chkOferta_web', None) and bool(self.ui.chkOferta_web.isChecked())
-            # Accept multiple naming variants for the PVP selector (underscore or CamelCase)
-            is_pvp = False
-            if getattr(self.ui, 'chkOferta_pvp', None) is not None:
-                try:
-                    is_pvp = bool(self.ui.chkOferta_pvp.isChecked())
-                except Exception:
-                    is_pvp = False
-            elif getattr(self.ui, 'chkOfertaPvp', None) is not None:
-                try:
-                    is_pvp = bool(self.ui.chkOfertaPvp.isChecked())
-                except Exception:
-                    is_pvp = False
+            # Use the normalized PVP radio name from the generated UI
+            is_pvp = getattr(self.ui, 'chkOfertaPvp', None) and bool(self.ui.chkOfertaPvp.isChecked())
 
             # Helper to toggle a widget if it exists. Support multiple naming variants
             def set_enabled(names, value):
@@ -1670,35 +1662,34 @@ class ArticulosView(QWidget):
                             except Exception:
                                 pass
 
-            # 3x2 -> enable por cada & ofertaregalo; disable dto/local, dto web and pvp
-            set_enabled(['txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada'], bool(is_32))
-            set_enabled(['txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], bool(is_32))
+            # 3x2 -> enable por cada & ofertaregalo; use canonical names from UI
+            set_enabled(['txtOfertaPorCada'], bool(is_32))
+            set_enabled(['txtOfertaregaloUnidades'], bool(is_32))
 
             # DTO local -> enable DTO local field; disable web, pvp, 3x2 fields
-            set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal'], bool(is_dto))
+            set_enabled(['txtOfertaDtoOferta'], bool(is_dto))
 
-            # DTO web -> enable web DTO only
-            set_enabled(['txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtOfertaDto_Web'], bool(is_web))
+            # DTO web -> enable web DTO only (canonical name as generated)
+            set_enabled('txtOferta_dto_web', bool(is_web))
 
-            # precio fijo -> enable precio fijo only
-            # Support both common naming variants for the fixed-price input
-            set_enabled(['txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOfertaPvpFijo'], bool(is_pvp))
+            # precio fijo -> enable the canonical fixed-price input only
+            set_enabled('txtofertaPvpFijo', bool(is_pvp))
 
             # Make sure all the mutually exclusive fields are disabled when not selected
             # Disable counterparts for each type (explicitly set False for clarity)
             if is_32:
-                set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp'], False)
+                set_enabled(['txtOfertaDtoOferta', 'txtOferta_dto_web', 'txtofertaPvpFijo'], False)
             elif is_dto:
-                set_enabled(['txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], False)
+                set_enabled(['txtOferta_dto_web', 'txtofertaPvpFijo', 'txtOfertaPorCada', 'txtOfertaregaloUnidades'], False)
             elif is_web:
                 # web mode disables DTO local, pvp and 3x2 fields
-                set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], False)
+                set_enabled(['txtOfertaDtoOferta', 'txtofertaPvpFijo', 'txtOfertaPorCada', 'txtOfertaregaloUnidades'], False)
             elif is_pvp:
                 # pvp mode: ensure pvp fields are left enabled and other special fields are disabled
-                set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], False)
+                set_enabled(['txtOfertaPorCada', 'txtOfertaregaloUnidades', 'txtOfertaDtoOferta', 'txtOferta_dto_web'], False)
             else:
                 # None selected -> disable all special offer fields
-                set_enabled(['txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe', 'txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOfertaPvpFijo'], False)
+                set_enabled(['txtOfertaPorCada', 'txtOfertaregaloUnidades', 'txtOfertaDtoOferta', 'txtOferta_dto_web', 'txtofertaPvpFijo'], False)
 
         except Exception:
             # Keep silent on any error – this code is best-effort UI sync
@@ -1809,29 +1800,24 @@ class ArticulosView(QWidget):
 
             # Numeric mappings (UI -> DB)
             try:
-                if hasattr(self.ui, 'txtOferta_por_cada'):
-                    v = self.ui.txtOferta_por_cada.text().strip()
+                    if hasattr(self.ui, 'txtOfertaPorCada'):
+                        v = self.ui.txtOfertaPorCada.text().strip()
                     if v != '':
                         payload['unidades'] = float(parse_decimal_input(v))
             except Exception:
                 pass
 
             try:
-                if hasattr(self.ui, 'txtOfertaregalo_de'):
-                    v = self.ui.txtOfertaregalo_de.text().strip()
+                    if hasattr(self.ui, 'txtOfertaregaloUnidades'):
+                        v = self.ui.txtOfertaregaloUnidades.text().strip()
                     if v != '':
                         payload['regalo'] = float(parse_decimal_input(v))
             except Exception:
                 pass
 
             try:
-                # Support both naming variants for the fixed-price input
-                pvp_widget = None
-                for n in ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp'):
-                    if hasattr(self.ui, n):
-                        pvp_widget = getattr(self.ui, n)
-                        break
-
+                # canonical fixed-price input name
+                pvp_widget = getattr(self.ui, 'txtofertaPvpFijo', None)
                 if pvp_widget is not None:
                     v = pvp_widget.text().strip()
                     if v != '':

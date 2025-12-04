@@ -37,9 +37,9 @@ def test_3x2_mode_enables_por_cada_and_regalo():
     v.ui.chkOferta_32.setChecked(True)
     v._sync_oferta_type_fields()
 
-    # fields to be enabled
-    enabled_names = ['txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe']
-    disabled_names = ['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtOfertaPvp']
+    # fields to be enabled (canonical UI names)
+    enabled_names = ['txtOfertaPorCada', 'txtOfertaregaloUnidades']
+    disabled_names = ['txtOfertaDtoOferta', 'txtOferta_dto_web', 'txtofertaPvpFijo']
 
     for name in enabled_names:
         w = getattr(v.ui, name, None)
@@ -72,7 +72,7 @@ def test_dto_local_mode_enables_dto_local_only():
         assert v.ui.txtOfertaDto.isEnabled()
 
     # disabled
-    for name in ['txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtOfertaPvp', 'txtOferta_por_cada', 'txtOfertaregalo_de']:
+    for name in ['txtOferta_dto_web', 'txtofertaPvpFijo', 'txtOfertaPorCada', 'txtOfertaregaloUnidades']:
         w = getattr(v.ui, name, None)
         if w is not None:
             assert not w.isEnabled(), f"{name} should be disabled for dto local"
@@ -92,13 +92,13 @@ def test_dto_web_mode_enables_dto_web_only():
     v._sync_oferta_type_fields()
 
     # enabled
-    for name in ['txtOferta_dto_web', 'txtOfertaDtoWeb']:
+    for name in ['txtOferta_dto_web']:
         w = getattr(v.ui, name, None)
         if w is not None:
             assert w.isEnabled(), f"{name} should be enabled for dto web"
 
     # disabled
-    for name in ['txtOfertaDtoOferta', 'txtOfertaDto', 'txtoferta_pvp_fijo', 'txtOfertaPvp', 'txtOferta_por_cada', 'txtOfertaregalo_de']:
+    for name in ['txtOfertaDtoOferta', 'txtofertaPvpFijo', 'txtOfertaPorCada', 'txtOfertaregaloUnidades']:
         w = getattr(v.ui, name, None)
         if w is not None:
             assert not w.isEnabled(), f"{name} should be disabled for dto web"
@@ -111,24 +111,20 @@ def test_pvp_mode_enables_precio_fijo_only():
     v = ArticulosView()
     v._on_add_oferta()
 
-    # Accept either naming variant used by different UI generations
-    if not (hasattr(v.ui, 'chkOferta_pvp') or hasattr(v.ui, 'chkOfertaPvp')):
+    if not hasattr(v.ui, 'chkOfertaPvp'):
         return
 
-    if hasattr(v.ui, 'chkOferta_pvp'):
-        v.ui.chkOferta_pvp.setChecked(True)
-    else:
-        v.ui.chkOfertaPvp.setChecked(True)
+    v.ui.chkOfertaPvp.setChecked(True)
     v._sync_oferta_type_fields()
 
     # enabled
-    for name in ['txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOfertaPvpFijo']:
+    for name in ['txtofertaPvpFijo']:
         w = getattr(v.ui, name, None)
         if w is not None:
             assert w.isEnabled(), f"{name} should be enabled for pvp"
 
     # disabled
-    for name in ['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtOferta_por_cada', 'txtOfertaregalo_de']:
+    for name in ['txtOfertaDtoOferta', 'txtOferta_dto_web', 'txtOfertaPorCada', 'txtOfertaregaloUnidades']:
         w = getattr(v.ui, name, None)
         if w is not None:
             assert not w.isEnabled(), f"{name} should be disabled for pvp"

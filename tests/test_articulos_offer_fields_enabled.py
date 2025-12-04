@@ -38,7 +38,12 @@ def test_add_enables_promotion_fields(qapp):
 
     # Check some representative promotion fields are enabled
     assert _is_enabled(v, 'txtOferta_Descripcion_promocion')
-    assert _is_enabled(v, 'txtoferta_pvp_fijo') or _is_enabled(v, 'txtOferta_por_cada')
+    assert _is_enabled(v, 'txtofertaPvpFijo') or _is_enabled(v, 'txtOfertaPorCada')
+    # The activation and delete buttons should be enabled while editing an oferta
+    if hasattr(v.ui, 'btnActivarOferta'):
+        assert v.ui.btnActivarOferta.isEnabled()
+    if hasattr(v.ui, 'btnBorrar_oferta'):
+        assert v.ui.btnBorrar_oferta.isEnabled()
     assert _is_enabled(v, 'chkOferta_32') or _is_enabled(v, 'chkOferta_dto')
     # Date fields should become enabled (because add triggers editing and checkbox should be allowed)
     # The checkbox itself must be enabled too
@@ -54,7 +59,12 @@ def test_edit_enables_promotion_fields(qapp):
     v._on_edit_oferta()
 
     assert _is_enabled(v, 'txtOferta_Descripcion_promocion')
-    assert _is_enabled(v, 'txtoferta_pvp_fijo') or _is_enabled(v, 'txtOferta_por_cada')
+    assert _is_enabled(v, 'txtofertaPvpFijo') or _is_enabled(v, 'txtOfertaPorCada')
+    # Activation & delete buttons should also be enabled while editing
+    if hasattr(v.ui, 'btnActivarOferta'):
+        assert v.ui.btnActivarOferta.isEnabled()
+    if hasattr(v.ui, 'btnBorrar_oferta'):
+        assert v.ui.btnBorrar_oferta.isEnabled()
     assert _is_enabled(v, 'chkOferta_32') or _is_enabled(v, 'chkOferta_dto')
 
 
@@ -78,3 +88,8 @@ def test_save_or_undo_disables_promotion_fields(qapp):
     v._on_undo_oferta()
 
     assert not _is_enabled(v, 'txtOferta_Descripcion_promocion')
+    # After saving/undo the action buttons should be disabled
+    if hasattr(v.ui, 'btnActivarOferta'):
+        assert not v.ui.btnActivarOferta.isEnabled()
+    if hasattr(v.ui, 'btnBorrar_oferta'):
+        assert not v.ui.btnBorrar_oferta.isEnabled()

@@ -58,8 +58,8 @@ def test_save_updates_specific_oferta_by_id():
     v._on_edit_oferta()
 
     # Change unidades for oferta b and save
-    if hasattr(v.ui, 'txtOferta_por_cada'):
-        v.ui.txtOferta_por_cada.setText('9')
+    if hasattr(v.ui, 'txtOfertaPorCada'):
+        v.ui.txtOfertaPorCada.setText('9')
 
     v._on_save_oferta()
 

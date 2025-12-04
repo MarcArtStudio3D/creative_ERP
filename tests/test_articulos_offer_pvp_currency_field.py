@@ -50,13 +50,8 @@ def test_pvp_field_formats_and_saves():
     v._lock_fields(False)
     v._on_add_oferta()
 
-    # select available pvp widget name
-    pvp_widget = None
-    for nm in ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp'):
-        if hasattr(v.ui, nm):
-            pvp_widget = getattr(v.ui, nm)
-            break
-
+    # canonical widget name
+    pvp_widget = getattr(v.ui, 'txtofertaPvpFijo', None)
     assert pvp_widget is not None, 'No PVP fixed-price widget available in this UI generation'
 
     # enter a value using thousands separator and comma decimal
@@ -69,7 +64,7 @@ def test_pvp_field_formats_and_saves():
         v._format_price_field(pvp_widget)
 
     # Expect formatted result (company uses comma separator and default decimals)
-    formatted = v.ui.txtoferta_pvp_fijo.text() if hasattr(v.ui, 'txtoferta_pvp_fijo') else pvp_widget.text()
+    formatted = pvp_widget.text()
     assert formatted != ''
 
     # Save offer and verify persisted value

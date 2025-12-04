@@ -36,8 +36,8 @@ def test_offer_type_32_enables_correct_fields():
     v._sync_oferta_type_fields()
 
     # Support multiple naming variants for these fields; at least one should exist
-    por_cada_vars = ['txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada']
-    regalo_vars = ['txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe']
+    por_cada_vars = ['txtOfertaPorCada']
+    regalo_vars = ['txtOfertaregaloUnidades']
     assert any(getattr(v.ui, n, None) is not None for n in por_cada_vars)
     assert any(getattr(v.ui, n, None) is not None for n in regalo_vars)
 
@@ -56,8 +56,6 @@ def test_offer_type_32_enables_correct_fields():
         assert not v.ui.txtOfertaDtoOferta.isEnabled()
     if hasattr(v.ui, 'txtOferta_dto_web'):
         assert not v.ui.txtOferta_dto_web.isEnabled()
-    # Check both possible names for the fixed-price input (underscore and CamelCase)
-    if hasattr(v.ui, 'txtoferta_pvp_fijo'):
-        assert not v.ui.txtoferta_pvp_fijo.isEnabled()
+    # fixed-price input should be disabled for 3x2 mode
     if hasattr(v.ui, 'txtofertaPvpFijo'):
         assert not v.ui.txtofertaPvpFijo.isEnabled()

@@ -1668,7 +1668,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item row="1" column="2">
-               <widget class="QLineEdit" name="txtoferta_pvp_fijo">
+               <widget class="QLineEdit" name="txtofertaPvpFijo">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -1721,7 +1721,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item row="1" column="1">
-               <widget class="QLineEdit" name="txtOferta_por_cada">
+               <widget class="QLineEdit" name="txtOfertaPorCada">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
@@ -1778,7 +1778,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item row="1" column="4">
-               <widget class="QLineEdit" name="txtOfertaregalo_de">
+               <widget class="QLineEdit" name="txtOfertaregaloUnidades">
                 <property name="enabled">
                  <bool>false</bool>
                 </property>
@@ -2024,7 +2024,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item>
-               <widget class="QLineEdit" name="txtOferta_dto_web">
+               <widget class="QLineEdit" name="txtOfertaDtoWeb">
                 <property name="minimumSize">
                  <size>
                   <width>0</width>
@@ -2218,7 +2218,7 @@ color: rgb(255, 255, 255);</string>
                </widget>
               </item>
               <item row="5" column="1">
-               <widget class="QRadioButton" name="chkOferta_pvp">
+               <widget class="QRadioButton" name="chkOfertaPvp">
                 <property name="styleSheet">
                  <string notr="true"/>
                 </property>
@@ -3174,7 +3174,7 @@ background-color: rgb(239, 239, 239);</string>
                   <second>0</second>
                   <year>1900</year>
                   <month>9</month>
-                  <day>6</day>
+                  <day>5</day>
                  </datetime>
                 </property>
                 <property name="displayFormat">
@@ -4970,12 +4970,12 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>chkOferta_32</tabstop>
   <tabstop>chkOferta_web</tabstop>
   <tabstop>chkOferta_dto</tabstop>
-  <tabstop>chkOferta_pvp</tabstop>
-  <tabstop>txtOferta_por_cada</tabstop>
-  <tabstop>txtOfertaregalo_de</tabstop>
+  <tabstop>chkOfertaPvp</tabstop>
+  <tabstop>txtOfertaPorCada</tabstop>
+  <tabstop>txtOfertaregaloUnidades</tabstop>
   <tabstop>txtOfertaDtoOferta</tabstop>
-  <tabstop>txtOferta_dto_web</tabstop>
-  <tabstop>txtoferta_pvp_fijo</tabstop>
+  <tabstop>txtOfertaDtoWeb</tabstop>
+  <tabstop>txtofertaPvpFijo</tabstop>
   <tabstop>cboTarifaOferta</tabstop>
   <tabstop>tabla_ofertas</tabstop>
   <tabstop>btnActivarOferta</tabstop>

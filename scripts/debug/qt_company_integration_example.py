@@ -13,7 +13,7 @@ sys.path.insert(0, str(root_dir))
 
 # Importar módulos necesarios
 try:
-        from PySide6.QtWidgets import (
+    from PySide6.QtWidgets import (
             QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
             QLabel, QComboBox, QPushButton, QTextEdit, QGroupBox, QFormLayout,
             QStatusBar

@@ -837,13 +837,13 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_26.addWidget(self.lbl_oferta_importe, 1, 1, 1, 1)
 
-        self.txtoferta_pvp_fijo = QLineEdit(self.frame_pvp_fijo)
-        self.txtoferta_pvp_fijo.setObjectName(u"txtoferta_pvp_fijo")
-        self.txtoferta_pvp_fijo.setMinimumSize(QSize(0, 27))
-        self.txtoferta_pvp_fijo.setMaximumSize(QSize(110, 27))
-        self.txtoferta_pvp_fijo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.txtofertaPvpFijo = QLineEdit(self.frame_pvp_fijo)
+        self.txtofertaPvpFijo.setObjectName(u"txtofertaPvpFijo")
+        self.txtofertaPvpFijo.setMinimumSize(QSize(0, 27))
+        self.txtofertaPvpFijo.setMaximumSize(QSize(110, 27))
+        self.txtofertaPvpFijo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_26.addWidget(self.txtoferta_pvp_fijo, 1, 2, 1, 1)
+        self.gridLayout_26.addWidget(self.txtofertaPvpFijo, 1, 2, 1, 1)
 
 
         self.gridLayout_39.addWidget(self.frame_pvp_fijo, 6, 0, 1, 2)
@@ -862,14 +862,14 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_24.addWidget(self.lbl_por_cada, 1, 0, 1, 1)
 
-        self.txtOferta_por_cada = QLineEdit(self.frame_tipo_32)
-        self.txtOferta_por_cada.setObjectName(u"txtOferta_por_cada")
-        self.txtOferta_por_cada.setEnabled(False)
-        self.txtOferta_por_cada.setMinimumSize(QSize(0, 27))
-        self.txtOferta_por_cada.setMaximumSize(QSize(50, 27))
-        self.txtOferta_por_cada.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.txtOfertaPorCada = QLineEdit(self.frame_tipo_32)
+        self.txtOfertaPorCada.setObjectName(u"txtOfertaPorCada")
+        self.txtOfertaPorCada.setEnabled(False)
+        self.txtOfertaPorCada.setMinimumSize(QSize(0, 27))
+        self.txtOfertaPorCada.setMaximumSize(QSize(50, 27))
+        self.txtOfertaPorCada.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_24.addWidget(self.txtOferta_por_cada, 1, 1, 1, 1)
+        self.gridLayout_24.addWidget(self.txtOfertaPorCada, 1, 1, 1, 1)
 
         self.lbl_unidades = QLabel(self.frame_tipo_32)
         self.lbl_unidades.setObjectName(u"lbl_unidades")
@@ -885,14 +885,14 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_24.addWidget(self.lbl_regalo_de, 1, 3, 1, 1)
 
-        self.txtOfertaregalo_de = QLineEdit(self.frame_tipo_32)
-        self.txtOfertaregalo_de.setObjectName(u"txtOfertaregalo_de")
-        self.txtOfertaregalo_de.setEnabled(False)
-        self.txtOfertaregalo_de.setMinimumSize(QSize(0, 27))
-        self.txtOfertaregalo_de.setMaximumSize(QSize(50, 27))
-        self.txtOfertaregalo_de.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.txtOfertaregaloUnidades = QLineEdit(self.frame_tipo_32)
+        self.txtOfertaregaloUnidades.setObjectName(u"txtOfertaregaloUnidades")
+        self.txtOfertaregaloUnidades.setEnabled(False)
+        self.txtOfertaregaloUnidades.setMinimumSize(QSize(0, 27))
+        self.txtOfertaregaloUnidades.setMaximumSize(QSize(50, 27))
+        self.txtOfertaregaloUnidades.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_24.addWidget(self.txtOfertaregalo_de, 1, 4, 1, 1)
+        self.gridLayout_24.addWidget(self.txtOfertaregaloUnidades, 1, 4, 1, 1)
 
         self.lbl_unidades_2 = QLabel(self.frame_tipo_32)
         self.lbl_unidades_2.setObjectName(u"lbl_unidades_2")
@@ -998,13 +998,13 @@ class Ui_FrmArticulos(object):
 
         self.horizontalLayout.addWidget(self.lbl_dto_web2)
 
-        self.txtOferta_dto_web = QLineEdit(self.frame_ofertaweb)
-        self.txtOferta_dto_web.setObjectName(u"txtOferta_dto_web")
-        self.txtOferta_dto_web.setMinimumSize(QSize(0, 27))
-        self.txtOferta_dto_web.setMaximumSize(QSize(50, 27))
-        self.txtOferta_dto_web.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.txtOfertaDtoWeb = QLineEdit(self.frame_ofertaweb)
+        self.txtOfertaDtoWeb.setObjectName(u"txtOfertaDtoWeb")
+        self.txtOfertaDtoWeb.setMinimumSize(QSize(0, 27))
+        self.txtOfertaDtoWeb.setMaximumSize(QSize(50, 27))
+        self.txtOfertaDtoWeb.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.horizontalLayout.addWidget(self.txtOferta_dto_web)
+        self.horizontalLayout.addWidget(self.txtOfertaDtoWeb)
 
 
         self.gridLayout_39.addWidget(self.frame_ofertaweb, 5, 0, 1, 2)
@@ -1100,11 +1100,11 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_34.addWidget(self.chkOferta_dto, 5, 0, 1, 1)
 
-        self.chkOferta_pvp = QRadioButton(self.framePromocion)
-        self.chkOferta_pvp.setObjectName(u"chkOferta_pvp")
-        self.chkOferta_pvp.setStyleSheet(u"")
+        self.chkOfertaPvp = QRadioButton(self.framePromocion)
+        self.chkOfertaPvp.setObjectName(u"chkOfertaPvp")
+        self.chkOfertaPvp.setStyleSheet(u"")
 
-        self.gridLayout_34.addWidget(self.chkOferta_pvp, 5, 1, 1, 1)
+        self.gridLayout_34.addWidget(self.chkOfertaPvp, 5, 1, 1, 1)
 
 
         self.gridLayout_39.addWidget(self.framePromocion, 1, 0, 2, 2)
@@ -1557,7 +1557,7 @@ class Ui_FrmArticulos(object):
         self.txtfecha_fecha_ultima_compra.setMaximumSize(QSize(120, 27))
         self.txtfecha_fecha_ultima_compra.setStyleSheet(u"")
         self.txtfecha_fecha_ultima_compra.setDateTime(QDateTime(QDate(2000, 9, 13), QTime(0, 0, 0)))
-        self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 6), QTime(0, 0, 0)))
+        self.txtfecha_fecha_ultima_compra.setMinimumDateTime(QDateTime(QDate(1900, 9, 5), QTime(0, 0, 0)))
         self.txtfecha_fecha_ultima_compra.setCalendarPopup(True)
         self.txtfecha_fecha_ultima_compra.setDate(QDate(2000, 9, 13))
 
@@ -2398,13 +2398,13 @@ class Ui_FrmArticulos(object):
         QWidget.setTabOrder(self.txtOferta_Descripcion_promocion, self.chkOferta_32)
         QWidget.setTabOrder(self.chkOferta_32, self.chkOferta_web)
         QWidget.setTabOrder(self.chkOferta_web, self.chkOferta_dto)
-        QWidget.setTabOrder(self.chkOferta_dto, self.chkOferta_pvp)
-        QWidget.setTabOrder(self.chkOferta_pvp, self.txtOferta_por_cada)
-        QWidget.setTabOrder(self.txtOferta_por_cada, self.txtOfertaregalo_de)
-        QWidget.setTabOrder(self.txtOfertaregalo_de, self.txtOfertaDtoOferta)
-        QWidget.setTabOrder(self.txtOfertaDtoOferta, self.txtOferta_dto_web)
-        QWidget.setTabOrder(self.txtOferta_dto_web, self.txtoferta_pvp_fijo)
-        QWidget.setTabOrder(self.txtoferta_pvp_fijo, self.cboTarifaOferta)
+        QWidget.setTabOrder(self.chkOferta_dto, self.chkOfertaPvp)
+        QWidget.setTabOrder(self.chkOfertaPvp, self.txtOfertaPorCada)
+        QWidget.setTabOrder(self.txtOfertaPorCada, self.txtOfertaregaloUnidades)
+        QWidget.setTabOrder(self.txtOfertaregaloUnidades, self.txtOfertaDtoOferta)
+        QWidget.setTabOrder(self.txtOfertaDtoOferta, self.txtOfertaDtoWeb)
+        QWidget.setTabOrder(self.txtOfertaDtoWeb, self.txtofertaPvpFijo)
+        QWidget.setTabOrder(self.txtofertaPvpFijo, self.cboTarifaOferta)
         QWidget.setTabOrder(self.cboTarifaOferta, self.tabla_ofertas)
         QWidget.setTabOrder(self.tabla_ofertas, self.btnActivarOferta)
         QWidget.setTabOrder(self.btnActivarOferta, self.btnBorrar_oferta)
@@ -2610,12 +2610,12 @@ class Ui_FrmArticulos(object):
         self.chkArticulo_promocionado.setText(QCoreApplication.translate("FrmArticulos", u"Art\u00edculo promocionado", None))
         self.label_63.setText(QCoreApplication.translate("FrmArticulos", u"OFERTA PRECIO FIJO", None))
         self.lbl_oferta_importe.setText(QCoreApplication.translate("FrmArticulos", u"Importe:", None))
-        self.txtoferta_pvp_fijo.setText(QCoreApplication.translate("FrmArticulos", u"0,00", None))
+        self.txtofertaPvpFijo.setText(QCoreApplication.translate("FrmArticulos", u"0,00", None))
         self.lbl_por_cada.setText(QCoreApplication.translate("FrmArticulos", u"Por cada: ", None))
-        self.txtOferta_por_cada.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
+        self.txtOfertaPorCada.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.lbl_unidades.setText(QCoreApplication.translate("FrmArticulos", u"Unidades", None))
         self.lbl_regalo_de.setText(QCoreApplication.translate("FrmArticulos", u"Regalo de:", None))
-        self.txtOfertaregalo_de.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
+        self.txtOfertaregaloUnidades.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.lbl_unidades_2.setText(QCoreApplication.translate("FrmArticulos", u"Unidades", None))
         self.label_57.setText(QCoreApplication.translate("FrmArticulos", u"OFERTA TIPO 3*2", None))
         self.txtOferta_Fecha_fin.setDisplayFormat(QCoreApplication.translate("FrmArticulos", u"dd/MM/yyyy", None))
@@ -2625,7 +2625,7 @@ class Ui_FrmArticulos(object):
         self.txtOfertaDtoOferta.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.lbl_dto_web.setText(QCoreApplication.translate("FrmArticulos", u"Dto Especial web:", None))
         self.lbl_dto_web2.setText(QCoreApplication.translate("FrmArticulos", u"% Descuento:", None))
-        self.txtOferta_dto_web.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
+        self.txtOfertaDtoWeb.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.label_68.setText(QCoreApplication.translate("FrmArticulos", u"Hasta:", None))
         self.label_21.setText(QCoreApplication.translate("FrmArticulos", u"Desde:", None))
         self.chkMostrar_en_cuadro.setText(QCoreApplication.translate("FrmArticulos", u"Mostrar en cuadro", None))
@@ -2637,7 +2637,7 @@ class Ui_FrmArticulos(object):
         self.chkOferta_32.setText(QCoreApplication.translate("FrmArticulos", u" Oferta 3*2", None))
         self.chkOferta_web.setText(QCoreApplication.translate("FrmArticulos", u"Descuento especial web", None))
         self.chkOferta_dto.setText(QCoreApplication.translate("FrmArticulos", u"Oferta % dto", None))
-        self.chkOferta_pvp.setText(QCoreApplication.translate("FrmArticulos", u"Oferta precio final", None))
+        self.chkOfertaPvp.setText(QCoreApplication.translate("FrmArticulos", u"Oferta precio final", None))
         self.label_65.setText(QCoreApplication.translate("FrmArticulos", u"Comentarios", None))
         self.label_72.setText(QCoreApplication.translate("FrmArticulos", u"OFERTAS ART\u00cdCULO", None))
         self.btnActivarOferta.setText(QCoreApplication.translate("FrmArticulos", u"Activar", None))

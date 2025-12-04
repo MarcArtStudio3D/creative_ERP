@@ -2017,47 +2017,47 @@ class MainWindowV2(QMainWindow):
                 clicked_button = msg.clickedButton()
 
                 if clicked_button == save_btn:
-                # Guardar cambios en todos los módulos afectados
-                all_saved = True
-                for module_id in modules_with_changes:
-                    widget = self.module_widgets[module_id]
-                    success = False
-                    
-                    try:
-                        # Intentar guardar directamente si el widget tiene el método
-                        if hasattr(widget, '_save_changes') and callable(getattr(widget, '_save_changes')):
-                            result = widget._save_changes()
-                            # Si retorna None, asumimos True por compatibilidad, si retorna bool usamos el valor
-                            success = result if result is not None else True
-                        # Buscar en widgets hijos
-                        elif hasattr(widget, 'findChildren'):
-                            for child in widget.findChildren(QWidget):
-                                if hasattr(child, '_save_changes') and callable(getattr(child, '_save_changes')):
-                                    result = child._save_changes()
-                                    success = result if result is not None else True
-                                    break
-                    except Exception as e:
-                        print(f"Error al guardar módulo {module_id}: {e}")
+                    # Guardar cambios en todos los módulos afectados
+                    all_saved = True
+                    for module_id in modules_with_changes:
+                        widget = self.module_widgets[module_id]
                         success = False
-                    
-                    if not success:
-                        all_saved = False
-                        break
+                        
+                        try:
+                            # Intentar guardar directamente si el widget tiene el método
+                            if hasattr(widget, '_save_changes') and callable(getattr(widget, '_save_changes')):
+                                result = widget._save_changes()
+                                # Si retorna None, asumimos True por compatibilidad, si retorna bool usamos el valor
+                                success = result if result is not None else True
+                            # Buscar en widgets hijos
+                            elif hasattr(widget, 'findChildren'):
+                                for child in widget.findChildren(QWidget):
+                                    if hasattr(child, '_save_changes') and callable(getattr(child, '_save_changes')):
+                                        result = child._save_changes()
+                                        success = result if result is not None else True
+                                        break
+                        except Exception as e:
+                            print(f"Error al guardar módulo {module_id}: {e}")
+                            success = False
+                        
+                        if not success:
+                            all_saved = False
+                            break
                 
-                if all_saved:
-                    # Aceptar el cierre
-                    event.accept()
-                else:
-                    # Cancelar el cierre si hubo error al guardar
-                    event.ignore()
-                
+                    if all_saved:
+                        # Aceptar el cierre
+                        event.accept()
+                    else:
+                        # Cancelar el cierre si hubo error al guardar
+                        event.ignore()
+
                 elif clicked_button == discard_btn:
-                # Descartar cambios y cerrar
-                event.accept()
-                
+                    # Descartar cambios y cerrar
+                    event.accept()
+
                 else:  # cancel_btn
-                # Cancelar el cierre
-                event.ignore()
+                    # Cancelar el cierre
+                    event.ignore()
                 # end runtime dialog handling
 
             # test-mode simplified action handling

@@ -75,6 +75,42 @@ class ArticulosView(QWidget):
         self.ui.botDeshacer.clicked.connect(self._on_undo_clicked)
         self.ui.botBorrar.clicked.connect(self._on_delete_clicked)
         # setup_connections finished
+        # Offer-type radio toggles (only present for the promotions frame)
+        try:
+            if hasattr(self.ui, 'chkOferta_32'):
+                self.ui.chkOferta_32.toggled.connect(self._sync_oferta_type_fields)
+            if hasattr(self.ui, 'chkOferta_dto'):
+                self.ui.chkOferta_dto.toggled.connect(self._sync_oferta_type_fields)
+            if hasattr(self.ui, 'chkOferta_web'):
+                self.ui.chkOferta_web.toggled.connect(self._sync_oferta_type_fields)
+            # Support both naming variants for the PVP radio (some UI versions use chkOferta_pvp, others chkOfertaPvp)
+            if hasattr(self.ui, 'chkOferta_pvp'):
+                self.ui.chkOferta_pvp.toggled.connect(self._sync_oferta_type_fields)
+            elif hasattr(self.ui, 'chkOfertaPvp'):
+                self.ui.chkOfertaPvp.toggled.connect(self._sync_oferta_type_fields)
+            # Promotions frame action buttons
+            if hasattr(self.ui, 'btnAnadirOferta'):
+                self.ui.btnAnadirOferta.clicked.connect(self._on_add_oferta)
+            if hasattr(self.ui, 'btnEditarOferta'):
+                self.ui.btnEditarOferta.clicked.connect(self._on_edit_oferta)
+            if hasattr(self.ui, 'btnguardar_oferta'):
+                self.ui.btnguardar_oferta.clicked.connect(self._on_save_oferta)
+            if hasattr(self.ui, 'btnDeshacerOferta'):
+                self.ui.btnDeshacerOferta.clicked.connect(self._on_undo_oferta)
+            # Ensure PVP fixed-price widgets normalize/format on editing finished
+            for candidate in ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo'):
+                w = getattr(self.ui, candidate, None)
+                if w is not None:
+                    try:
+                        # connect once only
+                        if not getattr(w, '_currency_format_hooked', False):
+                            w.editingFinished.connect(lambda _w=w: self._format_price_field(_w))
+                            setattr(w, '_currency_format_hooked', True)
+                    except Exception:
+                        pass
+        except Exception:
+            # Signals may not be available in test environment; ignore
+            pass
     
     def _setup_initial_state(self):
         """Establecer el estado inicial de la interfaz (vista, tablas, y configuraciones)"""
@@ -509,13 +545,20 @@ class ArticulosView(QWidget):
                 except Exception:
                     pass
 
-            if hasattr(self.ui, 'txtoferta_pvp_fijo'):
+            # price/pvp fixed field may exist under several name variants; set whichever exists
+            pwp_names = ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp')
+            pvp_widget = None
+            for nm in pwp_names:
+                if hasattr(self.ui, nm):
+                    pvp_widget = getattr(self.ui, nm)
+                    break
+            if pvp_widget is not None:
                 try:
                     v = curr.get('oferta_precio_final')
                     if v is None:
-                        self.ui.txtoferta_pvp_fijo.setText('')
+                        pvp_widget.setText('')
                     else:
-                        self.ui.txtoferta_pvp_fijo.setText(format_decimal_value(float(v), self.decimales_precios, use_comma=True))
+                        pvp_widget.setText(format_decimal_value(float(v), self.decimales_precios, use_comma=True))
                 except Exception:
                     pass
 
@@ -659,6 +702,27 @@ class ArticulosView(QWidget):
             pass
 
         return data
+
+    def _refresh_ofertas_table(self):
+        """Reload offers for the current article into the ofertas model.
+
+        This centralises the refresh logic so multiple handlers can update the table
+        immediately after changes (save / undo / add / delete).
+        """
+        try:
+            art = None
+            if hasattr(self.controller, 'get_current_article'):
+                art = self.controller.get_current_article()
+
+            if art and isinstance(art, dict):
+                art_id = art.get('id')
+                if art_id and hasattr(self.controller, 'repository'):
+                    offers = self.controller.repository.get_ofertas_for_article(art_id)
+                    if hasattr(self, 'ofertas_model'):
+                        self.ofertas_model.set_offers(offers)
+        except Exception:
+            # Best-effort - non-fatal
+            pass
     
     def _clear_form(self):
         """Clear all form fields"""
@@ -853,10 +917,18 @@ class ArticulosView(QWidget):
                 pass
 
             try:
-                if hasattr(self.ui, 'txtoferta_pvp_fijo'):
+                # support multiple variants for the pvp fixed-price input
+                pwp_names = ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp')
+                pvp_widget = None
+                for nm in pwp_names:
+                    if hasattr(self.ui, nm):
+                        pvp_widget = getattr(self.ui, nm)
+                        break
+
+                if pvp_widget is not None:
                     v = offer.get('precio_final')
                     if v is None:
-                        self.ui.txtoferta_pvp_fijo.setText('')
+                        pvp_widget.setText('')
                     else:
                         # precio_final in model is likely oferta_precio_final key; fallback accordingly
                         value = None
@@ -868,7 +940,7 @@ class ArticulosView(QWidget):
                             self.ui.txtoferta_pvp_fijo.setText('')
                         else:
                             try:
-                                self.ui.txtoferta_pvp_fijo.setText(format_decimal_value(float(value), self.decimales_precios, use_comma=True))
+                                pvp_widget.setText(format_decimal_value(float(value), self.decimales_precios, use_comma=True))
                             except Exception:
                                 self.ui.txtoferta_pvp_fijo.setText(str(value))
             except Exception:
@@ -903,6 +975,12 @@ class ArticulosView(QWidget):
             try:
                 if hasattr(self.ui, 'chkOferta_web'):
                     self.ui.chkOferta_web.setChecked(bool(offer.get('oferta_web')))
+            except Exception:
+                pass
+
+            # Ensure related fields are enabled/disabled according to the selected oferta type
+            try:
+                self._sync_oferta_type_fields()
             except Exception:
                 pass
 
@@ -1541,6 +1619,92 @@ class ArticulosView(QWidget):
                     pass
 
         except Exception:
+            # Any unexpected error toggling edit state should not crash the UI
+            pass
+
+        # Keep oferta-type dependent fields in sync when toggling types
+        try:
+            self._sync_oferta_type_fields()
+        except Exception:
+            pass
+
+    def _sync_oferta_type_fields(self):
+        """Enable/disable oferta fields based on the currently selected oferta type.
+
+        Behavior:
+        - If chkOferta_32 is selected: enable txtOferta_por_cada and txtOfertaregalo_de; disable txtOfertaDtoOferta, txtOferta_dto_web and txtoferta_pvp_fijo.
+        - If chkOferta_dto selected: enable txtOfertaDtoOferta only.
+        - If chkOferta_web selected: enable txtOferta_dto_web only.
+        - If chkOferta_pvp selected: enable txtoferta_pvp_fijo only.
+        - If none selected, disable all specialty oferta fields.
+        """
+        try:
+            # Determine which (if any) radio is selected
+            is_32 = getattr(self.ui, 'chkOferta_32', None) and bool(self.ui.chkOferta_32.isChecked())
+            is_dto = getattr(self.ui, 'chkOferta_dto', None) and bool(self.ui.chkOferta_dto.isChecked())
+            is_web = getattr(self.ui, 'chkOferta_web', None) and bool(self.ui.chkOferta_web.isChecked())
+            # Accept multiple naming variants for the PVP selector (underscore or CamelCase)
+            is_pvp = False
+            if getattr(self.ui, 'chkOferta_pvp', None) is not None:
+                try:
+                    is_pvp = bool(self.ui.chkOferta_pvp.isChecked())
+                except Exception:
+                    is_pvp = False
+            elif getattr(self.ui, 'chkOfertaPvp', None) is not None:
+                try:
+                    is_pvp = bool(self.ui.chkOfertaPvp.isChecked())
+                except Exception:
+                    is_pvp = False
+
+            # Helper to toggle a widget if it exists. Support multiple naming variants
+            def set_enabled(names, value):
+                if isinstance(names, str):
+                    names = [names]
+                for name in names:
+                    if hasattr(self.ui, name):
+                        try:
+                            getattr(self.ui, name).setEnabled(value)
+                        except Exception:
+                            try:
+                                getattr(self.ui, name).setReadOnly(not value)
+                            except Exception:
+                                pass
+
+            # 3x2 -> enable por cada & ofertaregalo; disable dto/local, dto web and pvp
+            set_enabled(['txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada'], bool(is_32))
+            set_enabled(['txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], bool(is_32))
+
+            # DTO local -> enable DTO local field; disable web, pvp, 3x2 fields
+            set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal'], bool(is_dto))
+
+            # DTO web -> enable web DTO only
+            set_enabled(['txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtOfertaDto_Web'], bool(is_web))
+
+            # precio fijo -> enable precio fijo only
+            # Support both common naming variants for the fixed-price input
+            set_enabled(['txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOfertaPvpFijo'], bool(is_pvp))
+
+            # Make sure all the mutually exclusive fields are disabled when not selected
+            # Disable counterparts for each type (explicitly set False for clarity)
+            if is_32:
+                set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp'], False)
+            elif is_dto:
+                set_enabled(['txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], False)
+            elif is_web:
+                # web mode disables DTO local, pvp and 3x2 fields
+                set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], False)
+            elif is_pvp:
+                # pvp mode: ensure pvp fields are left enabled and other special fields are disabled
+                set_enabled(['txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe'], False)
+            else:
+                # None selected -> disable all special offer fields
+                set_enabled(['txtOferta_por_cada', 'txtOfertaPorCada', 'txtOfertaPorcada', 'txtOfertaregalo_de', 'txtOfertaregaloUnidades', 'txtOfertaregaloDe', 'txtOfertaDtoOferta', 'txtOfertaDto', 'txtOfertaDtoLocal', 'txtOferta_dto_web', 'txtOfertaDtoWeb', 'txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvp', 'txtOfertaPvpFijo'], False)
+
+        except Exception:
+            # Keep silent on any error – this code is best-effort UI sync
+            pass
+
+        except Exception:
             # Fail safe: don't let UI errors break the application
             pass
 
@@ -1661,8 +1825,15 @@ class ArticulosView(QWidget):
                 pass
 
             try:
-                if hasattr(self.ui, 'txtoferta_pvp_fijo'):
-                    v = self.ui.txtoferta_pvp_fijo.text().strip()
+                # Support both naming variants for the fixed-price input
+                pvp_widget = None
+                for n in ('txtoferta_pvp_fijo', 'txtofertaPvpFijo', 'txtOfertaPvpFijo', 'txtOfertaPvp'):
+                    if hasattr(self.ui, n):
+                        pvp_widget = getattr(self.ui, n)
+                        break
+
+                if pvp_widget is not None:
+                    v = pvp_widget.text().strip()
                     if v != '':
                         payload['precio_final'] = float(parse_decimal_input(v))
                         payload['oferta_precio_final'] = True
@@ -1797,6 +1968,39 @@ class ArticulosView(QWidget):
             self._editing_oferta = False
             self._creating_oferta = False
             self._enable_oferta_editing(False)
+
+            # Immediately refresh the offers table so the UI reflects saved changes
+            try:
+                self._refresh_ofertas_table()
+                # If we have a current oferta id, select & highlight the saved row
+                if getattr(self, '_current_oferta_id', None) and hasattr(self, 'ofertas_model'):
+                    oferta_id = getattr(self, '_current_oferta_id')
+                    try:
+                        # select the row in the table if table exists
+                        if hasattr(self.ui, 'tabla_ofertas') and self.ui.tabla_ofertas.model() is self.ofertas_model:
+                            # find index
+                            row_idx = None
+                            for i, of in enumerate(self.ofertas_model.offers):
+                                if of and isinstance(of, dict) and of.get('id') == oferta_id:
+                                    row_idx = i
+                                    break
+                            if row_idx is not None:
+                                idx = self.ofertas_model.index(row_idx, 0)
+                                try:
+                                    sel = self.ui.tabla_ofertas.selectionModel()
+                                    from PySide6.QtCore import QItemSelectionModel
+                                    sel.clearSelection()
+                                    sel.select(idx, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
+                                    self.ui.tabla_ofertas.setCurrentIndex(idx)
+                                    self.ui.tabla_ofertas.scrollTo(idx)
+                                except Exception:
+                                    pass
+                        # highlight via model
+                        self.ofertas_model.highlight_row_by_id(oferta_id)
+                    except Exception:
+                        pass
+            except Exception:
+                pass
         except Exception:
             # Ensure we reset editing state even on unexpected exceptions
             self._editing_oferta = False
@@ -1850,6 +2054,12 @@ class ArticulosView(QWidget):
         self._editing_oferta = False
         self._enable_oferta_editing(False)
 
+        # Refresh offers table so that any created-then-undo'd record disappears from the UI
+        try:
+            self._refresh_ofertas_table()
+        except Exception:
+            pass
+
 
 class OffersTableModel(QAbstractTableModel):
     """Model for `tabla_ofertas` — two columns: active indicator and description."""
@@ -1858,11 +2068,133 @@ class OffersTableModel(QAbstractTableModel):
         super().__init__()
         self.offers = []
         self.headers = ["Activo", "Descripción"]
+        # Rows which should be displayed in a highlighted state for a short time
+        # mapping oferta_id -> current opacity (float 0.0..1.0) used to paint background
+        self._highlighted_ids = {}
+        # active animations (keep references so they don't get GC'd)
+        self._active_animations = {}
 
     def set_offers(self, offers: list):
         self.beginResetModel()
         self.offers = offers or []
         self.endResetModel()
+
+    def highlight_row_by_id(self, oferta_id, duration_ms=2000):
+        """Highlight a row (by oferta id) for a given duration (ms).
+
+        The highlight is implemented by storing the id in _highlighted_ids and
+        emitting dataChanged for the row so views will update the BackgroundRole.
+        """
+        if not oferta_id:
+            return
+
+        # find the row index
+        row_idx = None
+        for i, of in enumerate(self.offers):
+            try:
+                if of and isinstance(of, dict) and of.get('id') == oferta_id:
+                    row_idx = i
+                    break
+            except Exception:
+                continue
+
+        if row_idx is None:
+            return
+        # initialize as fully opaque highlight (1.0 float opacity)
+        self._highlighted_ids[oferta_id] = 1.0
+        # notify view to repaint the row (background role)
+        top_left = self.index(row_idx, 0)
+        bottom_right = self.index(row_idx, self.columnCount() - 1)
+        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
+
+        # Prefer a smooth fade using QVariantAnimation where available. Fallback to QTimer.
+        try:
+            from PySide6.QtCore import QVariantAnimation, QEasingCurve, QApplication
+
+            if QApplication.instance() is not None:
+                # Cancel any running animation for this oferta
+                prev = self._active_animations.get(oferta_id)
+                try:
+                    if prev is not None:
+                        prev.stop()
+                except Exception:
+                    pass
+
+                anim = QVariantAnimation(self)
+                anim.setStartValue(1.0)
+                anim.setEndValue(0.0)
+                # make the fade long enough to be visible by default (2s)
+                anim.setDuration(duration_ms)
+                try:
+                    anim.setEasingCurve(QEasingCurve.Type.OutQuad)
+                except Exception:
+                    pass
+
+                def on_value(val):
+                    try:
+                        self._highlighted_ids[oferta_id] = float(val)
+                        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
+                    except Exception:
+                        pass
+
+                def on_finished():
+                    try:
+                        self._highlighted_ids.pop(oferta_id, None)
+                        # clean animation reference
+                        self._active_animations.pop(oferta_id, None)
+                        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
+                    except Exception:
+                        pass
+
+                anim.valueChanged.connect(on_value)
+                anim.finished.connect(on_finished)
+                self._active_animations[oferta_id] = anim
+                anim.start()
+                return
+        except Exception:
+            # fall through to timer fallback
+            pass
+
+        # Fallback: decrement alpha periodically using QTimer (scale from 1.0)
+        try:
+            from PySide6.QtCore import QTimer
+
+            interval = 50
+            steps = max(1, duration_ms // interval)
+            delta = 1.0 / max(1, steps)
+
+            def _step():
+                try:
+                    cur = self._highlighted_ids.get(oferta_id)
+                    if cur is None:
+                        return
+                    cur -= delta
+                    if cur <= 0.0:
+                        try:
+                            del self._highlighted_ids[oferta_id]
+                        except Exception:
+                            self._highlighted_ids.pop(oferta_id, None)
+                        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
+                        timer.stop()
+                    else:
+                        self._highlighted_ids[oferta_id] = cur
+                        self.dataChanged.emit(top_left, bottom_right, [Qt.ItemDataRole.BackgroundRole])
+                except Exception:
+                    self._highlighted_ids.pop(oferta_id, None)
+                    try:
+                        timer.stop()
+                    except Exception:
+                        pass
+
+            timer = QTimer(self)
+            timer.timeout.connect(_step)
+            timer.start(interval)
+        except Exception:
+            # If timers not available, clear instantly
+            try:
+                self._highlighted_ids.pop(oferta_id, None)
+            except Exception:
+                pass
 
     def rowCount(self, parent=QModelIndex()):
         return len(self.offers)
@@ -1902,12 +2234,39 @@ class OffersTableModel(QAbstractTableModel):
                     p.setPen(color)
                     p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
                     p.drawEllipse(1, 1, 10, 10)
-                    p.end()
+                    try:
+                        p.end()
+                    except Exception:
+                        pass
                     return pix
                 else:
-                    p.end()
+                    try:
+                        p.end()
+                    except Exception:
+                        pass
                     return None
             except Exception:
+                # If any error occurs while drawing decoration, ignore and continue
+                return None
+
+        # Background highlight for recently-saved rows
+        if role == Qt.ItemDataRole.BackgroundRole:
+            try:
+                oferta_id = offer.get('id')
+                alpha = self._highlighted_ids.get(oferta_id)
+                if alpha is not None:
+                    from PySide6.QtGui import QBrush, QColor
+                    # alpha may be float (0.0..1.0) or int (0..255) depending on implementation
+                    try:
+                        if isinstance(alpha, float):
+                            a = int(max(0, min(255, alpha * 255)))
+                        else:
+                            a = int(max(0, min(255, int(alpha))))
+                    except Exception:
+                        a = 200
+                    return QBrush(QColor(255, 255, 150, a))
+            except Exception:
+                # Non-fatal; fall through to default
                 return None
 
         # Center the decoration in the cell

@@ -658,8 +658,8 @@ class LoginWindowMultiCompany(QDialog):
     def on_language_changed(self, language_code: str):
         """Maneja el cambio de idioma."""
         from core.translations import change_language
-            from PySide6.QtWidgets import QApplication
-            from core.ui_helpers import show_info
+        from PySide6.QtWidgets import QApplication
+        from core.ui_helpers import show_info
         
         app = QApplication.instance()
         if app:

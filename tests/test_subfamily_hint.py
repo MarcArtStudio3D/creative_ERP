@@ -7,8 +7,8 @@ se muestra un mensaje informativo (hint).
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-    from PySide6.QtWidgets import QApplication
-    from core.ui_helpers import show_info
+from PySide6.QtWidgets import QApplication
+from core.ui_helpers import show_info
 from modules.articulos.view import ArticulosView
 from modules.articulos.controller import ArticuloController
 from core.db import set_current_database

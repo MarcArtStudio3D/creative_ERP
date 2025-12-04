@@ -18,6 +18,12 @@ jobs:
       - name: Make script executable
         run: |
           chmod +x scripts/check_no_prints.sh
+      - name: Make core-check script executable
+        run: |
+          chmod +x scripts/check_no_prints_core.sh
       - name: Run stray-print check
         run: |
           ./scripts/check_no_prints.sh
+      - name: Stray print check #1 (core)
+        run: |
+          ./scripts/check_no_prints_core.sh

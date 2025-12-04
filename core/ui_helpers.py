@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QMessageBox
+import logging
 
 def show_warning(parent, title: str, message: str):
     """Show a warning message to the user.
@@ -11,8 +12,8 @@ def show_warning(parent, title: str, message: str):
     try:
         import os
         if os.environ.get('PYTEST_CURRENT_TEST'):
-            # Running under pytest — print instead of showing a modal
-            print(f"{title}: {message}")
+            # Running under pytest — log instead of showing a modal to avoid blocking
+            logging.getLogger(__name__).warning("%s: %s", title, message)
             return
     except Exception:
         pass
@@ -20,15 +21,15 @@ def show_warning(parent, title: str, message: str):
     try:
         QMessageBox.warning(parent, title, message)
     except Exception:
-        # Last resort fallback to printing if QMessageBox can't be shown (headless)
-        print(f"{title}: {message}")
+        # Last resort fallback to logging if QMessageBox can't be shown (headless)
+        logging.getLogger(__name__).exception("%s: %s", title, message)
 
 def show_info(parent, title: str, message: str):
     """Show an information message (non-blocking in tests)."""
     try:
         import os
         if os.environ.get('PYTEST_CURRENT_TEST'):
-            print(f"{title}: {message}")
+            logging.getLogger(__name__).info("%s: %s", title, message)
             return
     except Exception:
         pass
@@ -36,14 +37,14 @@ def show_info(parent, title: str, message: str):
     try:
         QMessageBox.information(parent, title, message)
     except Exception:
-        print(f"{title}: {message}")
+        logging.getLogger(__name__).exception("%s: %s", title, message)
 
 def show_critical(parent, title: str, message: str):
     """Show a critical message (non-blocking in tests)."""
     try:
         import os
         if os.environ.get('PYTEST_CURRENT_TEST'):
-            print(f"{title}: {message}")
+            logging.getLogger(__name__).error("%s: %s", title, message)
             return
     except Exception:
         pass
@@ -51,7 +52,7 @@ def show_critical(parent, title: str, message: str):
     try:
         QMessageBox.critical(parent, title, message)
     except Exception:
-        print(f"{title}: {message}")
+        logging.getLogger(__name__).exception("%s: %s", title, message)
 
 
 def show_question(parent, title: str, message: str, buttons=None, default=None):
@@ -69,8 +70,8 @@ def show_question(parent, title: str, message: str, buttons=None, default=None):
     try:
         import os
         if os.environ.get('PYTEST_CURRENT_TEST'):
-            # Running under pytest — print the question and return the default
-            print(f"{title}: {message}")
+            # Running under pytest — log the question and return the default
+            logging.getLogger(__name__).info("%s: %s", title, message)
             # Default to Yes if not specified to allow destructive actions in tests
             return default if default is not None else QMessageBox.StandardButton.Yes
     except Exception:

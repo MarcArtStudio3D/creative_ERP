@@ -14,6 +14,7 @@ import secrets
 from core.module_manager import Permission
 import json
 import os
+import logging
 
 if TYPE_CHECKING:
     from core.business import CompanyContext
@@ -345,6 +346,7 @@ class AuthenticationManager:
     
     def __init__(self):
         self._current_session: Optional[Session] = None
+        self._logger = logging.getLogger(__name__)
     
     def login(self, username: str, password: str, user_repository) -> Optional[Session]:
         """
@@ -370,12 +372,28 @@ class AuthenticationManager:
             self._current_session = session
             user.last_login = datetime.now()
             user_repository.update(user)
+            try:
+                self._logger.info("Login successful for user=%s id=%s", user.username, getattr(user, 'id', None))
+            except Exception:
+                pass
             return session
+        else:
+            try:
+                # Avoid logging passwords, only username and attempt
+                uname = username or '<unknown>'
+                self._logger.warning("Login failed for user=%s", uname)
+            except Exception:
+                pass
         
         return None
     
     def logout(self):
         """Cierra la sesión actual."""
+        if self._current_session:
+            try:
+                logging.getLogger(__name__).info("Logout: user=%s id=%s", self._current_session.user.username, getattr(self._current_session.user, 'id', None))
+            except Exception:
+                pass
         self._current_session = None
     
     def get_current_session(self) -> Optional[Session]:
@@ -391,6 +409,9 @@ class AuthenticationManager:
             True si tiene permiso, False si no
         """
         if not self._current_session:
+            logging.getLogger(__name__).debug("Permission check failed - no active session for module=%s permission=%s", module_id, permission)
             return False
         
-        return self._current_session.has_permission(module_id, permission)
+        ok = self._current_session.has_permission(module_id, permission)
+        logging.getLogger(__name__).debug("Permission check: user=%s module=%s permission=%s result=%s", self._current_session.user.username, module_id, permission, ok)
+        return ok

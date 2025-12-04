@@ -467,14 +467,14 @@ def get_qsql_database(connection_name: str = None):
                     db.setPassword(password)
                     
                     if db.open():
-                        print(f"QSqlDatabase connection created ({driver}): {connection_name} -> {database}")
+                        logging.getLogger(__name__).info("QSqlDatabase connection created (%s): %s -> %s", driver, connection_name, database)
                         return db
                     else:
-                        print(f"Connection failed with {driver}: {db.lastError().text()}")
+                        logging.getLogger(__name__).warning("Connection failed with %s: %s", driver, db.lastError().text())
                         QSqlDatabase.removeDatabase(connection_name)
             
             # Si MySQL falla, crear fallback con SQLite temporal
-            print("MySQL not available, using SQLite fallback for queries...")
+            logging.getLogger(__name__).warning("MySQL not available, using SQLite fallback for queries...")
             return _create_sqlite_fallback(connection_name)
         
         # PostgreSQL
@@ -510,14 +510,14 @@ def get_qsql_database(connection_name: str = None):
                 db.setPassword(password)
                 
                 if db.open():
-                    print(f"QSqlDatabase connection created (QPSQL): {connection_name} -> {database}")
+                    logging.getLogger(__name__).info("QSqlDatabase connection created (QPSQL): %s -> %s", connection_name, database)
                     return db
                 else:
-                    print(f"PostgreSQL connection failed: {db.lastError().text()}")
+                    logging.getLogger(__name__).warning("PostgreSQL connection failed: %s", db.lastError().text())
                     QSqlDatabase.removeDatabase(connection_name)
             
             # Fallback a SQLite para PostgreSQL
-            print("PostgreSQL not available, using SQLite fallback for queries...")
+            logging.getLogger(__name__).warning("PostgreSQL not available, using SQLite fallback for queries...")
             return _create_sqlite_fallback(connection_name)
         
         # SQLite
@@ -529,17 +529,17 @@ def get_qsql_database(connection_name: str = None):
                 db.setDatabaseName(db_path)
                 
                 if db.open():
-                    print(f"QSqlDatabase connection created (QSQLITE): {connection_name} -> {db_path}")
+                    logging.getLogger(__name__).info("QSqlDatabase connection created (QSQLITE): %s -> %s", connection_name, db_path)
                     return db
                 else:
-                    print(f"Error opening SQLite connection: {db.lastError().text()}")
+                    logging.getLogger(__name__).warning("Error opening SQLite connection: %s", db.lastError().text())
                     QSqlDatabase.removeDatabase(connection_name)
         
-        print(f"Unsupported database type: {db_url}")
+        logging.getLogger(__name__).warning("Unsupported database type: %s", db_url)
         return None
         
     except Exception as e:
-        print(f"❌ Error al crear conexión QSqlDatabase: {e}")
+        logging.getLogger(__name__).exception("Error al crear conexión QSqlDatabase")
         if QSqlDatabase.contains(connection_name):
             QSqlDatabase.removeDatabase(connection_name)
         return None
@@ -562,10 +562,10 @@ def _create_sqlite_fallback(connection_name: str):
         if 'QSQLITE' in QSqlDatabase.drivers():
             db = QSqlDatabase.addDatabase('QSQLITE', connection_name)
             db.setDatabaseName(temp_path)
-            
+
             if db.open():
-                print(f"✅ SQLite temporal creado: {temp_path}")
-                
+                logging.getLogger(__name__).info("SQLite temporal creado: %s", temp_path)
+
                 # Marcar como temporal para limpieza posterior
                 db._temp_path = temp_path
                 return db
@@ -576,8 +576,8 @@ def _create_sqlite_fallback(connection_name: str):
         os.unlink(temp_path)  # Limpiar si no hay QSQLITE
         return None
         
-    except Exception as e:
-        print(f"❌ Error creando SQLite temporal: {e}")
+    except Exception:
+        logging.getLogger(__name__).exception("Error creando SQLite temporal")
         return None
 
 def populate_sqlite_temp_with_data(qt_db, table_name: str, data: list, columns: list):
@@ -592,7 +592,7 @@ def populate_sqlite_temp_with_data(qt_db, table_name: str, data: list, columns: 
         # Crear tabla
         columns_sql = ", ".join([f"{col} TEXT" for col in columns])
         if not query.exec(f"CREATE TABLE {table_name} ({columns_sql})"):
-            print(f"❌ Error creando tabla temporal: {query.lastError().text()}")
+            logging.getLogger(__name__).warning("Error creando tabla temporal: %s", query.lastError().text())
             return False
         
         # Insertar datos
@@ -605,12 +605,12 @@ def populate_sqlite_temp_with_data(qt_db, table_name: str, data: list, columns: 
                 query.addBindValue(row_data.get(col, ''))
             
             if not query.exec():
-                print(f"⚠️ Error insertando fila: {query.lastError().text()}")
+                logging.getLogger(__name__).warning("Error insertando fila: %s", query.lastError().text())
                 continue
         
-        print(f"✅ Tabla temporal {table_name} poblada con {len(data)} registros")
+        logging.getLogger(__name__).info("Tabla temporal %s poblada con %d registros", table_name, len(data))
         return True
         
-    except Exception as e:
-        print(f"❌ Error poblando tabla temporal: {e}")
+    except Exception:
+        logging.getLogger(__name__).exception("Error poblando tabla temporal")
         return False

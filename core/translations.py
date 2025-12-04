@@ -18,6 +18,7 @@ from pathlib import Path
 from typing import Optional
 from PySide6.QtCore import QTranslator, QCoreApplication, QLocale
 from PySide6.QtWidgets import QApplication
+import logging
 
 
 # Directorio de traducciones
@@ -65,8 +66,9 @@ def load_translation(app: QCoreApplication, language: Optional[str] = None) -> O
     if language is None:
         language = get_system_language()
     
+    logger = logging.getLogger(__name__)
     if language not in AVAILABLE_LANGUAGES:
-        print(f"Advertencia: Idioma '{language}' no disponible. Usando español.")
+        logger.warning("Idioma '%s' no disponible. Usando español.", language)
         language = 'es'
     
     # Establecer el locale de la aplicación
@@ -77,8 +79,8 @@ def load_translation(app: QCoreApplication, language: Optional[str] = None) -> O
     qm_file = TRANSLATIONS_DIR / f"creative_erp_{language}.qm"
     
     if not qm_file.exists():
-        print(f"Advertencia: Archivo de traducción no encontrado: {qm_file}")
-        print("Ejecuta: python scripts/compile_translations.py")
+        logger.warning("Archivo de traducción no encontrado: %s", qm_file)
+        logger.info("Ejecuta: python scripts/compile_translations.py")
         return None
     
     # Crear y cargar traductor para la aplicación
@@ -86,9 +88,9 @@ def load_translation(app: QCoreApplication, language: Optional[str] = None) -> O
     
     if translator.load(str(qm_file)):
         app.installTranslator(translator)
-        print(f"✓ Traducción cargada: {AVAILABLE_LANGUAGES[language]} ({language})")
+        logger.info("Traducción cargada: %s (%s)", AVAILABLE_LANGUAGES[language], language)
     else:
-        print(f"Error: No se pudo cargar la traducción desde {qm_file}")
+        logger.error("Error: No se pudo cargar la traducción desde %s", qm_file)
         return None
     
     # Cargar traducciones de Qt para botones estándar (Yes/No, OK/Cancel, etc.)
@@ -102,13 +104,13 @@ def load_translation(app: QCoreApplication, language: Optional[str] = None) -> O
         qt_base_translator = QTranslator()
         if qt_base_translator.load(f"qtbase_{language}", str(qt_translations_path)):
             app.installTranslator(qt_base_translator)
-            print(f"✓ Traducciones base de Qt cargadas para {language}")
+            logger.info("Traducciones base de Qt cargadas para %s", language)
         
         # Cargar qt (traducciones adicionales)
         qt_translator = QTranslator()
         if qt_translator.load(f"qt_{language}", str(qt_translations_path)):
             app.installTranslator(qt_translator)
-            print(f"✓ Traducciones de Qt cargadas para {language}")
+            logger.info("Traducciones de Qt cargadas para %s", language)
     
     return translator
 

@@ -7,8 +7,9 @@ Interfaz gráfica para gestionar permisos de módulos por rol.
 from typing import Dict
 from PySide6.QtWidgets import (
     QWidget, QVBoxLayout, QHBoxLayout, QLabel, QPushButton, QListWidget,
-    QListWidgetItem, QComboBox, QMessageBox, QCheckBox, QGridLayout
+    QListWidgetItem, QComboBox, QCheckBox, QGridLayout
 )
+from core.ui_helpers import show_warning, show_info
 from core.module_manager import AVAILABLE_MODULES
 from core.auth import UserRole
 from .model import RolePermissionsManager
@@ -183,11 +184,7 @@ class GestorModulosView(QWidget):
         selected_items = self.list_modules.selectedItems()
         
         if not selected_items:
-            QMessageBox.information(
-                self, 
-                'Selecciona', 
-                'Selecciona al menos un módulo primero'
-            )
+            show_info(self, 'Selecciona', 'Selecciona al menos un módulo primero')
             return
         
         role = self.cbo_role.currentText()
@@ -203,31 +200,23 @@ class GestorModulosView(QWidget):
         
         # Mensaje informativo
         if count == 1:
-            QMessageBox.information(
-                self, 
-                'Asignado', 
-                f'Asignados {perms} a {role} en {module_ids[0]}'
-            )
+            show_info(self, 'Asignado', f'Asignados {perms} a {role} en {module_ids[0]}')
         else:
             modules_preview = ', '.join(module_ids[:5])
             if len(module_ids) > 5:
                 modules_preview += '...'
             
-            QMessageBox.information(
-                self, 
-                'Asignado', 
-                f'Asignados {perms} a {role} en {count} módulos:\n{modules_preview}'
-            )
+            show_info(self, 'Asignado', f'Asignados {perms} a {role} en {count} módulos:\n{modules_preview}')
 
     def _save_changes(self) -> bool:
         """Guarda los cambios en el archivo JSON."""
         if self.manager.save():
             self._has_unsaved_changes = False
             self.btn_save.setEnabled(False)
-            QMessageBox.information(self, 'Guardado', 'Permisos guardados correctamente.')
+            show_info(self, 'Guardado', 'Permisos guardados correctamente.')
             return True
         else:
-            QMessageBox.warning(self, 'Error', 'No se pudo guardar los permisos.')
+            show_warning(self, 'Error', 'No se pudo guardar los permisos.')
             return False
     
     def has_unsaved_changes(self) -> bool:

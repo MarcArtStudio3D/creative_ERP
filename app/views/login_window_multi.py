@@ -100,7 +100,7 @@ class LoginWindowMultiCompany(QDialog):
         self.user_combo = QComboBox()
         self.user_combo.setObjectName("loginCombo")
         self.user_combo.setMinimumHeight(50)
-        self.user_combo.setPlaceholderText("Username")
+        self.user_combo.setPlaceholderText(self.tr("Username"))
         self._setup_combo_popup(self.user_combo)
         user_layout.addWidget(self.user_combo)
         
@@ -122,7 +122,7 @@ class LoginWindowMultiCompany(QDialog):
         self.password_input.setObjectName("loginInput")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
         self.password_input.setMinimumHeight(50)
-        self.password_input.setPlaceholderText("Password")
+        self.password_input.setPlaceholderText(self.tr("Password"))
         self.password_input.returnPressed.connect(self.on_login_clicked)
         password_layout.addWidget(self.password_input)
         
@@ -143,7 +143,7 @@ class LoginWindowMultiCompany(QDialog):
         self.group_combo = QComboBox()
         self.group_combo.setObjectName("loginCombo")
         self.group_combo.setMinimumHeight(50)
-        self.group_combo.setPlaceholderText("Business Group")
+        self.group_combo.setPlaceholderText(self.tr("Business Group"))
         self.group_combo.currentIndexChanged.connect(self.on_group_changed)
         self._setup_combo_popup(self.group_combo)
         group_layout.addWidget(self.group_combo)
@@ -165,7 +165,7 @@ class LoginWindowMultiCompany(QDialog):
         self.company_combo = QComboBox()
         self.company_combo.setObjectName("loginCombo")
         self.company_combo.setMinimumHeight(50)
-        self.company_combo.setPlaceholderText("Company")
+        self.company_combo.setPlaceholderText(self.tr("Company"))
         self._setup_combo_popup(self.company_combo)
         company_layout.addWidget(self.company_combo)
         
@@ -173,7 +173,7 @@ class LoginWindowMultiCompany(QDialog):
         main_layout.addSpacing(30)
         
         # ========== BOTÓN LOGIN ==========
-        self.access_button = QPushButton("LOGIN")
+        self.access_button = QPushButton(self.tr("LOGIN"))
         self.access_button.setObjectName("loginButton")
         self.access_button.setMinimumHeight(55)
         access_font = QFont()
@@ -191,7 +191,7 @@ class LoginWindowMultiCompany(QDialog):
         links_layout.setSpacing(30)
         
         # Forgot Password
-        forgot_link = QPushButton("Forgot Password?")
+        forgot_link = QPushButton(self.tr("Forgot Password?"))
         forgot_link.setObjectName("linkButton")
         forgot_link.setMinimumHeight(30)
         forgot_link.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -216,7 +216,7 @@ class LoginWindowMultiCompany(QDialog):
         links_layout.addWidget(self.config_btn)
         
         # Create Account (abre configuración)
-        create_link = QPushButton("Create Account")
+        create_link = QPushButton(self.tr("Create Account"))
         create_link.setObjectName("linkButton")
         create_link.setMinimumHeight(30)
         create_link.setCursor(Qt.CursorShape.PointingHandCursor)
@@ -542,16 +542,16 @@ class LoginWindowMultiCompany(QDialog):
         password = self.password_input.text()
         
         if not username or not password:
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, self.tr("Error"), self.tr("Ingresa usuario y contraseña"))
+            from core.ui_helpers import show_warning
+            show_warning(self, self.tr("Error"), self.tr("Ingresa usuario y contraseña"))
             return
         
         group = self.group_combo.currentData()
         company = self.company_combo.currentData()
         
         if not group or not company:
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, self.tr("Error"), self.tr("Selecciona grupo y empresa"))
+            from core.ui_helpers import show_warning
+            show_warning(self, self.tr("Error"), self.tr("Selecciona grupo y empresa"))
             return
         
         # Intentar login
@@ -575,8 +575,8 @@ class LoginWindowMultiCompany(QDialog):
             
             self.login_successful.emit(context)
         else:
-            from PySide6.QtWidgets import QMessageBox
-            QMessageBox.warning(self, self.tr("Error"), self.tr("Usuario o contraseña incorrectos"))
+            from core.ui_helpers import show_warning
+            show_warning(self, self.tr("Error"), self.tr("Usuario o contraseña incorrectos"))
             self.password_input.clear()
     
     def try_login(self, username: str, password: str) -> bool:
@@ -658,14 +658,15 @@ class LoginWindowMultiCompany(QDialog):
     def on_language_changed(self, language_code: str):
         """Maneja el cambio de idioma."""
         from core.translations import change_language
-        from PySide6.QtWidgets import QApplication, QMessageBox
+            from PySide6.QtWidgets import QApplication
+            from core.ui_helpers import show_info
         
         app = QApplication.instance()
         if app:
             # Cambiar el idioma (necesitaremos guardar el translator en algún lugar)
             # Por ahora solo guardamos la preferencia, el cambio real se hará al reiniciar
             print(f"{self.tr('Idioma cambiado a')}: {language_code}")
-            QMessageBox.information(
+            show_info(
                 self,
                 self.tr("Cambio de idioma"),
                 self.tr("La aplicación debe reiniciarse para aplicar todos los cambios")

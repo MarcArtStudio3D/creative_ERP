@@ -1,5 +1,6 @@
 from typing import Optional
-from PySide6.QtWidgets import QWidget, QMessageBox, QTableView, QHeaderView
+from PySide6.QtWidgets import QWidget, QTableView, QHeaderView, QMessageBox
+from core.ui_helpers import show_warning, show_info, show_critical
 from PySide6.QtCore import Qt, QCoreApplication
 from PySide6.QtSql import QSqlDatabase
 import os
@@ -102,10 +103,10 @@ class EmpresasView(QWidget):
         self.ui.stackedWidget.setCurrentIndex(1)  # Mostrar lista por defecto
 
     def mostrar_error(self, mensaje: str):
-        QMessageBox.warning(self, "Error", mensaje)
+        show_warning(self, self.tr("Error"), mensaje)
 
     def mostrar_exito(self, mensaje: str):
-        QMessageBox.information(self, "Éxito", mensaje)
+        show_info(self, self.tr("Éxito"), mensaje)
 
     def _on_double_click(self, index):
         """Maneja el doble click en la tabla"""
@@ -116,7 +117,7 @@ class EmpresasView(QWidget):
                 id_ = item.data(Qt.ItemDataRole.UserRole)
                 
                 if id_ is None:
-                    QMessageBox.warning(self, "Error", "No se pudo obtener el ID de la empresa")
+                    show_warning(self, self.tr("Error"), self.tr("No se pudo obtener el ID de la empresa"))
                     return
                 
                 # Cargar empresa directamente
@@ -126,10 +127,10 @@ class EmpresasView(QWidget):
                     self._map_to_form(empresa)
                     self.ui.stackedWidget.setCurrentIndex(0)  # Ir al formulario
                 else:
-                    QMessageBox.warning(self, "Error", f"No se pudo cargar la empresa con ID {id_}")
+                    show_warning(self, self.tr("Error"), self.tr("No se pudo cargar la empresa con ID {}").format(id_))
                     
             except Exception as e:
-                QMessageBox.warning(self, "Error", f"Error al procesar doble click: {e}")
+                show_warning(self, self.tr("Error"), self.tr("Error al procesar doble click: {}").format(e))
 
     def _on_create_db(self, engine_type: str):
         """Handler for Create DB buttons (mariadb/postgresql).
@@ -145,14 +146,14 @@ class EmpresasView(QWidget):
             company_id = self._get_selected_id()
 
         if not company_id:
-            QMessageBox.warning(self, self.tr("Selecciona"), self.tr("Selecciona una empresa primero"))
+            show_warning(self, self.tr("Selecciona"), self.tr("Selecciona una empresa primero"))
             return
 
         # Ask for confirmation (text)
         from PySide6.QtWidgets import QInputDialog
         text, ok = QInputDialog.getText(self, self.tr("Confirmar creación"), self.tr("Escribe CONFIRM_CREATE_DB para confirmar la creación de la base de datos:"))
         if not ok or (text or '').strip() != 'CONFIRM_CREATE_DB':
-            QMessageBox.information(self, self.tr("Cancelado"), self.tr("Acción cancelada por el usuario"))
+            show_info(self, self.tr("Cancelado"), self.tr("Acción cancelada por el usuario"))
             return
 
         # Determine initiator name (current session if available)
@@ -168,13 +169,13 @@ class EmpresasView(QWidget):
         try:
             ok = self.controller.crear_y_inicializar_db(company_id, engine_type, initiator=initiator)
             if ok:
-                QMessageBox.information(self, self.tr("Hecho"), self.tr("Base de datos creada e inicializada (si fue posible). Revisa logs para detalles."))
+                show_info(self, self.tr("Hecho"), self.tr("Base de datos creada e inicializada (si fue posible). Revisa logs para detalles."))
                 # refresh list to reflect any changes
                 self.controller.cargar_empresas()
             else:
-                QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo crear o inicializar la base de datos. Revisa logs para más detalles."))
+                show_warning(self, self.tr("Error"), self.tr("No se pudo crear o inicializar la base de datos. Revisa logs para más detalles."))
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
 
     def _get_selected_id(self) -> Optional[int]:
         sel = self.ui.tableView.selectionModel()
@@ -199,7 +200,7 @@ class EmpresasView(QWidget):
         id_ = self._get_selected_id()
         
         if id_ is None:
-            QMessageBox.information(self, "Selecciona", "Selecciona una empresa primero.")
+            show_info(self, self.tr("Selecciona"), self.tr("Selecciona una empresa primero."))
             return
             
         empresa = self.controller.obtener_empresa(id_)
@@ -212,7 +213,7 @@ class EmpresasView(QWidget):
         """Borra la empresa seleccionada."""
         id_ = self._get_selected_id()
         if id_ is None:
-            QMessageBox.information(self, "Selecciona", "Selecciona una empresa primero.")
+            show_info(self, self.tr("Selecciona"), self.tr("Selecciona una empresa primero."))
             return
             
         # Obtener nombre para confirmación (opcional, requiere acceso al objeto)
@@ -221,19 +222,15 @@ class EmpresasView(QWidget):
         nombre = self.controller.model.item(idx.row(), 2).text()
         
         
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Icon.Question)
-        msg.setWindowTitle(self.tr("Confirmar"))
-        msg.setText(self.tr("¿Borrar empresa {}?").format(nombre))
-        
-        btn_yes = msg.addButton(self.tr("Sí"), QMessageBox.ButtonRole.YesRole)
-        btn_no = msg.addButton(self.tr("No"), QMessageBox.ButtonRole.NoRole)
-        msg.setDefaultButton(btn_no)
-        
-        msg.exec()
-        reply = msg.clickedButton()
-        
-        if reply == btn_yes:
+        reply = show_question(
+            self,
+            self.tr("Confirmar"),
+            self.tr("¿Borrar empresa {}?").format(nombre),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
             self.controller.borrar_empresa(id_)
 
     def guardar(self):
@@ -247,7 +244,7 @@ class EmpresasView(QWidget):
         if self.controller.empresa_actual:
             self._limpiar_formulario() # Limpiar antes de recargar
             self._map_to_form(self.controller.empresa_actual)
-            QMessageBox.information(self, "Deshacer", "Cambios descartados. Datos recargados.")
+            show_info(self, self.tr("Deshacer"), self.tr("Cambios descartados. Datos recargados."))
         else:
             # Si es una nueva empresa, limpiamos el formulario
             self._limpiar_formulario()
@@ -891,7 +888,7 @@ class EmpresasView(QWidget):
         
         # Validar que haya datos
         if not all([host, database, user]):
-            QMessageBox.warning(
+            show_warning(
                 self,
                 "Datos incompletos",
                 "Por favor, rellena al menos Host, Base de Datos y Usuario."
@@ -914,7 +911,7 @@ class EmpresasView(QWidget):
             engine.dispose()
             
             # Mostrar éxito
-            QMessageBox.information(
+            show_info(
                 self,
                 "✅ Conexión exitosa",
                 f"Conexión a MariaDB establecida correctamente.\n\n"
@@ -925,7 +922,7 @@ class EmpresasView(QWidget):
             
         except Exception as e:
             # Mostrar error
-            QMessageBox.critical(
+            show_critical(
                 self,
                 "❌ Error de conexión",
                 f"No se pudo conectar a MariaDB.\n\n"
@@ -950,7 +947,7 @@ class EmpresasView(QWidget):
         
         # Validar que haya datos
         if not all([host, database, user]):
-            QMessageBox.warning(
+            show_warning(
                 self,
                 "Datos incompletos",
                 "Por favor, rellena al menos Host, Base de Datos y Usuario."
@@ -973,7 +970,7 @@ class EmpresasView(QWidget):
             engine.dispose()
             
             # Mostrar éxito
-            QMessageBox.information(
+            show_info(
                 self,
                 "✅ Conexión exitosa",
                 f"Conexión a PostgreSQL establecida correctamente.\n\n"
@@ -984,7 +981,7 @@ class EmpresasView(QWidget):
             
         except Exception as e:
             # Mostrar error
-            QMessageBox.critical(
+            show_critical(
                 self,
                 "❌ Error de conexión",
                 f"No se pudo conectar a PostgreSQL.\n\n"

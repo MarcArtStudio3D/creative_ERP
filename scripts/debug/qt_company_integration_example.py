@@ -13,10 +13,10 @@ sys.path.insert(0, str(root_dir))
 
 # Importar módulos necesarios
 try:
-    from PySide6.QtWidgets import (
-        QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-        QLabel, QComboBox, QPushButton, QTextEdit, QGroupBox, QFormLayout,
-        QMessageBox, QStatusBar
+        from PySide6.QtWidgets import (
+            QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
+            QLabel, QComboBox, QPushButton, QTextEdit, QGroupBox, QFormLayout,
+            QStatusBar
     )
     from PySide6.QtCore import Qt, Signal
     from PySide6.QtGui import QFont, QPalette, QColor
@@ -25,6 +25,7 @@ except ImportError:
     sys.exit(1)
 
 from core.company_manager import company_manager, setup_company_selection_combo, on_company_selected, get_current_company_context
+from core.ui_helpers import show_warning, show_info, show_critical, show_question
 
 
 class CompanySelectionWidget(QWidget):
@@ -41,17 +42,17 @@ class CompanySelectionWidget(QWidget):
         layout = QVBoxLayout()
 
         # Grupo de selección de empresa
-        selection_group = QGroupBox("Selección de Empresa")
+        selection_group = QGroupBox(self.tr("Selección de Empresa"))
         selection_layout = QFormLayout()
 
         # Combo de empresas
         self.company_combo = QComboBox()
-        self.company_combo.addItem("Cargando empresas...", None)
+        self.company_combo.addItem(self.tr("Cargando empresas..."), None)
         self.company_combo.currentIndexChanged.connect(self.on_company_combo_changed)
-        selection_layout.addRow("Empresa:", self.company_combo)
+        selection_layout.addRow(self.tr("Empresa:"), self.company_combo)
 
         # Botón de validar
-        self.validate_btn = QPushButton("Validar Configuración")
+        self.validate_btn = QPushButton(self.tr("Validar Configuración"))
         self.validate_btn.clicked.connect(self.validate_current_company)
         selection_layout.addRow(self.validate_btn)
 
@@ -59,23 +60,23 @@ class CompanySelectionWidget(QWidget):
         layout.addWidget(selection_group)
 
         # Grupo de información de empresa actual
-        info_group = QGroupBox("Empresa Actual")
+        info_group = QGroupBox(self.tr("Empresa Actual"))
         info_layout = QFormLayout()
 
-        self.company_name_label = QLabel("Ninguna empresa seleccionada")
-        info_layout.addRow("Nombre:", self.company_name_label)
+        self.company_name_label = QLabel(self.tr("Ninguna empresa seleccionada"))
+        info_layout.addRow(self.tr("Nombre:"), self.company_name_label)
 
-        self.database_label = QLabel("N/A")
-        info_layout.addRow("Base de Datos:", self.database_label)
+        self.database_label = QLabel(self.tr("N/A"))
+        info_layout.addRow(self.tr("Base de Datos:"), self.database_label)
 
-        self.motor_label = QLabel("N/A")
-        info_layout.addRow("Motor BD:", self.motor_label)
+        self.motor_label = QLabel(self.tr("N/A"))
+        info_layout.addRow(self.tr("Motor BD:"), self.motor_label)
 
         info_group.setLayout(info_layout)
         layout.addWidget(info_group)
 
         # Área de log
-        log_group = QGroupBox("Log de Operaciones")
+        log_group = QGroupBox(self.tr("Log de Operaciones"))
         log_layout = QVBoxLayout()
 
         self.log_text = QTextEdit()
@@ -84,7 +85,7 @@ class CompanySelectionWidget(QWidget):
         log_layout.addWidget(self.log_text)
 
         # Botón de limpiar log
-        clear_log_btn = QPushButton("Limpiar Log")
+        clear_log_btn = QPushButton(self.tr("Limpiar Log"))
         clear_log_btn.clicked.connect(self.clear_log)
         log_layout.addWidget(clear_log_btn)
 
@@ -99,12 +100,12 @@ class CompanySelectionWidget(QWidget):
     def load_companies(self):
         """Carga la lista de empresas disponibles."""
         try:
-            self.log_message("Cargando empresas disponibles...")
+            self.log_message(self.tr("Cargando empresas disponibles..."))
             setup_company_selection_combo(self.company_combo)
-            self.log_message("✅ Empresas cargadas exitosamente")
+            self.log_message(self.tr("✅ Empresas cargadas exitosamente"))
         except Exception as e:
             self.log_message(f"❌ Error cargando empresas: {e}")
-            QMessageBox.critical(self, "Error", f"Error cargando empresas:\n{str(e)}")
+            show_critical(self, self.tr("Error"), self.tr("Error cargando empresas:\n{}").format(str(e)))
 
     def on_company_combo_changed(self, index):
         """Maneja el cambio de selección en el combo de empresas."""
@@ -130,10 +131,10 @@ class CompanySelectionWidget(QWidget):
 
             self.log_message("✅ Empresa seleccionada exitosamente")
         else:
-            self.log_message("❌ Error seleccionando empresa")
+            self.log_message(self.tr("❌ Error seleccionando empresa"))
             # Resetear combo a opción por defecto
             self.company_combo.setCurrentIndex(0)
-            QMessageBox.warning(self, "Error", "No se pudo seleccionar la empresa.\nVerifique la configuración de base de datos.")
+            show_warning(self, self.tr("Error"), self.tr("No se pudo seleccionar la empresa.\nVerifique la configuración de base de datos."))
 
     def validate_current_company(self):
         """Valida la configuración de la empresa actualmente seleccionada."""
@@ -141,7 +142,7 @@ class CompanySelectionWidget(QWidget):
         company_id = self.company_combo.itemData(current_index)
 
         if company_id is None:
-            QMessageBox.information(self, "Validación", "Seleccione una empresa primero.")
+            show_info(self, self.tr("Validación"), self.tr("Seleccione una empresa primero."))
             return
 
         self.log_message(f"Validando configuración de empresa ID: {company_id}")
@@ -151,19 +152,20 @@ class CompanySelectionWidget(QWidget):
 
             if validation['valid']:
                 self.log_message("✅ Configuración de base de datos válida")
-                QMessageBox.information(self, "Validación Exitosa",
-                    "La configuración de base de datos es correcta.\n"
-                    f"Empresa: {validation['company_info']['company_name']}\n"
-                    f"Motor: {validation['company_info']['motor_base_datos']}\n"
-                    f"Base de datos: {validation['company_info']['database_name']}")
+                show_info(self, self.tr("Validación Exitosa"),
+                    self.tr("La configuración de base de datos es correcta.\nEmpresa: {company}\nMotor: {motor}\nBase de datos: {db}").format(
+                        company=validation['company_info']['company_name'],
+                        motor=validation['company_info']['motor_base_datos'],
+                        db=validation['company_info']['database_name']
+                    ))
             else:
                 self.log_message(f"❌ Configuración inválida: {validation['message']}")
-                QMessageBox.warning(self, "Validación Fallida",
-                    f"La configuración de base de datos no es válida:\n{validation['message']}")
+                show_warning(self, self.tr("Validación Fallida"),
+                    self.tr("La configuración de base de datos no es válida:\n{}").format(validation['message']))
 
         except Exception as e:
             self.log_message(f"❌ Error en validación: {e}")
-            QMessageBox.critical(self, "Error", f"Error validando configuración:\n{str(e)}")
+            show_critical(self, self.tr("Error"), self.tr("Error validando configuración:\n{}").format(str(e)))
 
     def update_company_info(self, context):
         """Actualiza la información mostrada de la empresa actual."""
@@ -198,7 +200,7 @@ class MainWindow(QMainWindow):
 
     def init_ui(self):
         """Inicializa la interfaz principal."""
-        self.setWindowTitle("Creative ERP - Gestión Multi-Base de Datos")
+        self.setWindowTitle(self.tr("Creative ERP - Gestión Multi-Base de Datos"))
         self.setGeometry(100, 100, 800, 600)
 
         # Widget central
@@ -208,7 +210,7 @@ class MainWindow(QMainWindow):
         layout = QVBoxLayout()
 
         # Título
-        title_label = QLabel("Creative ERP - Multi-Database System")
+        title_label = QLabel(self.tr("Creative ERP - Multi-Database System"))
         title_font = QFont()
         title_font.setPointSize(14)
         title_font.setBold(True)
@@ -222,11 +224,11 @@ class MainWindow(QMainWindow):
         layout.addWidget(self.company_widget)
 
         # Área de contenido de ejemplo
-        content_group = QGroupBox("Contenido de la Aplicación")
+        content_group = QGroupBox(self.tr("Contenido de la Aplicación"))
         content_layout = QVBoxLayout()
 
-        self.content_label = QLabel("Aquí iría el contenido principal de tu aplicación.\n"
-                                   "Cuando cambies de empresa, esta área se actualizaría automáticamente.")
+        self.content_label = QLabel(self.tr("Aquí iría el contenido principal de tu aplicación.\n"
+                       "Cuando cambies de empresa, esta área se actualizaría automáticamente."))
         self.content_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.content_label.setStyleSheet("QLabel { padding: 20px; border: 1px solid #ccc; border-radius: 5px; }")
         content_layout.addWidget(self.content_label)
@@ -239,7 +241,7 @@ class MainWindow(QMainWindow):
         # Barra de estado
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage("Listo - Seleccione una empresa para comenzar")
+        self.status_bar.showMessage(self.tr("Listo - Seleccione una empresa para comenzar"))
 
     def on_company_changed(self, context):
         """Maneja el cambio de empresa."""
@@ -253,7 +255,7 @@ class MainWindow(QMainWindow):
                                      "¡Aquí puedes cargar los módulos específicos de esta empresa!")
         else:
             self.status_bar.showMessage("Ninguna empresa seleccionada")
-            self.content_label.setText("Seleccione una empresa para ver su contenido.")
+            self.content_label.setText(self.tr("Seleccione una empresa para ver su contenido."))
 
 
 def main():

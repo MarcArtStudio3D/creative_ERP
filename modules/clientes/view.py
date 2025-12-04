@@ -347,7 +347,7 @@ class ClientesView(QWidget):
     def abrir_tipo_cliente(self):
         """Abre el formulario de gestión de tipos de cliente"""
         if not self.cliente_actual:
-            QMessageBox.warning(self, self.tr("Aviso"), self.tr("Debe guardar el cliente antes de asignar tipos."))
+            show_warning(self, self.tr("Aviso"), self.tr("Debe guardar el cliente antes de asignar tipos."))
             return
 
         try:
@@ -373,7 +373,7 @@ class ClientesView(QWidget):
                             pass
                         
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
     
     # Propiedad para acceder al cliente actual del controller
     @property
@@ -408,11 +408,11 @@ class ClientesView(QWidget):
     
     def _on_error_occurred(self, mensaje: str):
         """Maneja la señal error_occurred del controller."""
-        QMessageBox.warning(self, self.tr("Error"), mensaje)
+        show_warning(self, self.tr("Error"), mensaje)
     
     def _on_operation_success(self, mensaje: str):
         """Maneja la señal operation_success del controller."""
-        QMessageBox.information(self, self.tr("Éxito"), mensaje)
+        show_info(self, self.tr("Éxito"), mensaje)
     
     def _on_cliente_changed(self, cliente_id: int):
         """Maneja la señal cliente_changed del controller."""
@@ -1244,7 +1244,7 @@ class ClientesView(QWidget):
                     pass
                 
         except Exception as e:
-            QMessageBox.warning(self, self.tr("Error"), self.tr("Error al filtrar clientes: {}").format(str(e)))
+            show_warning(self, self.tr("Error"), self.tr("Error al filtrar clientes: {}").format(str(e)))
 
     def apply_palette_styles(self):
         """Quita estilos forzados de colores para que el sistema use sus valores por defecto.
@@ -1380,11 +1380,11 @@ class ClientesView(QWidget):
             try:
                 cliente = self.controller.obtener_cliente(id_cliente)
             except Exception as controller_error:
-                QMessageBox.warning(self, self.tr("Error"), f"Error en controller: {controller_error}")
+                show_warning(self, self.tr("Error"), f"Error en controller: {controller_error}")
                 return
                 
             if not cliente:
-                QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo cargar el cliente"))
+                show_warning(self, self.tr("Error"), self.tr("No se pudo cargar el cliente"))
                 return
             
             # Cargar datos en formulario (con manejo robusto de errores)
@@ -1398,7 +1398,7 @@ class ClientesView(QWidget):
             self.ui.stackedWidget.setCurrentIndex(0)
             
         except Exception as e:
-            QMessageBox.warning(self, self.tr("Error"), f"Error al abrir la ficha del cliente: {e}")
+            show_warning(self, self.tr("Error"), f"Error al abrir la ficha del cliente: {e}")
     
     def cargar_datos_en_formulario(self, cliente: Cliente):
         """Carga los datos del cliente en los campos del formulario"""
@@ -1708,7 +1708,7 @@ class ClientesView(QWidget):
         # Verificar que hay un cliente seleccionado
         selection = tabla.selectionModel()
         if not selection.hasSelection():
-            QMessageBox.warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para editar"))
+            show_warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para editar"))
             return
         self.abrir_ficha_cliente()
         self.activar_edicion()
@@ -1729,7 +1729,7 @@ class ClientesView(QWidget):
         # Obtener fila seleccionada
         selection = tabla.selectionModel()
         if not selection.hasSelection():
-            QMessageBox.warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para borrar"))
+            show_warning(self, self.tr("Aviso"), self.tr("Seleccione un cliente para borrar"))
             return
         
         index = selection.currentIndex()
@@ -1745,20 +1745,15 @@ class ClientesView(QWidget):
             return
         
         
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Icon.Question)
-        msg.setWindowTitle(self.tr("Confirmar borrado"))
-        msg.setText(self.tr("¿Está seguro de que desea borrar el cliente '{}'?").format(cliente.nombre_completo()))
-        
-        # Usar botones personalizados con texto traducible
-        btn_yes = msg.addButton(self.tr("Sí"), QMessageBox.ButtonRole.YesRole)
-        btn_no = msg.addButton(self.tr("No"), QMessageBox.ButtonRole.NoRole)
-        msg.setDefaultButton(btn_no)
-        
-        msg.exec()
-        respuesta = msg.clickedButton()
-        
-        if respuesta == btn_yes:
+        reply = show_question(
+            self,
+            self.tr("Confirmar borrado"),
+            self.tr("¿Está seguro de que desea borrar el cliente '{}'?" ).format(cliente.nombre_completo()),
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
             # Delegar eliminación al controller
             if self.controller.borrar_cliente(id_cliente):
                 # Volver a la vista de lista después de borrar
@@ -1821,7 +1816,7 @@ class ClientesView(QWidget):
             # Validar campos antes de construir el mapeo (y antes de guardar)
             ok, errores = self._validar_campos()
             if not ok:
-                QMessageBox.warning(self, self.tr("Validación"), "\n".join(errores))
+                show_warning(self, self.tr("Validación"), "\n".join(errores))
                 return
             # Declarative mappings for fields (attribute name in model -> widget name)
             txt_map = [
@@ -1964,7 +1959,7 @@ class ClientesView(QWidget):
             error_msg = str(e)
             if "transaction has been rolled back" in error_msg:
                 # Mensaje más claro para el usuario
-                QMessageBox.critical(
+                show_critical(
                     self, 
                     self.tr("Error de Base de Datos"), 
                     self.tr("Error al guardar cliente. La base de datos ha rechazado la operación.\n\n"
@@ -1975,7 +1970,7 @@ class ClientesView(QWidget):
                            "Detalles técnicos: {}").format(error_msg)
                 )
             else:
-                QMessageBox.critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(error_msg))
+                show_critical(self, self.tr("Error"), self.tr("Error al guardar: {}").format(error_msg))
     
     def get_combo_value(self, name):
         """Helper method to get combo box value, handling special cases like countries"""
@@ -2355,24 +2350,23 @@ class ClientesView(QWidget):
 
     def _handle_duplicate_cif(self, cliente_existente):
         """Maneja el caso de CIF duplicado con diálogo al usuario"""
-        from PySide6.QtWidgets import QMessageBox
-        
-        msg = QMessageBox(self)
-        msg.setIcon(QMessageBox.Icon.Warning)
-        msg.setWindowTitle(self.tr("CIF/NIF Duplicado"))
-        msg.setText(
-            self.tr("Ya existe un cliente con el CIF/NIF") + f": {cliente_existente.cif_nif_siren}\n\n" +
-            self.tr("Cliente") + f": {cliente_existente.nombre_fiscal}\n" +
-            self.tr("Código") + f": {cliente_existente.codigo_cliente}"
+        # Ask user whether to load the existing client or cancel changes.
+        text = (
+            self.tr("Ya existe un cliente con el CIF/NIF") + f": {cliente_existente.cif_nif_siren}\n\n"
+            + self.tr("Cliente") + f": {cliente_existente.nombre_fiscal}\n"
+            + self.tr("Código") + f": {cliente_existente.codigo_cliente}\n\n"
+            + self.tr("¿Qué desea hacer?")
         )
-        msg.setInformativeText(self.tr("¿Qué desea hacer?"))
-        
-        btn_cargar = msg.addButton(self.tr("Cargar cliente existente"), QMessageBox.ButtonRole.AcceptRole)
-        btn_deshacer = msg.addButton(self.tr("Deshacer cambios"), QMessageBox.ButtonRole.RejectRole)
-        
-        msg.exec()
-        
-        if msg.clickedButton() == btn_cargar:
+
+        reply = show_question(
+            self,
+            self.tr("CIF/NIF Duplicado"),
+            text,
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
+        )
+
+        if reply == QMessageBox.StandardButton.Yes:
             self._cargar_cliente_existente(cliente_existente)
         else:
             # Limpiar campo CIF
@@ -2890,7 +2884,7 @@ class ClientesView(QWidget):
     def anadir_direccion_alternativa(self):
         """Añade una nueva dirección alternativa"""
         if not self.cliente_actual:
-            QMessageBox.warning(self, "Error", "Primero debe seleccionar un cliente.")
+            show_warning(self, self.tr("Error"), self.tr("Primero debe seleccionar un cliente."))
             return
 
         # Limpiar campos de dirección
@@ -2917,7 +2911,7 @@ class ClientesView(QWidget):
         # Obtener la dirección seleccionada
         current_index = self.ui.lista_direccionesAlternativas.currentIndex()
         if not current_index.isValid():
-            QMessageBox.information(self, "Seleccionar dirección", "Por favor, seleccione una dirección de la lista.")
+            show_info(self, self.tr("Seleccionar dirección"), self.tr("Por favor, seleccione una dirección de la lista."))
             return
             
         # Obtener el ID de la dirección desde el modelo
@@ -2937,7 +2931,7 @@ class ClientesView(QWidget):
         # Obtener la dirección desde el repositorio
         direccion = self.repository.obtener_direccion_por_id(id_direccion)
         if not direccion:
-            QMessageBox.warning(self, "Error", "No se pudo cargar la dirección.")
+            show_warning(self, self.tr("Error"), self.tr("No se pudo cargar la dirección."))
             return
             
         # Cargar datos en los campos
@@ -2960,14 +2954,15 @@ class ClientesView(QWidget):
             
         current_index = self.ui.lista_direccionesAlternativas.currentIndex()
         if not current_index.isValid():
-            QMessageBox.information(self, "Seleccionar dirección", "Por favor, seleccione una dirección de la lista para borrar.")
+            show_info(self, self.tr("Seleccionar dirección"), self.tr("Por favor, seleccione una dirección de la lista para borrar."))
             return
             
         # Confirmar eliminación
-        reply = QMessageBox.question(
+        reply = show_question(
             self, "Confirmar eliminación",
             "¿Está seguro de que desea eliminar esta dirección alternativa?",
-            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No
+            QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+            QMessageBox.StandardButton.No
         )
         
         if reply != QMessageBox.StandardButton.Yes:
@@ -2981,14 +2976,14 @@ class ClientesView(QWidget):
         # Eliminar desde repositorio
         try:
             if self.repository.eliminar_direccion(id_direccion):
-                QMessageBox.information(self, "Éxito", "Dirección eliminada correctamente.")
+                show_info(self, self.tr("Éxito"), self.tr("Dirección eliminada correctamente."))
                 # Recargar lista
                 if self.cliente_actual:
                     self.cargar_direcciones_alternativas(self.cliente_actual.id)
             else:
-                QMessageBox.warning(self, "Error", "No se pudo eliminar la dirección.")
+                show_warning(self, self.tr("Error"), self.tr("No se pudo eliminar la dirección."))
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al eliminar la dirección: {str(e)}")
+            show_critical(self, self.tr("Error"), self.tr("Error al eliminar la dirección: {}").format(str(e)))
 
     def guardar_direccion_alternativa(self):
         """Guarda la dirección alternativa actual"""
@@ -3001,12 +2996,12 @@ class ClientesView(QWidget):
                 # Actualizar existente
                 self.actualizar_direccion_desde_campos(self._direccion_actual)
                 self.repository.guardar_direccion(self._direccion_actual)
-                QMessageBox.information(self, "Éxito", "Dirección actualizada correctamente.")
+                show_info(self, self.tr("Éxito"), self.tr("Dirección actualizada correctamente."))
             else:
                 # Crear nueva
                 nueva_direccion = self.crear_direccion_desde_campos()
                 self.repository.crear_direccion(nueva_direccion)
-                QMessageBox.information(self, "Éxito", "Dirección creada correctamente.")
+                show_info(self, self.tr("Éxito"), self.tr("Dirección creada correctamente."))
                 
             # Recargar lista
             self.cargar_direcciones_alternativas(self.cliente_actual.id)
@@ -3015,7 +3010,7 @@ class ClientesView(QWidget):
             self.deshacer_direccion_alternativa()
             
         except Exception as e:
-            QMessageBox.critical(self, "Error", f"Error al guardar la dirección: {str(e)}")
+            show_critical(self, self.tr("Error"), self.tr("Error al guardar la dirección: {}").format(str(e)))
 
     def deshacer_direccion_alternativa(self):
         """Cancela la edición de dirección alternativa"""

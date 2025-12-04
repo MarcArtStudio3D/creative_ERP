@@ -47,10 +47,21 @@ class ArticuloController:
                 try:
                     oferta = self.repository.get_oferta_for_article(articulo_id)
                     if oferta:
-                        # Use unambiguous keys so UI can pick them up
+                        # Store oferta id and unambiguous keys so UI can pick them up
+                        self.current_article['oferta_id'] = oferta.get('id')
                         self.current_article['oferta_fecha_inicio'] = oferta.get('fecha_inicio')
                         self.current_article['oferta_fecha_fin'] = oferta.get('fecha_fin')
                         self.current_article['oferta_activa'] = oferta.get('activa')
+                        # Additional fields
+                        self.current_article['oferta_descripcion'] = oferta.get('descripcion')
+                        self.current_article['oferta_unidades'] = oferta.get('unidades')
+                        self.current_article['oferta_regalo'] = oferta.get('regalo')
+                        self.current_article['oferta_precio_final'] = oferta.get('precio_final')
+                        self.current_article['oferta_dto_local'] = oferta.get('dto_local')
+                        self.current_article['oferta_dto_web'] = oferta.get('dto_web')
+                        self.current_article['oferta_oferta32'] = oferta.get('oferta32')
+                        self.current_article['oferta_oferta_dto'] = oferta.get('oferta_dto')
+                        self.current_article['oferta_oferta_web'] = oferta.get('oferta_web')
                     else:
                         # Ensure keys exist
                         self.current_article['oferta_fecha_inicio'] = None
@@ -415,18 +426,26 @@ class ArticuloController:
 
             engine = get_engine()
 
-            # Use a short transaction to upsert oferta only
+            # Use a short transaction to insert or update oferta by its own id when possible
             try:
                 with engine.begin() as conn:
                     Session = sessionmaker(bind=conn, autocommit=False, autoflush=False)
                     session = Session()
                     tx_repo = ArticuloRepository(session=session)
 
+                    # If oferta id is known, update by id. Otherwise create a new oferta for this article+tarifa.
                     tarifa_id = tx_repo.get_default_tarifa()
-
-                    ok = tx_repo.upsert_oferta(self.current_article['id'], tarifa_id, oferta_payload)
-                    if not ok:
-                        raise Exception('Repository upsert failed')
+                    oferta_id = oferta_payload.get('id') or self.current_article.get('oferta_id')
+                    if oferta_id:
+                        ok = tx_repo.update_oferta_by_id(oferta_id, oferta_payload)
+                        if not ok:
+                            raise Exception('Repository update failed')
+                    else:
+                        row = tx_repo.insert_oferta(self.current_article['id'], tarifa_id, oferta_payload)
+                        if not row:
+                            raise Exception('Repository insert failed')
+                        # capture new id
+                        oferta_id = row.get('id')
             except Exception as e:
                 try:
                     session.rollback()
@@ -440,13 +459,28 @@ class ArticuloController:
                 except Exception:
                     pass
 
-            # Refresh current_article oferta fields
+            # Refresh current_article oferta fields (prefer by oferta_id)
             try:
-                oferta = self.repository.get_oferta_for_article(self.current_article['id'])
+                oferta = None
+                if oferta_id:
+                    oferta = self.repository.get_oferta_by_id(oferta_id)
+                if not oferta:
+                    oferta = self.repository.get_oferta_for_article(self.current_article['id'])
+
                 if oferta:
+                    self.current_article['oferta_id'] = oferta.get('id')
                     self.current_article['oferta_fecha_inicio'] = oferta.get('fecha_inicio')
                     self.current_article['oferta_fecha_fin'] = oferta.get('fecha_fin')
                     self.current_article['oferta_activa'] = oferta.get('activa')
+                    self.current_article['oferta_descripcion'] = oferta.get('descripcion')
+                    self.current_article['oferta_unidades'] = oferta.get('unidades')
+                    self.current_article['oferta_regalo'] = oferta.get('regalo')
+                    self.current_article['oferta_precio_final'] = oferta.get('precio_final')
+                    self.current_article['oferta_dto_local'] = oferta.get('dto_local')
+                    self.current_article['oferta_dto_web'] = oferta.get('dto_web')
+                    self.current_article['oferta_oferta32'] = oferta.get('oferta32')
+                    self.current_article['oferta_oferta_dto'] = oferta.get('oferta_dto')
+                    self.current_article['oferta_oferta_web'] = oferta.get('oferta_web')
                 else:
                     self.current_article['oferta_fecha_inicio'] = None
                     self.current_article['oferta_fecha_fin'] = None
@@ -458,6 +492,114 @@ class ArticuloController:
             return True, "Oferta guardada correctamente"
         except Exception as e:
             return False, f"Error guardando oferta: {e}"
+
+    def insert_oferta(self, oferta_payload: Dict[str, Any] | None = None) -> tuple[bool, str]:
+        """
+        Create a new oferta row for the currently loaded article using oferta_payload (or defaults)
+        and refresh controller.current_article oferta fields.
+
+        Returns (success: bool, message: str)
+        """
+        if not self.current_article:
+            return False, "No article loaded"
+
+        try:
+            from core.db import get_engine
+            from sqlalchemy.orm import sessionmaker
+
+            engine = get_engine()
+
+            try:
+                with engine.begin() as conn:
+                    Session = sessionmaker(bind=conn, autocommit=False, autoflush=False)
+                    session = Session()
+                    tx_repo = ArticuloRepository(session=session)
+
+                    tarifa_id = tx_repo.get_default_tarifa()
+
+                    row = tx_repo.insert_oferta(self.current_article['id'], tarifa_id, oferta_payload or {})
+                    if not row:
+                        raise Exception('Repository insert failed')
+                    # update current_article with new oferta id and useful fields
+                    self.current_article['oferta_id'] = row.get('id')
+                    self.current_article['oferta_fecha_inicio'] = row.get('fecha_inicio')
+                    self.current_article['oferta_fecha_fin'] = row.get('fecha_fin')
+                    self.current_article['oferta_activa'] = row.get('activa')
+                    self.current_article['oferta_descripcion'] = row.get('descripcion')
+                    self.current_article['oferta_unidades'] = row.get('unidades')
+                    self.current_article['oferta_regalo'] = row.get('regalo')
+                    self.current_article['oferta_precio_final'] = row.get('precio_final')
+                    self.current_article['oferta_dto_local'] = row.get('dto_local')
+                    self.current_article['oferta_dto_web'] = row.get('dto_web')
+                    self.current_article['oferta_oferta32'] = row.get('oferta32')
+                    self.current_article['oferta_oferta_dto'] = row.get('oferta_dto')
+                    self.current_article['oferta_oferta_web'] = row.get('oferta_web')
+            except Exception as e:
+                try:
+                    session.rollback()
+                except Exception:
+                    pass
+                session.close()
+                return False, f"Error insertando oferta: {e}", None
+            finally:
+                try:
+                    session.close()
+                except Exception:
+                    pass
+
+            # Refresh loaded article oferta fields
+            try:
+                oferta = self.repository.get_oferta_for_article(self.current_article['id'])
+                if oferta:
+                    self.current_article['oferta_fecha_inicio'] = oferta.get('fecha_inicio')
+                    self.current_article['oferta_fecha_fin'] = oferta.get('fecha_fin')
+                    self.current_article['oferta_activa'] = oferta.get('activa')
+                else:
+                    self.current_article['oferta_fecha_inicio'] = None
+                    self.current_article['oferta_fecha_fin'] = None
+                    self.current_article['oferta_activa'] = False
+            except Exception:
+                pass
+
+            return True, 'Oferta creada', row
+        except Exception as e:
+            return False, f"Error insertando oferta: {e}", None
+
+    def delete_oferta(self) -> tuple[bool, str]:
+        """
+        Delete the oferta for the currently loaded article (default tarifa) and refresh controller.current_article
+        """
+        if not self.current_article:
+            return False, "No article loaded"
+
+        try:
+            # Prefer deletion by oferta id if present
+            oferta_id = self.current_article.get('oferta_id')
+            if oferta_id:
+                ok = self.repository.delete_oferta_by_id(oferta_id)
+            else:
+                tarifa_id = self.repository.get_default_tarifa()
+                ok = self.repository.delete_oferta(self.current_article['id'], tarifa_id)
+            if not ok:
+                return False, 'Deletion failed'
+
+            # Clear oferta fields including id
+            self.current_article['oferta_id'] = None
+            self.current_article['oferta_fecha_inicio'] = None
+            self.current_article['oferta_fecha_fin'] = None
+            self.current_article['oferta_activa'] = False
+            self.current_article['oferta_descripcion'] = None
+            self.current_article['oferta_unidades'] = None
+            self.current_article['oferta_regalo'] = None
+            self.current_article['oferta_precio_final'] = None
+            self.current_article['oferta_dto_local'] = None
+            self.current_article['oferta_dto_web'] = None
+            self.current_article['oferta_oferta32'] = None
+            self.current_article['oferta_oferta_dto'] = None
+            self.current_article['oferta_oferta_web'] = None
+            return True, 'Oferta eliminada'
+        except Exception as e:
+            return False, f"Error eliminando oferta: {e}"
     
     def get_article_id(self) -> Optional[int]:
         """Obtener el ID del artículo actualmente cargado"""

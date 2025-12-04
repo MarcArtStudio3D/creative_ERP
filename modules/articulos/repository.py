@@ -579,16 +579,62 @@ class ArticuloRepository:
         Obtener el ID de tarifa predeterminada desde la configuración.
         Devuelve 1 si no está configurado.
         """
+        # Prefer retrieving tarifa from the currently selected company in the
+        # main database (where Empresa.tarifa_predeterminada lives). This mirrors
+        # newer schema where company-level settings live in `main.empresas`.
+        from core.company_manager import get_current_company_context
+        from core.db import get_current_database, set_current_database, get_session as get_main_session
+
         session = self._session()
         try:
-            result = session.execute(
-                text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
-            )
-            row = result.fetchone()
-            return row[0] if row and row[0] else 1
-        except Exception as e:
-            print(f"Error getting default tarifa: {e}")
-            return 1
+            # Try company context first
+            try:
+                ctx = get_current_company_context()
+                if ctx.get('has_company') and ctx.get('company_id'):
+                    company_id = ctx.get('company_id')
+                    # switch to main DB to read Empresa
+                    orig = get_current_database()
+                    try:
+                        set_current_database('main')
+                        main_sess = get_main_session()
+                        try:
+                            from core.models import Empresa
+                            empresa = main_sess.query(Empresa).filter_by(id=company_id).first()
+                            if empresa:
+                                # tarifa_predeterminada may be stored as string; try to coerce to int
+                                val = getattr(empresa, 'tarifa_predeterminada', None)
+                                if val is None:
+                                    return 1
+                                try:
+                                    return int(val)
+                                except Exception:
+                                    # not an integer — attempt to parse int part
+                                    try:
+                                        return int(str(val).strip())
+                                    except Exception:
+                                        return 1
+                        finally:
+                            try:
+                                main_sess.close()
+                            except Exception:
+                                pass
+                    finally:
+                        set_current_database(orig)
+            except Exception:
+                # If anything goes wrong here, fallback to legacy behaviour
+                pass
+
+            # Legacy fallback: older schema stored default tarifa in configuracion table
+            try:
+                result = session.execute(
+                    text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
+                )
+                row = result.fetchone()
+                return int(row[0]) if row and row[0] else 1
+            except Exception:
+                # The repository may be used in contexts without configuracion table
+                return 1
+
         finally:
             if not self._external_session:
                 session.close()
@@ -729,6 +775,28 @@ class ArticuloRepository:
             if not self._external_session:
                 session.close()
 
+    def get_ofertas_for_article(self, articulo_id: int, id_tarifa: int = None) -> list:
+        """Return all ofertsa rows for the given article (and optionally tarifa)."""
+        session = self._session()
+        try:
+            if id_tarifa is None:
+                # return all tarifas for article regardless of tarifa_id
+                r = session.execute(
+                    text("SELECT * FROM articulos_ofertas WHERE id_articulo = :id_articulo ORDER BY id ASC"),
+                    {"id_articulo": articulo_id}
+                )
+            else:
+                r = session.execute(
+                    text("SELECT * FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa ORDER BY id ASC"),
+                    {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+                )
+
+            rows = r.fetchall()
+            return [dict(row._mapping) for row in rows]
+        finally:
+            if not self._external_session:
+                session.close()
+
     def upsert_oferta(self, articulo_id: int, id_tarifa: int, oferta_data: dict) -> bool:
         """Insertar o actualizar una oferta para el artículo/tarifa indicados.
 
@@ -816,6 +884,155 @@ class ArticuloRepository:
             return True
         except Exception:
             # Rollback only if repository manages the session
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_oferta_by_id(self, oferta_id: int) -> Optional[dict]:
+        """Return oferta row by its primary key id."""
+        session = self._session()
+        try:
+            r = session.execute(
+                text("SELECT * FROM articulos_ofertas WHERE id = :id LIMIT 1"),
+                {"id": oferta_id}
+            ).fetchone()
+            return dict(r._mapping) if r else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def update_oferta_by_id(self, oferta_id: int, oferta_data: dict) -> bool:
+        """Update oferta row identified by oferta_id with provided fields."""
+        session = self._session()
+        try:
+            if not oferta_data:
+                return True
+            set_clauses = []
+            params = { 'id': oferta_id }
+            allowed_keys = set([
+                'descripcion', 'activa', 'oferta32', 'oferta_dto', 'oferta_precio_final', 'oferta_web',
+                'unidades', 'regalo', 'dto_local', 'dto_web', 'precio_final',
+                'fecha_inicio', 'fecha_fin'
+            ])
+
+            for k, v in oferta_data.items():
+                if k in allowed_keys:
+                    set_clauses.append(f"{k} = :{k}")
+                    params[k] = int(v) if isinstance(v, bool) else v
+
+            if not set_clauses:
+                return True
+
+            sql = f"UPDATE articulos_ofertas SET {', '.join(set_clauses)} WHERE id = :id"
+            session.execute(text(sql), params)
+
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_oferta_by_id(self, oferta_id: int) -> bool:
+        """Delete oferta row by its primary key id."""
+        session = self._session()
+        try:
+            session.execute(text("DELETE FROM articulos_ofertas WHERE id = :id"), { 'id': oferta_id })
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def insert_oferta(self, articulo_id: int, id_tarifa: int, oferta_data: dict = None) -> Optional[dict]:
+        """Insert a new oferta row for the given article+tarifa and return the inserted row as a dict.
+
+        oferta_data may contain a subset of allowed fields (descripcion, fecha_inicio, fecha_fin, activa, etc.).
+        If oferta_data is None, sensible defaults will be used.
+        """
+        session = self._session()
+        try:
+            # Prepare defaults and allowed fields (mirror upsert logic)
+            defaults = {
+                'descripcion': None,
+                'activa': False,
+                'oferta32': False,
+                'oferta_dto': False,
+                'oferta_precio_final': False,
+                'oferta_web': False,
+                'unidades': 0.0,
+                'regalo': 0.0,
+                'dto_local': 0.0,
+                'dto_web': 0.0,
+                'precio_final': 0.0,
+                'fecha_inicio': None,
+                'fecha_fin': None
+            }
+
+            allowed_keys = set(defaults.keys())
+
+            merged = defaults.copy()
+            if oferta_data:
+                for k, v in oferta_data.items():
+                    if k in allowed_keys:
+                        merged[k] = int(v) if isinstance(v, bool) else v
+
+            params = { 'id_articulo': articulo_id, 'id_tarifa': id_tarifa }
+            cols = ["id_articulo", "id_tarifa"]
+            vals = [":id_articulo", ":id_tarifa"]
+
+            for k, v in merged.items():
+                cols.append(k)
+                vals.append(f":{k}")
+                params[k] = v
+
+            sql = f"INSERT INTO articulos_ofertas ({', '.join(cols)}) VALUES ({', '.join(vals)})"
+            session.execute(text(sql), params)
+
+            if not self._external_session:
+                session.commit()
+
+            # Return the newly inserted row
+            row = session.execute(
+                text("SELECT * FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa ORDER BY id DESC LIMIT 1"),
+                { 'id_articulo': articulo_id, 'id_tarifa': id_tarifa }
+            ).fetchone()
+
+            return dict(row._mapping) if row else None
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_oferta(self, articulo_id: int, id_tarifa: int) -> bool:
+        """Delete an oferta for a given article and tarifa. Returns True on success."""
+        session = self._session()
+        try:
+            session.execute(
+                text("DELETE FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa"),
+                { 'id_articulo': articulo_id, 'id_tarifa': id_tarifa }
+            )
+
+            if not self._external_session:
+                session.commit()
+
+            return True
+        except Exception:
             if not self._external_session:
                 session.rollback()
             raise

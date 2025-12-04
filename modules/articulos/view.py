@@ -16,6 +16,8 @@ class ArticulosView(QWidget):
         self.ui.setupUi(self)
         # Asegurar que el botón 'Nuevo' utilice el estilo centralizado 'success' desde modern.qss
         try:
+            # DEBUG: mark entry and current flags (help trace unexpected flows)
+            # build payload above; proceed to persistence
             # Establecer una propiedad dinámica 'class' para que coincida con selectores tipo QPushButton[class="success"]
             self.ui.botAnadir.setProperty('class', 'success')
         except Exception:
@@ -30,6 +32,11 @@ class ArticulosView(QWidget):
         self.decimales_precios = 2
 
         self._init_complete = False
+        # Flags for oferta workflow
+        self._editing_oferta = False
+        self._creating_oferta = False
+        self._current_oferta_id = None
+        self._created_db_row = False
         
         # Initialize UI
         self._setup_connections()
@@ -67,113 +74,7 @@ class ArticulosView(QWidget):
         self.ui.botGuardar.clicked.connect(self._on_save_clicked)
         self.ui.botDeshacer.clicked.connect(self._on_undo_clicked)
         self.ui.botBorrar.clicked.connect(self._on_delete_clicked)
-        self.ui.btn_cerrar.clicked.connect(self.close)
-        
-        # Search button
-        self.ui.btnBuscar.clicked.connect(self._on_search_clicked)
-        
-        # Keyboard shortcut for search (Ctrl+F)
-        self.search_shortcut = QShortcut(QKeySequence("Ctrl+F"), self)
-        self.search_shortcut.activated.connect(self._on_search_clicked)
-        
-        # Tab changes
-        self.ui.Pestanas.currentChanged.connect(self._on_tab_changed)
-        
-        # Chart controls
-        self.ui.cboTipoGrafica.currentTextChanged.connect(self._on_chart_type_changed)
-        self.ui.radGrafica_unidades.toggled.connect(self._on_chart_data_changed)
-        self.ui.radGrafica_importes.toggled.connect(self._on_chart_data_changed)
-        
-        # Lookup buttons
-        self.ui.botBuscarSeccion.clicked.connect(self._on_buscar_seccion_clicked)
-        self.ui.botBuscarFamilia.clicked.connect(self._on_buscar_familia_clicked)
-        self.ui.botBuscarSubfamilia.clicked.connect(self._on_buscar_subfamilia_clicked)
-        
-        # Promociones - control de campos de fecha según checkbox
-        self.ui.chkArticulo_promocionado.toggled.connect(self._on_articulo_promocionado_changed)
-        # Promociones action buttons
-        try:
-            if hasattr(self.ui, 'btnAnadirOferta'):
-                self.ui.btnAnadirOferta.clicked.connect(self._on_add_oferta)
-        except Exception:
-            pass
-        try:
-            if hasattr(self.ui, 'btnEditarOferta'):
-                self.ui.btnEditarOferta.clicked.connect(self._on_edit_oferta)
-        except Exception:
-            pass
-        try:
-            if hasattr(self.ui, 'btnguardar_oferta'):
-                self.ui.btnguardar_oferta.clicked.connect(self._on_save_oferta)
-        except Exception:
-            pass
-        try:
-            if hasattr(self.ui, 'btnDeshacerOferta'):
-                self.ui.btnDeshacerOferta.clicked.connect(self._on_undo_oferta)
-        except Exception:
-            pass
-
-        # Formatear campos numéricos al terminar la edición para que el usuario vea una representación normalizada (separador coma)
-        if hasattr(self.ui, 'txtPrecioVenta'):
-            try:
-                self.ui.txtPrecioVenta.editingFinished.connect(lambda: self._format_price_field(self.ui.txtPrecioVenta))
-            except Exception:
-                pass
-
-        if hasattr(self.ui, 'txtcoste'):
-            try:
-                self.ui.txtcoste.editingFinished.connect(lambda: self._format_price_field(self.ui.txtcoste))
-            except Exception:
-                pass
-
-        if hasattr(self.ui, 'txtCoste_real'):
-            try:
-                self.ui.txtCoste_real.editingFinished.connect(lambda: self._format_price_field(self.ui.txtCoste_real))
-            except Exception:
-                pass
-    
-    def search(self, text: str):
-        """
-        Método invocado por el panel lateral de búsqueda en main_window_v2.py
-        """
-        self._load_articles_data(text)
-        
-    def nuevo(self):
-        """Método público para la acción 'Nuevo' desde el panel lateral"""
-        self._on_add_clicked()
-        
-    def editar(self):
-        """Método público para la acción 'Editar' desde el panel lateral"""
-        self._on_edit_clicked()
-        
-    def borrar(self):
-        """Método público para la acción 'Borrar' desde el panel lateral"""
-        self._on_delete_clicked()
-        
-    def list(self):
-        """Método público para cambiar a la vista de lista"""
-        self.ui.stackedWidget.setCurrentIndex(1)
-
-
-    def get_search_options(self) -> dict:
-        """
-        Devuelve la configuración para las opciones de búsqueda del panel lateral.
-        Usado por main_window_v2.py para rellenar el combo de ordenación.
-        """
-        return {
-            'sort_fields': [
-                ("Descripción", "descripcion_reducida"),
-                ("Código", "codigo"),
-                ("Stock", "stock_real"),
-                ("Precio", "pvp")
-            ],
-            'search_placeholder': "Buscar por código, descripción..."
-        }
-
-
-
-
-
+        # setup_connections finished
     
     def _setup_initial_state(self):
         """Establecer el estado inicial de la interfaz (vista, tablas, y configuraciones)"""
@@ -203,6 +104,18 @@ class ArticulosView(QWidget):
         # Hide certain labels
         self.ui.lblkit.setVisible(False)
         self.ui.lbl_en_promocion.setVisible(False)
+
+    def _maybe_warn(self, title: str, message: str):
+        """Delegate to central UI helper which avoids modals during test runs."""
+        try:
+            from core.ui_helpers import show_warning
+            show_warning(self, title, message)
+        except Exception:
+            # Fallback to simple print in any unexpected error
+            try:
+                print(f"{title}: {message}")
+            except Exception:
+                pass
 
     def _load_company_decimal_settings(self):
         """Load company decimal settings (decimales_totales, decimales_precios)
@@ -277,7 +190,7 @@ class ArticulosView(QWidget):
     def _populate_iva_combo(self):
         """Rellenar el combo de tipos de IVA desde la tabla TVAIVA"""
         try:
-                # Obtener tipos de IVA desde el controlador
+            # Obtener tipos de IVA desde el controlador
             iva_types = self.controller.get_iva_types()
             
             # Clear existing items
@@ -289,7 +202,7 @@ class ArticulosView(QWidget):
             # Add IVA types
             for iva in iva_types:
                 # Display format: "descripcion (porcentaje%)"
-                display_text = f"{iva['descripcion']} ({iva['porcentaje']}%)"
+                display_text = self.tr("{desc} ({pct}%)").format(desc=iva['descripcion'], pct=iva['porcentaje'])
                 # Store the ID as user data
                 self.ui.cboTipoIVA.addItem(display_text, iva['id'])
             
@@ -299,7 +212,7 @@ class ArticulosView(QWidget):
             print(f"Error populating IVA combo: {e}")
             # Add a default option if error
             self.ui.cboTipoIVA.clear()
-            self.ui.cboTipoIVA.addItem("Error cargando tipos IVA", None)
+            self.ui.cboTipoIVA.addItem(self.tr("Error cargando tipos IVA"), None)
     
     # ==================== Field Locking ====================
     
@@ -564,6 +477,95 @@ class ArticulosView(QWidget):
             self.ui.txtOferta_Fecha_ini.setDate(_to_qdate(fecha_ini))
         if hasattr(self.ui, 'txtOferta_Fecha_fin'):
             self.ui.txtOferta_Fecha_fin.setDate(_to_qdate(fecha_fin))
+        # Populate other oferta controls if we have oferta data merged into current article
+        try:
+            curr = self.controller.get_current_article() or {}
+            # Store current oferta id for later save/delete
+            if 'oferta_id' in curr:
+                self._current_oferta_id = curr.get('oferta_id')
+
+            if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                val = curr.get('oferta_descripcion') or ''
+                try:
+                    self.ui.txtOferta_Descripcion_promocion.setText(str(val))
+                except Exception:
+                    pass
+
+            if hasattr(self.ui, 'txtOferta_por_cada'):
+                try:
+                    v = curr.get('oferta_unidades')
+                    if v is None:
+                        v = ''
+                    else:
+                        v = str(int(v)) if float(v).is_integer() else str(v)
+                    self.ui.txtOferta_por_cada.setText(v)
+                except Exception:
+                    pass
+
+            if hasattr(self.ui, 'txtOfertaregalo_de'):
+                try:
+                    v = curr.get('oferta_regalo')
+                    self.ui.txtOfertaregalo_de.setText(str(int(v)) if v and float(v).is_integer() else (str(v) if v is not None else ''))
+                except Exception:
+                    pass
+
+            if hasattr(self.ui, 'txtoferta_pvp_fijo'):
+                try:
+                    v = curr.get('oferta_precio_final')
+                    if v is None:
+                        self.ui.txtoferta_pvp_fijo.setText('')
+                    else:
+                        self.ui.txtoferta_pvp_fijo.setText(format_decimal_value(float(v), self.decimales_precios, use_comma=True))
+                except Exception:
+                    pass
+
+            if hasattr(self.ui, 'txtOfertaDtoOferta'):
+                try:
+                    v = curr.get('oferta_dto_local')
+                    self.ui.txtOfertaDtoOferta.setText(str(v) if v is not None else '')
+                except Exception:
+                    pass
+
+            if hasattr(self.ui, 'txtOferta_dto_web'):
+                try:
+                    v = curr.get('oferta_dto_web')
+                    self.ui.txtOferta_dto_web.setText(str(v) if v is not None else '')
+                except Exception:
+                    pass
+
+            # Flags
+            try:
+                if hasattr(self.ui, 'chkOferta_32'):
+                    self.ui.chkOferta_32.setChecked(bool(curr.get('oferta_oferta32')))
+            except Exception:
+                pass
+            try:
+                if hasattr(self.ui, 'chkOferta_dto'):
+                    self.ui.chkOferta_dto.setChecked(bool(curr.get('oferta_oferta_dto')))
+            except Exception:
+                pass
+            try:
+                if hasattr(self.ui, 'chkOferta_web'):
+                    self.ui.chkOferta_web.setChecked(bool(curr.get('oferta_oferta_web')))
+            except Exception:
+                pass
+        except Exception:
+            pass
+        # Refresh ofertas table for this article
+        try:
+            art = self.controller.get_current_article()
+            if art and isinstance(art, dict):
+                art_id = art.get('id')
+                if art_id and hasattr(self.controller, 'repository'):
+                    try:
+                        offers = self.controller.repository.get_ofertas_for_article(art_id)
+                        if hasattr(self, 'ofertas_model'):
+                            self.ofertas_model.set_offers(offers)
+                    except Exception:
+                        # Non-fatal
+                        pass
+        except Exception:
+            pass
         # El signal toggled se encargará de habilitar/deshabilitar los campos de fecha
         
         # Update chart if on graphics tab
@@ -713,6 +715,30 @@ class ArticulosView(QWidget):
         
         # Cargar datos
         self._load_articles_data()
+
+        # Setup ofertas table model
+        try:
+            self.ofertas_model = OffersTableModel()
+            if hasattr(self.ui, 'tabla_ofertas'):
+                self.ui.tabla_ofertas.setModel(self.ofertas_model)
+                # Prefer wider first column (~20px wider than before) and center its contents
+                try:
+                    self.ui.tabla_ofertas.setColumnWidth(0, 56)
+                    # Center alignment for first column cells
+                    try:
+                        header = self.ui.tabla_ofertas.horizontalHeader()
+                        header.setDefaultAlignment(Qt.AlignmentFlag.AlignCenter)
+                    except Exception:
+                        pass
+                except Exception:
+                    pass
+                try:
+                    # Clicking a row populates the promotion fields (does not enable editing)
+                    self.ui.tabla_ofertas.clicked.connect(self._on_tabla_ofertas_clicked)
+                except Exception:
+                    pass
+        except Exception:
+            pass
     
     def _load_articles_data(self, filter_text: str = ""):
         """Load articles data into the table with optional filter"""
@@ -737,6 +763,152 @@ class ArticulosView(QWidget):
             self.controller.load_by_id(article['id'])
             self._load_form_from_article()
             self.ui.stackedWidget.setCurrentIndex(0)  # Show form
+
+    def _on_tabla_ofertas_clicked(self, index: QModelIndex):
+        """Populate the promotions form when the user selects a row in tabla_ofertas.
+
+        This does NOT enable editing — the user must press Edit to change values.
+        """
+        try:
+            if not index or not index.isValid():
+                return
+
+            if not hasattr(self, 'ofertas_model'):
+                return
+
+            # Safely get the offer dict from the model
+            offer = None
+            try:
+                if hasattr(self.ofertas_model, 'get_offer'):
+                    offer = self.ofertas_model.get_offer(index.row())
+                else:
+                    offer = self.ofertas_model.offers[index.row()]
+            except Exception:
+                offer = None
+
+            if not offer:
+                return
+
+            # Keep track of selected oferta id for saves/deletes
+            try:
+                self._current_oferta_id = offer.get('id')
+            except Exception:
+                pass
+
+            # Populate UI controls with oferta values
+            try:
+                if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
+                    self.ui.txtOferta_Descripcion_promocion.setText(str(offer.get('descripcion') or ''))
+            except Exception:
+                pass
+
+            # Convert python date -> QDate for date fields
+            def _pydate_to_qdate(d):
+                if not d:
+                    return QDate()
+                try:
+                    if isinstance(d, QDate):
+                        return d
+                    return QDate(d.year, d.month, d.day)
+                except Exception:
+                    return QDate()
+
+            try:
+                if hasattr(self.ui, 'txtOferta_Fecha_ini'):
+                    self.ui.txtOferta_Fecha_ini.setDate(_pydate_to_qdate(offer.get('fecha_inicio')))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_Fecha_fin'):
+                    self.ui.txtOferta_Fecha_fin.setDate(_pydate_to_qdate(offer.get('fecha_fin')))
+            except Exception:
+                pass
+
+            # Flags and numeric fields
+            try:
+                if hasattr(self.ui, 'chkArticulo_promocionado'):
+                    self.ui.chkArticulo_promocionado.setChecked(bool(offer.get('activa')))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_por_cada'):
+                    v = offer.get('unidades')
+                    if v is None:
+                        self.ui.txtOferta_por_cada.setText('')
+                    else:
+                        self.ui.txtOferta_por_cada.setText(str(int(v)) if float(v).is_integer() else str(v))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOfertaregalo_de'):
+                    v = offer.get('regalo')
+                    if v is None:
+                        self.ui.txtOfertaregalo_de.setText('')
+                    else:
+                        self.ui.txtOfertaregalo_de.setText(str(int(v)) if float(v).is_integer() else str(v))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtoferta_pvp_fijo'):
+                    v = offer.get('precio_final')
+                    if v is None:
+                        self.ui.txtoferta_pvp_fijo.setText('')
+                    else:
+                        # precio_final in model is likely oferta_precio_final key; fallback accordingly
+                        value = None
+                        if 'precio_final' in offer:
+                            value = offer.get('precio_final')
+                        elif 'oferta_precio_final' in offer:
+                            value = offer.get('oferta_precio_final')
+                        if value is None:
+                            self.ui.txtoferta_pvp_fijo.setText('')
+                        else:
+                            try:
+                                self.ui.txtoferta_pvp_fijo.setText(format_decimal_value(float(value), self.decimales_precios, use_comma=True))
+                            except Exception:
+                                self.ui.txtoferta_pvp_fijo.setText(str(value))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOfertaDtoOferta'):
+                    v = offer.get('dto_local') or offer.get('oferta_dto')
+                    self.ui.txtOfertaDtoOferta.setText(str(v) if v is not None else '')
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_dto_web'):
+                    v = offer.get('dto_web') or offer.get('oferta_web')
+                    self.ui.txtOferta_dto_web.setText(str(v) if v is not None else '')
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'chkOferta_32'):
+                    self.ui.chkOferta_32.setChecked(bool(offer.get('oferta32')))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'chkOferta_dto'):
+                    self.ui.chkOferta_dto.setChecked(bool(offer.get('oferta_dto') or offer.get('oferta_dto')))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'chkOferta_web'):
+                    self.ui.chkOferta_web.setChecked(bool(offer.get('oferta_web')))
+            except Exception:
+                pass
+
+        except Exception:
+            # Selection handling should never break the main UI
+            return
     
     # ==================== Button Handlers ====================
     
@@ -753,7 +925,7 @@ class ArticulosView(QWidget):
             # TODO: Revisar la configuración de auto_codigo
             self.ui.txtcodigo.setFocus()
         else:
-            QMessageBox.warning(self, "Error", "No se pudo crear el artículo")
+            self._maybe_warn("Error", "No se pudo crear el artículo")
     
     def _on_edit_clicked(self):
         """Manejar click en el botón Editar"""
@@ -765,7 +937,8 @@ class ArticulosView(QWidget):
         # Otherwise, get the selected article from the table
         selection = self.ui.tablaBusqueda.selectionModel()
         if not selection or not selection.hasSelection():
-            QMessageBox.information(self, "Editar", "Por favor, selecciona un artículo de la lista")
+            from core.ui_helpers import show_info
+            show_info(self, self.tr("Editar"), self.tr("Por favor, selecciona un artículo de la lista"))
             return
         
         index = selection.currentIndex()
@@ -788,11 +961,12 @@ class ArticulosView(QWidget):
         success, message = self.controller.save(form_data)
         
         if success:
-            QMessageBox.information(self, "Guardar", message)
+            from core.ui_helpers import show_info
+            show_info(self, self.tr("Guardar"), message)
             self._load_form_from_article()
             self._lock_fields(True)
         else:
-            QMessageBox.warning(self, "Error", message)
+            self._maybe_warn("Error", message)
     
     def _on_undo_clicked(self):
         """Manejar click en el botón Deshacer"""
@@ -808,20 +982,23 @@ class ArticulosView(QWidget):
     
     def _on_delete_clicked(self):
         """Manejar click en el botón Borrar"""
-        reply = QMessageBox.question(
+        from core.ui_helpers import show_question
+        reply = show_question(
             self,
-            "Borrar Artículo",
-            "¿Desea realmente borrar este artículo?\nEsta opción no se puede deshacer",
-            QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes
+            self.tr("Borrar Artículo"),
+            self.tr("¿Desea realmente borrar este artículo?\nEsta opción no se puede deshacer"),
+            QMessageBox.StandardButton.No | QMessageBox.StandardButton.Yes,
+            QMessageBox.StandardButton.No
         )
         
         if reply == QMessageBox.StandardButton.Yes:
             success, message = self.controller.delete()
             if success:
-                QMessageBox.information(self, "Borrar", message)
+                from core.ui_helpers import show_info
+                show_info(self, self.tr("Borrar"), message)
                 self._load_form_from_article()
             else:
-                QMessageBox.warning(self, "Error", message)
+                self._maybe_warn("Error", message)
     
     def _on_next_clicked(self):
         """Manejar click en el botón Siguiente"""
@@ -1057,7 +1234,7 @@ class ArticulosView(QWidget):
             pvp = coste * (1 + margen/100)
             data = [units * pvp for units in units_data]
         
-        return data, "Importes de Ventas (€)"
+        return data, self.tr("Importes de Ventas (€)")
     
     def _on_chart_type_changed(self):
         """Manejar cambio de tipo de gráfica"""
@@ -1078,16 +1255,17 @@ class ArticulosView(QWidget):
             secciones_data = self.controller.get_secciones_data()
             
             if not secciones_data:
-                QMessageBox.information(self, "Info", "No se encontraron secciones en la base de datos")
+                from core.ui_helpers import show_info
+                show_info(self, self.tr("Info"), self.tr("No se encontraron secciones en la base de datos"))
                 return
             
             # Use DBConsultaView.select_from_data - no QSqlDatabase needed!
             selected_data, record = DBConsultaView.select_from_data(
                 parent=self,
                 data=secciones_data,
-                headers=["ID", "Código", "Sección"],
+                headers=[self.tr("ID"), self.tr("Código"), self.tr("Sección")],
                 campos=["codigo", "seccion"],
-                titulo="Seleccionar Sección"
+                titulo=self.tr("Seleccionar Sección")
             )
             
             if selected_data:
@@ -1120,11 +1298,12 @@ class ArticulosView(QWidget):
 
                     print(f"✅ Sección seleccionada: {seccion_codigo} - {seccion_nombre}")
                 else:
-                    QMessageBox.warning(self, "Error", "No se pudo actualizar la sección")
+                    self._maybe_warn(self.tr("Error"), self.tr("No se pudo actualizar la sección"))
         
         except Exception as e:
             print(f"Error opening section lookup: {e}")
-            QMessageBox.critical(self, "Error", f"Error al abrir consulta de secciones: {str(e)}")
+            from core.ui_helpers import show_critical
+            show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de secciones: {}").format(str(e)))
 
     def _on_buscar_familia_clicked(self):
         """Abrir diálogo de búsqueda de familias y actualizar controller/modelo/vista (MVC)."""
@@ -1133,21 +1312,23 @@ class ArticulosView(QWidget):
             current = self.controller.get_current_article() or {}
             id_seccion = current.get('id_seccion')
             if not id_seccion:
-                QMessageBox.information(self, "Info", "Seleccione primero una sección para listar las familias correspondientes")
+                from core.ui_helpers import show_info
+                show_info(self, self.tr("Info"), self.tr("Seleccione primero una sección para listar las familias correspondientes"))
                 return
 
             familias_data = self.controller.get_familias_data(id_seccion)
 
             if not familias_data:
-                QMessageBox.information(self, "Info", "No se encontraron familias en la base de datos")
+                from core.ui_helpers import show_info
+                show_info(self, self.tr("Info"), self.tr("No se encontraron familias en la base de datos"))
                 return
 
             selected_data, record = DBConsultaView.select_from_data(
                 parent=self,
                 data=familias_data,
-                headers=["ID", "Código", "Familia"],
+                headers=[self.tr("ID"), self.tr("Código"), self.tr("Familia")],
                 campos=["codigo", "familia"],
-                titulo="Seleccionar Familia"
+                titulo=self.tr("Seleccionar Familia")
             )
 
             if selected_data:
@@ -1169,11 +1350,12 @@ class ArticulosView(QWidget):
                     if hasattr(self.ui, 'txtsubfamilia'):
                         self.ui.txtsubfamilia.clear()
                 else:
-                    QMessageBox.warning(self, "Error", "No se pudo actualizar la familia")
+                    self._maybe_warn(self.tr("Error"), self.tr("No se pudo actualizar la familia"))
 
         except Exception as e:
             print(f"Error opening family lookup: {e}")
-            QMessageBox.critical(self, "Error", f"Error al abrir consulta de familias: {str(e)}")
+            from core.ui_helpers import show_critical
+            show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de familias: {}").format(str(e)))
 
     def _on_buscar_subfamilia_clicked(self):
         """Abrir diálogo de búsqueda de subfamilias y actualizar controller/modelo/vista (MVC)."""
@@ -1185,31 +1367,32 @@ class ArticulosView(QWidget):
             # Si no hay familia seleccionada, mostrar hint y no abrir diálogo
             if not id_familia:
                 # Mostrar mensaje orientativo al usuario
-                from PySide6.QtWidgets import QMessageBox
-                QMessageBox.information(
+                from core.ui_helpers import show_info
+                show_info(
                     self,
-                    "Info",
-                    "Antes de buscar subfamilias, seleccione primero una familia."
+                    self.tr("Info"),
+                    self.tr("Antes de buscar subfamilias, seleccione primero una familia.")
                 )
 
                 # Añadir tooltip informativo al botón para UX
                 if hasattr(self.ui, 'botBuscarSubfamilia'):
-                    self.ui.botBuscarSubfamilia.setToolTip("Seleccione una familia antes de buscar subfamilias")
+                    self.ui.botBuscarSubfamilia.setToolTip(self.tr("Seleccione una familia antes de buscar subfamilias"))
 
                 return
 
             subfamilias_data = self.controller.get_subfamilias_data(id_familia)
 
             if not subfamilias_data:
-                QMessageBox.information(self, "Info", "No se encontraron subfamilias en la base de datos")
+                from core.ui_helpers import show_info
+                show_info(self, self.tr("Info"), self.tr("No se encontraron subfamilias en la base de datos"))
                 return
 
             selected_data, record = DBConsultaView.select_from_data(
                 parent=self,
                 data=subfamilias_data,
-                headers=["ID", "Código", "Subfamilia"],
+                headers=[self.tr("ID"), self.tr("Código"), self.tr("Subfamilia")],
                 campos=["codigo", "subfamilia"],
-                titulo="Seleccionar Subfamilia"
+                titulo=self.tr("Seleccionar Subfamilia")
             )
 
             if selected_data:
@@ -1221,11 +1404,12 @@ class ArticulosView(QWidget):
                     self.ui.txtsubfamilia.setText(sub_nombre)
                     print(f"✅ Subfamilia seleccionada: {sub_codigo} - {sub_nombre}")
                 else:
-                    QMessageBox.warning(self, "Error", "No se pudo actualizar la subfamilia")
+                    self._maybe_warn("Error", "No se pudo actualizar la subfamilia")
 
         except Exception as e:
             print(f"Error opening subfamily lookup: {e}")
-            QMessageBox.critical(self, "Error", f"Error al abrir consulta de subfamilias: {str(e)}")
+            from core.ui_helpers import show_critical
+            show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de subfamilias: {}").format(str(e)))
     
     # ==================== Promociones Logic ====================
     
@@ -1366,6 +1550,7 @@ class ArticulosView(QWidget):
         Enable save/undo and disable add/edit controls until saved or undone.
         """
         self._editing_oferta = True
+        self._creating_oferta = False
 
         # Clear oferta form fields and enable editing
         try:
@@ -1374,6 +1559,14 @@ class ArticulosView(QWidget):
         except Exception:
             pass
 
+        # Do NOT create a DB row immediately. Enter editing state and allow
+        # the user to fill the form and press Guardar to persist the oferta.
+        # This prevents transient/accidental DB rows when users only open the
+        # add form and then cancel.
+        self._creating_oferta = True
+        # clear any previously selected oferta id (we haven't created it yet)
+        self._current_oferta_id = None
+
         self._enable_oferta_editing(True)
 
     def _on_edit_oferta(self):
@@ -1381,67 +1574,11 @@ class ArticulosView(QWidget):
         self._editing_oferta = True
         self._enable_oferta_editing(True)
 
-    def _on_save_oferta(self):
-        """User clicked 'Guardar oferta' — save oferta using controller and exit edit mode."""
-        payload = {}
-        try:
-            if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
-                try:
-                    payload['descripcion'] = self.ui.txtOferta_Descripcion_promocion.text() or None
-                except Exception:
-                    pass
+    # NOTE: _on_save_oferta logic has been consolidated further down; earlier
+    # definitions were removed to avoid duplicated handlers.
 
-            try:
-                if hasattr(self.ui, 'txtOferta_Fecha_ini'):
-                    d1 = self.ui.txtOferta_Fecha_ini.date()
-                    payload['fecha_inicio'] = qdate_to_date(d1) if d1 is not None else None
-            except Exception:
-                pass
-
-            try:
-                if hasattr(self.ui, 'txtOferta_Fecha_fin'):
-                    d2 = self.ui.txtOferta_Fecha_fin.date()
-                    payload['fecha_fin'] = qdate_to_date(d2) if d2 is not None else None
-            except Exception:
-                pass
-
-            try:
-                if hasattr(self.ui, 'chkArticulo_promocionado'):
-                    payload['activa'] = bool(self.ui.chkArticulo_promocionado.isChecked())
-            except Exception:
-                pass
-
-            if hasattr(self, 'controller') and hasattr(self.controller, 'save_oferta'):
-                success, message = self.controller.save_oferta(payload)
-                if not success:
-                    try:
-                        QMessageBox.warning(self, 'Error', f'No se pudo guardar la oferta: {message}')
-                    except Exception:
-                        pass
-
-        finally:
-            self._editing_oferta = False
-            self._enable_oferta_editing(False)
-
-    def _on_undo_oferta(self):
-        """User clicked 'Deshacer oferta' — restore values and exit edit mode."""
-        try:
-            current = None
-            if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
-                current = self.controller.get_current_article()
-
-            if current and isinstance(current, dict):
-                if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
-                    try:
-                        self.ui.txtOferta_Descripcion_promocion.setText(str(current.get('descripcion', '') or ''))
-                    except Exception:
-                        pass
-        except Exception:
-            pass
-
-        self._editing_oferta = False
-        self._enable_oferta_editing(False)
-        self._enable_oferta_editing(True)
+    # NOTE: The undo/save handlers were consolidated later in the file. Removed
+    # duplicate implementation earlier in the source.
 
     def _on_edit_oferta(self):
         """User clicked 'Editar oferta' — enable editing existing oferta."""
@@ -1455,6 +1592,7 @@ class ArticulosView(QWidget):
         — this handler toggles UI state only.
         """
         # Gather oferta payload from UI and persist using controller
+        # enter save handler
         payload = {}
         try:
             # Description
@@ -1488,16 +1626,176 @@ class ArticulosView(QWidget):
             except Exception:
                 pass
 
+            # Offer type flags
+            try:
+                if hasattr(self.ui, 'chkOferta_32'):
+                    payload['oferta32'] = bool(getattr(self.ui, 'chkOferta_32').isChecked())
+            except Exception:
+                pass
+            try:
+                if hasattr(self.ui, 'chkOferta_dto'):
+                    payload['oferta_dto'] = bool(getattr(self.ui, 'chkOferta_dto').isChecked())
+            except Exception:
+                pass
+            try:
+                if hasattr(self.ui, 'chkOferta_web'):
+                    payload['oferta_web'] = bool(getattr(self.ui, 'chkOferta_web').isChecked())
+            except Exception:
+                pass
+
+            # Numeric mappings (UI -> DB)
+            try:
+                if hasattr(self.ui, 'txtOferta_por_cada'):
+                    v = self.ui.txtOferta_por_cada.text().strip()
+                    if v != '':
+                        payload['unidades'] = float(parse_decimal_input(v))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOfertaregalo_de'):
+                    v = self.ui.txtOfertaregalo_de.text().strip()
+                    if v != '':
+                        payload['regalo'] = float(parse_decimal_input(v))
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtoferta_pvp_fijo'):
+                    v = self.ui.txtoferta_pvp_fijo.text().strip()
+                    if v != '':
+                        payload['precio_final'] = float(parse_decimal_input(v))
+                        payload['oferta_precio_final'] = True
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOfertaDtoOferta'):
+                    v = self.ui.txtOfertaDtoOferta.text().strip()
+                    if v != '':
+                        payload['dto_local'] = float(parse_decimal_input(v))
+                        if 'oferta_dto' not in payload:
+                            payload['oferta_dto'] = True
+            except Exception:
+                pass
+
+            try:
+                if hasattr(self.ui, 'txtOferta_dto_web'):
+                    v = self.ui.txtOferta_dto_web.text().strip()
+                    if v != '':
+                        payload['dto_web'] = float(parse_decimal_input(v))
+                        if 'oferta_web' not in payload:
+                            payload['oferta_web'] = True
+            except Exception:
+                pass
+
             # Attempt to persist via controller
             if hasattr(self, 'controller') and hasattr(self.controller, 'save_oferta'):
-                success, message = self.controller.save_oferta(payload)
-                if not success:
                     try:
-                        QMessageBox.warning(self, 'Error', f'No se pudo guardar la oferta: {message}')
+                        # If we are in the Add flow (creating an oferta) and the oferta has not
+                        # yet been persisted to the DB, call controller.insert_oferta to create
+                        # the row. Otherwise call save_oferta which will update existing oferta.
+                        # Decide whether we need to create (insert) or update the oferta.
+                        # Prefer explicit DB check: if there is no oferta for this article+tarifa,
+                        # perform insert, otherwise update.
+                        should_insert = False
+                        try:
+                            current = None
+                            if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
+                                current = self.controller.get_current_article()
+                            if current and isinstance(current, dict):
+                                art_id = current.get('id')
+                                # If the view has a selected oferta id, prefer update
+                                if getattr(self, '_current_oferta_id', None):
+                                    should_insert = False
+                                else:
+                                    # No current oferta id in view — check repository for existing oferta
+                                    try:
+                                        tarifa_id = None
+                                        if hasattr(self.controller, 'repository') and hasattr(self.controller.repository, 'get_default_tarifa'):
+                                            tarifa_id = self.controller.repository.get_default_tarifa()
+                                        existing = None
+                                        if hasattr(self.controller, 'repository') and art_id is not None:
+                                            existing = self.controller.repository.get_oferta_for_article(art_id, tarifa_id)
+                                        # Track whether an existing oferta exists for this article+tarifa
+
+                                        if not existing:
+                                            should_insert = True
+                                    except Exception:
+                                        # If repository check fails, fallback to add-mode flag
+                                        should_insert = bool(getattr(self, '_creating_oferta', False)) and not getattr(self, '_current_oferta_id', None)
+                            else:
+                                pass
+                                should_insert = bool(getattr(self, '_creating_oferta', False)) and not getattr(self, '_current_oferta_id', None)
+                        except Exception:
+                            should_insert = bool(getattr(self, '_creating_oferta', False)) and not getattr(self, '_current_oferta_id', None)
+
+                        # decided whether to insert or update based on repository state
+
+                        if should_insert:
+                            # create new oferta via controller
+                            # create a new oferta row using the controller and capture id
+                            if hasattr(self.controller, 'insert_oferta'):
+                                res = self.controller.insert_oferta(payload or {})
+                                # insert_oferta returns (ok, msg, row)
+                                if isinstance(res, tuple) and len(res) >= 3:
+                                    ok, msg, row = res[0], res[1], res[2]
+                                else:
+                                    ok, msg = res[0], res[1]
+                                    row = None
+
+                                if not ok:
+                                    try:
+                                        self._maybe_warn('Error', f'No se pudo crear la oferta: {msg}')
+                                    except Exception:
+                                        pass
+                                else:
+                                    # remember that we've actually created a DB row
+                                    try:
+                                        if row and isinstance(row, dict) and 'id' in row:
+                                            self._current_oferta_id = row.get('id')
+                                            # Mark that a DB row was created during add/save
+                                            self._created_db_row = True
+                                    except Exception:
+                                        pass
+                            else:
+                                # Fallback to save_oferta which will insert if no id present
+                                success, message = self.controller.save_oferta(payload)
+                                if not success:
+                                    try:
+                                        self._maybe_warn('Error', f'No se pudo guardar la oferta: {message}')
+                                    except Exception:
+                                        pass
+                        else:
+                            # update existing oferta
+                            # Update an existing oferta (by id if available)
+                            try:
+                                if getattr(self, '_current_oferta_id', None):
+                                    payload['id'] = self._current_oferta_id
+                                else:
+                                    current = None
+                                    if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
+                                        current = self.controller.get_current_article()
+                                    if current and isinstance(current, dict) and current.get('oferta_id'):
+                                        payload['id'] = current.get('oferta_id')
+                            except Exception:
+                                pass
+
+                            success, message = self.controller.save_oferta(payload)
+                            if not success:
+                                try:
+                                    self._maybe_warn('Error', f'No se pudo guardar la oferta: {message}')
+                                except Exception:
+                                    pass
                     except Exception:
-                        pass
+                        # Any errors in persistence should not break UI flow
+                        try:
+                            self._maybe_warn('Error', 'Error guardando oferta')
+                        except Exception:
+                            pass
             # Finally disable editing UI and clear editing flag
             self._editing_oferta = False
+            self._creating_oferta = False
             self._enable_oferta_editing(False)
         except Exception:
             # Ensure we reset editing state even on unexpected exceptions
@@ -1515,15 +1813,112 @@ class ArticulosView(QWidget):
             if current and isinstance(current, dict):
                 if hasattr(self.ui, 'txtOferta_Descripcion_promocion'):
                     try:
-                        self.ui.txtOferta_Descripcion_promocion.setText(str(current.get('descripcion', '') or ''))
+                        desc = current.get('oferta_descripcion', None)
+                        if desc is None:
+                            desc = current.get('descripcion', '')
+                        self.ui.txtOferta_Descripcion_promocion.setText(str(desc or ''))
                     except Exception:
                         pass
+        except Exception:
+            pass
+
+        # If we created a new oferta in DB during Add/save and then undo, remove it
+        try:
+            # Only delete when we actually created a DB row (created_db_row True)
+            if getattr(self, '_created_db_row', False) and getattr(self, '_current_oferta_id', None):
+                if hasattr(self, 'controller') and hasattr(self.controller, 'delete_oferta'):
+                    # controller.delete_oferta prefers deleting by oferta_id when present
+                    try:
+                        self.controller.delete_oferta()
+                    except Exception:
+                        # Best-effort: attempt repository deletion by id if provided
+                        try:
+                            if hasattr(self, 'controller') and hasattr(self.controller, 'repository'):
+                                self.controller.repository.delete_oferta_by_id(self._current_oferta_id)
+                        except Exception:
+                            pass
+                # Clear flags
+                self._created_db_row = False
+                self._current_oferta_id = None
+            # If we were in add flow but never persisted, just clear the creating flag
+            elif getattr(self, '_creating_oferta', False):
+                self._creating_oferta = False
         except Exception:
             pass
 
         # Exit editing
         self._editing_oferta = False
         self._enable_oferta_editing(False)
+
+
+class OffersTableModel(QAbstractTableModel):
+    """Model for `tabla_ofertas` — two columns: active indicator and description."""
+
+    def __init__(self):
+        super().__init__()
+        self.offers = []
+        self.headers = ["Activo", "Descripción"]
+
+    def set_offers(self, offers: list):
+        self.beginResetModel()
+        self.offers = offers or []
+        self.endResetModel()
+
+    def rowCount(self, parent=QModelIndex()):
+        return len(self.offers)
+
+    def columnCount(self, parent=QModelIndex()):
+        return 2
+
+    def headerData(self, section, orientation, role):
+        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+            return self.headers[section]
+        return None
+
+    def data(self, index, role):
+        if not index.isValid() or not (0 <= index.row() < len(self.offers)):
+            return None
+
+        offer = self.offers[index.row()]
+        col = index.column()
+
+        if role == Qt.ItemDataRole.DisplayRole:
+            # first column must be empty — decoration (pixmap) will show active indicator
+            if col == 0:
+                return ''
+            elif col == 1:
+                return offer.get('descripcion') or ''
+
+        # DecorationRole draws the green circle only when 'activa' is True. No decoration otherwise.
+        if role == Qt.ItemDataRole.DecorationRole and col == 0:
+            try:
+                from PySide6.QtGui import QPixmap, QPainter, QColor
+                pix = QPixmap(12, 12)
+                pix.fill(QColor(0, 0, 0, 0))
+                p = QPainter(pix)
+                if bool(offer.get('activa')):
+                    color = QColor(0, 180, 0)
+                    p.setBrush(color)
+                    p.setPen(color)
+                    p.setRenderHint(QPainter.RenderHint.Antialiasing, True)
+                    p.drawEllipse(1, 1, 10, 10)
+                    p.end()
+                    return pix
+                else:
+                    p.end()
+                    return None
+            except Exception:
+                return None
+
+        # Center the decoration in the cell
+        if role == Qt.ItemDataRole.TextAlignmentRole and col == 0:
+            return Qt.AlignmentFlag.AlignCenter
+
+    def get_offer(self, row: int):
+        """Return the offer dict at row or None if out of range."""
+        if 0 <= row < len(self.offers):
+            return self.offers[row]
+        return None
 
 
 class ArticlesTableModel(QAbstractTableModel):
@@ -1539,7 +1934,7 @@ class ArticlesTableModel(QAbstractTableModel):
             self.decimales_precios = vals.get('decimales_precios', 2)
         except Exception:
             self.decimales_precios = 2
-    
+
     def set_articles(self, articles):
         """Set articles data"""
         # Validar que la entrada contiene la columna precio_venta — fallar pronto si falta

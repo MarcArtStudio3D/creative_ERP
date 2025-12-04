@@ -7,7 +7,8 @@ se muestra un mensaje informativo (hint).
 import sys, os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from PySide6.QtWidgets import QApplication, QMessageBox
+    from PySide6.QtWidgets import QApplication
+    from core.ui_helpers import show_info
 from modules.articulos.view import ArticulosView
 from modules.articulos.controller import ArticuloController
 from core.db import set_current_database
@@ -33,9 +34,8 @@ def test_subfamily_hint_shown(monkeypatch):
 
     def fake_info(parent, title, text):
         called['msg'] = text
-        return QMessageBox.Ok
 
-    monkeypatch.setattr(QMessageBox, 'information', fake_info)
+    monkeypatch.setattr('core.ui_helpers.show_info', fake_info)
 
     # Llamamos al método que maneja el clic
     view._on_buscar_subfamilia_clicked()

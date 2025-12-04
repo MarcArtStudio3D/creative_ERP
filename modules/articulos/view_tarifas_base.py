@@ -4,6 +4,7 @@ from PySide6.QtWidgets import QSizePolicy
 
 from modules.articulos.ui_frmTarifasBase import Ui_Dialog
 from modules.articulos.tarifa_tipo_controller import TarifaTipoController
+from core.ui_helpers import show_warning, show_info, show_critical, show_question
 from core.db import get_current_database, set_current_database
 
 
@@ -162,6 +163,7 @@ class TarifasBaseView(QDialog):
         # lock fields
         self._lock_fields(True)
 
+
     def _setup_table(self):
         # Show two visible columns: Código and Nombre. Keep an ID column hidden so we can
         # identify records when users select rows (used by edit/delete handlers).
@@ -318,7 +320,7 @@ class TarifasBaseView(QDialog):
             if switch_to_list:
                 self.ui.stackedWidget.setCurrentIndex(1)
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
 
     def _on_table_double_click(self, row, col):
         # called when a user double-clicks a row; attempt to load the corresponding record
@@ -392,11 +394,11 @@ class TarifasBaseView(QDialog):
             else:
                 # Inform the user if we couldn't load the record — prevents silent failures
                 # inform the user if loading failed
-                QMessageBox.warning(self, self.tr("No encontrado"), self.tr("No se pudo cargar el registro para edición"))
+                show_warning(self, self.tr("No encontrado"), self.tr("No se pudo cargar el registro para edición"))
         except Exception as e:
             import traceback
             traceback.print_exc()
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
 
     def _on_add(self):
         # prepare new
@@ -409,15 +411,15 @@ class TarifasBaseView(QDialog):
         # try to find selected row in table
         current_row = self.ui.tableWidget.currentRow()
         if current_row < 0:
-            QMessageBox.warning(self, self.tr("Seleccione"), self.tr("Seleccione un registro en la lista para editar"))
+            show_warning(self, self.tr("Seleccione"), self.tr("Seleccione un registro en la lista para editar"))
             return
         id_item = self.ui.tableWidget.item(current_row, 0)
         if not id_item:
-            QMessageBox.warning(self, self.tr("Seleccione"), self.tr("ID no encontrado en la fila seleccionada"))
+            show_warning(self, self.tr("Seleccione"), self.tr("ID no encontrado en la fila seleccionada"))
             return
         tipo_id = int(id_item.text())
         if not self.controller.load_by_id(tipo_id):
-            QMessageBox.warning(self, self.tr("No encontrado"), self.tr("Registro no encontrado"))
+            show_warning(self, self.tr("No encontrado"), self.tr("Registro no encontrado"))
             return
 
         self._fill_form(self.controller.current)
@@ -428,22 +430,22 @@ class TarifasBaseView(QDialog):
     def _on_save(self):
         payload = self._collect_form()
         if not payload.get('nombre'):
-            QMessageBox.warning(self, self.tr("Validación"), self.tr("El campo nombre es obligatorio"))
+            show_warning(self, self.tr("Validación"), self.tr("El campo nombre es obligatorio"))
             return
 
         try:
             if self.is_new:
                 new_id = self.controller.create(payload)
                 if new_id:
-                    QMessageBox.information(self, self.tr("Éxito"), self.tr("Tipo de tarifa creado"))
+                    show_info(self, self.tr("Éxito"), self.tr("Tipo de tarifa creado"))
             else:
                 # must have current
                 if not self.controller.current:
-                    QMessageBox.warning(self, self.tr("Seleccione"), self.tr("No hay registro cargado para actualizar"))
+                    show_warning(self, self.tr("Seleccione"), self.tr("No hay registro cargado para actualizar"))
                     return
                 ok = self.controller.update(int(self.controller.current.get('id')), payload)
                 if ok:
-                    QMessageBox.information(self, self.tr("Éxito"), self.tr("Tipo de tarifa actualizado"))
+                    show_info(self, self.tr("Éxito"), self.tr("Tipo de tarifa actualizado"))
 
             # Refresh table and switch to list
             self._load_table()
@@ -452,7 +454,7 @@ class TarifasBaseView(QDialog):
             self.ui.stackedWidget.setCurrentIndex(1)
 
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
 
     def _on_undo(self):
         if self.is_new:
@@ -481,28 +483,28 @@ class TarifasBaseView(QDialog):
         # delete selected
         current_row = self.ui.tableWidget.currentRow()
         if current_row < 0:
-            QMessageBox.warning(self, self.tr("Seleccione"), self.tr("Seleccione un registro en la lista para borrar"))
+            show_warning(self, self.tr("Seleccione"), self.tr("Seleccione un registro en la lista para borrar"))
             return
         id_item = self.ui.tableWidget.item(current_row, 0)
         if not id_item:
             return
         tipo_id = int(id_item.text())
 
-        reply = QMessageBox.question(self, self.tr("Confirmar"), self.tr("¿Desea borrar este tipo de tarifa?"),
-                                     QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
-                                     QMessageBox.StandardButton.No)
+        reply = show_question(self, self.tr("Confirmar"), self.tr("¿Desea borrar este tipo de tarifa?"),
+                         QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
+                         QMessageBox.StandardButton.No)
         if reply == QMessageBox.StandardButton.No:
             return
 
         try:
             ok = self.controller.delete(tipo_id)
             if ok:
-                QMessageBox.information(self, self.tr("Éxito"), self.tr("Registro borrado"))
+                show_info(self, self.tr("Éxito"), self.tr("Registro borrado"))
             else:
-                QMessageBox.warning(self, self.tr("Error"), self.tr("No se pudo borrar el registro"))
+                show_warning(self, self.tr("Error"), self.tr("No se pudo borrar el registro"))
             self._load_table()
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
 
     def _on_next(self):
         if self.controller.next():

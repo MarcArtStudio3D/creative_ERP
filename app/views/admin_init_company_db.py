@@ -1,4 +1,5 @@
 from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QMessageBox, QLineEdit, QHBoxLayout
+from core.ui_helpers import show_warning, show_info, show_critical
 from PySide6.QtCore import Qt
 
 from core.company_manager import company_manager
@@ -52,27 +53,27 @@ class AdminInitCompanyDBDialog(QDialog):
             for c in companies:
                 self.combo.addItem(f"{c['id']} — {c['codigo']} - {c['nombre']}", c['id'])
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))
 
     def _on_validate(self):
         cid = self.combo.currentData()
         if not cid:
-            QMessageBox.warning(self, self.tr("Seleccione"), self.tr("Seleccione una empresa"))
+            show_warning(self, self.tr("Seleccione"), self.tr("Seleccione una empresa"))
             return
         result = company_manager.validate_company_database(cid)
         if result.get('valid'):
-            QMessageBox.information(self, self.tr("OK"), self.tr("Conexión a la BD de la empresa válida"))
+            show_info(self, self.tr("OK"), self.tr("Conexión a la BD de la empresa válida"))
         else:
-            QMessageBox.warning(self, self.tr("Falló"), result.get('message') or self.tr('Error de conexión'))
+            show_warning(self, self.tr("Falló"), result.get('message') or self.tr('Error de conexión'))
 
     def _on_init(self):
         cid = self.combo.currentData()
         if not cid:
-            QMessageBox.warning(self, self.tr("Seleccione"), self.tr("Seleccione una empresa"))
+            show_warning(self, self.tr("Seleccione"), self.tr("Seleccione una empresa"))
             return
 
         if self.confirm_input.text().strip() != 'CONFIRM_INIT':
-            QMessageBox.warning(self, self.tr("Confirmación"), self.tr("Debe escribir CONFIRM_INIT para confirmar la acción"))
+            show_warning(self, self.tr("Confirmación"), self.tr("Debe escribir CONFIRM_INIT para confirmar la acción"))
             return
 
         # Who initiated this? Prefer session username if provided
@@ -86,7 +87,7 @@ class AdminInitCompanyDBDialog(QDialog):
         try:
             # Switch to company DB and initialize (explicit)
             set_database_for_company(cid, init=True, initiator=initiator)
-            QMessageBox.information(self, self.tr("Hecho"), self.tr("Inicialización completada. Revise logs para detalles."))
+            show_info(self, self.tr("Hecho"), self.tr("Inicialización completada. Revise logs para detalles."))
             self.close()
         except Exception as e:
-            QMessageBox.critical(self, self.tr("Error"), str(e))
+            show_critical(self, self.tr("Error"), str(e))

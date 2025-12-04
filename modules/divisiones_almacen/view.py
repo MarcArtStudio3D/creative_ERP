@@ -3,7 +3,8 @@ Vista del módulo Divisiones del Almacén
 Abre el diálogo de gestión de Secciones, Familias y Subfamilias
 """
 
-from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton, QMessageBox
+from PySide6.QtWidgets import QWidget, QVBoxLayout, QLabel, QPushButton
+from core.ui_helpers import show_critical
 from PySide6.QtGui import QPixmap, QIcon
 from PySide6.QtCore import Qt
 from modules.articulos.divisiones_view import DivisionesView
@@ -23,7 +24,7 @@ class DivisionesAlmacenView(QWidget):
         layout.setSpacing(20)
         
         # Título (sin emojis)
-        title = QLabel("Divisiones del Almacén")
+        title = QLabel(self.tr("Divisiones del Almacén"))
         title.setStyleSheet("font-size: 24px; font-weight: bold;")
         title.setAlignment(Qt.AlignmentFlag.AlignCenter)
         layout.addWidget(title)
@@ -40,7 +41,7 @@ class DivisionesAlmacenView(QWidget):
         layout.addWidget(description)
         
         # Botón para abrir el diálogo
-        btn_abrir = QPushButton("Abrir Gestor de Divisiones")
+        btn_abrir = QPushButton(self.tr("Abrir Gestor de Divisiones"))
         try:
             btn_abrir.setIcon(QIcon(":/PNG/resources/icons/png/List.png"))
         except Exception:
@@ -83,11 +84,7 @@ class DivisionesAlmacenView(QWidget):
             dialog = DivisionesView(self)
             dialog.exec()
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                "Error",
-                f"No se pudo abrir el gestor de divisiones:\n{str(e)}"
-            )
+            show_critical(self, self.tr("Error"), self.tr("No se pudo abrir el gestor de divisiones:\n{}").format(str(e)))
             import traceback
             traceback.print_exc()
     

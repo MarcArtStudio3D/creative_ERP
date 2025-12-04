@@ -75,12 +75,19 @@ def test_view_save_creates_new_oferta(qapp):
 
     v._on_add_oferta()
 
+    # After invoking Add the app should NOT create a DB row immediately
+    created = repo.get_oferta_for_article(art_id, tarifa_id)
+    assert created is None, 'Add should not create a DB row until the user saves'
+
     # Fill fields
     v.ui.chkArticulo_promocionado.setChecked(True)
     v.ui.txtOferta_Fecha_ini.setDate(QDate(2025, 1, 1))
     v.ui.txtOferta_Fecha_fin.setDate(QDate(2025, 1, 31))
+    # set unidades (por cada N)
+    if hasattr(v.ui, 'txtOferta_por_cada'):
+        v.ui.txtOferta_por_cada.setText('3')
 
-    # Save oferta via view handler
+    # Save oferta via view handler (this should update the existing oferta row)
     v._on_save_oferta()
 
     # Verify oferta now present
@@ -89,6 +96,8 @@ def test_view_save_creates_new_oferta(qapp):
     assert oferta.get('fecha_inicio') == date(2025, 1, 1)
     assert oferta.get('fecha_fin') == date(2025, 1, 31)
     assert oferta.get('activa') in (1, True)
+    # unidades comes from txtOferta_por_cada -> unidades
+    assert float(oferta.get('unidades') or 0) == 3.0
 
 
 def test_view_save_updates_existing_oferta(qapp):
@@ -127,10 +136,12 @@ def test_view_save_updates_existing_oferta(qapp):
     v._lock_fields(False)
     v._on_edit_oferta()
 
-    # Change dates and activa flag
+    # Change dates, activa flag and unidades
     v.ui.chkArticulo_promocionado.setChecked(False)
     v.ui.txtOferta_Fecha_ini.setDate(QDate(2026, 2, 2))
     v.ui.txtOferta_Fecha_fin.setDate(QDate(2026, 2, 28))
+    if hasattr(v.ui, 'txtOferta_por_cada'):
+        v.ui.txtOferta_por_cada.setText('5')
 
     v._on_save_oferta()
 
@@ -139,5 +150,47 @@ def test_view_save_updates_existing_oferta(qapp):
     assert oferta is not None
     assert oferta.get('fecha_inicio') == date(2026, 2, 2)
     assert oferta.get('fecha_fin') == date(2026, 2, 28)
+    assert float(oferta.get('unidades') or 0) == 5.0
     # activa should reflect False (0) now
     assert oferta.get('activa') in (0, False, None) or oferta.get('activa') == False
+
+
+def test_add_then_undo_removes_created_oferta(qapp):
+    set_current_database('artstudio3d')
+
+    v = ArticulosView()
+
+    repo = ArticuloRepository()
+    tarifa_id = repo.get_default_tarifa()
+
+    session = get_session()
+    # Choose an article that doesn't have an oferta so Add will create
+    row = session.execute(
+        text("SELECT a.id FROM articulos a LEFT JOIN articulos_ofertas ao ON a.id = ao.id_articulo AND ao.id_tarifa = :tarifa WHERE ao.id IS NULL LIMIT 1"),
+        {"tarifa": tarifa_id}
+    ).fetchone()
+
+    if row:
+        art_id = row[0]
+    else:
+        # fallback: take first and ensure removal
+        row2 = session.execute(text("SELECT id FROM articulos LIMIT 1")).fetchone()
+        assert row2, "No articles present in DB for test"
+        art_id = row2[0]
+        session.execute(text("DELETE FROM articulos_ofertas WHERE id_articulo = :id AND id_tarifa = :tarifa"), {"id": art_id, "tarifa": tarifa_id})
+        session.commit()
+
+    assert v.controller.load_by_id(art_id)
+
+    v.ui.Pestanas.setCurrentWidget(v.ui.tab_promociones)
+    v._lock_fields(False)
+
+    # Add should NOT create a row yet
+    v._on_add_oferta()
+    created = repo.get_oferta_for_article(art_id, tarifa_id)
+    assert created is None
+
+    # Undo should simply cancel the add flow and not delete anything from DB
+    v._on_undo_oferta()
+    still = repo.get_oferta_for_article(art_id, tarifa_id)
+    assert still is None

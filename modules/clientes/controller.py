@@ -1,7 +1,6 @@
 from typing import Optional, List
 from PySide6.QtCore import QObject, Signal
 from PySide6.QtGui import QStandardItemModel, QStandardItem
-from PySide6.QtWidgets import QMessageBox
 from sqlalchemy.orm import Session
 
 from modules.clientes.repository import ClienteRepository

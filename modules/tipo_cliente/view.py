@@ -6,7 +6,7 @@ Basado en frmtipocliente.cpp
 from PySide6.QtWidgets import (
     QDialog, QVBoxLayout, QHBoxLayout, QGridLayout,
     QListView, QPushButton, QLabel, QLineEdit,
-    QMessageBox, QSpacerItem, QSizePolicy
+    QSpacerItem, QSizePolicy
 )
 from PySide6.QtCore import Qt, QStringListModel
 from PySide6.QtGui import QStandardItemModel, QStandardItem
@@ -15,6 +15,7 @@ from typing import Optional
 
 from modules.tipo_cliente.repository import TipoClienteRepository
 from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
+from core.ui_helpers import show_warning, show_info, show_critical, show_question
 
 
 class TipoClienteView(QDialog):
@@ -154,11 +155,7 @@ class TipoClienteView(QDialog):
                 self.model_tipos.appendRow(item)
                 
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error"),
-                self.tr("Error al cargar tipos de cliente: {}").format(str(e))
-            )
+            show_critical(self, self.tr("Error"), self.tr("Error al cargar tipos de cliente: {}").format(str(e)))
     
     def load_subtipos(self, id_tipo: int):
         """Carga la lista de subtipos para un tipo específico"""
@@ -174,11 +171,7 @@ class TipoClienteView(QDialog):
                 self.model_subtipos.appendRow(item)
                 
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error"),
-                self.tr("Error al cargar subtipos: {}").format(str(e))
-            )
+            show_critical(self, self.tr("Error"), self.tr("Error al cargar subtipos: {}").format(str(e)))
     
     # ==================== EVENTOS DE SELECCIÓN ====================
     
@@ -204,11 +197,7 @@ class TipoClienteView(QDialog):
                 self.load_subtipos(tipo_id)
                 
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error"),
-                self.tr("Error al cargar tipo: {}").format(str(e))
-            )
+            show_critical(self, self.tr("Error"), self.tr("Error al cargar tipo: {}").format(str(e)))
     
     def on_lista_subtipos_clicked(self, index):
         """Maneja el clic en la lista de subtipos"""
@@ -228,11 +217,7 @@ class TipoClienteView(QDialog):
                 self.txtDesc.setText(subtipo.desc or "")
                 
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error"),
-                self.tr("Error al cargar subtipo: {}").format(str(e))
-            )
+            show_critical(self, self.tr("Error"), self.tr("Error al cargar subtipo: {}").format(str(e)))
     
     # ==================== OPERACIONES CON TIPOS ====================
     
@@ -242,11 +227,7 @@ class TipoClienteView(QDialog):
         desc = self.txtDesc.text().strip()
         
         if not nombre or not desc:
-            QMessageBox.warning(
-                self,
-                self.tr("Campos vacíos"),
-                self.tr("Por favor, rellene los datos antes de añadir")
-            )
+            show_warning(self, self.tr("Campos vacíos"), self.tr("Por favor, rellene los datos antes de añadir"))
             return
         
         try:
@@ -257,33 +238,17 @@ class TipoClienteView(QDialog):
             self.txtNombre.clear()
             self.txtDesc.clear()
             
-            QMessageBox.information(
-                self,
-                self.tr("Éxito"),
-                self.tr("Tipo cliente insertado con éxito")
-            )
+            show_info(self, self.tr("Éxito"), self.tr("Tipo cliente insertado con éxito"))
             
         except ValueError as e:
-            QMessageBox.warning(
-                self,
-                self.tr("Error de validación"),
-                str(e)
-            )
+            show_warning(self, self.tr("Error de validación"), str(e))
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error al añadir tipo cliente"),
-                str(e)
-            )
+            show_critical(self, self.tr("Error al añadir tipo cliente"), str(e))
     
     def on_btnEditarTipo_clicked(self):
         """Edita el tipo de cliente seleccionado"""
         if self.current_tipo_id is None:
-            QMessageBox.warning(
-                self,
-                self.tr("Seleccione tipo"),
-                self.tr("Por favor, seleccione el tipo de cliente\nque desea editar.")
-            )
+            show_warning(self, self.tr("Seleccione tipo"), self.tr("Por favor, seleccione el tipo de cliente\nque desea editar."))
             return
         
         nombre = self.txtNombre.text().strip()
@@ -293,44 +258,28 @@ class TipoClienteView(QDialog):
             self.repository.actualizar_tipo(self.current_tipo_id, nombre, desc)
             self.load_tipos()
             
-            QMessageBox.information(
-                self,
-                self.tr("Éxito"),
-                self.tr("Tipo cliente actualizado con éxito")
-            )
+            show_info(self, self.tr("Éxito"), self.tr("Tipo cliente actualizado con éxito"))
             
         except ValueError as e:
-            QMessageBox.warning(
-                self,
-                self.tr("Error de validación"),
-                str(e)
-            )
+            show_warning(self, self.tr("Error de validación"), str(e))
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error al actualizar tipo cliente"),
-                str(e)
-            )
+            show_critical(self, self.tr("Error al actualizar tipo cliente"), str(e))
     
     def on_btnBorrarTipo_clicked(self):
         """Borra el tipo de cliente seleccionado"""
         if self.current_tipo_id is None:
-            QMessageBox.warning(
-                self,
-                self.tr("Seleccione tipo"),
-                self.tr("Por favor, seleccione el tipo de cliente\nque desea borrar.")
-            )
+            show_warning(self, self.tr("Seleccione tipo"), self.tr("Por favor, seleccione el tipo de cliente\nque desea borrar."))
             return
         
         # Confirmar eliminación
-        reply = QMessageBox.question(
+        reply = show_question(
             self,
             self.tr("Confirmar eliminación"),
             self.tr("¿Está seguro de que desea borrar este tipo?\nSe eliminarán también todos sus subtipos."),
             QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
             QMessageBox.StandardButton.No
         )
-        
+
         if reply == QMessageBox.StandardButton.No:
             return
         
@@ -344,18 +293,10 @@ class TipoClienteView(QDialog):
             self.txtNombre.clear()
             self.txtDesc.clear()
             
-            QMessageBox.information(
-                self,
-                self.tr("Éxito"),
-                self.tr("Tipo cliente borrado con éxito")
-            )
+            show_info(self, self.tr("Éxito"), self.tr("Tipo cliente borrado con éxito"))
             
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error al borrar tipo cliente"),
-                str(e)
-            )
+            show_critical(self, self.tr("Error al borrar tipo cliente"), str(e))
     
     # ==================== OPERACIONES CON SUBTIPOS ====================
     
@@ -365,19 +306,11 @@ class TipoClienteView(QDialog):
         desc = self.txtDesc.text().strip()
         
         if not nombre or not desc:
-            QMessageBox.warning(
-                self,
-                self.tr("Campos vacíos"),
-                self.tr("Por favor, rellene los datos antes de añadir")
-            )
+            show_warning(self, self.tr("Campos vacíos"), self.tr("Por favor, rellene los datos antes de añadir"))
             return
         
         if self.current_tipo_id is None:
-            QMessageBox.warning(
-                self,
-                self.tr("Seleccione tipo"),
-                self.tr("Por favor, seleccione el tipo de cliente\nal que desea añadir un subtipo.")
-            )
+            show_warning(self, self.tr("Seleccione tipo"), self.tr("Por favor, seleccione el tipo de cliente\nal que desea añadir un subtipo."))
             return
         
         try:
@@ -388,33 +321,17 @@ class TipoClienteView(QDialog):
             self.txtNombre.clear()
             self.txtDesc.clear()
             
-            QMessageBox.information(
-                self,
-                self.tr("Éxito"),
-                self.tr("Subtipo cliente insertado con éxito")
-            )
+            show_info(self, self.tr("Éxito"), self.tr("Subtipo cliente insertado con éxito"))
             
         except ValueError as e:
-            QMessageBox.warning(
-                self,
-                self.tr("Error de validación"),
-                str(e)
-            )
+            show_warning(self, self.tr("Error de validación"), str(e))
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error al añadir subtipo cliente"),
-                str(e)
-            )
+            show_critical(self, self.tr("Error al añadir subtipo cliente"), str(e))
     
     def on_btnEditarSubTipo_clicked(self):
         """Edita el subtipo de cliente seleccionado"""
         if self.current_subtipo_id is None:
-            QMessageBox.warning(
-                self,
-                self.tr("Seleccione subtipo"),
-                self.tr("Por favor, seleccione el subtipo de cliente\nque desea editar.")
-            )
+            show_warning(self, self.tr("Seleccione subtipo"), self.tr("Por favor, seleccione el subtipo de cliente\nque desea editar."))
             return
         
         nombre = self.txtNombre.text().strip()
@@ -426,37 +343,21 @@ class TipoClienteView(QDialog):
             if self.current_tipo_id:
                 self.load_subtipos(self.current_tipo_id)
             
-            QMessageBox.information(
-                self,
-                self.tr("Éxito"),
-                self.tr("Subtipo cliente actualizado con éxito")
-            )
+            show_info(self, self.tr("Éxito"), self.tr("Subtipo cliente actualizado con éxito"))
             
         except ValueError as e:
-            QMessageBox.warning(
-                self,
-                self.tr("Error de validación"),
-                str(e)
-            )
+            show_warning(self, self.tr("Error de validación"), str(e))
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error al actualizar subtipo cliente"),
-                str(e)
-            )
+            show_critical(self, self.tr("Error al actualizar subtipo cliente"), str(e))
     
     def on_btnBorrarSubTipo_clicked(self):
         """Borra el subtipo de cliente seleccionado"""
         if self.current_subtipo_id is None:
-            QMessageBox.warning(
-                self,
-                self.tr("Seleccione subtipo"),
-                self.tr("Por favor, seleccione el subtipo de cliente\nque desea borrar.")
-            )
+            show_warning(self, self.tr("Seleccione subtipo"), self.tr("Por favor, seleccione el subtipo de cliente\nque desea borrar."))
             return
         
         # Confirmar eliminación
-        reply = QMessageBox.question(
+        reply = show_question(
             self,
             self.tr("Confirmar eliminación"),
             self.tr("¿Está seguro de que desea borrar este subtipo?"),
@@ -477,18 +378,10 @@ class TipoClienteView(QDialog):
             self.txtNombre.clear()
             self.txtDesc.clear()
             
-            QMessageBox.information(
-                self,
-                self.tr("Éxito"),
-                self.tr("Subtipo cliente borrado con éxito")
-            )
+            show_info(self, self.tr("Éxito"), self.tr("Subtipo cliente borrado con éxito"))
             
         except Exception as e:
-            QMessageBox.critical(
-                self,
-                self.tr("Error al borrar subtipo cliente"),
-                str(e)
-            )
+            show_critical(self, self.tr("Error al borrar subtipo cliente"), str(e))
 
     def on_btnInsertarenFichaCliente_clicked(self):
         """
@@ -496,11 +389,7 @@ class TipoClienteView(QDialog):
         Guarda la selección actual y cierra el diálogo con Accepted.
         """
         if self.current_tipo_id is None:
-            QMessageBox.warning(
-                self,
-                self.tr("Selección requerida"),
-                self.tr("Por favor, seleccione al menos un tipo de cliente.")
-            )
+            show_warning(self, self.tr("Selección requerida"), self.tr("Por favor, seleccione al menos un tipo de cliente."))
             return
             
         # Preparar resultado

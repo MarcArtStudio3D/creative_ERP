@@ -8,6 +8,7 @@ from PySide6.QtCore import Qt
 from modules.articulos.ui_frmDivisiones import Ui_DlgDivisionesAlmacen
 from modules.articulos.divisiones_controller import DivisionesController
 from modules.articulos.models import Seccion, Familia, Subfamilia
+from core.ui_helpers import show_info, show_warning, show_question
 
 
 class DivisionesView(QDialog):
@@ -106,7 +107,7 @@ class DivisionesView(QDialog):
         secciones = self.controller.obtener_todas_secciones()
         
         for seccion in secciones:
-            item = QListWidgetItem(f"{seccion.codigo} - {seccion.seccion}")
+            item = QListWidgetItem(self.tr("{code} - {name}").format(code=seccion.codigo, name=seccion.seccion))
             item.setData(Qt.UserRole, seccion)
             self.ui.listSecciones.addItem(item)
     
@@ -116,7 +117,7 @@ class DivisionesView(QDialog):
         familias = self.controller.obtener_familias_seccion_actual()
         
         for familia in familias:
-            item = QListWidgetItem(f"{familia.codigo} - {familia.familia}")
+            item = QListWidgetItem(self.tr("{code} - {name}").format(code=familia.codigo, name=familia.familia))
             item.setData(Qt.UserRole, familia)
             self.ui.listFamilias.addItem(item)
     
@@ -126,7 +127,7 @@ class DivisionesView(QDialog):
         subfamilias = self.controller.obtener_subfamilias_familia_actual()
         
         for subfamilia in subfamilias:
-            item = QListWidgetItem(f"{subfamilia.codigo} - {subfamilia.subfamilia}")
+            item = QListWidgetItem(self.tr("{code} - {name}").format(code=subfamilia.codigo, name=subfamilia.subfamilia))
             item.setData(Qt.UserRole, subfamilia)
             self.ui.listSubfamilias.addItem(item)
     
@@ -259,9 +260,9 @@ class DivisionesView(QDialog):
         if exito:
             self._cargar_secciones()
             self._limpiar_formulario()
-            QMessageBox.information(self, "Éxito", "Sección creada correctamente")
+            show_info(self, self.tr("Éxito"), self.tr("Sección creada correctamente"))
         else:
-            QMessageBox.warning(self, "Error", mensaje)
+            show_warning(self, self.tr("Error"), mensaje)
     
     def _on_add_familia(self):
         """Crear nueva familia con los datos de los campos"""
@@ -277,9 +278,9 @@ class DivisionesView(QDialog):
                 self.ui.txtcodigo.setText(self.controller.seccion_actual.codigo)
                 self.ui.txtnombre.setText(self.controller.seccion_actual.seccion)
                 self.ui.btnActualizarSeccion.setEnabled(True)
-            QMessageBox.information(self, "Éxito", "Familia creada correctamente")
+            show_info(self, self.tr("Éxito"), self.tr("Familia creada correctamente"))
         else:
-            QMessageBox.warning(self, "Error", mensaje)
+            show_warning(self, self.tr("Error"), mensaje)
     
     def _on_add_subfamilia(self):
         """Crear nueva subfamilia con los datos de los campos"""
@@ -295,15 +296,15 @@ class DivisionesView(QDialog):
                 self.ui.txtcodigo.setText(self.controller.familia_actual.codigo)
                 self.ui.txtnombre.setText(self.controller.familia_actual.familia)
                 self.ui.btnActualizarFamilia.setEnabled(True)
-            QMessageBox.information(self, "Éxito", "Subfamilia creada correctamente")
+            show_info(self, self.tr("Éxito"), self.tr("Subfamilia creada correctamente"))
         else:
-            QMessageBox.warning(self, "Error", mensaje)
+            show_warning(self, self.tr("Error"), mensaje)
     
     # ==================== EVENTOS DE BOTONES (BORRAR) ====================
     
     def _on_borrar_seccion(self):
         """Borrar la sección seleccionada"""
-        if QMessageBox.question(self, "Confirmar", "¿Borrar sección y todo su contenido?") == QMessageBox.Yes:
+        if show_question(self, self.tr("Confirmar"), self.tr("¿Borrar sección y todo su contenido?")) == QMessageBox.StandardButton.Yes:
             exito, mensaje = self.controller.borrar_seccion_actual()
             if exito:
                 self._cargar_secciones()
@@ -313,11 +314,11 @@ class DivisionesView(QDialog):
                 self._actualizar_arbol()
                 self.ui.btnActualizarSeccion.setEnabled(False)
             else:
-                QMessageBox.warning(self, "Error", mensaje)
+                show_warning(self, self.tr("Error"), mensaje)
     
     def _on_borrar_familia(self):
         """Borrar la familia seleccionada"""
-        if QMessageBox.question(self, "Confirmar", "¿Borrar familia y sus subfamilias?") == QMessageBox.Yes:
+        if show_question(self, self.tr("Confirmar"), self.tr("¿Borrar familia y sus subfamilias?")) == QMessageBox.StandardButton.Yes:
             exito, mensaje = self.controller.borrar_familia_actual()
             if exito:
                 self._cargar_familias()
@@ -330,11 +331,11 @@ class DivisionesView(QDialog):
                     self.ui.txtnombre.setText(self.controller.seccion_actual.seccion)
                     self.ui.btnActualizarSeccion.setEnabled(True)
             else:
-                QMessageBox.warning(self, "Error", mensaje)
+                show_warning(self, self.tr("Error"), mensaje)
     
     def _on_borrar_subfamilia(self):
         """Borrar la subfamilia seleccionada"""
-        if QMessageBox.question(self, "Confirmar", "¿Borrar subfamilia?") == QMessageBox.Yes:
+        if show_question(self, self.tr("Confirmar"), self.tr("¿Borrar subfamilia?")) == QMessageBox.StandardButton.Yes:
             exito, mensaje = self.controller.borrar_subfamilia_actual()
             if exito:
                 self._cargar_subfamilias()
@@ -346,7 +347,7 @@ class DivisionesView(QDialog):
                     self.ui.txtnombre.setText(self.controller.familia_actual.familia)
                     self.ui.btnActualizarFamilia.setEnabled(True)
             else:
-                QMessageBox.warning(self, "Error", mensaje)
+                show_warning(self, self.tr("Error"), mensaje)
     
     # ==================== EVENTOS DE BOTONES (ACTUALIZAR) ====================
     
@@ -358,9 +359,9 @@ class DivisionesView(QDialog):
         exito, mensaje = self.controller.actualizar_seccion_actual(codigo, nombre)
         if exito:
             self._cargar_secciones()
-            QMessageBox.information(self, "Éxito", "Sección actualizada correctamente")
+            show_info(self, self.tr("Éxito"), self.tr("Sección actualizada correctamente"))
         else:
-            QMessageBox.warning(self, "Error", mensaje)
+            show_warning(self, self.tr("Error"), mensaje)
             
     def _on_guardar_familia(self):
         """Actualiza la familia seleccionada"""
@@ -370,9 +371,9 @@ class DivisionesView(QDialog):
         exito, mensaje = self.controller.actualizar_familia_actual(codigo, nombre)
         if exito:
             self._cargar_familias()
-            QMessageBox.information(self, "Éxito", "Familia actualizada correctamente")
+            show_info(self, self.tr("Éxito"), self.tr("Familia actualizada correctamente"))
         else:
-            QMessageBox.warning(self, "Error", mensaje)
+            show_warning(self, self.tr("Error"), mensaje)
             
     def _on_guardar_subfamilia(self):
         """Actualiza la subfamilia seleccionada"""
@@ -382,9 +383,9 @@ class DivisionesView(QDialog):
         exito, mensaje = self.controller.actualizar_subfamilia_actual(codigo, nombre)
         if exito:
             self._cargar_subfamilias()
-            QMessageBox.information(self, "Éxito", "Subfamilia actualizada correctamente")
+            show_info(self, self.tr("Éxito"), self.tr("Subfamilia actualizada correctamente"))
         else:
-            QMessageBox.warning(self, "Error", mensaje)
+            show_warning(self, self.tr("Error"), mensaje)
     
     # ==================== FUNCIONES AUXILIARES ====================
     
@@ -398,11 +399,11 @@ class DivisionesView(QDialog):
         """Actualiza la etiqueta que muestra la jerarquía seleccionada"""
         arbol_texto = ""
         if self.controller.seccion_actual:
-            arbol_texto = f"Sección: {self.controller.seccion_actual.seccion}"
+            arbol_texto = self.tr("Sección: {name}").format(name=self.controller.seccion_actual.seccion)
             if self.controller.familia_actual:
-                arbol_texto += f" → Familia: {self.controller.familia_actual.familia}"
+                arbol_texto += self.tr(" → Familia: {name}").format(name=self.controller.familia_actual.familia)
                 if self.controller.subfamilia_actual:
-                    arbol_texto += f" → Subfamilia: {self.controller.subfamilia_actual.subfamilia}"
+                    arbol_texto += self.tr(" → Subfamilia: {name}").format(name=self.controller.subfamilia_actual.subfamilia)
         
         self.ui.lbl_tree.setText(arbol_texto)
     

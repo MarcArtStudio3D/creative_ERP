@@ -4,6 +4,7 @@ Permite configurar el idioma de la aplicación.
 """
 
 from PySide6.QtWidgets import QDialog, QMessageBox
+from core.ui_helpers import show_warning, show_info, show_question
 from PySide6.QtCore import QSettings, Signal
 from modules.common.ui_frmConfig import Ui_frmConfig
 from core.translations import AVAILABLE_LANGUAGES
@@ -118,30 +119,25 @@ class ConfigDialog(QDialog):
     def _on_clear_cache(self):
         """Maneja el evento del botón Limpiar Caché."""
         if self.main_window:
-            reply = QMessageBox.question(
+            reply = show_question(
                 self,
-                "Limpiar Caché",
-                "¿Desea limpiar la caché de módulos?\n\n"
-                "Esto liberará memoria de todos los módulos no activos.\n"
-                "Los módulos se volverán a cargar automáticamente cuando los necesite.",
+                self.tr("Limpiar Caché"),
+                self.tr("¿Desea limpiar la caché de módulos?\n\n"
+                    "Esto liberará memoria de todos los módulos no activos.\n"
+                    "Los módulos se volverán a cargar automáticamente cuando los necesite."),
                 QMessageBox.StandardButton.Yes | QMessageBox.StandardButton.No,
                 QMessageBox.StandardButton.No
             )
             
             if reply == QMessageBox.StandardButton.Yes:
                 self.main_window.clear_module_cache()
-                QMessageBox.information(
+                show_info(
                     self,
-                    "Caché Limpiada",
-                    "La caché de módulos ha sido limpiada exitosamente.\n"
-                    "La memoria ha sido liberada."
+                    self.tr("Caché Limpiada"),
+                    self.tr("La caché de módulos ha sido limpiada exitosamente.\nLa memoria ha sido liberada.")
                 )
         else:
-            QMessageBox.warning(
-                self,
-                "No disponible",
-                "Esta función solo está disponible cuando la aplicación está en ejecución."
-            )
+            show_warning(self, self.tr("No disponible"), self.tr("Esta función solo está disponible cuando la aplicación está en ejecución."))
 
     
     def get_selected_language(self):

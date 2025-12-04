@@ -14,7 +14,7 @@ class SimpleDataSelector(QDialog):
     
     def __init__(self, parent=None, title="Seleccionar elemento", headers=None):
         super().__init__(parent)
-        self.setWindowTitle(title)
+        self.setWindowTitle(self.tr(title))
         self.setModal(True)
         self.resize(600, 400)
         
@@ -31,7 +31,7 @@ class SimpleDataSelector(QDialog):
         
         # Search section
         search_layout = QHBoxLayout()
-        search_layout.addWidget(QLabel("Buscar:"))
+        search_layout.addWidget(QLabel(self.tr("Buscar:")))
         
         self.search_edit = QLineEdit()
         self.search_edit.textChanged.connect(self._filter_data)
@@ -50,12 +50,12 @@ class SimpleDataSelector(QDialog):
         # Buttons
         button_layout = QHBoxLayout()
         
-        self.accept_btn = QPushButton("Aceptar")
+        self.accept_btn = QPushButton(self.tr("Aceptar"))
         self.accept_btn.clicked.connect(self._on_accept)
         self.accept_btn.setDefault(True)
         button_layout.addWidget(self.accept_btn)
         
-        cancel_btn = QPushButton("Cancelar")
+        cancel_btn = QPushButton(self.tr("Cancelar"))
         cancel_btn.clicked.connect(self.reject)
         button_layout.addWidget(cancel_btn)
         

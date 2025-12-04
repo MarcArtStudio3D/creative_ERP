@@ -195,6 +195,25 @@ QDoubleSpinBox::up-button:disabled, QDoubleSpinBox::down-button:disabled {
     border-color: #303030;
 }
 
+/* QDateEdit: hide buttons/arrows completely (no border leftovers) */
+QDateEdit::up-button, QDateEdit::down-button {
+    subcontrol-origin: padding;
+    subcontrol-position: right center;
+    width: 0px;
+    min-width: 0px;
+    max-width: 0px;
+    padding: 0px;
+    margin: 0px;
+    border: none;
+    background: transparent;
+}
+
+QDateEdit::up-arrow, QDateEdit::down-arrow {
+    image: none;
+    width: 0px;
+    height: 0px;
+}
+
 /* --- Combo Box --- */
 QComboBox::drop-down {
     subcontrol-origin: padding;

@@ -1516,6 +1516,31 @@ class Ui_FrmArticulos(object):
         self.frame.setObjectName(u"frame")
         self.gridLayout_12 = QGridLayout(self.frame)
         self.gridLayout_12.setObjectName(u"gridLayout_12")
+        self.label_28 = QLabel(self.frame)
+        self.label_28.setObjectName(u"label_28")
+
+        self.gridLayout_12.addWidget(self.label_28, 0, 1, 1, 1)
+
+        self.horizontalSpacer_3 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_12.addItem(self.horizontalSpacer_3, 2, 3, 1, 1)
+
+        self.label_29 = QLabel(self.frame)
+        self.label_29.setObjectName(u"label_29")
+
+        self.gridLayout_12.addWidget(self.label_29, 0, 4, 1, 1)
+
+        self.lblFechaVenta = QLabel(self.frame)
+        self.lblFechaVenta.setObjectName(u"lblFechaVenta")
+
+        self.gridLayout_12.addWidget(self.lblFechaVenta, 2, 4, 1, 1)
+
+        self.txtFechaUltimaVenta = QDateEdit(self.frame)
+        self.txtFechaUltimaVenta.setObjectName(u"txtFechaUltimaVenta")
+        self.txtFechaUltimaVenta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_12.addWidget(self.txtFechaUltimaVenta, 2, 5, 1, 1)
+
         self.txtunidades_vendidas = QLineEdit(self.frame)
         self.txtunidades_vendidas.setObjectName(u"txtunidades_vendidas")
         self.txtunidades_vendidas.setEnabled(True)
@@ -1524,32 +1549,11 @@ class Ui_FrmArticulos(object):
         self.txtunidades_vendidas.setMaximumSize(QSize(120, 27))
         self.txtunidades_vendidas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_12.addWidget(self.txtunidades_vendidas, 0, 3, 1, 1)
+        self.gridLayout_12.addWidget(self.txtunidades_vendidas, 0, 5, 1, 1)
 
-        self.label_29 = QLabel(self.frame)
-        self.label_29.setObjectName(u"label_29")
+        self.horizontalSpacer_4 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_12.addWidget(self.label_29, 0, 2, 1, 1)
-
-        self.label_28 = QLabel(self.frame)
-        self.label_28.setObjectName(u"label_28")
-
-        self.gridLayout_12.addWidget(self.label_28, 0, 0, 1, 1)
-
-        self.txtunidades_compradas = QLineEdit(self.frame)
-        self.txtunidades_compradas.setObjectName(u"txtunidades_compradas")
-        self.txtunidades_compradas.setEnabled(True)
-        sizePolicy.setHeightForWidth(self.txtunidades_compradas.sizePolicy().hasHeightForWidth())
-        self.txtunidades_compradas.setSizePolicy(sizePolicy)
-        self.txtunidades_compradas.setMaximumSize(QSize(120, 27))
-        self.txtunidades_compradas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_12.addWidget(self.txtunidades_compradas, 0, 1, 1, 1)
-
-        self.label_42 = QLabel(self.frame)
-        self.label_42.setObjectName(u"label_42")
-
-        self.gridLayout_12.addWidget(self.label_42, 1, 0, 1, 1)
+        self.gridLayout_12.addItem(self.horizontalSpacer_4, 2, 0, 1, 1)
 
         self.txtimporte_acumulado_compras = QLineEdit(self.frame)
         self.txtimporte_acumulado_compras.setObjectName(u"txtimporte_acumulado_compras")
@@ -1559,12 +1563,28 @@ class Ui_FrmArticulos(object):
         self.txtimporte_acumulado_compras.setMaximumSize(QSize(120, 27))
         self.txtimporte_acumulado_compras.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_12.addWidget(self.txtimporte_acumulado_compras, 1, 1, 1, 1)
+        self.gridLayout_12.addWidget(self.txtimporte_acumulado_compras, 1, 2, 1, 1)
+
+        self.txtunidades_compradas = QLineEdit(self.frame)
+        self.txtunidades_compradas.setObjectName(u"txtunidades_compradas")
+        self.txtunidades_compradas.setEnabled(True)
+        sizePolicy.setHeightForWidth(self.txtunidades_compradas.sizePolicy().hasHeightForWidth())
+        self.txtunidades_compradas.setSizePolicy(sizePolicy)
+        self.txtunidades_compradas.setMaximumSize(QSize(120, 27))
+        self.txtunidades_compradas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_12.addWidget(self.txtunidades_compradas, 0, 2, 1, 1)
+
+        self.txtfechaUltimaCompra = QDateEdit(self.frame)
+        self.txtfechaUltimaCompra.setObjectName(u"txtfechaUltimaCompra")
+        self.txtfechaUltimaCompra.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_12.addWidget(self.txtfechaUltimaCompra, 2, 2, 1, 1)
 
         self.label_43 = QLabel(self.frame)
         self.label_43.setObjectName(u"label_43")
 
-        self.gridLayout_12.addWidget(self.label_43, 1, 2, 1, 1)
+        self.gridLayout_12.addWidget(self.label_43, 1, 4, 1, 1)
 
         self.txtimporte_acumulado_ventas = QLineEdit(self.frame)
         self.txtimporte_acumulado_ventas.setObjectName(u"txtimporte_acumulado_ventas")
@@ -1574,27 +1594,21 @@ class Ui_FrmArticulos(object):
         self.txtimporte_acumulado_ventas.setMaximumSize(QSize(120, 27))
         self.txtimporte_acumulado_ventas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_12.addWidget(self.txtimporte_acumulado_ventas, 1, 3, 1, 1)
+        self.gridLayout_12.addWidget(self.txtimporte_acumulado_ventas, 1, 5, 1, 1)
+
+        self.label_42 = QLabel(self.frame)
+        self.label_42.setObjectName(u"label_42")
+
+        self.gridLayout_12.addWidget(self.label_42, 1, 1, 1, 1)
 
         self.lblFechaCompra = QLabel(self.frame)
         self.lblFechaCompra.setObjectName(u"lblFechaCompra")
 
-        self.gridLayout_12.addWidget(self.lblFechaCompra, 2, 0, 1, 1)
+        self.gridLayout_12.addWidget(self.lblFechaCompra, 2, 1, 1, 1)
 
-        self.lblFechaVenta = QLabel(self.frame)
-        self.lblFechaVenta.setObjectName(u"lblFechaVenta")
+        self.horizontalSpacer_10 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
-        self.gridLayout_12.addWidget(self.lblFechaVenta, 2, 2, 1, 1)
-
-        self.txtfechaUltimaCompra = QDateEdit(self.frame)
-        self.txtfechaUltimaCompra.setObjectName(u"txtfechaUltimaCompra")
-
-        self.gridLayout_12.addWidget(self.txtfechaUltimaCompra, 2, 1, 1, 1)
-
-        self.txtFechaUltimaVenta = QDateEdit(self.frame)
-        self.txtFechaUltimaVenta.setObjectName(u"txtFechaUltimaVenta")
-
-        self.gridLayout_12.addWidget(self.txtFechaUltimaVenta, 2, 3, 1, 1)
+        self.gridLayout_12.addItem(self.horizontalSpacer_10, 1, 6, 1, 1)
 
 
         self.gridLayout_37.addWidget(self.frame, 0, 0, 1, 1)
@@ -1614,27 +1628,35 @@ class Ui_FrmArticulos(object):
         self.label_30.setObjectName(u"label_30")
         self.label_30.setAutoFillBackground(False)
 
-        self.gridLayout_33.addWidget(self.label_30, 0, 0, 1, 1)
+        self.gridLayout_33.addWidget(self.label_30, 0, 1, 1, 1)
 
         self.label_45 = QLabel(self.frame_6)
         self.label_45.setObjectName(u"label_45")
 
-        self.gridLayout_33.addWidget(self.label_45, 3, 0, 1, 1)
+        self.gridLayout_33.addWidget(self.label_45, 3, 1, 1, 1)
+
+        self.horizontalSpacer_6 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_33.addItem(self.horizontalSpacer_6, 0, 0, 1, 1)
+
+        self.horizontalSpacer = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_33.addItem(self.horizontalSpacer, 0, 3, 1, 1)
 
         self.label_31 = QLabel(self.frame_6)
         self.label_31.setObjectName(u"label_31")
 
-        self.gridLayout_33.addWidget(self.label_31, 0, 2, 1, 1)
+        self.gridLayout_33.addWidget(self.label_31, 0, 4, 1, 1)
 
         self.label_32 = QLabel(self.frame_6)
         self.label_32.setObjectName(u"label_32")
 
-        self.gridLayout_33.addWidget(self.label_32, 4, 0, 1, 1)
+        self.gridLayout_33.addWidget(self.label_32, 4, 1, 1, 1)
 
         self.label_44 = QLabel(self.frame_6)
         self.label_44.setObjectName(u"label_44")
 
-        self.gridLayout_33.addWidget(self.label_44, 2, 0, 1, 1)
+        self.gridLayout_33.addWidget(self.label_44, 2, 1, 1, 1)
 
         self.txtstock_real_2 = QLineEdit(self.frame_6)
         self.txtstock_real_2.setObjectName(u"txtstock_real_2")
@@ -1645,7 +1667,7 @@ class Ui_FrmArticulos(object):
         self.txtstock_real_2.setMaximumSize(QSize(120, 27))
         self.txtstock_real_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtstock_real_2, 4, 1, 1, 1)
+        self.gridLayout_33.addWidget(self.txtstock_real_2, 4, 2, 1, 1)
 
         self.txtstock_minimo = QLineEdit(self.frame_6)
         self.txtstock_minimo.setObjectName(u"txtstock_minimo")
@@ -1654,7 +1676,7 @@ class Ui_FrmArticulos(object):
         self.txtstock_minimo.setMaximumSize(QSize(120, 27))
         self.txtstock_minimo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtstock_minimo, 0, 1, 1, 1)
+        self.gridLayout_33.addWidget(self.txtstock_minimo, 0, 2, 1, 1)
 
         self.txtunidades_reservadas = QLineEdit(self.frame_6)
         self.txtunidades_reservadas.setObjectName(u"txtunidades_reservadas")
@@ -1664,12 +1686,13 @@ class Ui_FrmArticulos(object):
         self.txtunidades_reservadas.setMaximumSize(QSize(120, 27))
         self.txtunidades_reservadas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtunidades_reservadas, 3, 1, 1, 1)
+        self.gridLayout_33.addWidget(self.txtunidades_reservadas, 3, 2, 1, 1)
 
         self.txtFechaPrevistaEntrega = QDateEdit(self.frame_6)
         self.txtFechaPrevistaEntrega.setObjectName(u"txtFechaPrevistaEntrega")
+        self.txtFechaPrevistaEntrega.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtFechaPrevistaEntrega, 2, 5, 1, 1)
+        self.gridLayout_33.addWidget(self.txtFechaPrevistaEntrega, 2, 7, 1, 1)
 
         self.txtstock_maximo = QLineEdit(self.frame_6)
         self.txtstock_maximo.setObjectName(u"txtstock_maximo")
@@ -1678,12 +1701,12 @@ class Ui_FrmArticulos(object):
         self.txtstock_maximo.setMaximumSize(QSize(120, 27))
         self.txtstock_maximo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtstock_maximo, 0, 5, 1, 1)
+        self.gridLayout_33.addWidget(self.txtstock_maximo, 0, 7, 1, 1)
 
         self.lblFechaPrevistaEntrega = QLabel(self.frame_6)
         self.lblFechaPrevistaEntrega.setObjectName(u"lblFechaPrevistaEntrega")
 
-        self.gridLayout_33.addWidget(self.lblFechaPrevistaEntrega, 2, 2, 1, 1)
+        self.gridLayout_33.addWidget(self.lblFechaPrevistaEntrega, 2, 4, 1, 1)
 
         self.txtcantidad_pendiente_recibir = QLineEdit(self.frame_6)
         self.txtcantidad_pendiente_recibir.setObjectName(u"txtcantidad_pendiente_recibir")
@@ -1693,19 +1716,23 @@ class Ui_FrmArticulos(object):
         self.txtcantidad_pendiente_recibir.setMaximumSize(QSize(120, 27))
         self.txtcantidad_pendiente_recibir.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtcantidad_pendiente_recibir, 2, 1, 1, 1)
+        self.gridLayout_33.addWidget(self.txtcantidad_pendiente_recibir, 2, 2, 1, 1)
 
         self.txtstock_fisico_almacen = QLineEdit(self.frame_6)
         self.txtstock_fisico_almacen.setObjectName(u"txtstock_fisico_almacen")
         self.txtstock_fisico_almacen.setMaximumSize(QSize(120, 27))
         self.txtstock_fisico_almacen.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
-        self.gridLayout_33.addWidget(self.txtstock_fisico_almacen, 1, 1, 1, 1)
+        self.gridLayout_33.addWidget(self.txtstock_fisico_almacen, 1, 2, 1, 1)
 
         self.label_22 = QLabel(self.frame_6)
         self.label_22.setObjectName(u"label_22")
 
-        self.gridLayout_33.addWidget(self.label_22, 1, 0, 1, 1)
+        self.gridLayout_33.addWidget(self.label_22, 1, 1, 1, 1)
+
+        self.horizontalSpacer_11 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
+
+        self.gridLayout_33.addItem(self.horizontalSpacer_11, 2, 8, 1, 1)
 
 
         self.gridLayout_37.addWidget(self.frame_6, 1, 0, 1, 1)
@@ -2670,16 +2697,16 @@ class Ui_FrmArticulos(object):
         self.btnBorrarimagen_4.setText(QCoreApplication.translate("FrmArticulos", u"Borrar", None))
         self.Pestanas.setTabText(self.Pestanas.indexOf(self.tab_imagenes), QCoreApplication.translate("FrmArticulos", u"Imagenes Art\u00edculo", None))
         self.btnResArt2.setText(QCoreApplication.translate("FrmArticulos", u"Referencia-descripcion-pvp-tipo iva - ODS", None))
-        self.txtunidades_vendidas.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
-        self.label_29.setText(QCoreApplication.translate("FrmArticulos", u"Unidades Vendidas:", None))
         self.label_28.setText(QCoreApplication.translate("FrmArticulos", u"Unidades Compradas:", None))
-        self.txtunidades_compradas.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
-        self.label_42.setText(QCoreApplication.translate("FrmArticulos", u"Acumulado Compras", None))
+        self.label_29.setText(QCoreApplication.translate("FrmArticulos", u"Unidades Vendidas:", None))
+        self.lblFechaVenta.setText(QCoreApplication.translate("FrmArticulos", u"Fecha \u00falt. Venta:", None))
+        self.txtunidades_vendidas.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.txtimporte_acumulado_compras.setText(QCoreApplication.translate("FrmArticulos", u"0,00", None))
+        self.txtunidades_compradas.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.label_43.setText(QCoreApplication.translate("FrmArticulos", u"Acumulado Ventas:", None))
         self.txtimporte_acumulado_ventas.setText(QCoreApplication.translate("FrmArticulos", u"0,00", None))
+        self.label_42.setText(QCoreApplication.translate("FrmArticulos", u"Acumulado Compras", None))
         self.lblFechaCompra.setText(QCoreApplication.translate("FrmArticulos", u"Fecha \u00falt. Compra:", None))
-        self.lblFechaVenta.setText(QCoreApplication.translate("FrmArticulos", u"Fecha \u00falt. Venta:", None))
         self.btnResArt.setText(QCoreApplication.translate("FrmArticulos", u"resumen articulos /Stock - ODS", None))
         self.label_30.setText(QCoreApplication.translate("FrmArticulos", u"Stock M\u00ednimo:", None))
         self.label_45.setText(QCoreApplication.translate("FrmArticulos", u"Cantidad reservada:", None))

@@ -114,6 +114,13 @@ class ArticulosView(QWidget):
                     self.ui.txtCodigoTipo.editingFinished.connect(self._on_codigo_tipo_entered)
                 except Exception:
                     pass
+                # Bind F1 to open the tipo lookup when focused
+                try:
+                    from PySide6.QtGui import QKeySequence, QShortcut
+                    sc = QShortcut(QKeySequence(Qt.Key.Key_F1), self.ui.txtCodigoTipo)
+                    sc.activated.connect(self._on_buscar_tipo_clicked)
+                except Exception:
+                    pass
         except Exception:
             # Signals may not be available in test environment; ignore
             pass
@@ -1576,6 +1583,56 @@ class ArticulosView(QWidget):
             logging.getLogger(__name__).exception("Error opening subfamily lookup")
             from core.ui_helpers import show_critical
             show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de subfamilias: {}").format(str(e)))
+
+    def _on_buscar_tipo_clicked(self):
+        """Abrir diálogo de búsqueda de Tipos de Artículo (articulo_tipo).
+
+        Solo cuando estamos en modo edición (botGuardar habilitado).
+        """
+        try:
+            editing = False
+            if hasattr(self.ui, 'botGuardar'):
+                try:
+                    editing = self.ui.botGuardar.isEnabled()
+                except Exception:
+                    editing = False
+
+            if not editing:
+                return
+
+            tipos = self.controller.get_tipos_data() or []
+            if not tipos:
+                from core.ui_helpers import show_info
+                show_info(self, self.tr("Info"), self.tr("No se encontraron tipos de artículo"))
+                return
+
+            selected, record = DBConsultaView.select_from_data(
+                parent=self,
+                data=tipos,
+                headers=[self.tr("ID"), self.tr("Código"), self.tr("Descripción")],
+                campos=["codigo", "descripcion"],
+                titulo=self.tr("Seleccionar Tipo de Artículo")
+            )
+
+            if selected:
+                tipo_id = selected.get('id')
+                codigo = selected.get('codigo')
+                descripcion = selected.get('descripcion')
+
+                ok = self.controller.set_tipo_from_lookup(tipo_id, codigo, descripcion)
+                if ok:
+                    if hasattr(self.ui, 'txtCodigoTipo'):
+                        self.ui.txtCodigoTipo.setText(str(codigo or ''))
+                    if hasattr(self.ui, 'txtDescripcionTipo'):
+                        self.ui.txtDescripcionTipo.setText(str(descripcion or ''))
+                    logging.getLogger(__name__).info(f"✅ Tipo seleccionado: {codigo} - {descripcion}")
+                else:
+                    self._maybe_warn(self.tr("Error"), self.tr("No se pudo asignar el tipo seleccionado"))
+
+        except Exception:
+            logging.getLogger(__name__).exception("Error opening tipo lookup")
+            from core.ui_helpers import show_critical
+            show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de tipos: {}"))
     
     # ==================== Promociones Logic ====================
     

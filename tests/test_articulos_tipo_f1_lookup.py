@@ -1,5 +1,7 @@
 from modules.articulos.view import ArticulosView
 from modules.common.db_consulta_view import DBConsultaView
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtCore import QEvent, Qt
 
 
 def test_f1_lookup_opens_dialog_and_sets_tipo(monkeypatch):
@@ -32,3 +34,30 @@ def test_f1_lookup_opens_dialog_and_sets_tipo(monkeypatch):
         assert v.ui.txtCodigoTipo.text() == 'T-TEST'
     if hasattr(v.ui, 'txtDescripcionTipo'):
         assert v.ui.txtDescripcionTipo.text() == 'Tipo Test'
+
+
+def test_eventfilter_captures_f1(monkeypatch):
+    v = ArticulosView()
+    if not hasattr(v.ui, 'txtCodigoTipo'):
+        return
+
+    # Ensure editing enabled
+    if hasattr(v.ui, 'botGuardar'):
+        v.ui.botGuardar.setEnabled(True)
+
+    v.controller.current_article = {'id': 1}
+
+    fake_selected = {'id': 321, 'codigo': 'T-KEY', 'descripcion': 'Tipo Key'}
+
+    def fake_select(parent, data, headers, campos=None, titulo=None):
+        return fake_selected, None
+
+    monkeypatch.setattr(DBConsultaView, 'select_from_data', staticmethod(fake_select))
+
+    # Simulate Ctrl+F key press on the widget
+    key_event = QKeyEvent(QEvent.KeyPress, Qt.Key_F, Qt.ControlModifier)
+    handled = v.eventFilter(v.ui.txtCodigoTipo, key_event)
+
+    assert handled is True
+    assert v.controller.current_article.get('id_tipo') == 321
+    assert v.ui.txtCodigoTipo.text() == 'T-KEY'

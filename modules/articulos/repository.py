@@ -1,4 +1,5 @@
 from typing import List, Optional, Tuple
+import logging
 from sqlalchemy import text
 from sqlalchemy.orm import Session
 from core.db import get_session

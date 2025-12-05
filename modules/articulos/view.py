@@ -1,5 +1,5 @@
-from PySide6.QtWidgets import QWidget, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView
-from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QDate
+from PySide6.QtWidgets import QWidget, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView, QApplication
+from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QDate, QEvent
 from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
 from PySide6.QtGui import QPainter, QShortcut, QKeySequence
 from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
@@ -33,6 +33,17 @@ class ArticulosView(QWidget):
         self.decimales_precios = 2
 
         self._init_complete = False
+        # Guard used to avoid re-entrancy / duplicate lookups when F1 is
+        # handled both by a local QShortcut and by application-level
+        # eventFilter (ShortcutOverride). The guard prevents DBConsultaView
+        # from being opened twice in quick succession.
+        self._tipo_lookup_running = False
+        # last invocation timestamp to avoid duplicate open after modal closes
+        self._last_tipo_lookup_time = 0.0
+        # small time-window to suppress duplicate KeyPress after we handled
+        # ShortcutOverride and opened the lookup (prevents two dialogs when
+        # ShortcutOverride triggers then KeyPress arrives later).
+        self._suppress_next_keypress_until = 0.0
         # Flags for oferta workflow
         self._editing_oferta = False
         self._creating_oferta = False
@@ -117,10 +128,51 @@ class ArticulosView(QWidget):
                 # Bind F1 to open the tipo lookup when focused
                 try:
                     from PySide6.QtGui import QKeySequence, QShortcut
-                    sc = QShortcut(QKeySequence(Qt.Key.Key_F1), self.ui.txtCodigoTipo)
-                    sc.activated.connect(self._on_buscar_tipo_clicked)
+                    # Keep a reference on the view so the QShortcut isn't garbage collected
+                    # Create the QShortcut on the view (self) and set context so it
+                    # activates when children widgets (like txtCodigoTipo) have focus.
+                    if not hasattr(self, '_shortcut_txtCodigoTipo'):
+                        # Use Ctrl+F for the field lookup so the main window keeps F1
+                        # mapped to the global panel toggle.
+                        self._shortcut_txtCodigoTipo = QShortcut(QKeySequence("Ctrl+F"), self)
+                        # Make sure it's active while the widget or any children have focus
+                        try:
+                            self._shortcut_txtCodigoTipo.setContext(Qt.ShortcutContext.WidgetWithChildrenShortcut)
+                        except Exception:
+                            # Older Qt/PySide variants may have different enum locations; ignore if unavailable
+                            pass
+                        # Only open the tipo lookup when focus is on txtCodigoTipo and we are in edit mode
+                        def _f1_handler():
+                            try:
+                                if not hasattr(self.ui, 'txtCodigoTipo'):
+                                    return
+                                # Only trigger when the txtCodigoTipo widget has focus
+                                if self.ui.txtCodigoTipo.hasFocus():
+                                    # Also require we are editing (botGuardar enabled)
+                                    editing_flag = False
+                                    try:
+                                        editing_flag = bool(self.ui.botGuardar.isEnabled())
+                                    except Exception:
+                                        editing_flag = False
+
+                                    if editing_flag:
+                                        self._on_buscar_tipo_clicked()
+                            except Exception:
+                                # don't propagate UI errors
+                                logging.getLogger(__name__).exception("Error handling Ctrl+F for txtCodigoTipo")
+
+                        self._shortcut_txtCodigoTipo.activated.connect(_f1_handler)
+
+                    # Provide a helpful tooltip so users discover the shortcut (best-effort)
+                    try:
+                        self.ui.txtCodigoTipo.setToolTip(self.tr("Ctrl+F - Buscar tipo"))
+                    except Exception:
+                        # Non-fatal if UI doesn't support tooltips
+                        pass
                 except Exception:
+                    # outer import/shortcut setup failed; ignore in test environments
                     pass
+
         except Exception:
             # Signals may not be available in test environment; ignore
             pass
@@ -153,6 +205,8 @@ class ArticulosView(QWidget):
         # Hide certain labels
         self.ui.lblkit.setVisible(False)
         self.ui.lbl_en_promocion.setVisible(False)
+
+
 
     def _maybe_warn(self, title: str, message: str):
         """Delegate to central UI helper which avoids modals during test runs."""
@@ -1589,7 +1643,32 @@ class ArticulosView(QWidget):
 
         Solo cuando estamos en modo edición (botGuardar habilitado).
         """
+        import time
+        import traceback
+        
+        # Log every invocation with stack trace
+        stack = ''.join(traceback.format_stack()[-4:-1])
+        logging.getLogger(__name__).warning(f"_on_buscar_tipo_clicked CALLED at {time.time():.3f}\nStack:\n{stack}")
+        
+        # Deduplicate within a short window (protects across multiple event sources)
         try:
+            now = time.time()
+            if getattr(self, '_last_tipo_lookup_time', 0) and (now - self._last_tipo_lookup_time) < 0.7:
+                logging.getLogger(__name__).warning(f"BLOCKED by timestamp guard: last={self._last_tipo_lookup_time:.3f}, now={now:.3f}, diff={now - self._last_tipo_lookup_time:.3f}")
+                return
+            self._last_tipo_lookup_time = now
+        except Exception as e:
+            # if time is unavailable, continue but rely on other guards
+            logging.getLogger(__name__).exception(f"Timestamp guard failed: {e}")
+            pass
+        
+        # Prevent duplicate/opening re-entrancy
+        if getattr(self, '_tipo_lookup_running', False):
+            logging.getLogger(__name__).warning("BLOCKED by _tipo_lookup_running guard")
+            return
+
+        try:
+            self._tipo_lookup_running = True
             editing = False
             if hasattr(self.ui, 'botGuardar'):
                 try:
@@ -1633,6 +1712,12 @@ class ArticulosView(QWidget):
             logging.getLogger(__name__).exception("Error opening tipo lookup")
             from core.ui_helpers import show_critical
             show_critical(self, self.tr("Error"), self.tr("Error al abrir consulta de tipos: {}"))
+        finally:
+            # Ensure the guard is always cleared
+            try:
+                self._tipo_lookup_running = False
+            except Exception:
+                pass
     
     # ==================== Promociones Logic ====================
     

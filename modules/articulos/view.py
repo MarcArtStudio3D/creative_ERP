@@ -108,6 +108,12 @@ class ArticulosView(QWidget):
                             setattr(w, '_currency_format_hooked', True)
                     except Exception:
                         pass
+            # Tipo lookup: when user finishes editing the Código Tipo field, attempt lookup
+            if hasattr(self.ui, 'txtCodigoTipo'):
+                try:
+                    self.ui.txtCodigoTipo.editingFinished.connect(self._on_codigo_tipo_entered)
+                except Exception:
+                    pass
         except Exception:
             # Signals may not be available in test environment; ignore
             pass
@@ -441,6 +447,34 @@ class ArticulosView(QWidget):
         else:
             self.ui.txtcodigo_proveedor.clear()
             self.ui.txtproveedor.clear()
+
+        # Tipo: show codigo and descripcion if present
+        id_tipo = article.get('id_tipo')
+        if id_tipo:
+            try:
+                t = self.controller.repository.get_articulo_tipo(id_tipo)
+                if t:
+                    if hasattr(self.ui, 'txtCodigoTipo'):
+                        self.ui.txtCodigoTipo.setText(str(t.get('codigo') or ''))
+                    if hasattr(self.ui, 'txtDescripcionTipo'):
+                        self.ui.txtDescripcionTipo.setText(str(t.get('descripcion') or ''))
+                else:
+                    # Fallback to any directly stored fields on article
+                    if hasattr(self.ui, 'txtCodigoTipo'):
+                        self.ui.txtCodigoTipo.setText(str(article.get('codigo_tipo') or ''))
+                    if hasattr(self.ui, 'txtDescripcionTipo'):
+                        self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
+            except Exception:
+                # Fallback to article fields
+                if hasattr(self.ui, 'txtCodigoTipo'):
+                    self.ui.txtCodigoTipo.setText(str(article.get('codigo_tipo') or ''))
+                if hasattr(self.ui, 'txtDescripcionTipo'):
+                    self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
+        else:
+            if hasattr(self.ui, 'txtCodigoTipo'):
+                self.ui.txtCodigoTipo.setText(str(article.get('codigo_tipo') or ''))
+            if hasattr(self.ui, 'txtDescripcionTipo'):
+                self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
         
         # Precios: formatear según la configuración de decimales de la empresa
         try:
@@ -674,6 +708,12 @@ class ArticulosView(QWidget):
             # Family ID (set by set_familia_from_lookup)
             if 'id_familia' in current:
                 data["id_familia"] = current['id_familia']
+
+            # Tipo de artículo (lookup) - include only if present on the loaded article
+            if 'id_tipo' in current:
+                data['id_tipo'] = current['id_tipo']
+            elif 'codigo_tipo' in current:
+                data['codigo_tipo'] = current['codigo_tipo']
         
         # TODO: Obtener IDs de familia/subfamilia desde los diálogos de búsqueda
         # TODO: Obtener tipo de IVA desde el combo
@@ -1097,6 +1137,51 @@ class ArticulosView(QWidget):
         self.ui.stackedWidget.setCurrentIndex(1)
         # Set focus on the table for immediate keyboard navigation
         self.ui.tablaBusqueda.setFocus()
+
+    def _on_codigo_tipo_entered(self):
+        """Handler: cuando el usuario termina de editar txtCodigoTipo intentar buscar el tipo por código."""
+        try:
+            if not hasattr(self.ui, 'txtCodigoTipo'):
+                return
+            code = (self.ui.txtCodigoTipo.text() or '').strip()
+            if not code:
+                # Clear description when code is empty
+                if hasattr(self.ui, 'txtDescripcionTipo'):
+                    self.ui.txtDescripcionTipo.clear()
+                # Remove stored type in controller current article
+                cur = self.controller.get_current_article()
+                if cur and 'id_tipo' in cur:
+                    cur.pop('id_tipo', None)
+                    cur.pop('codigo_tipo', None)
+                    cur.pop('descripcion_tipo', None)
+                return
+
+            tipo = None
+            try:
+                tipo = self.controller.get_tipo_by_codigo(code)
+            except Exception:
+                tipo = None
+
+            if tipo:
+                # Populate UI and set in current article transiently
+                if hasattr(self.ui, 'txtCodigoTipo'):
+                    self.ui.txtCodigoTipo.setText(str(tipo.get('codigo') or ''))
+                if hasattr(self.ui, 'txtDescripcionTipo'):
+                    self.ui.txtDescripcionTipo.setText(str(tipo.get('descripcion') or ''))
+
+                # update controller state for save to pick up if necessary
+                try:
+                    self.controller.set_tipo_from_lookup(tipo.get('id'), tipo.get('codigo'), tipo.get('descripcion'))
+                except Exception:
+                    pass
+            else:
+                # No match found — clear description and warn user
+                if hasattr(self.ui, 'txtDescripcionTipo'):
+                    self.ui.txtDescripcionTipo.clear()
+                self._maybe_warn(self.tr("Tipo no encontrado"), self.tr("No se encontró ningún tipo con ese código"))
+        except Exception:
+            # Don't crash UI on lookup errors
+            logging.getLogger(__name__).exception("Error buscando tipo por código")
     
     def _on_tab_changed(self, index: int):
         """Manejar cambio de pestaña"""

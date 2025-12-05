@@ -298,29 +298,6 @@ color: rgb(255, 255, 255);</string>
            </widget>
           </item>
           <item>
-           <widget class="QPushButton" name="btnExcepciones_3">
-            <property name="minimumSize">
-             <size>
-              <width>0</width>
-              <height>40</height>
-             </size>
-            </property>
-            <property name="text">
-             <string>Excepciones</string>
-            </property>
-            <property name="icon">
-             <iconset>
-              <normaloff>:/Icons/PNG/excepciones.png</normaloff>:/Icons/PNG/excepciones.png</iconset>
-            </property>
-            <property name="iconSize">
-             <size>
-              <width>24</width>
-              <height>24</height>
-             </size>
-            </property>
-           </widget>
-          </item>
-          <item>
            <widget class="QPushButton" name="btnKit">
             <property name="minimumSize">
              <size>
@@ -510,278 +487,32 @@ color: rgb(255, 255, 255);</string>
            <string notr="true"/>
           </property>
           <attribute name="title">
-           <string>Artículo</string>
+           <string>Servicio/artículo</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_8">
-           <item row="4" column="3">
-            <widget class="QFrame" name="frame_10">
+           <item row="1" column="7" rowspan="13">
+            <widget class="QFrame" name="frame_20">
              <property name="frameShape">
               <enum>QFrame::Shape::StyledPanel</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Raised</enum>
              </property>
-             <layout class="QGridLayout" name="gridLayout_13">
+             <layout class="QGridLayout" name="gridLayout_42">
+              <item row="1" column="0">
+               <widget class="QTextEdit" name="txtdescripcion"/>
+              </item>
               <item row="0" column="0">
-               <widget class="QCheckBox" name="chkmostrar_web">
-                <property name="toolTip">
-                 <string>Seleccionar si se desea que el artículo aparezca en la tienda virtual en su web</string>
-                </property>
+               <widget class="QLabel" name="label_7">
                 <property name="text">
-                 <string>Mostrar en web</string>
+                 <string>Descripción</string>
                 </property>
                </widget>
               </item>
              </layout>
             </widget>
            </item>
-           <item row="1" column="0" colspan="2">
-            <widget class="QFrame" name="frame_13">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>45</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_16">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_2">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Código: </string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="txtcodigo">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="codeField" stdset="0">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="2" column="0">
-            <widget class="QLabel" name="label_6">
-             <property name="text">
-              <string>Artículo:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1" colspan="6">
-            <widget class="QLineEdit" name="txtdescripcionResumida">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>27</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="10" column="7" rowspan="2">
-            <widget class="QFrame" name="FrameRF">
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_7">
-              <item row="2" column="1">
-               <widget class="QTextEdit" name="txtcomentario">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="label_18">
-                <property name="text">
-                 <string>Comentarios:</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="9" column="0" rowspan="3" colspan="7">
-            <widget class="QFrame" name="frame_8">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_4">
-              <item row="0" column="0" colspan="3">
-               <widget class="QTableView" name="TablaTarifas">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="alternatingRowColors">
-                 <bool>true</bool>
-                </property>
-                <property name="selectionMode">
-                 <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-                </property>
-                <property name="selectionBehavior">
-                 <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="2">
-               <widget class="QPushButton" name="btnEditartarifa">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="text">
-                 <string>Editar Tarifa</string>
-                </property>
-                <property name="icon">
-                 <iconset resource="../designer.qrc">
-                  <normaloff>:/PNG/resources/icons/png/Edit.png</normaloff>:/PNG/resources/icons/png/Edit.png</iconset>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="1" column="2" colspan="2">
-            <widget class="QFrame" name="frame_12">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>45</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_15">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_3">
-                <property name="text">
-                 <string>Código EAN:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="txtcodigo_barras">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>148</width>
-                  <height>0</height>
-                 </size>
-                </property>
-                <property name="maximumSize">
-                 <size>
-                  <width>120</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="testField" stdset="0">
-                 <bool>true</bool>
-                </property>
-               </widget>
-              </item>
-             </layout>
-             <zorder>txtcodigo_barras</zorder>
-             <zorder>label_3</zorder>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QFrame" name="frame_4">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>40</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <widget class="QLabel" name="label_19">
-                <property name="text">
-                 <string>Tipo IVA:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="cboTipoIVA">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>27</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="3" column="1">
+           <item row="7" column="1">
             <widget class="QLineEdit" name="txtcodigo_proveedor">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
@@ -809,7 +540,7 @@ color: rgb(255, 255, 255);</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="1" colspan="2">
+           <item row="8" column="1" colspan="2">
             <widget class="QFrame" name="frame_7">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -880,77 +611,141 @@ color: rgb(255, 255, 255);</string>
              </layout>
             </widget>
            </item>
-           <item row="1" column="4" colspan="3">
-            <widget class="QFrame" name="frame_11">
+           <item row="9" column="5">
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>Precio venta:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="0" rowspan="3" colspan="7">
+            <widget class="QFrame" name="frame_8">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0" colspan="3">
+               <widget class="QTableView" name="TablaTarifas">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+                </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="btnEditartarifa">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Editar Tarifa</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../designer.qrc">
+                  <normaloff>:/PNG/resources/icons/png/Edit.png</normaloff>:/PNG/resources/icons/png/Edit.png</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Código: </string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="3">
+            <widget class="QFrame" name="frame_10">
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_13">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="chkmostrar_web">
+                <property name="toolTip">
+                 <string>Seleccionar si se desea que el artículo aparezca en la tienda virtual en su web</string>
+                </property>
+                <property name="text">
+                 <string>Mostrar en web</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="5" column="3">
+            <widget class="QLineEdit" name="txtcodigo_barras">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="minimumSize">
+              <size>
+               <width>148</width>
+               <height>0</height>
+              </size>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="testField" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="6" column="1" colspan="6">
+            <widget class="QLineEdit" name="txtdescripcionResumida">
              <property name="maximumSize">
               <size>
                <width>16777215</width>
-               <height>45</height>
+               <height>27</height>
               </size>
              </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_14">
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_4">
-                <property name="text">
-                 <string>Código en Proveedor:</string>
-                </property>
-               </widget>
-              </item>
-              <item row="0" column="1">
-               <widget class="QLineEdit" name="txtcodigo_fabricante">
-                <property name="maximumSize">
-                 <size>
-                  <width>120</width>
-                  <height>16777215</height>
-                 </size>
-                </property>
-                <property name="text">
-                 <string/>
-                </property>
-                <property name="alignment">
-                 <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </widget>
            </item>
-           <item row="3" column="0">
-            <widget class="QLabel" name="label_8">
-             <property name="text">
-              <string>Proveedor Habitual:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="7" rowspan="9">
-            <widget class="QFrame" name="frame_20">
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_42">
-              <item row="1" column="0">
-               <widget class="QTextEdit" name="txtdescripcion"/>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>Descripción</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="8" column="0" colspan="7">
+           <item row="12" column="0" colspan="7">
             <widget class="QFrame" name="frame_5">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -1102,33 +897,7 @@ color: rgb(255, 255, 255);</string>
              </layout>
             </widget>
            </item>
-           <item row="3" column="6">
-            <widget class="QPushButton" name="btnBuscarProveedor">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>24</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/search.png</normaloff>:/PNG/resources/icons/png/search.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>16</width>
-               <height>16</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="4" colspan="3">
+           <item row="8" column="4" colspan="3">
             <widget class="QFrame" name="frame_2">
              <property name="frameShape">
               <enum>QFrame::Shape::StyledPanel</enum>
@@ -1147,20 +916,84 @@ color: rgb(255, 255, 255);</string>
              </layout>
             </widget>
            </item>
-           <item row="3" column="2" colspan="4">
-            <widget class="QLineEdit" name="txtproveedor">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>24</height>
-              </size>
+           <item row="9" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_12"/>
+           </item>
+           <item row="5" column="2">
+            <widget class="QLabel" name="label_3">
+             <property name="text">
+              <string>Código EAN:</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_12"/>
+           <item row="5" column="1">
+            <widget class="QLineEdit" name="txtcodigo">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="codeField" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
            </item>
-           <item row="5" column="6">
+           <item row="8" column="0">
+            <widget class="QFrame" name="frame_4">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string>Tipo IVA:</string>
+                </property>
+               </widget>
+              </item>
+              <item>
+               <widget class="QComboBox" name="cboTipoIVA">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="minimumSize">
+                 <size>
+                  <width>0</width>
+                  <height>27</height>
+                 </size>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="txtCodigoTipo">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="6">
             <widget class="QLineEdit" name="txtPrecioVenta">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1188,10 +1021,126 @@ color: rgb(255, 255, 255);</string>
              </property>
             </widget>
            </item>
-           <item row="5" column="5">
-            <widget class="QLabel" name="label_15">
+           <item row="6" column="0">
+            <widget class="QLabel" name="label_6">
              <property name="text">
-              <string>Precio venta:</string>
+              <string>Artículo:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2" colspan="5">
+            <widget class="QLineEdit" name="txtDescripcionTipo">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>Tipo :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="5">
+            <widget class="QLabel" name="label_4">
+             <property name="text">
+              <string>Código en Proveedor:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="14" column="7" rowspan="2">
+            <widget class="QFrame" name="FrameRF">
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_7">
+              <item row="2" column="1">
+               <widget class="QTextEdit" name="txtcomentario">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QLabel" name="label_18">
+                <property name="text">
+                 <string>Comentarios:</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="7" column="2" colspan="4">
+            <widget class="QLineEdit" name="txtproveedor">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>24</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="6">
+            <widget class="QPushButton" name="btnBuscarProveedor">
+             <property name="enabled">
+              <bool>false</bool>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>24</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="icon">
+              <iconset resource="../designer.qrc">
+               <normaloff>:/PNG/resources/icons/png/search.png</normaloff>:/PNG/resources/icons/png/search.png</iconset>
+             </property>
+             <property name="iconSize">
+              <size>
+               <width>16</width>
+               <height>16</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="6">
+            <widget class="QLineEdit" name="txtcodigo_fabricante">
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Proveedor Habitual:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="3" column="1">
+            <widget class="QLabel" name="label_17">
+             <property name="text">
+              <string>F1-Buscar</string>
              </property>
             </widget>
            </item>
@@ -1593,7 +1542,7 @@ color: rgb(255, 255, 255);</string>
          </widget>
          <widget class="QWidget" name="tab_promociones">
           <attribute name="title">
-           <string>Promociones artículo</string>
+           <string>Promociones</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_39">
            <item row="0" column="0">
@@ -2369,379 +2318,11 @@ color: rgb(255, 255, 255);</string>
            </item>
           </layout>
          </widget>
-         <widget class="QWidget" name="tab_web">
-          <attribute name="title">
-           <string>Web</string>
-          </attribute>
-          <layout class="QGridLayout" name="gridLayout_43">
-           <item row="4" column="1" colspan="6">
-            <widget class="QTextEdit" name="txtDescWebIdioma"/>
-           </item>
-           <item row="5" column="6" rowspan="2">
-            <widget class="QLabel" name="imagen3_web_idioma">
-             <property name="maximumSize">
-              <size>
-               <width>72</width>
-               <height>72</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap>:/Icons/PNG/Box.png</pixmap>
-             </property>
-             <property name="scaledContents">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="0" column="0">
-            <widget class="QLabel" name="label_66">
-             <property name="styleSheet">
-              <string notr="true">background-color: #304163;
-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="text">
-              <string>Pais</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="1">
-            <widget class="QLabel" name="label_51">
-             <property name="text">
-              <string>Articulo:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="0" rowspan="8">
-            <widget class="QTableView" name="tablaPaises_web">
-             <property name="maximumSize">
-              <size>
-               <width>239</width>
-               <height>16777215</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="5">
-            <widget class="QPushButton" name="btnImg_web3_delete">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="1" column="1">
-            <widget class="QLabel" name="label_56">
-             <property name="text">
-              <string>Idioma</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="5">
-            <widget class="QPushButton" name="btnImg_web3_add">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="5">
-            <widget class="QPushButton" name="btnImg_web4_add">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="6" rowspan="2">
-            <widget class="QLabel" name="imagen4_web_idioma">
-             <property name="maximumSize">
-              <size>
-               <width>72</width>
-               <height>72</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap>:/Icons/PNG/Box.png</pixmap>
-             </property>
-             <property name="scaledContents">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1" colspan="6">
-            <widget class="QLabel" name="label_64">
-             <property name="styleSheet">
-              <string notr="true">background-color: #304163;
-color: rgb(255, 255, 255);</string>
-             </property>
-             <property name="text">
-              <string>Descripción:</string>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignCenter</set>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="5">
-            <widget class="QPushButton" name="btnImg_web4_delete">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="2" column="2" colspan="5">
-            <widget class="QLineEdit" name="txtArticulowebidioma"/>
-           </item>
-           <item row="1" column="2" colspan="5">
-            <widget class="QComboBox" name="cboIdiomasweb"/>
-           </item>
-           <item row="5" column="4" rowspan="2">
-            <widget class="QLabel" name="imagen1_web_idioma">
-             <property name="maximumSize">
-              <size>
-               <width>72</width>
-               <height>72</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap>:/Icons/PNG/Box.png</pixmap>
-             </property>
-             <property name="scaledContents">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="4" rowspan="2">
-            <widget class="QLabel" name="imagen2_web_idioma">
-             <property name="maximumSize">
-              <size>
-               <width>72</width>
-               <height>72</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap>:/Icons/PNG/Box.png</pixmap>
-             </property>
-             <property name="scaledContents">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="3">
-            <widget class="QPushButton" name="btnImg_web1_add">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="6" column="3">
-            <widget class="QPushButton" name="btnImg_web1_delete">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="3">
-            <widget class="QPushButton" name="btnImg_web2_add">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="3">
-            <widget class="QPushButton" name="btnImg_web2_delete">
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1" rowspan="4" colspan="2">
-            <widget class="QFrame" name="frame_21">
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <widget class="QPushButton" name="pushButton">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>10</y>
-                <width>151</width>
-                <height>30</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Agregar a pais</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../designer.qrc">
-                <normaloff>:/PNG/resources/icons/png/Add.png</normaloff>:/PNG/resources/icons/png/Add.png</iconset>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_2">
-              <property name="geometry">
-               <rect>
-                <x>170</x>
-                <y>10</y>
-                <width>81</width>
-                <height>30</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Editar</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../designer.qrc">
-                <normaloff>:/PNG/resources/icons/png/Edit.png</normaloff>:/PNG/resources/icons/png/Edit.png</iconset>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_3">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>40</y>
-                <width>151</width>
-                <height>30</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Guardar</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../designer.qrc">
-                <normaloff>:/PNG/resources/icons/png/Save.png</normaloff>:/PNG/resources/icons/png/Save.png</iconset>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_4">
-              <property name="geometry">
-               <rect>
-                <x>170</x>
-                <y>40</y>
-                <width>81</width>
-                <height>30</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Deshacer</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../designer.qrc">
-                <normaloff>:/PNG/resources/icons/png/undo.png</normaloff>:/PNG/resources/icons/png/undo.png</iconset>
-              </property>
-             </widget>
-             <widget class="QPushButton" name="pushButton_5">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>100</y>
-                <width>241</width>
-                <height>30</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Borrar de pais</string>
-              </property>
-              <property name="icon">
-               <iconset resource="../designer.qrc">
-                <normaloff>:/PNG/resources/icons/png/delete.png</normaloff>:/PNG/resources/icons/png/delete.png</iconset>
-              </property>
-             </widget>
-             <widget class="QCheckBox" name="checkBox">
-              <property name="geometry">
-               <rect>
-                <x>10</x>
-                <y>70</y>
-                <width>241</width>
-                <height>30</height>
-               </rect>
-              </property>
-              <property name="text">
-               <string>Mostrar en web</string>
-              </property>
-             </widget>
-            </widget>
-           </item>
-          </layout>
-         </widget>
          <widget class="QWidget" name="tab_imagenes">
           <attribute name="title">
-           <string>Imagenes Artículo</string>
+           <string>Imagenes</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_23">
-           <item row="0" column="0">
-            <widget class="QLabel" name="lblImagenArticulo_1">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-               <horstretch>255</horstretch>
-               <verstretch>255</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>256</width>
-               <height>256</height>
-              </size>
-             </property>
-             <property name="toolTip">
-              <string>La imagen introducida debe tener los mismos pixels horizontales que verticales</string>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="pixmap">
-              <pixmap>:/Icons/PNG/paquete.png</pixmap>
-             </property>
-             <property name="scaledContents">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
            <item row="0" column="1">
             <widget class="QLabel" name="lblImagenArticulo_2">
              <property name="sizePolicy">
@@ -2771,114 +2352,6 @@ color: rgb(255, 255, 255);</string>
             </widget>
            </item>
            <item row="1" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_8">
-             <item>
-              <widget class="QPushButton" name="botCambiarImagen">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>256</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Cambiar
-Imagen.</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/image.png</normaloff>:/Icons/PNG/image.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnBorrarImagen_1">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Borrar</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/borrar.png</normaloff>:/Icons/PNG/borrar.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="1" column="1">
-            <layout class="QHBoxLayout" name="horizontalLayout_10">
-             <item>
-              <widget class="QPushButton" name="botCambiarImagen_2">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Cambiar
-Imagen.</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/image.png</normaloff>:/Icons/PNG/image.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnBorrarimagen_2">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Borrar</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/borrar.png</normaloff>:/Icons/PNG/borrar.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="2" column="0">
             <widget class="QLabel" name="lblImagenArticulo_3">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -2906,7 +2379,35 @@ Imagen.</string>
              </property>
             </widget>
            </item>
-           <item row="2" column="1">
+           <item row="0" column="0">
+            <widget class="QLabel" name="lblImagenArticulo_1">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+               <horstretch>255</horstretch>
+               <verstretch>255</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>256</width>
+               <height>256</height>
+              </size>
+             </property>
+             <property name="toolTip">
+              <string>La imagen introducida debe tener los mismos pixels horizontales que verticales</string>
+             </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="pixmap">
+              <pixmap>:/Icons/PNG/paquete.png</pixmap>
+             </property>
+             <property name="scaledContents">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="1" column="1">
             <widget class="QLabel" name="lblImagenArticulo_4">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
@@ -2934,114 +2435,6 @@ Imagen.</string>
              </property>
             </widget>
            </item>
-           <item row="3" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_9">
-             <item>
-              <widget class="QPushButton" name="botCambiarImagen_3">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>256</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Cambiar
-Imagen.</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/image.png</normaloff>:/Icons/PNG/image.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnBorrarImagen_3">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Borrar</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/borrar.png</normaloff>:/Icons/PNG/borrar.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
-           <item row="3" column="1">
-            <layout class="QHBoxLayout" name="horizontalLayout_11">
-             <item>
-              <widget class="QPushButton" name="botCambiarImagen_4">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="text">
-                <string>Cambiar
-Imagen.</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/image.png</normaloff>:/Icons/PNG/image.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-             <item>
-              <widget class="QPushButton" name="btnBorrarimagen_4">
-               <property name="enabled">
-                <bool>false</bool>
-               </property>
-               <property name="maximumSize">
-                <size>
-                 <width>100</width>
-                 <height>16777215</height>
-                </size>
-               </property>
-               <property name="text">
-                <string>Borrar</string>
-               </property>
-               <property name="icon">
-                <iconset>
-                 <normaloff>:/Icons/PNG/borrar.png</normaloff>:/Icons/PNG/borrar.png</iconset>
-               </property>
-               <property name="iconSize">
-                <size>
-                 <width>32</width>
-                 <height>32</height>
-                </size>
-               </property>
-              </widget>
-             </item>
-            </layout>
-           </item>
           </layout>
          </widget>
          <widget class="QWidget" name="tab_estadistica">
@@ -3049,7 +2442,7 @@ Imagen.</string>
            <string>Estadistica</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_37">
-           <item row="5" column="0">
+           <item row="3" column="0">
             <spacer name="verticalSpacer_4">
              <property name="orientation">
               <enum>Qt::Orientation::Vertical</enum>
@@ -3061,13 +2454,6 @@ Imagen.</string>
               </size>
              </property>
             </spacer>
-           </item>
-           <item row="3" column="0">
-            <widget class="QPushButton" name="btnResArt2">
-             <property name="text">
-              <string>Referencia-descripcion-pvp-tipo iva - ODS</string>
-             </property>
-            </widget>
            </item>
            <item row="0" column="0">
             <widget class="QFrame" name="frame">
@@ -3268,13 +2654,6 @@ Imagen.</string>
                </spacer>
               </item>
              </layout>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QPushButton" name="btnResArt">
-             <property name="text">
-              <string>resumen articulos /Stock - ODS</string>
-             </property>
             </widget>
            </item>
            <item row="1" column="0">
@@ -4877,7 +4256,7 @@ color: rgb(255,255,255);
 font: 14pt &quot;Sans Serif&quot;;</string>
      </property>
      <property name="text">
-      <string>Gestión de Articulos</string>
+      <string>Gestión de Servicios/Articulos</string>
      </property>
      <property name="alignment">
       <set>Qt::AlignmentFlag::AlignCenter</set>
@@ -4895,6 +4274,8 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   </customwidget>
  </customwidgets>
  <tabstops>
+  <tabstop>txtCodigoTipo</tabstop>
+  <tabstop>txtDescripcionTipo</tabstop>
   <tabstop>txtcodigo</tabstop>
   <tabstop>txtcodigo_barras</tabstop>
   <tabstop>txtcodigo_fabricante</tabstop>
@@ -4931,10 +4312,9 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>txtOferta_Fecha_ini</tabstop>
   <tabstop>txtOferta_Fecha_fin</tabstop>
   <tabstop>btnAnadirOferta</tabstop>
-  <tabstop>btnguardar_oferta</tabstop>
   <tabstop>btnEditarOferta</tabstop>
+  <tabstop>btnguardar_oferta</tabstop>
   <tabstop>btnDeshacerOferta</tabstop>
-  <tabstop>txtOferta_Descripcion_promocion</tabstop>
   <tabstop>chkOferta_32</tabstop>
   <tabstop>chkOferta_web</tabstop>
   <tabstop>chkOferta_dto</tabstop>
@@ -4949,32 +4329,6 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>btnActivarOferta</tabstop>
   <tabstop>btnBorrarOferta</tabstop>
   <tabstop>txtOferta_comentarios_promocion</tabstop>
-  <tabstop>tablaPaises_web</tabstop>
-  <tabstop>cboIdiomasweb</tabstop>
-  <tabstop>txtArticulowebidioma</tabstop>
-  <tabstop>txtDescWebIdioma</tabstop>
-  <tabstop>pushButton</tabstop>
-  <tabstop>pushButton_2</tabstop>
-  <tabstop>pushButton_3</tabstop>
-  <tabstop>pushButton_4</tabstop>
-  <tabstop>checkBox</tabstop>
-  <tabstop>pushButton_5</tabstop>
-  <tabstop>btnImg_web1_add</tabstop>
-  <tabstop>btnImg_web1_delete</tabstop>
-  <tabstop>btnImg_web2_add</tabstop>
-  <tabstop>btnImg_web2_delete</tabstop>
-  <tabstop>btnImg_web3_add</tabstop>
-  <tabstop>btnImg_web3_delete</tabstop>
-  <tabstop>btnImg_web4_add</tabstop>
-  <tabstop>btnImg_web4_delete</tabstop>
-  <tabstop>botCambiarImagen</tabstop>
-  <tabstop>btnBorrarImagen_1</tabstop>
-  <tabstop>botCambiarImagen_3</tabstop>
-  <tabstop>btnBorrarImagen_3</tabstop>
-  <tabstop>botCambiarImagen_2</tabstop>
-  <tabstop>btnBorrarimagen_2</tabstop>
-  <tabstop>botCambiarImagen_4</tabstop>
-  <tabstop>btnBorrarimagen_4</tabstop>
   <tabstop>txtunidades_compradas</tabstop>
   <tabstop>txtimporte_acumulado_compras</tabstop>
   <tabstop>txtfechaUltimaCompra</tabstop>
@@ -4988,9 +4342,6 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>txtFechaUltimaVenta</tabstop>
   <tabstop>txtstock_maximo</tabstop>
   <tabstop>txtFechaPrevistaEntrega</tabstop>
-  <tabstop>btnResArt2</tabstop>
-  <tabstop>btnResArt</tabstop>
-  <tabstop>chkValorGrafica</tabstop>
   <tabstop>txtUnid_compras_enero</tabstop>
   <tabstop>txtImporte_compras_enero</tabstop>
   <tabstop>txtUnid_compras_febrero</tabstop>
@@ -5039,6 +4390,10 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>txtImporte_ventas_noviembre</tabstop>
   <tabstop>txtUnid_ventas_diciembre</tabstop>
   <tabstop>txtImporte_ventas_diciembre</tabstop>
+  <tabstop>cboTipoGrafica</tabstop>
+  <tabstop>radGrafica_unidades</tabstop>
+  <tabstop>radGrafica_importes</tabstop>
+  <tabstop>chkValorGrafica</tabstop>
   <tabstop>botAnadir</tabstop>
   <tabstop>botSiguiente</tabstop>
   <tabstop>botAnterior</tabstop>
@@ -5046,15 +4401,12 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   <tabstop>botEditar</tabstop>
   <tabstop>botGuardar</tabstop>
   <tabstop>botDeshacer</tabstop>
-  <tabstop>btnExcepciones_3</tabstop>
   <tabstop>btnKit</tabstop>
   <tabstop>botBorrar</tabstop>
   <tabstop>btn_cerrar</tabstop>
   <tabstop>Pestanas</tabstop>
   <tabstop>tablaBusqueda</tabstop>
-  <tabstop>radGrafica_importes</tabstop>
-  <tabstop>radGrafica_unidades</tabstop>
-  <tabstop>cboTipoGrafica</tabstop>
+  <tabstop>txtOferta_Descripcion_promocion</tabstop>
  </tabstops>
  <resources>
   <include location="../designer.qrc"/>

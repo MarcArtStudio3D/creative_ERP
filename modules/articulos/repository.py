@@ -484,6 +484,39 @@ class ArticuloRepository:
         finally:
             if not self._external_session:
                 session.close()
+
+    # ==================== Artículo tipo (lookup) ====================
+
+    def get_articulo_tipos(self) -> list:
+        """Obtener todos los tipos de artículo (tabla articulo_tipo)"""
+        session = self._session()
+        try:
+            result = session.execute(text("SELECT id, codigo, descripcion, activo FROM articulo_tipo ORDER BY codigo"))
+            return [dict(row._mapping) for row in result.fetchall()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_articulo_tipo(self, tipo_id: int) -> dict | None:
+        session = self._session()
+        try:
+            result = session.execute(text("SELECT id, codigo, descripcion, activo FROM articulo_tipo WHERE id = :id LIMIT 1"), {"id": tipo_id})
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_articulo_tipo_por_codigo(self, codigo: str) -> dict | None:
+        """Buscar un tipo de artículo por su código exacto (case-insensitive)."""
+        session = self._session()
+        try:
+            result = session.execute(text("SELECT id, codigo, descripcion, activo FROM articulo_tipo WHERE UPPER(codigo) = UPPER(:codigo) LIMIT 1"), {"codigo": codigo})
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        finally:
+            if not self._external_session:
+                session.close()
     
     def get_proveedor(self, proveedor_id: int) -> Optional[Tuple[str, str]]:
         """Obtener código y nombre del proveedor por ID. Devuelve (codigo, proveedor)"""

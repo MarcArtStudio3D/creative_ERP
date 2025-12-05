@@ -111,6 +111,39 @@ class ArticuloController:
             logging.getLogger(__name__).exception("Error getting sections data")
             return []
 
+    # ==================== Artículo Tipo ====================
+    def get_tipos_data(self) -> list:
+        """Obtener lista de tipos de artículo (lookup)"""
+        try:
+            return self.repository.get_articulo_tipos()
+        except Exception:
+            logging.getLogger(__name__).exception("Error getting articulo tipos data")
+            return []
+
+    def get_tipo_by_codigo(self, codigo: str) -> dict | None:
+        """Obtener un tipo de artículo por su código exacto (case-insensitive)."""
+        try:
+            if not codigo:
+                return None
+            return self.repository.get_articulo_tipo_por_codigo(codigo)
+        except Exception:
+            logging.getLogger(__name__).exception(f"Error looking up articulo tipo by codigo={codigo}")
+            return None
+
+    def set_tipo_from_lookup(self, tipo_id: int, tipo_codigo: str, tipo_descripcion: str) -> bool:
+        """Establecer el tipo seleccionado en el artículo actual (no persiste hasta guardar)."""
+        try:
+            if not self.current_article:
+                return False
+            # Store both id and code/description for the view to use
+            self.current_article['id_tipo'] = tipo_id
+            self.current_article['codigo_tipo'] = tipo_codigo
+            self.current_article['descripcion_tipo'] = tipo_descripcion
+            return True
+        except Exception:
+            logging.getLogger(__name__).exception("Error setting articulo tipo from lookup")
+            return False
+
     def set_familia_from_lookup(self, familia_id: int, familia_codigo: str, familia_nombre: str) -> bool:
         """Establece la familia seleccionada desde el diálogo de búsqueda (MVC: sólo actualiza el modelo)."""
         try:

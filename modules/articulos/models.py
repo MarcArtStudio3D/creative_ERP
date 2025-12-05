@@ -71,6 +71,8 @@ class Articulo(Base):
     id_seccion: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     id_familia: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
     id_subfamilia: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
+    # Tipo de artículo (nuevo campo de relación con articulo_tipo)
+    id_tipo: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('articulo_tipo.id'), nullable=True)
     
     # Proveedor
     id_proveedor: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
@@ -169,6 +171,23 @@ class TarifaTipo(Base):
 
     def __repr__(self):
         return f"<TarifaTipo(id={self.id}, codigo='{self.codigo}', nombre='{self.nombre}')>"
+
+
+class ArticuloTipo(Base):
+    """Tipos de artículo (lookup): código + descripción"""
+    __tablename__ = 'articulo_tipo'
+
+    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
+    codigo: Mapped[Optional[str]] = mapped_column(String(50), unique=True, nullable=True)
+    descripcion: Mapped[str] = mapped_column(String(255), nullable=False)
+    activo: Mapped[bool] = mapped_column(Boolean, default=True)
+
+    __table_args__ = (
+        {'sqlite_autoincrement': True},
+    )
+
+    def __repr__(self):
+        return f"<ArticuloTipo(id={self.id}, codigo='{self.codigo}', descripcion='{self.descripcion}')>"
 
 
 class ProveedorFrecuente(Base):

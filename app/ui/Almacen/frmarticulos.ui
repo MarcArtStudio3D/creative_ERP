@@ -6,7 +6,7 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1147</width>
+    <width>1173</width>
     <height>630</height>
    </rect>
   </property>
@@ -72,6 +72,76 @@ color: rgb(255, 255, 255);</string>
           </size>
          </property>
         </spacer>
+       </item>
+       <item row="0" column="4">
+        <widget class="QLabel" name="lbl_en_promocion">
+         <property name="minimumSize">
+          <size>
+           <width>120</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>150</width>
+           <height>19</height>
+          </size>
+         </property>
+         <property name="styleSheet">
+          <string notr="true">background-color: rgb(255, 85, 0);
+color: rgb(255, 255, 255);</string>
+         </property>
+         <property name="text">
+          <string>En Promoción</string>
+         </property>
+         <property name="alignment">
+          <set>Qt::AlignmentFlag::AlignCenter</set>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLabel" name="lblCodigo">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>130</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>código</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="2">
+        <widget class="QLabel" name="lblDescripcion">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>0</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+         <property name="minimumSize">
+          <size>
+           <width>0</width>
+           <height>0</height>
+          </size>
+         </property>
+         <property name="maximumSize">
+          <size>
+           <width>425</width>
+           <height>16777215</height>
+          </size>
+         </property>
+         <property name="text">
+          <string>Descripcion</string>
+         </property>
+        </widget>
        </item>
        <item row="0" column="0" rowspan="2">
         <widget class="QFrame" name="frame_16">
@@ -390,76 +460,6 @@ Editar
          </layout>
         </widget>
        </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="lblCodigo">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>130</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>código</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="2">
-        <widget class="QLabel" name="lblDescripcion">
-         <property name="sizePolicy">
-          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-           <horstretch>0</horstretch>
-           <verstretch>0</verstretch>
-          </sizepolicy>
-         </property>
-         <property name="minimumSize">
-          <size>
-           <width>0</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>425</width>
-           <height>16777215</height>
-          </size>
-         </property>
-         <property name="text">
-          <string>Descripcion</string>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="4">
-        <widget class="QLabel" name="lbl_en_promocion">
-         <property name="minimumSize">
-          <size>
-           <width>120</width>
-           <height>0</height>
-          </size>
-         </property>
-         <property name="maximumSize">
-          <size>
-           <width>150</width>
-           <height>19</height>
-          </size>
-         </property>
-         <property name="styleSheet">
-          <string notr="true">background-color: rgb(255, 85, 0);
-color: rgb(255, 255, 255);</string>
-         </property>
-         <property name="text">
-          <string>En Promoción</string>
-         </property>
-         <property name="alignment">
-          <set>Qt::AlignmentFlag::AlignCenter</set>
-         </property>
-        </widget>
-       </item>
        <item row="1" column="1" colspan="5">
         <widget class="QTabWidget" name="Pestanas">
          <property name="sizePolicy">
@@ -490,32 +490,26 @@ color: rgb(255, 255, 255);</string>
            <string>Servicio/artículo</string>
           </attribute>
           <layout class="QGridLayout" name="gridLayout_8">
-           <item row="1" column="7" rowspan="13">
-            <widget class="QFrame" name="frame_20">
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
+           <item row="8" column="1">
+            <widget class="QComboBox" name="cboTipoIVA">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
              </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
+             <property name="minimumSize">
+              <size>
+               <width>0</width>
+               <height>27</height>
+              </size>
              </property>
-             <layout class="QGridLayout" name="gridLayout_42">
-              <item row="1" column="0">
-               <widget class="QTextEdit" name="txtdescripcion"/>
-              </item>
-              <item row="0" column="0">
-               <widget class="QLabel" name="label_7">
-                <property name="text">
-                 <string>Descripción</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
             </widget>
            </item>
            <item row="7" column="1">
             <widget class="QLineEdit" name="txtcodigo_proveedor">
              <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+              <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
                <verstretch>0</verstretch>
               </sizepolicy>
@@ -528,19 +522,120 @@ color: rgb(255, 255, 255);</string>
              </property>
              <property name="maximumSize">
               <size>
-               <width>100</width>
-               <height>24</height>
+               <width>150</width>
+               <height>16777215</height>
               </size>
              </property>
              <property name="placeholderText">
-              <string>F1-Buscar</string>
+              <string>Ctrl+F-Buscar</string>
              </property>
              <property name="locateField" stdset="0">
               <bool>true</bool>
              </property>
             </widget>
            </item>
-           <item row="8" column="1" colspan="2">
+           <item row="4" column="0">
+            <widget class="QLabel" name="label_16">
+             <property name="text">
+              <string>Tipo :</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="1">
+            <widget class="QLineEdit" name="txtcodigo">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="codeField" stdset="0">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="7" column="0">
+            <widget class="QLabel" name="label_8">
+             <property name="text">
+              <string>Proveedor Habitual:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="13" column="0" rowspan="3" colspan="8">
+            <widget class="QFrame" name="frame_8">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_4">
+              <item row="0" column="0" colspan="3">
+               <widget class="QTableView" name="TablaTarifas">
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="alternatingRowColors">
+                 <bool>true</bool>
+                </property>
+                <property name="selectionMode">
+                 <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
+                </property>
+                <property name="selectionBehavior">
+                 <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="2">
+               <widget class="QPushButton" name="btnEditartarifa">
+                <property name="enabled">
+                 <bool>false</bool>
+                </property>
+                <property name="sizePolicy">
+                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+                  <horstretch>0</horstretch>
+                  <verstretch>0</verstretch>
+                 </sizepolicy>
+                </property>
+                <property name="text">
+                 <string>Editar Tarifa</string>
+                </property>
+                <property name="icon">
+                 <iconset resource="../designer.qrc">
+                  <normaloff>:/PNG/resources/icons/png/Edit.png</normaloff>:/PNG/resources/icons/png/Edit.png</iconset>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="7" column="2" colspan="5">
+            <widget class="QLineEdit" name="txtproveedor">
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>16777215</height>
+              </size>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="6">
+            <widget class="QLabel" name="label_15">
+             <property name="text">
+              <string>Precio venta:</string>
+             </property>
+            </widget>
+           </item>
+           <item row="8" column="2" colspan="2">
             <widget class="QFrame" name="frame_7">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -611,99 +706,59 @@ color: rgb(255, 255, 255);</string>
              </layout>
             </widget>
            </item>
-           <item row="9" column="5">
-            <widget class="QLabel" name="label_15">
+           <item row="5" column="2">
+            <widget class="QLabel" name="lblCodigoEAN">
              <property name="text">
-              <string>Precio venta:</string>
+              <string>Código EAN:</string>
              </property>
             </widget>
            </item>
-           <item row="13" column="0" rowspan="3" colspan="7">
-            <widget class="QFrame" name="frame_8">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Expanding" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
+           <item row="5" column="7">
+            <widget class="QLineEdit" name="txtcodigo_fabricante">
+             <property name="maximumSize">
+              <size>
+               <width>120</width>
+               <height>16777215</height>
+              </size>
              </property>
+             <property name="text">
+              <string/>
+             </property>
+             <property name="alignment">
+              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+             </property>
+            </widget>
+           </item>
+           <item row="4" column="2" colspan="6">
+            <widget class="QLineEdit" name="txtDescripcionTipo">
+             <property name="readOnly">
+              <bool>true</bool>
+             </property>
+            </widget>
+           </item>
+           <item row="14" column="8" rowspan="2">
+            <widget class="QFrame" name="FrameRF">
              <property name="frameShape">
               <enum>QFrame::Shape::StyledPanel</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Raised</enum>
              </property>
-             <layout class="QGridLayout" name="gridLayout_4">
-              <item row="0" column="0" colspan="3">
-               <widget class="QTableView" name="TablaTarifas">
+             <layout class="QGridLayout" name="gridLayout_7">
+              <item row="2" column="1">
+               <widget class="QTextEdit" name="txtcomentario">
                 <property name="sizePolicy">
                  <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
                   <horstretch>0</horstretch>
                   <verstretch>0</verstretch>
                  </sizepolicy>
                 </property>
-                <property name="alternatingRowColors">
-                 <bool>true</bool>
-                </property>
-                <property name="selectionMode">
-                 <enum>QAbstractItemView::SelectionMode::SingleSelection</enum>
-                </property>
-                <property name="selectionBehavior">
-                 <enum>QAbstractItemView::SelectionBehavior::SelectRows</enum>
-                </property>
                </widget>
               </item>
-              <item row="1" column="2">
-               <widget class="QPushButton" name="btnEditartarifa">
-                <property name="enabled">
-                 <bool>false</bool>
-                </property>
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
+              <item row="1" column="1">
+               <widget class="QLabel" name="label_18">
                 <property name="text">
-                 <string>Editar Tarifa</string>
-                </property>
-                <property name="icon">
-                 <iconset resource="../designer.qrc">
-                  <normaloff>:/PNG/resources/icons/png/Edit.png</normaloff>:/PNG/resources/icons/png/Edit.png</iconset>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="5" column="0">
-            <widget class="QLabel" name="label_2">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="text">
-              <string>Código: </string>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="3">
-            <widget class="QFrame" name="frame_10">
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_13">
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="chkmostrar_web">
-                <property name="toolTip">
-                 <string>Seleccionar si se desea que el artículo aparezca en la tienda virtual en su web</string>
-                </property>
-                <property name="text">
-                 <string>Mostrar en web</string>
+                 <string>Comentarios:</string>
                 </property>
                </widget>
               </item>
@@ -735,17 +790,96 @@ color: rgb(255, 255, 255);</string>
              </property>
             </widget>
            </item>
-           <item row="6" column="1" colspan="6">
+           <item row="4" column="1">
+            <widget class="QLineEdit" name="txtCodigoTipo">
+             <property name="enabled">
+              <bool>true</bool>
+             </property>
+             <property name="placeholderText">
+              <string>Ctrl+F-Buscar</string>
+             </property>
+            </widget>
+           </item>
+           <item row="5" column="0">
+            <widget class="QLabel" name="label_2">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Maximum" vsizetype="Preferred">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="text">
+              <string>Código: </string>
+             </property>
+            </widget>
+           </item>
+           <item row="9" column="0">
+            <layout class="QHBoxLayout" name="horizontalLayout_12"/>
+           </item>
+           <item row="8" column="4">
+            <widget class="QFrame" name="frame_10">
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_13">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="chkmostrar_web">
+                <property name="toolTip">
+                 <string>Seleccionar si se desea que el artículo aparezca en la tienda virtual en su web</string>
+                </property>
+                <property name="text">
+                 <string>Mostrar en web</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="6" column="1" colspan="7">
             <widget class="QLineEdit" name="txtdescripcionResumida">
              <property name="maximumSize">
               <size>
                <width>16777215</width>
-               <height>27</height>
+               <height>16777215</height>
               </size>
              </property>
             </widget>
            </item>
-           <item row="12" column="0" colspan="7">
+           <item row="8" column="0">
+            <widget class="QFrame" name="frame_4">
+             <property name="sizePolicy">
+              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+               <horstretch>0</horstretch>
+               <verstretch>0</verstretch>
+              </sizepolicy>
+             </property>
+             <property name="maximumSize">
+              <size>
+               <width>16777215</width>
+               <height>40</height>
+              </size>
+             </property>
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QHBoxLayout" name="horizontalLayout_4">
+              <item>
+               <widget class="QLabel" name="label_19">
+                <property name="text">
+                 <string>Tipo IVA:</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item row="12" column="0" colspan="8">
             <widget class="QFrame" name="frame_5">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Expanding" vsizetype="Fixed">
@@ -897,103 +1031,7 @@ color: rgb(255, 255, 255);</string>
              </layout>
             </widget>
            </item>
-           <item row="8" column="4" colspan="3">
-            <widget class="QFrame" name="frame_2">
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QGridLayout" name="gridLayout_5">
-              <item row="0" column="0">
-               <widget class="QCheckBox" name="chkcontrolar_stock">
-                <property name="text">
-                 <string>Controlar stock</string>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="9" column="0">
-            <layout class="QHBoxLayout" name="horizontalLayout_12"/>
-           </item>
-           <item row="5" column="2">
-            <widget class="QLabel" name="label_3">
-             <property name="text">
-              <string>Código EAN:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="1">
-            <widget class="QLineEdit" name="txtcodigo">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="codeField" stdset="0">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="8" column="0">
-            <widget class="QFrame" name="frame_4">
-             <property name="sizePolicy">
-              <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
-               <horstretch>0</horstretch>
-               <verstretch>0</verstretch>
-              </sizepolicy>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>40</height>
-              </size>
-             </property>
-             <property name="frameShape">
-              <enum>QFrame::Shape::StyledPanel</enum>
-             </property>
-             <property name="frameShadow">
-              <enum>QFrame::Shadow::Raised</enum>
-             </property>
-             <layout class="QHBoxLayout" name="horizontalLayout_4">
-              <item>
-               <widget class="QLabel" name="label_19">
-                <property name="text">
-                 <string>Tipo IVA:</string>
-                </property>
-               </widget>
-              </item>
-              <item>
-               <widget class="QComboBox" name="cboTipoIVA">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-                <property name="minimumSize">
-                 <size>
-                  <width>0</width>
-                  <height>27</height>
-                 </size>
-                </property>
-               </widget>
-              </item>
-             </layout>
-            </widget>
-           </item>
-           <item row="4" column="1">
-            <widget class="QLineEdit" name="txtCodigoTipo">
-             <property name="enabled">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="9" column="6">
+           <item row="9" column="7">
             <widget class="QLineEdit" name="txtPrecioVenta">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
@@ -1021,6 +1059,28 @@ color: rgb(255, 255, 255);</string>
              </property>
             </widget>
            </item>
+           <item row="1" column="8" rowspan="13">
+            <widget class="QFrame" name="frame_20">
+             <property name="frameShape">
+              <enum>QFrame::Shape::StyledPanel</enum>
+             </property>
+             <property name="frameShadow">
+              <enum>QFrame::Shadow::Raised</enum>
+             </property>
+             <layout class="QGridLayout" name="gridLayout_42">
+              <item row="1" column="0">
+               <widget class="QTextEdit" name="txtdescripcion"/>
+              </item>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>Descripción</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
            <item row="6" column="0">
             <widget class="QLabel" name="label_6">
              <property name="text">
@@ -1028,121 +1088,197 @@ color: rgb(255, 255, 255);</string>
              </property>
             </widget>
            </item>
-           <item row="4" column="2" colspan="5">
-            <widget class="QLineEdit" name="txtDescripcionTipo">
-             <property name="readOnly">
-              <bool>true</bool>
-             </property>
-            </widget>
-           </item>
-           <item row="4" column="0">
-            <widget class="QLabel" name="label_16">
-             <property name="text">
-              <string>Tipo :</string>
-             </property>
-            </widget>
-           </item>
-           <item row="5" column="5">
-            <widget class="QLabel" name="label_4">
-             <property name="text">
-              <string>Código en Proveedor:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="14" column="7" rowspan="2">
-            <widget class="QFrame" name="FrameRF">
+           <item row="8" column="5" colspan="3">
+            <widget class="QFrame" name="frame_2">
              <property name="frameShape">
               <enum>QFrame::Shape::StyledPanel</enum>
              </property>
              <property name="frameShadow">
               <enum>QFrame::Shadow::Raised</enum>
              </property>
-             <layout class="QGridLayout" name="gridLayout_7">
-              <item row="2" column="1">
-               <widget class="QTextEdit" name="txtcomentario">
-                <property name="sizePolicy">
-                 <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
-                  <horstretch>0</horstretch>
-                  <verstretch>0</verstretch>
-                 </sizepolicy>
-                </property>
-               </widget>
-              </item>
-              <item row="1" column="1">
-               <widget class="QLabel" name="label_18">
+             <layout class="QGridLayout" name="gridLayout_5">
+              <item row="0" column="0">
+               <widget class="QCheckBox" name="chkcontrolar_stock">
                 <property name="text">
-                 <string>Comentarios:</string>
+                 <string>Controlar stock</string>
                 </property>
                </widget>
               </item>
              </layout>
             </widget>
            </item>
-           <item row="7" column="2" colspan="4">
-            <widget class="QLineEdit" name="txtproveedor">
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>24</height>
-              </size>
-             </property>
-            </widget>
-           </item>
-           <item row="7" column="6">
-            <widget class="QPushButton" name="btnBuscarProveedor">
-             <property name="enabled">
-              <bool>false</bool>
-             </property>
-             <property name="maximumSize">
-              <size>
-               <width>16777215</width>
-               <height>24</height>
-              </size>
-             </property>
-             <property name="text">
-              <string/>
-             </property>
-             <property name="icon">
-              <iconset resource="../designer.qrc">
-               <normaloff>:/PNG/resources/icons/png/search.png</normaloff>:/PNG/resources/icons/png/search.png</iconset>
-             </property>
-             <property name="iconSize">
-              <size>
-               <width>16</width>
-               <height>16</height>
-              </size>
-             </property>
-            </widget>
-           </item>
            <item row="5" column="6">
-            <widget class="QLineEdit" name="txtcodigo_fabricante">
-             <property name="maximumSize">
-              <size>
-               <width>120</width>
-               <height>16777215</height>
-              </size>
-             </property>
+            <widget class="QLabel" name="lblCodigoenProveedor">
              <property name="text">
-              <string/>
-             </property>
-             <property name="alignment">
-              <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+              <string>Código en Proveedor:</string>
              </property>
             </widget>
            </item>
-           <item row="7" column="0">
-            <widget class="QLabel" name="label_8">
-             <property name="text">
-              <string>Proveedor Habitual:</string>
-             </property>
-            </widget>
-           </item>
-           <item row="3" column="1">
-            <widget class="QLabel" name="label_17">
-             <property name="text">
-              <string>F1-Buscar</string>
-             </property>
-            </widget>
+          </layout>
+         </widget>
+         <widget class="QWidget" name="TallasColores">
+          <attribute name="title">
+           <string>Tallas y colores</string>
+          </attribute>
+          <layout class="QVBoxLayout" name="verticalLayout_6">
+           <item>
+            <layout class="QGridLayout" name="gridLayout_11">
+             <item row="0" column="2">
+              <widget class="QFrame" name="frame_3">
+               <property name="frameShape">
+                <enum>QFrame::Shape::StyledPanel</enum>
+               </property>
+               <property name="frameShadow">
+                <enum>QFrame::Shadow::Raised</enum>
+               </property>
+              </widget>
+             </item>
+             <item row="0" column="0">
+              <layout class="QGridLayout" name="gridLayout_14">
+               <item row="0" column="2">
+                <widget class="QListWidget" name="listColors">
+                 <property name="styleSheet">
+                  <string notr="true">QListWidget::item{border:1px solid transparent; margin:3px; padding:0px;}\nQListWidget::item:selected{border:3px solid #1976d2; border-radius:6px; margin:-2px;}\nQListWidget::item:hover{border:1px solid rgba(0,0,0,40);}</string>
+                 </property>
+                 <property name="horizontalScrollBarPolicy">
+                  <enum>Qt::ScrollBarPolicy::ScrollBarAlwaysOff</enum>
+                 </property>
+                 <property name="iconSize">
+                  <size>
+                   <width>44</width>
+                   <height>44</height>
+                  </size>
+                 </property>
+                 <property name="resizeMode">
+                  <enum>QListView::ResizeMode::Adjust</enum>
+                 </property>
+                 <property name="layoutMode">
+                  <enum>QListView::LayoutMode::SinglePass</enum>
+                 </property>
+                 <property name="spacing">
+                  <number>8</number>
+                 </property>
+                 <property name="gridSize">
+                  <size>
+                   <width>56</width>
+                   <height>56</height>
+                  </size>
+                 </property>
+                 <property name="viewMode">
+                  <enum>QListView::ViewMode::IconMode</enum>
+                 </property>
+                 <item>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="toolTip">
+                   <string>Blanco</string>
+                  </property>
+                  <property name="background">
+                   <brush brushstyle="SolidPattern">
+                    <color alpha="255">
+                     <red>255</red>
+                     <green>255</green>
+                     <blue>255</blue>
+                    </color>
+                   </brush>
+                  </property>
+                  <property name="foreground">
+                   <brush brushstyle="SolidPattern">
+                    <color alpha="255">
+                     <red>0</red>
+                     <green>0</green>
+                     <blue>0</blue>
+                    </color>
+                   </brush>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="toolTip">
+                   <string>Negro</string>
+                  </property>
+                  <property name="background">
+                   <brush brushstyle="SolidPattern">
+                    <color alpha="255">
+                     <red>0</red>
+                     <green>0</green>
+                     <blue>0</blue>
+                    </color>
+                   </brush>
+                  </property>
+                  <property name="foreground">
+                   <brush brushstyle="SolidPattern">
+                    <color alpha="255">
+                     <red>255</red>
+                     <green>255</green>
+                     <blue>255</blue>
+                    </color>
+                   </brush>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="toolTip">
+                   <string>Rojo</string>
+                  </property>
+                  <property name="background">
+                   <brush brushstyle="SolidPattern">
+                    <color alpha="255">
+                     <red>170</red>
+                     <green>0</green>
+                     <blue>0</blue>
+                    </color>
+                   </brush>
+                  </property>
+                  <property name="foreground">
+                   <brush brushstyle="NoBrush">
+                    <color alpha="255">
+                     <red>255</red>
+                     <green>255</green>
+                     <blue>255</blue>
+                    </color>
+                   </brush>
+                  </property>
+                 </item>
+                 <item>
+                  <property name="text">
+                   <string/>
+                  </property>
+                  <property name="toolTip">
+                   <string>Azul</string>
+                  </property>
+                  <property name="background">
+                   <brush brushstyle="SolidPattern">
+                    <color alpha="255">
+                     <red>0</red>
+                     <green>0</green>
+                     <blue>127</blue>
+                    </color>
+                   </brush>
+                  </property>
+                  <property name="foreground">
+                   <brush brushstyle="NoBrush">
+                    <color alpha="255">
+                     <red>255</red>
+                     <green>255</green>
+                     <blue>255</blue>
+                    </color>
+                   </brush>
+                  </property>
+                 </item>
+                </widget>
+               </item>
+              </layout>
+             </item>
+             <item row="0" column="1">
+              <widget class="QTableView" name="tableView"/>
+             </item>
+            </layout>
            </item>
           </layout>
          </widget>
@@ -4274,16 +4410,8 @@ font: 14pt &quot;Sans Serif&quot;;</string>
   </customwidget>
  </customwidgets>
  <tabstops>
-  <tabstop>txtCodigoTipo</tabstop>
   <tabstop>txtDescripcionTipo</tabstop>
-  <tabstop>txtcodigo</tabstop>
-  <tabstop>txtcodigo_barras</tabstop>
   <tabstop>txtcodigo_fabricante</tabstop>
-  <tabstop>txtdescripcionResumida</tabstop>
-  <tabstop>txtcodigo_proveedor</tabstop>
-  <tabstop>txtproveedor</tabstop>
-  <tabstop>btnBuscarProveedor</tabstop>
-  <tabstop>cboTipoIVA</tabstop>
   <tabstop>txtcoste</tabstop>
   <tabstop>chkmostrar_web</tabstop>
   <tabstop>chkcontrolar_stock</tabstop>

@@ -18,9 +18,10 @@ from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor,
 from PySide6.QtWidgets import (QAbstractItemView, QApplication, QCheckBox, QComboBox,
     QDateEdit, QDialog, QDoubleSpinBox, QFrame,
     QGridLayout, QHBoxLayout, QHeaderView, QLabel,
-    QLineEdit, QPushButton, QRadioButton, QSizePolicy,
-    QSpacerItem, QStackedWidget, QTabWidget, QTableView,
-    QTextEdit, QVBoxLayout, QWidget)
+    QLineEdit, QListView, QListWidget, QListWidgetItem,
+    QPushButton, QRadioButton, QSizePolicy, QSpacerItem,
+    QStackedWidget, QTabWidget, QTableView, QTextEdit,
+    QVBoxLayout, QWidget)
 
 from modules.common.chartviewwidget import ChartViewWidget
 from modules import designer_rc
@@ -29,7 +30,7 @@ class Ui_FrmArticulos(object):
     def setupUi(self, FrmArticulos):
         if not FrmArticulos.objectName():
             FrmArticulos.setObjectName(u"FrmArticulos")
-        FrmArticulos.resize(1147, 630)
+        FrmArticulos.resize(1173, 630)
         FrmArticulos.setMaximumSize(QSize(16777215, 16777215))
         icon = QIcon()
         icon.addFile(u":/Icons/PNG/Maya.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
@@ -56,6 +57,36 @@ class Ui_FrmArticulos(object):
         self.horizontalSpacer_9 = QSpacerItem(40, 20, QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Minimum)
 
         self.gridLayout_2.addItem(self.horizontalSpacer_9, 0, 3, 1, 1)
+
+        self.lbl_en_promocion = QLabel(self.page)
+        self.lbl_en_promocion.setObjectName(u"lbl_en_promocion")
+        self.lbl_en_promocion.setMinimumSize(QSize(120, 0))
+        self.lbl_en_promocion.setMaximumSize(QSize(150, 19))
+        self.lbl_en_promocion.setStyleSheet(u"background-color: rgb(255, 85, 0);\n"
+"color: rgb(255, 255, 255);")
+        self.lbl_en_promocion.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        self.gridLayout_2.addWidget(self.lbl_en_promocion, 0, 4, 1, 1)
+
+        self.lblCodigo = QLabel(self.page)
+        self.lblCodigo.setObjectName(u"lblCodigo")
+        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
+        sizePolicy.setHorizontalStretch(0)
+        sizePolicy.setVerticalStretch(0)
+        sizePolicy.setHeightForWidth(self.lblCodigo.sizePolicy().hasHeightForWidth())
+        self.lblCodigo.setSizePolicy(sizePolicy)
+        self.lblCodigo.setMaximumSize(QSize(130, 16777215))
+
+        self.gridLayout_2.addWidget(self.lblCodigo, 0, 1, 1, 1)
+
+        self.lblDescripcion = QLabel(self.page)
+        self.lblDescripcion.setObjectName(u"lblDescripcion")
+        sizePolicy.setHeightForWidth(self.lblDescripcion.sizePolicy().hasHeightForWidth())
+        self.lblDescripcion.setSizePolicy(sizePolicy)
+        self.lblDescripcion.setMinimumSize(QSize(0, 0))
+        self.lblDescripcion.setMaximumSize(QSize(425, 16777215))
+
+        self.gridLayout_2.addWidget(self.lblDescripcion, 0, 2, 1, 1)
 
         self.frame_16 = QFrame(self.page)
         self.frame_16.setObjectName(u"frame_16")
@@ -181,36 +212,6 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_2.addWidget(self.frame_16, 0, 0, 2, 1)
 
-        self.lblCodigo = QLabel(self.page)
-        self.lblCodigo.setObjectName(u"lblCodigo")
-        sizePolicy = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Fixed)
-        sizePolicy.setHorizontalStretch(0)
-        sizePolicy.setVerticalStretch(0)
-        sizePolicy.setHeightForWidth(self.lblCodigo.sizePolicy().hasHeightForWidth())
-        self.lblCodigo.setSizePolicy(sizePolicy)
-        self.lblCodigo.setMaximumSize(QSize(130, 16777215))
-
-        self.gridLayout_2.addWidget(self.lblCodigo, 0, 1, 1, 1)
-
-        self.lblDescripcion = QLabel(self.page)
-        self.lblDescripcion.setObjectName(u"lblDescripcion")
-        sizePolicy.setHeightForWidth(self.lblDescripcion.sizePolicy().hasHeightForWidth())
-        self.lblDescripcion.setSizePolicy(sizePolicy)
-        self.lblDescripcion.setMinimumSize(QSize(0, 0))
-        self.lblDescripcion.setMaximumSize(QSize(425, 16777215))
-
-        self.gridLayout_2.addWidget(self.lblDescripcion, 0, 2, 1, 1)
-
-        self.lbl_en_promocion = QLabel(self.page)
-        self.lbl_en_promocion.setObjectName(u"lbl_en_promocion")
-        self.lbl_en_promocion.setMinimumSize(QSize(120, 0))
-        self.lbl_en_promocion.setMaximumSize(QSize(150, 19))
-        self.lbl_en_promocion.setStyleSheet(u"background-color: rgb(255, 85, 0);\n"
-"color: rgb(255, 255, 255);")
-        self.lbl_en_promocion.setAlignment(Qt.AlignmentFlag.AlignCenter)
-
-        self.gridLayout_2.addWidget(self.lbl_en_promocion, 0, 4, 1, 1)
-
         self.Pestanas = QTabWidget(self.page)
         self.Pestanas.setObjectName(u"Pestanas")
         sizePolicy1 = QSizePolicy(QSizePolicy.Policy.Preferred, QSizePolicy.Policy.Preferred)
@@ -227,83 +228,52 @@ class Ui_FrmArticulos(object):
         self.tab_articulo.setStyleSheet(u"")
         self.gridLayout_8 = QGridLayout(self.tab_articulo)
         self.gridLayout_8.setObjectName(u"gridLayout_8")
-        self.frame_20 = QFrame(self.tab_articulo)
-        self.frame_20.setObjectName(u"frame_20")
-        self.frame_20.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_20.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_42 = QGridLayout(self.frame_20)
-        self.gridLayout_42.setObjectName(u"gridLayout_42")
-        self.txtdescripcion = QTextEdit(self.frame_20)
-        self.txtdescripcion.setObjectName(u"txtdescripcion")
+        self.cboTipoIVA = QComboBox(self.tab_articulo)
+        self.cboTipoIVA.setObjectName(u"cboTipoIVA")
+        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
+        sizePolicy2.setHorizontalStretch(0)
+        sizePolicy2.setVerticalStretch(0)
+        sizePolicy2.setHeightForWidth(self.cboTipoIVA.sizePolicy().hasHeightForWidth())
+        self.cboTipoIVA.setSizePolicy(sizePolicy2)
+        self.cboTipoIVA.setMinimumSize(QSize(0, 27))
 
-        self.gridLayout_42.addWidget(self.txtdescripcion, 1, 0, 1, 1)
-
-        self.label_7 = QLabel(self.frame_20)
-        self.label_7.setObjectName(u"label_7")
-
-        self.gridLayout_42.addWidget(self.label_7, 0, 0, 1, 1)
-
-
-        self.gridLayout_8.addWidget(self.frame_20, 1, 7, 13, 1)
+        self.gridLayout_8.addWidget(self.cboTipoIVA, 8, 1, 1, 1)
 
         self.txtcodigo_proveedor = QLineEdit(self.tab_articulo)
         self.txtcodigo_proveedor.setObjectName(u"txtcodigo_proveedor")
-        sizePolicy.setHeightForWidth(self.txtcodigo_proveedor.sizePolicy().hasHeightForWidth())
-        self.txtcodigo_proveedor.setSizePolicy(sizePolicy)
+        sizePolicy2.setHeightForWidth(self.txtcodigo_proveedor.sizePolicy().hasHeightForWidth())
+        self.txtcodigo_proveedor.setSizePolicy(sizePolicy2)
         self.txtcodigo_proveedor.setMinimumSize(QSize(100, 0))
-        self.txtcodigo_proveedor.setMaximumSize(QSize(100, 24))
+        self.txtcodigo_proveedor.setMaximumSize(QSize(150, 16777215))
         self.txtcodigo_proveedor.setProperty(u"locateField", True)
 
         self.gridLayout_8.addWidget(self.txtcodigo_proveedor, 7, 1, 1, 1)
 
-        self.frame_7 = QFrame(self.tab_articulo)
-        self.frame_7.setObjectName(u"frame_7")
-        sizePolicy2 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
-        sizePolicy2.setHorizontalStretch(0)
-        sizePolicy2.setVerticalStretch(0)
-        sizePolicy2.setHeightForWidth(self.frame_7.sizePolicy().hasHeightForWidth())
-        self.frame_7.setSizePolicy(sizePolicy2)
-        self.frame_7.setMinimumSize(QSize(180, 0))
-        self.frame_7.setMaximumSize(QSize(16777215, 40))
-        self.frame_7.setAutoFillBackground(False)
-        self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_5 = QHBoxLayout(self.frame_7)
-        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
-        self.label_14 = QLabel(self.frame_7)
-        self.label_14.setObjectName(u"label_14")
-        self.label_14.setAutoFillBackground(False)
+        self.label_16 = QLabel(self.tab_articulo)
+        self.label_16.setObjectName(u"label_16")
 
-        self.horizontalLayout_5.addWidget(self.label_14)
+        self.gridLayout_8.addWidget(self.label_16, 4, 0, 1, 1)
 
-        self.txtcoste = QLineEdit(self.frame_7)
-        self.txtcoste.setObjectName(u"txtcoste")
-        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Maximum, QSizePolicy.Policy.Fixed)
-        sizePolicy3.setHorizontalStretch(0)
-        sizePolicy3.setVerticalStretch(0)
-        sizePolicy3.setHeightForWidth(self.txtcoste.sizePolicy().hasHeightForWidth())
-        self.txtcoste.setSizePolicy(sizePolicy3)
-        self.txtcoste.setMinimumSize(QSize(0, 27))
-        self.txtcoste.setMaximumSize(QSize(120, 16777215))
-        self.txtcoste.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+        self.txtcodigo = QLineEdit(self.tab_articulo)
+        self.txtcodigo.setObjectName(u"txtcodigo")
+        sizePolicy.setHeightForWidth(self.txtcodigo.sizePolicy().hasHeightForWidth())
+        self.txtcodigo.setSizePolicy(sizePolicy)
+        self.txtcodigo.setProperty(u"codeField", True)
 
-        self.horizontalLayout_5.addWidget(self.txtcoste)
+        self.gridLayout_8.addWidget(self.txtcodigo, 5, 1, 1, 1)
 
+        self.label_8 = QLabel(self.tab_articulo)
+        self.label_8.setObjectName(u"label_8")
 
-        self.gridLayout_8.addWidget(self.frame_7, 8, 1, 1, 2)
-
-        self.label_15 = QLabel(self.tab_articulo)
-        self.label_15.setObjectName(u"label_15")
-
-        self.gridLayout_8.addWidget(self.label_15, 9, 5, 1, 1)
+        self.gridLayout_8.addWidget(self.label_8, 7, 0, 1, 1)
 
         self.frame_8 = QFrame(self.tab_articulo)
         self.frame_8.setObjectName(u"frame_8")
-        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
-        sizePolicy4.setHorizontalStretch(0)
-        sizePolicy4.setVerticalStretch(0)
-        sizePolicy4.setHeightForWidth(self.frame_8.sizePolicy().hasHeightForWidth())
-        self.frame_8.setSizePolicy(sizePolicy4)
+        sizePolicy3 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Preferred)
+        sizePolicy3.setHorizontalStretch(0)
+        sizePolicy3.setVerticalStretch(0)
+        sizePolicy3.setHeightForWidth(self.frame_8.sizePolicy().hasHeightForWidth())
+        self.frame_8.setSizePolicy(sizePolicy3)
         self.frame_8.setFrameShape(QFrame.Shape.StyledPanel)
         self.frame_8.setFrameShadow(QFrame.Shadow.Raised)
         self.gridLayout_4 = QGridLayout(self.frame_8)
@@ -328,7 +298,106 @@ class Ui_FrmArticulos(object):
         self.gridLayout_4.addWidget(self.btnEditartarifa, 1, 2, 1, 1)
 
 
-        self.gridLayout_8.addWidget(self.frame_8, 13, 0, 3, 7)
+        self.gridLayout_8.addWidget(self.frame_8, 13, 0, 3, 8)
+
+        self.txtproveedor = QLineEdit(self.tab_articulo)
+        self.txtproveedor.setObjectName(u"txtproveedor")
+        self.txtproveedor.setMaximumSize(QSize(16777215, 16777215))
+
+        self.gridLayout_8.addWidget(self.txtproveedor, 7, 2, 1, 5)
+
+        self.label_15 = QLabel(self.tab_articulo)
+        self.label_15.setObjectName(u"label_15")
+
+        self.gridLayout_8.addWidget(self.label_15, 9, 6, 1, 1)
+
+        self.frame_7 = QFrame(self.tab_articulo)
+        self.frame_7.setObjectName(u"frame_7")
+        sizePolicy4 = QSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Fixed)
+        sizePolicy4.setHorizontalStretch(0)
+        sizePolicy4.setVerticalStretch(0)
+        sizePolicy4.setHeightForWidth(self.frame_7.sizePolicy().hasHeightForWidth())
+        self.frame_7.setSizePolicy(sizePolicy4)
+        self.frame_7.setMinimumSize(QSize(180, 0))
+        self.frame_7.setMaximumSize(QSize(16777215, 40))
+        self.frame_7.setAutoFillBackground(False)
+        self.frame_7.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_7.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout_5 = QHBoxLayout(self.frame_7)
+        self.horizontalLayout_5.setObjectName(u"horizontalLayout_5")
+        self.label_14 = QLabel(self.frame_7)
+        self.label_14.setObjectName(u"label_14")
+        self.label_14.setAutoFillBackground(False)
+
+        self.horizontalLayout_5.addWidget(self.label_14)
+
+        self.txtcoste = QLineEdit(self.frame_7)
+        self.txtcoste.setObjectName(u"txtcoste")
+        sizePolicy2.setHeightForWidth(self.txtcoste.sizePolicy().hasHeightForWidth())
+        self.txtcoste.setSizePolicy(sizePolicy2)
+        self.txtcoste.setMinimumSize(QSize(0, 27))
+        self.txtcoste.setMaximumSize(QSize(120, 16777215))
+        self.txtcoste.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.horizontalLayout_5.addWidget(self.txtcoste)
+
+
+        self.gridLayout_8.addWidget(self.frame_7, 8, 2, 1, 2)
+
+        self.lblCodigoEAN = QLabel(self.tab_articulo)
+        self.lblCodigoEAN.setObjectName(u"lblCodigoEAN")
+
+        self.gridLayout_8.addWidget(self.lblCodigoEAN, 5, 2, 1, 1)
+
+        self.txtcodigo_fabricante = QLineEdit(self.tab_articulo)
+        self.txtcodigo_fabricante.setObjectName(u"txtcodigo_fabricante")
+        self.txtcodigo_fabricante.setMaximumSize(QSize(120, 16777215))
+        self.txtcodigo_fabricante.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_8.addWidget(self.txtcodigo_fabricante, 5, 7, 1, 1)
+
+        self.txtDescripcionTipo = QLineEdit(self.tab_articulo)
+        self.txtDescripcionTipo.setObjectName(u"txtDescripcionTipo")
+        self.txtDescripcionTipo.setReadOnly(True)
+
+        self.gridLayout_8.addWidget(self.txtDescripcionTipo, 4, 2, 1, 6)
+
+        self.FrameRF = QFrame(self.tab_articulo)
+        self.FrameRF.setObjectName(u"FrameRF")
+        self.FrameRF.setFrameShape(QFrame.Shape.StyledPanel)
+        self.FrameRF.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_7 = QGridLayout(self.FrameRF)
+        self.gridLayout_7.setObjectName(u"gridLayout_7")
+        self.txtcomentario = QTextEdit(self.FrameRF)
+        self.txtcomentario.setObjectName(u"txtcomentario")
+        sizePolicy1.setHeightForWidth(self.txtcomentario.sizePolicy().hasHeightForWidth())
+        self.txtcomentario.setSizePolicy(sizePolicy1)
+
+        self.gridLayout_7.addWidget(self.txtcomentario, 2, 1, 1, 1)
+
+        self.label_18 = QLabel(self.FrameRF)
+        self.label_18.setObjectName(u"label_18")
+
+        self.gridLayout_7.addWidget(self.label_18, 1, 1, 1, 1)
+
+
+        self.gridLayout_8.addWidget(self.FrameRF, 14, 8, 2, 1)
+
+        self.txtcodigo_barras = QLineEdit(self.tab_articulo)
+        self.txtcodigo_barras.setObjectName(u"txtcodigo_barras")
+        sizePolicy.setHeightForWidth(self.txtcodigo_barras.sizePolicy().hasHeightForWidth())
+        self.txtcodigo_barras.setSizePolicy(sizePolicy)
+        self.txtcodigo_barras.setMinimumSize(QSize(148, 0))
+        self.txtcodigo_barras.setMaximumSize(QSize(120, 16777215))
+        self.txtcodigo_barras.setProperty(u"testField", True)
+
+        self.gridLayout_8.addWidget(self.txtcodigo_barras, 5, 3, 1, 1)
+
+        self.txtCodigoTipo = QLineEdit(self.tab_articulo)
+        self.txtCodigoTipo.setObjectName(u"txtCodigoTipo")
+        self.txtCodigoTipo.setEnabled(True)
+
+        self.gridLayout_8.addWidget(self.txtCodigoTipo, 4, 1, 1, 1)
 
         self.label_2 = QLabel(self.tab_articulo)
         self.label_2.setObjectName(u"label_2")
@@ -339,6 +408,11 @@ class Ui_FrmArticulos(object):
         self.label_2.setSizePolicy(sizePolicy5)
 
         self.gridLayout_8.addWidget(self.label_2, 5, 0, 1, 1)
+
+        self.horizontalLayout_12 = QHBoxLayout()
+        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+
+        self.gridLayout_8.addLayout(self.horizontalLayout_12, 9, 0, 1, 1)
 
         self.frame_10 = QFrame(self.tab_articulo)
         self.frame_10.setObjectName(u"frame_10")
@@ -352,28 +426,35 @@ class Ui_FrmArticulos(object):
         self.gridLayout_13.addWidget(self.chkmostrar_web, 0, 0, 1, 1)
 
 
-        self.gridLayout_8.addWidget(self.frame_10, 8, 3, 1, 1)
-
-        self.txtcodigo_barras = QLineEdit(self.tab_articulo)
-        self.txtcodigo_barras.setObjectName(u"txtcodigo_barras")
-        sizePolicy.setHeightForWidth(self.txtcodigo_barras.sizePolicy().hasHeightForWidth())
-        self.txtcodigo_barras.setSizePolicy(sizePolicy)
-        self.txtcodigo_barras.setMinimumSize(QSize(148, 0))
-        self.txtcodigo_barras.setMaximumSize(QSize(120, 16777215))
-        self.txtcodigo_barras.setProperty(u"testField", True)
-
-        self.gridLayout_8.addWidget(self.txtcodigo_barras, 5, 3, 1, 1)
+        self.gridLayout_8.addWidget(self.frame_10, 8, 4, 1, 1)
 
         self.txtdescripcionResumida = QLineEdit(self.tab_articulo)
         self.txtdescripcionResumida.setObjectName(u"txtdescripcionResumida")
-        self.txtdescripcionResumida.setMaximumSize(QSize(16777215, 27))
+        self.txtdescripcionResumida.setMaximumSize(QSize(16777215, 16777215))
 
-        self.gridLayout_8.addWidget(self.txtdescripcionResumida, 6, 1, 1, 6)
+        self.gridLayout_8.addWidget(self.txtdescripcionResumida, 6, 1, 1, 7)
+
+        self.frame_4 = QFrame(self.tab_articulo)
+        self.frame_4.setObjectName(u"frame_4")
+        sizePolicy.setHeightForWidth(self.frame_4.sizePolicy().hasHeightForWidth())
+        self.frame_4.setSizePolicy(sizePolicy)
+        self.frame_4.setMaximumSize(QSize(16777215, 40))
+        self.frame_4.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
+        self.horizontalLayout_4 = QHBoxLayout(self.frame_4)
+        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
+        self.label_19 = QLabel(self.frame_4)
+        self.label_19.setObjectName(u"label_19")
+
+        self.horizontalLayout_4.addWidget(self.label_19)
+
+
+        self.gridLayout_8.addWidget(self.frame_4, 8, 0, 1, 1)
 
         self.frame_5 = QFrame(self.tab_articulo)
         self.frame_5.setObjectName(u"frame_5")
-        sizePolicy2.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
-        self.frame_5.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.frame_5.sizePolicy().hasHeightForWidth())
+        self.frame_5.setSizePolicy(sizePolicy4)
         self.frame_5.setMinimumSize(QSize(0, 0))
         self.frame_5.setMaximumSize(QSize(16777215, 80))
         self.frame_5.setFrameShape(QFrame.Shape.StyledPanel)
@@ -445,7 +526,44 @@ class Ui_FrmArticulos(object):
         self.gridLayout.addWidget(self.label_20, 1, 6, 1, 1)
 
 
-        self.gridLayout_8.addWidget(self.frame_5, 12, 0, 1, 7)
+        self.gridLayout_8.addWidget(self.frame_5, 12, 0, 1, 8)
+
+        self.txtPrecioVenta = QLineEdit(self.tab_articulo)
+        self.txtPrecioVenta.setObjectName(u"txtPrecioVenta")
+        sizePolicy6.setHeightForWidth(self.txtPrecioVenta.sizePolicy().hasHeightForWidth())
+        self.txtPrecioVenta.setSizePolicy(sizePolicy6)
+        self.txtPrecioVenta.setMaximumSize(QSize(120, 16777215))
+        font1 = QFont()
+        font1.setPointSize(14)
+        font1.setKerning(False)
+        self.txtPrecioVenta.setFont(font1)
+        self.txtPrecioVenta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
+
+        self.gridLayout_8.addWidget(self.txtPrecioVenta, 9, 7, 1, 1)
+
+        self.frame_20 = QFrame(self.tab_articulo)
+        self.frame_20.setObjectName(u"frame_20")
+        self.frame_20.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_20.setFrameShadow(QFrame.Shadow.Raised)
+        self.gridLayout_42 = QGridLayout(self.frame_20)
+        self.gridLayout_42.setObjectName(u"gridLayout_42")
+        self.txtdescripcion = QTextEdit(self.frame_20)
+        self.txtdescripcion.setObjectName(u"txtdescripcion")
+
+        self.gridLayout_42.addWidget(self.txtdescripcion, 1, 0, 1, 1)
+
+        self.label_7 = QLabel(self.frame_20)
+        self.label_7.setObjectName(u"label_7")
+
+        self.gridLayout_42.addWidget(self.label_7, 0, 0, 1, 1)
+
+
+        self.gridLayout_8.addWidget(self.frame_20, 1, 8, 13, 1)
+
+        self.label_6 = QLabel(self.tab_articulo)
+        self.label_6.setObjectName(u"label_6")
+
+        self.gridLayout_8.addWidget(self.label_6, 6, 0, 1, 1)
 
         self.frame_2 = QFrame(self.tab_articulo)
         self.frame_2.setObjectName(u"frame_2")
@@ -459,145 +577,78 @@ class Ui_FrmArticulos(object):
         self.gridLayout_5.addWidget(self.chkcontrolar_stock, 0, 0, 1, 1)
 
 
-        self.gridLayout_8.addWidget(self.frame_2, 8, 4, 1, 3)
+        self.gridLayout_8.addWidget(self.frame_2, 8, 5, 1, 3)
 
-        self.horizontalLayout_12 = QHBoxLayout()
-        self.horizontalLayout_12.setObjectName(u"horizontalLayout_12")
+        self.lblCodigoenProveedor = QLabel(self.tab_articulo)
+        self.lblCodigoenProveedor.setObjectName(u"lblCodigoenProveedor")
 
-        self.gridLayout_8.addLayout(self.horizontalLayout_12, 9, 0, 1, 1)
-
-        self.label_3 = QLabel(self.tab_articulo)
-        self.label_3.setObjectName(u"label_3")
-
-        self.gridLayout_8.addWidget(self.label_3, 5, 2, 1, 1)
-
-        self.txtcodigo = QLineEdit(self.tab_articulo)
-        self.txtcodigo.setObjectName(u"txtcodigo")
-        sizePolicy.setHeightForWidth(self.txtcodigo.sizePolicy().hasHeightForWidth())
-        self.txtcodigo.setSizePolicy(sizePolicy)
-        self.txtcodigo.setProperty(u"codeField", True)
-
-        self.gridLayout_8.addWidget(self.txtcodigo, 5, 1, 1, 1)
-
-        self.frame_4 = QFrame(self.tab_articulo)
-        self.frame_4.setObjectName(u"frame_4")
-        sizePolicy.setHeightForWidth(self.frame_4.sizePolicy().hasHeightForWidth())
-        self.frame_4.setSizePolicy(sizePolicy)
-        self.frame_4.setMaximumSize(QSize(16777215, 40))
-        self.frame_4.setFrameShape(QFrame.Shape.StyledPanel)
-        self.frame_4.setFrameShadow(QFrame.Shadow.Raised)
-        self.horizontalLayout_4 = QHBoxLayout(self.frame_4)
-        self.horizontalLayout_4.setObjectName(u"horizontalLayout_4")
-        self.label_19 = QLabel(self.frame_4)
-        self.label_19.setObjectName(u"label_19")
-
-        self.horizontalLayout_4.addWidget(self.label_19)
-
-        self.cboTipoIVA = QComboBox(self.frame_4)
-        self.cboTipoIVA.setObjectName(u"cboTipoIVA")
-        sizePolicy3.setHeightForWidth(self.cboTipoIVA.sizePolicy().hasHeightForWidth())
-        self.cboTipoIVA.setSizePolicy(sizePolicy3)
-        self.cboTipoIVA.setMinimumSize(QSize(0, 27))
-
-        self.horizontalLayout_4.addWidget(self.cboTipoIVA)
-
-
-        self.gridLayout_8.addWidget(self.frame_4, 8, 0, 1, 1)
-
-        self.txtCodigoTipo = QLineEdit(self.tab_articulo)
-        self.txtCodigoTipo.setObjectName(u"txtCodigoTipo")
-        self.txtCodigoTipo.setEnabled(True)
-
-        self.gridLayout_8.addWidget(self.txtCodigoTipo, 4, 1, 1, 1)
-
-        self.txtPrecioVenta = QLineEdit(self.tab_articulo)
-        self.txtPrecioVenta.setObjectName(u"txtPrecioVenta")
-        sizePolicy6.setHeightForWidth(self.txtPrecioVenta.sizePolicy().hasHeightForWidth())
-        self.txtPrecioVenta.setSizePolicy(sizePolicy6)
-        self.txtPrecioVenta.setMaximumSize(QSize(120, 16777215))
-        font1 = QFont()
-        font1.setPointSize(14)
-        font1.setKerning(False)
-        self.txtPrecioVenta.setFont(font1)
-        self.txtPrecioVenta.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_8.addWidget(self.txtPrecioVenta, 9, 6, 1, 1)
-
-        self.label_6 = QLabel(self.tab_articulo)
-        self.label_6.setObjectName(u"label_6")
-
-        self.gridLayout_8.addWidget(self.label_6, 6, 0, 1, 1)
-
-        self.txtDescripcionTipo = QLineEdit(self.tab_articulo)
-        self.txtDescripcionTipo.setObjectName(u"txtDescripcionTipo")
-        self.txtDescripcionTipo.setReadOnly(True)
-
-        self.gridLayout_8.addWidget(self.txtDescripcionTipo, 4, 2, 1, 5)
-
-        self.label_16 = QLabel(self.tab_articulo)
-        self.label_16.setObjectName(u"label_16")
-
-        self.gridLayout_8.addWidget(self.label_16, 4, 0, 1, 1)
-
-        self.label_4 = QLabel(self.tab_articulo)
-        self.label_4.setObjectName(u"label_4")
-
-        self.gridLayout_8.addWidget(self.label_4, 5, 5, 1, 1)
-
-        self.FrameRF = QFrame(self.tab_articulo)
-        self.FrameRF.setObjectName(u"FrameRF")
-        self.FrameRF.setFrameShape(QFrame.Shape.StyledPanel)
-        self.FrameRF.setFrameShadow(QFrame.Shadow.Raised)
-        self.gridLayout_7 = QGridLayout(self.FrameRF)
-        self.gridLayout_7.setObjectName(u"gridLayout_7")
-        self.txtcomentario = QTextEdit(self.FrameRF)
-        self.txtcomentario.setObjectName(u"txtcomentario")
-        sizePolicy1.setHeightForWidth(self.txtcomentario.sizePolicy().hasHeightForWidth())
-        self.txtcomentario.setSizePolicy(sizePolicy1)
-
-        self.gridLayout_7.addWidget(self.txtcomentario, 2, 1, 1, 1)
-
-        self.label_18 = QLabel(self.FrameRF)
-        self.label_18.setObjectName(u"label_18")
-
-        self.gridLayout_7.addWidget(self.label_18, 1, 1, 1, 1)
-
-
-        self.gridLayout_8.addWidget(self.FrameRF, 14, 7, 2, 1)
-
-        self.txtproveedor = QLineEdit(self.tab_articulo)
-        self.txtproveedor.setObjectName(u"txtproveedor")
-        self.txtproveedor.setMaximumSize(QSize(16777215, 24))
-
-        self.gridLayout_8.addWidget(self.txtproveedor, 7, 2, 1, 4)
-
-        self.btnBuscarProveedor = QPushButton(self.tab_articulo)
-        self.btnBuscarProveedor.setObjectName(u"btnBuscarProveedor")
-        self.btnBuscarProveedor.setEnabled(False)
-        self.btnBuscarProveedor.setMaximumSize(QSize(16777215, 24))
-        self.btnBuscarProveedor.setIcon(icon4)
-        self.btnBuscarProveedor.setIconSize(QSize(16, 16))
-
-        self.gridLayout_8.addWidget(self.btnBuscarProveedor, 7, 6, 1, 1)
-
-        self.txtcodigo_fabricante = QLineEdit(self.tab_articulo)
-        self.txtcodigo_fabricante.setObjectName(u"txtcodigo_fabricante")
-        self.txtcodigo_fabricante.setMaximumSize(QSize(120, 16777215))
-        self.txtcodigo_fabricante.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
-
-        self.gridLayout_8.addWidget(self.txtcodigo_fabricante, 5, 6, 1, 1)
-
-        self.label_8 = QLabel(self.tab_articulo)
-        self.label_8.setObjectName(u"label_8")
-
-        self.gridLayout_8.addWidget(self.label_8, 7, 0, 1, 1)
-
-        self.label_17 = QLabel(self.tab_articulo)
-        self.label_17.setObjectName(u"label_17")
-
-        self.gridLayout_8.addWidget(self.label_17, 3, 1, 1, 1)
+        self.gridLayout_8.addWidget(self.lblCodigoenProveedor, 5, 6, 1, 1)
 
         self.Pestanas.addTab(self.tab_articulo, "")
+        self.TallasColores = QWidget()
+        self.TallasColores.setObjectName(u"TallasColores")
+        self.verticalLayout_6 = QVBoxLayout(self.TallasColores)
+        self.verticalLayout_6.setObjectName(u"verticalLayout_6")
+        self.gridLayout_11 = QGridLayout()
+        self.gridLayout_11.setObjectName(u"gridLayout_11")
+        self.frame_3 = QFrame(self.TallasColores)
+        self.frame_3.setObjectName(u"frame_3")
+        self.frame_3.setFrameShape(QFrame.Shape.StyledPanel)
+        self.frame_3.setFrameShadow(QFrame.Shadow.Raised)
+
+        self.gridLayout_11.addWidget(self.frame_3, 0, 2, 1, 1)
+
+        self.gridLayout_14 = QGridLayout()
+        self.gridLayout_14.setObjectName(u"gridLayout_14")
+        self.listColors = QListWidget(self.TallasColores)
+        brush = QBrush(QColor(0, 0, 0, 255))
+        brush.setStyle(Qt.BrushStyle.SolidPattern)
+        brush1 = QBrush(QColor(255, 255, 255, 255))
+        brush1.setStyle(Qt.BrushStyle.SolidPattern)
+        __qlistwidgetitem = QListWidgetItem(self.listColors)
+        __qlistwidgetitem.setBackground(brush1);
+        __qlistwidgetitem.setForeground(brush);
+        __qlistwidgetitem1 = QListWidgetItem(self.listColors)
+        __qlistwidgetitem1.setBackground(brush);
+        __qlistwidgetitem1.setForeground(brush1);
+        brush2 = QBrush(QColor(255, 255, 255, 255))
+        brush2.setStyle(Qt.BrushStyle.NoBrush)
+        brush3 = QBrush(QColor(170, 0, 0, 255))
+        brush3.setStyle(Qt.BrushStyle.SolidPattern)
+        __qlistwidgetitem2 = QListWidgetItem(self.listColors)
+        __qlistwidgetitem2.setBackground(brush3);
+        __qlistwidgetitem2.setForeground(brush2);
+        brush4 = QBrush(QColor(255, 255, 255, 255))
+        brush4.setStyle(Qt.BrushStyle.NoBrush)
+        brush5 = QBrush(QColor(0, 0, 127, 255))
+        brush5.setStyle(Qt.BrushStyle.SolidPattern)
+        __qlistwidgetitem3 = QListWidgetItem(self.listColors)
+        __qlistwidgetitem3.setBackground(brush5);
+        __qlistwidgetitem3.setForeground(brush4);
+        self.listColors.setObjectName(u"listColors")
+        self.listColors.setStyleSheet(u"QListWidget::item{border:1px solid transparent; margin:3px; padding:0px;}\\nQListWidget::item:selected{border:3px solid #1976d2; border-radius:6px; margin:-2px;}\\nQListWidget::item:hover{border:1px solid rgba(0,0,0,40);}")
+        self.listColors.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.listColors.setIconSize(QSize(44, 44))
+        self.listColors.setResizeMode(QListView.ResizeMode.Adjust)
+        self.listColors.setLayoutMode(QListView.LayoutMode.SinglePass)
+        self.listColors.setSpacing(8)
+        self.listColors.setGridSize(QSize(56, 56))
+        self.listColors.setViewMode(QListView.ViewMode.IconMode)
+
+        self.gridLayout_14.addWidget(self.listColors, 0, 2, 1, 1)
+
+
+        self.gridLayout_11.addLayout(self.gridLayout_14, 0, 0, 1, 1)
+
+        self.tableView = QTableView(self.TallasColores)
+        self.tableView.setObjectName(u"tableView")
+
+        self.gridLayout_11.addWidget(self.tableView, 0, 1, 1, 1)
+
+
+        self.verticalLayout_6.addLayout(self.gridLayout_11)
+
+        self.Pestanas.addTab(self.TallasColores, "")
         self.tab = QWidget()
         self.tab.setObjectName(u"tab")
         self.gridLayout_32 = QGridLayout(self.tab)
@@ -1029,8 +1080,8 @@ class Ui_FrmArticulos(object):
         self.btnAnadirOferta = QPushButton(self.framePromocion)
         self.btnAnadirOferta.setObjectName(u"btnAnadirOferta")
         self.btnAnadirOferta.setEnabled(False)
-        sizePolicy2.setHeightForWidth(self.btnAnadirOferta.sizePolicy().hasHeightForWidth())
-        self.btnAnadirOferta.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.btnAnadirOferta.sizePolicy().hasHeightForWidth())
+        self.btnAnadirOferta.setSizePolicy(sizePolicy4)
         self.btnAnadirOferta.setIcon(icon1)
 
         self.gridLayout_34.addWidget(self.btnAnadirOferta, 0, 0, 1, 1)
@@ -1038,8 +1089,8 @@ class Ui_FrmArticulos(object):
         self.btnEditarOferta = QPushButton(self.framePromocion)
         self.btnEditarOferta.setObjectName(u"btnEditarOferta")
         self.btnEditarOferta.setEnabled(False)
-        sizePolicy2.setHeightForWidth(self.btnEditarOferta.sizePolicy().hasHeightForWidth())
-        self.btnEditarOferta.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.btnEditarOferta.sizePolicy().hasHeightForWidth())
+        self.btnEditarOferta.setSizePolicy(sizePolicy4)
         self.btnEditarOferta.setIcon(icon5)
 
         self.gridLayout_34.addWidget(self.btnEditarOferta, 1, 0, 1, 1)
@@ -1152,8 +1203,8 @@ class Ui_FrmArticulos(object):
         self.btnBorrarOferta = QPushButton(self.frame_tabla_ofertas)
         self.btnBorrarOferta.setObjectName(u"btnBorrarOferta")
         self.btnBorrarOferta.setEnabled(False)
-        sizePolicy2.setHeightForWidth(self.btnBorrarOferta.sizePolicy().hasHeightForWidth())
-        self.btnBorrarOferta.setSizePolicy(sizePolicy2)
+        sizePolicy4.setHeightForWidth(self.btnBorrarOferta.sizePolicy().hasHeightForWidth())
+        self.btnBorrarOferta.setSizePolicy(sizePolicy4)
         icon12 = QIcon()
         icon12.addFile(u":/Icons/PNG/borrar.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
         self.btnBorrarOferta.setIcon(icon12)
@@ -1265,8 +1316,8 @@ class Ui_FrmArticulos(object):
         self.txtunidades_vendidas = QLineEdit(self.frame)
         self.txtunidades_vendidas.setObjectName(u"txtunidades_vendidas")
         self.txtunidades_vendidas.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.txtunidades_vendidas.sizePolicy().hasHeightForWidth())
-        self.txtunidades_vendidas.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtunidades_vendidas.sizePolicy().hasHeightForWidth())
+        self.txtunidades_vendidas.setSizePolicy(sizePolicy3)
         self.txtunidades_vendidas.setMaximumSize(QSize(120, 27))
         self.txtunidades_vendidas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1279,8 +1330,8 @@ class Ui_FrmArticulos(object):
         self.txtimporte_acumulado_compras = QLineEdit(self.frame)
         self.txtimporte_acumulado_compras.setObjectName(u"txtimporte_acumulado_compras")
         self.txtimporte_acumulado_compras.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.txtimporte_acumulado_compras.sizePolicy().hasHeightForWidth())
-        self.txtimporte_acumulado_compras.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtimporte_acumulado_compras.sizePolicy().hasHeightForWidth())
+        self.txtimporte_acumulado_compras.setSizePolicy(sizePolicy3)
         self.txtimporte_acumulado_compras.setMaximumSize(QSize(120, 27))
         self.txtimporte_acumulado_compras.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1310,8 +1361,8 @@ class Ui_FrmArticulos(object):
         self.txtimporte_acumulado_ventas = QLineEdit(self.frame)
         self.txtimporte_acumulado_ventas.setObjectName(u"txtimporte_acumulado_ventas")
         self.txtimporte_acumulado_ventas.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.txtimporte_acumulado_ventas.sizePolicy().hasHeightForWidth())
-        self.txtimporte_acumulado_ventas.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtimporte_acumulado_ventas.sizePolicy().hasHeightForWidth())
+        self.txtimporte_acumulado_ventas.setSizePolicy(sizePolicy3)
         self.txtimporte_acumulado_ventas.setMaximumSize(QSize(120, 27))
         self.txtimporte_acumulado_ventas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1377,8 +1428,8 @@ class Ui_FrmArticulos(object):
         self.txtstock_real_2 = QLineEdit(self.frame_6)
         self.txtstock_real_2.setObjectName(u"txtstock_real_2")
         self.txtstock_real_2.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.txtstock_real_2.sizePolicy().hasHeightForWidth())
-        self.txtstock_real_2.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtstock_real_2.sizePolicy().hasHeightForWidth())
+        self.txtstock_real_2.setSizePolicy(sizePolicy3)
         self.txtstock_real_2.setMinimumSize(QSize(0, 27))
         self.txtstock_real_2.setMaximumSize(QSize(120, 27))
         self.txtstock_real_2.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
@@ -1387,8 +1438,8 @@ class Ui_FrmArticulos(object):
 
         self.txtstock_minimo = QLineEdit(self.frame_6)
         self.txtstock_minimo.setObjectName(u"txtstock_minimo")
-        sizePolicy4.setHeightForWidth(self.txtstock_minimo.sizePolicy().hasHeightForWidth())
-        self.txtstock_minimo.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtstock_minimo.sizePolicy().hasHeightForWidth())
+        self.txtstock_minimo.setSizePolicy(sizePolicy3)
         self.txtstock_minimo.setMaximumSize(QSize(120, 27))
         self.txtstock_minimo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1397,8 +1448,8 @@ class Ui_FrmArticulos(object):
         self.txtunidades_reservadas = QLineEdit(self.frame_6)
         self.txtunidades_reservadas.setObjectName(u"txtunidades_reservadas")
         self.txtunidades_reservadas.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.txtunidades_reservadas.sizePolicy().hasHeightForWidth())
-        self.txtunidades_reservadas.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtunidades_reservadas.sizePolicy().hasHeightForWidth())
+        self.txtunidades_reservadas.setSizePolicy(sizePolicy3)
         self.txtunidades_reservadas.setMaximumSize(QSize(120, 27))
         self.txtunidades_reservadas.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1412,8 +1463,8 @@ class Ui_FrmArticulos(object):
 
         self.txtstock_maximo = QLineEdit(self.frame_6)
         self.txtstock_maximo.setObjectName(u"txtstock_maximo")
-        sizePolicy4.setHeightForWidth(self.txtstock_maximo.sizePolicy().hasHeightForWidth())
-        self.txtstock_maximo.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtstock_maximo.sizePolicy().hasHeightForWidth())
+        self.txtstock_maximo.setSizePolicy(sizePolicy3)
         self.txtstock_maximo.setMaximumSize(QSize(120, 27))
         self.txtstock_maximo.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -1427,8 +1478,8 @@ class Ui_FrmArticulos(object):
         self.txtcantidad_pendiente_recibir = QLineEdit(self.frame_6)
         self.txtcantidad_pendiente_recibir.setObjectName(u"txtcantidad_pendiente_recibir")
         self.txtcantidad_pendiente_recibir.setEnabled(True)
-        sizePolicy4.setHeightForWidth(self.txtcantidad_pendiente_recibir.sizePolicy().hasHeightForWidth())
-        self.txtcantidad_pendiente_recibir.setSizePolicy(sizePolicy4)
+        sizePolicy3.setHeightForWidth(self.txtcantidad_pendiente_recibir.sizePolicy().hasHeightForWidth())
+        self.txtcantidad_pendiente_recibir.setSizePolicy(sizePolicy3)
         self.txtcantidad_pendiente_recibir.setMaximumSize(QSize(120, 27))
         self.txtcantidad_pendiente_recibir.setAlignment(Qt.AlignmentFlag.AlignRight|Qt.AlignmentFlag.AlignTrailing|Qt.AlignmentFlag.AlignVCenter)
 
@@ -2072,16 +2123,8 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_10.addWidget(self.label_70, 0, 0, 1, 5)
 
-        QWidget.setTabOrder(self.txtCodigoTipo, self.txtDescripcionTipo)
-        QWidget.setTabOrder(self.txtDescripcionTipo, self.txtcodigo)
-        QWidget.setTabOrder(self.txtcodigo, self.txtcodigo_barras)
-        QWidget.setTabOrder(self.txtcodigo_barras, self.txtcodigo_fabricante)
-        QWidget.setTabOrder(self.txtcodigo_fabricante, self.txtdescripcionResumida)
-        QWidget.setTabOrder(self.txtdescripcionResumida, self.txtcodigo_proveedor)
-        QWidget.setTabOrder(self.txtcodigo_proveedor, self.txtproveedor)
-        QWidget.setTabOrder(self.txtproveedor, self.btnBuscarProveedor)
-        QWidget.setTabOrder(self.btnBuscarProveedor, self.cboTipoIVA)
-        QWidget.setTabOrder(self.cboTipoIVA, self.txtcoste)
+        QWidget.setTabOrder(self.txtDescripcionTipo, self.txtcodigo_fabricante)
+        QWidget.setTabOrder(self.txtcodigo_fabricante, self.txtcoste)
         QWidget.setTabOrder(self.txtcoste, self.chkmostrar_web)
         QWidget.setTabOrder(self.chkmostrar_web, self.chkcontrolar_stock)
         QWidget.setTabOrder(self.chkcontrolar_stock, self.txtPrecioVenta)
@@ -2224,6 +2267,9 @@ class Ui_FrmArticulos(object):
     def retranslateUi(self, FrmArticulos):
         FrmArticulos.setWindowTitle(QCoreApplication.translate("FrmArticulos", u"Gesti\u00f3n de Art\u00edculos", None))
         self.lblkit.setText(QCoreApplication.translate("FrmArticulos", u"KIT", None))
+        self.lbl_en_promocion.setText(QCoreApplication.translate("FrmArticulos", u"En Promoci\u00f3n", None))
+        self.lblCodigo.setText(QCoreApplication.translate("FrmArticulos", u"c\u00f3digo", None))
+        self.lblDescripcion.setText(QCoreApplication.translate("FrmArticulos", u"Descripcion", None))
         self.botAnadir.setText(QCoreApplication.translate("FrmArticulos", u"Nuevo", None))
         self.botSiguiente.setText(QCoreApplication.translate("FrmArticulos", u"Siguiente", None))
         self.botAnterior.setText(QCoreApplication.translate("FrmArticulos", u"Anterior", None))
@@ -2236,39 +2282,65 @@ class Ui_FrmArticulos(object):
 " Kit", None))
         self.botBorrar.setText(QCoreApplication.translate("FrmArticulos", u"Borrar", None))
         self.btn_cerrar.setText(QCoreApplication.translate("FrmArticulos", u"Cerrar", None))
-        self.lblCodigo.setText(QCoreApplication.translate("FrmArticulos", u"c\u00f3digo", None))
-        self.lblDescripcion.setText(QCoreApplication.translate("FrmArticulos", u"Descripcion", None))
-        self.lbl_en_promocion.setText(QCoreApplication.translate("FrmArticulos", u"En Promoci\u00f3n", None))
-        self.label_7.setText(QCoreApplication.translate("FrmArticulos", u"Descripci\u00f3n", None))
-        self.txtcodigo_proveedor.setPlaceholderText(QCoreApplication.translate("FrmArticulos", u"F1-Buscar", None))
+        self.txtcodigo_proveedor.setPlaceholderText(QCoreApplication.translate("FrmArticulos", u"Ctrl+F-Buscar", None))
+        self.label_16.setText(QCoreApplication.translate("FrmArticulos", u"Tipo :", None))
+        self.label_8.setText(QCoreApplication.translate("FrmArticulos", u"Proveedor Habitual:", None))
+        self.btnEditartarifa.setText(QCoreApplication.translate("FrmArticulos", u"Editar Tarifa", None))
+        self.label_15.setText(QCoreApplication.translate("FrmArticulos", u"Precio venta:", None))
         self.label_14.setText(QCoreApplication.translate("FrmArticulos", u"Coste:", None))
         self.txtcoste.setText(QCoreApplication.translate("FrmArticulos", u"0,00", None))
-        self.label_15.setText(QCoreApplication.translate("FrmArticulos", u"Precio venta:", None))
-        self.btnEditartarifa.setText(QCoreApplication.translate("FrmArticulos", u"Editar Tarifa", None))
+        self.lblCodigoEAN.setText(QCoreApplication.translate("FrmArticulos", u"C\u00f3digo EAN:", None))
+        self.txtcodigo_fabricante.setText("")
+        self.label_18.setText(QCoreApplication.translate("FrmArticulos", u"Comentarios:", None))
+        self.txtCodigoTipo.setPlaceholderText(QCoreApplication.translate("FrmArticulos", u"Ctrl+F-Buscar", None))
         self.label_2.setText(QCoreApplication.translate("FrmArticulos", u"C\u00f3digo: ", None))
 #if QT_CONFIG(tooltip)
         self.chkmostrar_web.setToolTip(QCoreApplication.translate("FrmArticulos", u"Seleccionar si se desea que el art\u00edculo aparezca en la tienda virtual en su web", None))
 #endif // QT_CONFIG(tooltip)
         self.chkmostrar_web.setText(QCoreApplication.translate("FrmArticulos", u"Mostrar en web", None))
+        self.label_19.setText(QCoreApplication.translate("FrmArticulos", u"Tipo IVA:", None))
         self.txtdto.setText(QCoreApplication.translate("FrmArticulos", u"0", None))
         self.label_5.setText(QCoreApplication.translate("FrmArticulos", u"Coste Real:", None))
         self.txtCoste_real.setText(QCoreApplication.translate("FrmArticulos", u"0,00", None))
         self.label_13.setText(QCoreApplication.translate("FrmArticulos", u"Margen min:", None))
         self.label_12.setText(QCoreApplication.translate("FrmArticulos", u"Margen:", None))
         self.label_20.setText(QCoreApplication.translate("FrmArticulos", u"%Descuento Promocional:", None))
-        self.chkcontrolar_stock.setText(QCoreApplication.translate("FrmArticulos", u"Controlar stock", None))
-        self.label_3.setText(QCoreApplication.translate("FrmArticulos", u"C\u00f3digo EAN:", None))
-        self.label_19.setText(QCoreApplication.translate("FrmArticulos", u"Tipo IVA:", None))
         self.txtPrecioVenta.setText(QCoreApplication.translate("FrmArticulos", u"0.00", None))
+        self.label_7.setText(QCoreApplication.translate("FrmArticulos", u"Descripci\u00f3n", None))
         self.label_6.setText(QCoreApplication.translate("FrmArticulos", u"Art\u00edculo:", None))
-        self.label_16.setText(QCoreApplication.translate("FrmArticulos", u"Tipo :", None))
-        self.label_4.setText(QCoreApplication.translate("FrmArticulos", u"C\u00f3digo en Proveedor:", None))
-        self.label_18.setText(QCoreApplication.translate("FrmArticulos", u"Comentarios:", None))
-        self.btnBuscarProveedor.setText("")
-        self.txtcodigo_fabricante.setText("")
-        self.label_8.setText(QCoreApplication.translate("FrmArticulos", u"Proveedor Habitual:", None))
-        self.label_17.setText(QCoreApplication.translate("FrmArticulos", u"F1-Buscar", None))
+        self.chkcontrolar_stock.setText(QCoreApplication.translate("FrmArticulos", u"Controlar stock", None))
+        self.lblCodigoenProveedor.setText(QCoreApplication.translate("FrmArticulos", u"C\u00f3digo en Proveedor:", None))
         self.Pestanas.setTabText(self.Pestanas.indexOf(self.tab_articulo), QCoreApplication.translate("FrmArticulos", u"Servicio/art\u00edculo", None))
+
+        __sortingEnabled = self.listColors.isSortingEnabled()
+        self.listColors.setSortingEnabled(False)
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem = self.listColors.item(0)
+#endif
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem.setToolTip(QCoreApplication.translate("FrmArticulos", u"Blanco", None));
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem1 = self.listColors.item(1)
+#endif
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem1.setToolTip(QCoreApplication.translate("FrmArticulos", u"Negro", None));
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem2 = self.listColors.item(2)
+#endif
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem2.setToolTip(QCoreApplication.translate("FrmArticulos", u"Rojo", None));
+#endif // QT_CONFIG(tooltip)
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem3 = self.listColors.item(3)
+#endif
+#if QT_CONFIG(tooltip)
+        ___qlistwidgetitem3.setToolTip(QCoreApplication.translate("FrmArticulos", u"Azul", None));
+#endif // QT_CONFIG(tooltip)
+        self.listColors.setSortingEnabled(__sortingEnabled)
+
+        self.Pestanas.setTabText(self.Pestanas.indexOf(self.TallasColores), QCoreApplication.translate("FrmArticulos", u"Tallas y colores", None))
         self.label_9.setText(QCoreApplication.translate("FrmArticulos", u"Secci\u00f3n:", None))
 #if QT_CONFIG(tooltip)
         self.botBuscarSeccion.setToolTip(QCoreApplication.translate("FrmArticulos", u"<html><head/><body><p>Asociar Secci\u00f3n.</p></body></html>", None))

@@ -492,7 +492,9 @@ class ArticuloRepository:
         """Obtener todos los tipos de artículo (tabla articulo_tipo)"""
         session = self._session()
         try:
-            result = session.execute(text("SELECT id, codigo, descripcion, activo FROM articulo_tipo ORDER BY codigo"))
+            # include new flags (requiereEAN, proveedor) added to articulo_tipo schema
+            # 'activo' column was removed from the schema — don't select it anymore
+            result = session.execute(text("SELECT id, codigo, descripcion, requiereEAN, proveedor FROM articulo_tipo ORDER BY codigo"))
             return [dict(row._mapping) for row in result.fetchall()]
         finally:
             if not self._external_session:
@@ -501,7 +503,7 @@ class ArticuloRepository:
     def get_articulo_tipo(self, tipo_id: int) -> dict | None:
         session = self._session()
         try:
-            result = session.execute(text("SELECT id, codigo, descripcion, activo FROM articulo_tipo WHERE id = :id LIMIT 1"), {"id": tipo_id})
+            result = session.execute(text("SELECT id, codigo, descripcion, requiereEAN, proveedor FROM articulo_tipo WHERE id = :id LIMIT 1"), {"id": tipo_id})
             row = result.fetchone()
             return dict(row._mapping) if row else None
         finally:
@@ -512,7 +514,7 @@ class ArticuloRepository:
         """Buscar un tipo de artículo por su código exacto (case-insensitive)."""
         session = self._session()
         try:
-            result = session.execute(text("SELECT id, codigo, descripcion, activo FROM articulo_tipo WHERE UPPER(codigo) = UPPER(:codigo) LIMIT 1"), {"codigo": codigo})
+            result = session.execute(text("SELECT id, codigo, descripcion, requiereEAN, proveedor FROM articulo_tipo WHERE UPPER(codigo) = UPPER(:codigo) LIMIT 1"), {"codigo": codigo})
             row = result.fetchone()
             return dict(row._mapping) if row else None
         finally:

@@ -12,7 +12,7 @@ def test_f1_lookup_opens_dialog_and_sets_tipo(monkeypatch):
         v.ui.botGuardar.setEnabled(True)
 
     # Prepare fake result from DBConsultaView.select_from_data
-    fake_selected = {'id': 123, 'codigo': 'T-TEST', 'descripcion': 'Tipo Test'}
+    fake_selected = {'id': 123, 'codigo': 'T-TEST', 'descripcion': 'Tipo Test', 'requiereEAN': True, 'proveedor': True}
 
     def fake_select_from_data(parent, data, headers, campos=None, titulo=None):
         return fake_selected, None
@@ -35,6 +35,12 @@ def test_f1_lookup_opens_dialog_and_sets_tipo(monkeypatch):
     if hasattr(v.ui, 'txtDescripcionTipo'):
         assert v.ui.txtDescripcionTipo.text() == 'Tipo Test'
 
+    # visibility based on flags
+    if hasattr(v.ui, 'txtcodigo_barras'):
+        assert v.ui.txtcodigo_barras.isVisible() is True
+    if hasattr(v.ui, 'txtcodigo_fabricante'):
+        assert v.ui.txtcodigo_fabricante.isVisible() is True
+
 
 def test_eventfilter_captures_f1(monkeypatch):
     v = ArticulosView()
@@ -47,7 +53,7 @@ def test_eventfilter_captures_f1(monkeypatch):
 
     v.controller.current_article = {'id': 1}
 
-    fake_selected = {'id': 321, 'codigo': 'T-KEY', 'descripcion': 'Tipo Key'}
+    fake_selected = {'id': 321, 'codigo': 'T-KEY', 'descripcion': 'Tipo Key', 'requiereEAN': False, 'proveedor': False}
 
     def fake_select(parent, data, headers, campos=None, titulo=None):
         return fake_selected, None
@@ -61,3 +67,8 @@ def test_eventfilter_captures_f1(monkeypatch):
     assert handled is True
     assert v.controller.current_article.get('id_tipo') == 321
     assert v.ui.txtCodigoTipo.text() == 'T-KEY'
+    # visibility should reflect flags
+    if hasattr(v.ui, 'txtcodigo_barras'):
+        assert v.ui.txtcodigo_barras.isVisible() is False
+    if hasattr(v.ui, 'txtcodigo_fabricante'):
+        assert v.ui.txtcodigo_fabricante.isVisible() is False

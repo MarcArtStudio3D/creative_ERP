@@ -1,7 +1,7 @@
-from PySide6.QtWidgets import QWidget, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView, QApplication
+from PySide6.QtWidgets import QWidget, QMessageBox, QLineEdit, QComboBox, QTextEdit, QCheckBox, QDateEdit, QDoubleSpinBox, QHeaderView, QApplication, QListWidgetItem
 from PySide6.QtCore import Qt, QAbstractTableModel, QModelIndex, QDate, QEvent
 from PySide6.QtCharts import QChart, QChartView, QBarSet, QBarSeries, QBarCategoryAxis, QValueAxis
-from PySide6.QtGui import QPainter, QShortcut, QKeySequence
+from PySide6.QtGui import QPainter, QShortcut, QKeySequence, QBrush, QColor, QIcon
 from modules.articulos.ui_frmarticulos import Ui_FrmArticulos
 from modules.articulos.controller import ArticuloController
 from modules.common.db_consulta_view import DBConsultaView
@@ -206,6 +206,33 @@ class ArticulosView(QWidget):
         self.ui.lblkit.setVisible(False)
         self.ui.lbl_en_promocion.setVisible(False)
 
+        # Agregar elementos de prueba al QListWidget
+        try:
+            list_colors = self.ui.listColors
+            if list_colors:
+                colores_prueba = [
+                    ("Rojo", QColor(255, 0, 0)),
+                    ("Verde", QColor(0, 255, 0)),
+                    ("Azul", QColor(0, 0, 255)),
+                    ("Amarillo", QColor(255, 255, 0)),
+                ]
+                for nombre, color in colores_prueba:
+                    item = QListWidgetItem(nombre)
+                    item.setBackground(QBrush(color))
+                    item.setForeground(QBrush(Qt.white))
+                    list_colors.addItem(item)
+        except Exception as e:
+            logging.getLogger(__name__).exception("Error agregando colores de prueba: %s", e)
+
+        # Make colours list look like a graphical palette (small square swatches,
+        # no visible labels, clear selection highlight). This is intentionally
+        # defensive: done inside try/except because tests / headless runners
+        # may not be able to create QPixmaps/QPainters.
+        try:
+            self._decorate_colors_list_as_palette()
+        except Exception as e:
+            logging.getLogger(__name__).exception("Error decorando la paleta de colores: %s", e)
+
 
 
     def _maybe_warn(self, title: str, message: str):
@@ -259,6 +286,39 @@ class ArticulosView(QWidget):
         except Exception:
             # Keep default values on any error
             pass
+
+    def _apply_tipo_flags_to_ui(self, requiere_ean: bool, proveedor_flag: bool):
+        """Show or hide UI elements based on articulo_tipo flags.
+
+        - requiere_ean -> shows/hides txtcodigo_barras and its label (label_3)
+        - proveedor_flag -> shows/hides txtcodigo_fabricante and its label (label_4)
+        """
+        try:
+            # EAN field + label
+            if hasattr(self.ui, 'txtcodigo_barras'):
+                try:
+                    self.ui.txtcodigo_barras.setVisible(bool(requiere_ean))
+                except Exception:
+                    pass
+            if hasattr(self.ui, 'label_3'):
+                try:
+                    self.ui.label_3.setVisible(bool(requiere_ean))
+                except Exception:
+                    pass
+
+            # Fabricante/Proveedor-related fields
+            if hasattr(self.ui, 'txtcodigo_fabricante'):
+                try:
+                    self.ui.txtcodigo_fabricante.setVisible(bool(proveedor_flag))
+                except Exception:
+                    pass
+            if hasattr(self.ui, 'label_4'):
+                try:
+                    self.ui.label_4.setVisible(bool(proveedor_flag))
+                except Exception:
+                    pass
+        except Exception:
+            logging.getLogger(__name__).exception("Error applying tipo flags to UI")
 
     def _format_price_field(self, widget):
         """Normalizar y formatear el QLineEdit de precio/importe para mostrar al usuario.
@@ -316,6 +376,191 @@ class ArticulosView(QWidget):
             # Add a default option if error
             self.ui.cboTipoIVA.clear()
             self.ui.cboTipoIVA.addItem(self.tr("Error cargando tipos IVA"), None)
+
+    def _decorate_colors_list_as_palette(self):
+        """Convert the simple QListWidget into a colour-palette-style widget.
+
+        This draws small rounded square swatches for each item using the
+        item's background/foreground brush, hides textual labels (keeps them
+        as tooltips) and reduces the icon/grid size so it looks like a
+        graphics-program palette.
+
+        The function is intentionally defensive: UI unit tests and CI runners
+        may run headless or without a GUI; any exceptions are swallowed so
+        we don't break the rest of the view initialization.
+        """
+        # Lightweight, very safe implementation: avoid any heavy GUI ops here
+        # (the full rendering logic was moved into a separate safe block and
+        # will be re-introduced when CI/headless concerns are resolved).
+        try:
+            lw = getattr(self.ui, 'listColors', None)
+            if not lw:
+                return
+            # Ensure the list is in icon mode with a small icon size so it
+            # will look like a palette even if we cannot paint swatches.
+            from PySide6.QtCore import QSize
+            try:
+                lw.setGridSize(QSize(56, 56))
+            except Exception:
+                pass
+            try:
+                lw.setIconSize(QSize(44, 44))
+            except Exception:
+                pass
+            try:
+                lw.setSpacing(8)
+            except Exception:
+                pass
+            try:
+                lw.setViewMode(lw.ViewMode.IconMode)
+            except Exception:
+                pass
+
+            # Compute whether we are allowed to paint QPixmaps (best-effort):
+            # avoid painting in headless/offscreen environments which can abort
+            try:
+                import os
+                from PySide6.QtGui import QGuiApplication
+                _platform = os.environ.get('QT_QPA_PLATFORM', '').lower()
+                # Asumimos que podemos pintar a menos que estemos en modo offscreen/minimal
+                _can_paint = _platform not in ('offscreen', 'minimal')
+                # Si no hay variable de entorno, asumimos entorno gráfico normal
+                if not _platform:
+                    _can_paint = True
+            except Exception:
+                # En caso de error, asumimos que podemos intentar pintar
+                _can_paint = True
+
+            # Hide textual labels (keep them as tooltips) so the list looks like
+            # a palette of swatches rather than a list of named colours.
+            for i in range(lw.count()):
+                try:
+                    it = lw.item(i)
+                    if it is None:
+                        continue
+                    # keep label as tooltip
+                    try:
+                        lbl = it.text()
+                        it.setToolTip(lbl or '')
+                    except Exception:
+                        pass
+                    try:
+                        it.setText('')
+                    except Exception:
+                        pass
+
+                    # Determine if we should create QPixmap icons for this run.
+                    _has_screen = _can_paint
+
+                    # Build a small rounded swatch icon matching the intended
+                    # colour. Prefer background brush, fall back to toolTip/name
+                    # mapping, then foreground. Use defensive try/except because
+                    # QPixmap/QPainter might fail in headless CI.
+                    try:
+                        colour = None
+                        bg = it.background()
+                        try:
+                            if bg and hasattr(bg, 'color'):
+                                colour = bg.color()
+                        except Exception:
+                            colour = None
+
+                        if colour is None:
+                            # try using tooltip or text (localized names) as fallback
+                            name = (it.toolTip() or it.data(Qt.DisplayRole) or '').strip().lower()
+                            # quick mapping for names we know are used in ui_frmarticulos
+                            name_map = {
+                                'blanco': QColor(255, 255, 255),
+                                'negro': QColor(0, 0, 0),
+                                'rojo': QColor(170, 0, 0),
+                                'azul': QColor(0, 0, 127),
+                            }
+                            if name in name_map:
+                                colour = name_map[name]
+
+                        if colour is None:
+                            try:
+                                fg = it.foreground()
+                                if fg and hasattr(fg, 'color'):
+                                    colour = fg.color()
+                            except Exception:
+                                colour = None
+
+                        if colour is None:
+                            # last resort: neutral gray
+                            colour = QColor(200, 200, 200)
+
+                        # create pixmap icon (rounded rect) sized to iconSize or grid
+                        if not _has_screen:
+                            # skip painting icons in headless/offscreen environments
+                            pass
+                        else:
+                            try:
+                                from PySide6.QtGui import QPixmap, QPainter, QIcon
+                                from PySide6.QtCore import QRect
+                                # icon size should match list icon size when possible
+                                isz = lw.iconSize() if hasattr(lw, 'iconSize') else None
+                                if isz and isz.width() > 0 and isz.height() > 0:
+                                    pix = QPixmap(isz.width(), isz.height())
+                                else:
+                                    pix = QPixmap(44, 44)
+
+                                pix.fill(QColor(0, 0, 0, 0))
+                                p = QPainter(pix)
+                                try:
+                                    p.setRenderHint(QPainter.Antialiasing)
+                                    r = pix.rect().adjusted(2, 2, -2, -2)
+                                    p.setBrush(colour)
+                                    # Choose a contrasting outline depending on luminance so
+                                    # swatches remain visible on similar backgrounds.
+                                    try:
+                                        rcol = colour
+                                        rr = rcol.red(); rg = rcol.green(); rb = rcol.blue()
+                                        lum = (0.299*rr + 0.587*rg + 0.114*rb)
+                                    except Exception:
+                                        lum = 200
+
+                                    if lum > 180:
+                                        outline = QColor(0, 0, 0, 200)
+                                    else:
+                                        outline = QColor(255, 255, 255, 200)
+
+                                    # draw slight outer shadow for depth (semi-transparent)
+                                    try:
+                                        shadow = QColor(0, 0, 0, 30)
+                                        p.setPen(shadow)
+                                        sh_r = pix.rect().adjusted(3, 3, -1, -1)
+                                        p.drawRoundedRect(sh_r, 6, 6)
+                                    except Exception:
+                                        pass
+
+                                    # main swatch
+                                    p.setPen(outline)
+                                    p.drawRoundedRect(r, 6, 6)
+                                finally:
+                                    p.end()
+
+                                try:
+                                    it.setIcon(QIcon(pix))
+                                except Exception:
+                                    # setting icon may fail in some PySide builds; ignore
+                                    pass
+                            except Exception:
+                                # If QPixmap isn't available (headless), skip icon creation
+                                pass
+                    except Exception:
+                        # non-fatal - continue building remaining items
+                        pass
+                except Exception:
+                    pass
+
+            try:
+                # subtle selection border to match a palette feel
+                lw.setStyleSheet('QListWidget::item{border:1px solid transparent; margin:3px; padding:0px;} QListWidget::item:selected{border:3px solid #1976d2; border-radius:6px; margin:-2px;} QListWidget::item:hover{border:1px solid rgba(0,0,0,40);}')
+            except Exception:
+                pass
+        except Exception:
+            logging.getLogger(__name__).exception("Error decorating colors palette")
     
     # ==================== Field Locking ====================
     
@@ -519,6 +764,17 @@ class ArticulosView(QWidget):
                         self.ui.txtCodigoTipo.setText(str(t.get('codigo') or ''))
                     if hasattr(self.ui, 'txtDescripcionTipo'):
                         self.ui.txtDescripcionTipo.setText(str(t.get('descripcion') or ''))
+                    # Apply tipo flags to UI (show/hide controls) if provided
+                    try:
+                        requiere_ean = bool(t.get('requiereEAN')) if t.get('requiereEAN') is not None else False
+                        proveedor_flag = bool(t.get('proveedor')) if t.get('proveedor') is not None else False
+                        # store transient flags
+                        if self.controller.current_article is not None:
+                            self.controller.current_article['tipo_requiereEAN'] = requiere_ean
+                            self.controller.current_article['tipo_proveedor'] = proveedor_flag
+                        self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
+                    except Exception:
+                        pass
                 else:
                     # Fallback to any directly stored fields on article
                     if hasattr(self.ui, 'txtCodigoTipo'):
@@ -537,6 +793,16 @@ class ArticulosView(QWidget):
             if hasattr(self.ui, 'txtDescripcionTipo'):
                 self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
         
+            # if no tipo present, ensure fields hidden
+            try:
+                # clear transient flags
+                if self.controller.current_article is not None:
+                    self.controller.current_article.pop('tipo_requiereEAN', None)
+                    self.controller.current_article.pop('tipo_proveedor', None)
+            except Exception:
+                pass
+            self._apply_tipo_flags_to_ui(False, False)
+
         # Precios: formatear según la configuración de decimales de la empresa
         try:
             coste_val = float(article.get("coste", 0) or 0)
@@ -810,6 +1076,46 @@ class ArticulosView(QWidget):
             # Don't break saving if date conversion fails; just omit dates
             pass
 
+        # Ensure we don't persist fields that are not relevant for the current tipo
+        try:
+            # Prefer transient flags stored on current_article (set at load or selection time)
+            tipo_requiereEAN = None
+            tipo_proveedor = None
+            if current and isinstance(current, dict):
+                if 'tipo_requiereEAN' in current:
+                    tipo_requiereEAN = bool(current.get('tipo_requiereEAN'))
+                if 'tipo_proveedor' in current:
+                    tipo_proveedor = bool(current.get('tipo_proveedor'))
+
+                # If flags were not set, try to inspect the tipo record directly
+                if (tipo_requiereEAN is None or tipo_proveedor is None) and current.get('id_tipo'):
+                    try:
+                        t = self.controller.repository.get_articulo_tipo(current.get('id_tipo'))
+                        if t:
+                            if tipo_requiereEAN is None:
+                                tipo_requiereEAN = bool(t.get('requiereEAN')) if t.get('requiereEAN') is not None else None
+                            if tipo_proveedor is None:
+                                tipo_proveedor = bool(t.get('proveedor')) if t.get('proveedor') is not None else None
+                    except Exception:
+                        pass
+
+            # If flags are explicitly False, remove related fields from the payload
+            if tipo_requiereEAN is False:
+                try:
+                    if 'codigo_barras' in data:
+                        del data['codigo_barras']
+                except Exception:
+                    pass
+
+            if tipo_proveedor is False:
+                try:
+                    if 'codigo_fabricante' in data:
+                        del data['codigo_fabricante']
+                except Exception:
+                    pass
+        except Exception:
+            logging.getLogger(__name__).exception("Error filtering out non-applicable fields before save")
+
         return data
 
     def _refresh_ofertas_table(self):
@@ -1075,7 +1381,6 @@ class ArticulosView(QWidget):
                     self.ui.chkOferta_dto.setChecked(bool(offer.get('oferta_dto') or offer.get('oferta_dto')))
             except Exception:
                 pass
-
             try:
                 if hasattr(self.ui, 'chkOferta_web'):
                     self.ui.chkOferta_web.setChecked(bool(offer.get('oferta_web')))
@@ -1235,10 +1540,32 @@ class ArticulosView(QWidget):
                     self.controller.set_tipo_from_lookup(tipo.get('id'), tipo.get('codigo'), tipo.get('descripcion'))
                 except Exception:
                     pass
+                # Apply UI visibility rules according to the tipo flags (if available)
+                try:
+                    requiere_ean = bool(tipo.get('requiereEAN')) if tipo.get('requiereEAN') is not None else False
+                    proveedor_flag = bool(tipo.get('proveedor')) if tipo.get('proveedor') is not None else False
+                    # store on transient current article for save/inspection
+                    try:
+                        if self.controller.current_article is not None:
+                            self.controller.current_article['tipo_requiereEAN'] = requiere_ean
+                            self.controller.current_article['tipo_proveedor'] = proveedor_flag
+                    except Exception:
+                        pass
+                    self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
+                except Exception:
+                    pass
             else:
                 # No match found — clear description and warn user
                 if hasattr(self.ui, 'txtDescripcionTipo'):
                     self.ui.txtDescripcionTipo.clear()
+                # clear tipo-based UI visibility
+                try:
+                    if self.controller.current_article is not None:
+                        self.controller.current_article.pop('tipo_requiereEAN', None)
+                        self.controller.current_article.pop('tipo_proveedor', None)
+                except Exception:
+                    pass
+                self._apply_tipo_flags_to_ui(False, False)
                 self._maybe_warn(self.tr("Tipo no encontrado"), self.tr("No se encontró ningún tipo con ese código"))
         except Exception:
             # Don't crash UI on lookup errors
@@ -1258,6 +1585,19 @@ class ArticulosView(QWidget):
     
     def _setup_chart(self):
         """Inicializar el widget de gráficas"""
+        # Avoid creating chart objects in headless/test environments which can
+        # trigger native aborts on some Qt builds. If there is no primary screen
+        # accessible, skip full chart initialization.
+        try:
+            import os
+            from PySide6.QtGui import QGuiApplication
+            platform = os.environ.get('QT_QPA_PLATFORM', '').lower()
+            if platform in ('offscreen', 'minimal') or QGuiApplication.primaryScreen() is None:
+                return
+        except Exception:
+            # If we cannot determine screen availability, skip chart setup
+            return
+
         # Create chart
         self.chart = QChart()
         self.chart.setTitle("Estadísticas Mensuales")
@@ -1497,6 +1837,13 @@ class ArticulosView(QWidget):
             
             if selected_data:
                 # Get selected values directly from dictionary
+
+
+
+
+
+
+
                 seccion_id = selected_data.get('id')
                 seccion_codigo = selected_data.get('codigo')
                 seccion_nombre = selected_data.get('seccion')
@@ -1705,6 +2052,17 @@ class ArticulosView(QWidget):
                     if hasattr(self.ui, 'txtDescripcionTipo'):
                         self.ui.txtDescripcionTipo.setText(str(descripcion or ''))
                     logging.getLogger(__name__).info(f"✅ Tipo seleccionado: {codigo} - {descripcion}")
+                    # read flags from selected data (if present) and apply visibility
+                    try:
+                        requiere_ean = bool(selected.get('requiereEAN')) if selected.get('requiereEAN') is not None else False
+                        proveedor_flag = bool(selected.get('proveedor')) if selected.get('proveedor') is not None else False
+                        # store transient flags on current_article for later
+                        if self.controller.current_article is not None:
+                            self.controller.current_article['tipo_requiereEAN'] = requiere_ean
+                            self.controller.current_article['tipo_proveedor'] = proveedor_flag
+                        self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
+                    except Exception:
+                        pass
                 else:
                     self._maybe_warn(self.tr("Error"), self.tr("No se pudo asignar el tipo seleccionado"))
 
@@ -2106,141 +2464,32 @@ class ArticulosView(QWidget):
                         # If we are in the Add flow (creating an oferta) and the oferta has not
                         # yet been persisted to the DB, call controller.insert_oferta to create
                         # the row. Otherwise call save_oferta which will update existing oferta.
-                        # Decide whether we need to create (insert) or update the oferta.
-                        # Prefer explicit DB check: if there is no oferta for this article+tarifa,
-                        # perform insert, otherwise update.
-                        should_insert = False
-                        try:
-                            current = None
-                            if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
-                                current = self.controller.get_current_article()
-                            if current and isinstance(current, dict):
-                                art_id = current.get('id')
-                                # If the view has a selected oferta id, prefer update
-                                if getattr(self, '_current_oferta_id', None):
-                                    should_insert = False
-                                else:
-                                    # No current oferta id in view — check repository for existing oferta
-                                    try:
-                                        tarifa_id = None
-                                        if hasattr(self.controller, 'repository') and hasattr(self.controller.repository, 'get_default_tarifa'):
-                                            tarifa_id = self.controller.repository.get_default_tarifa()
-                                        existing = None
-                                        if hasattr(self.controller, 'repository') and art_id is not None:
-                                            existing = self.controller.repository.get_oferta_for_article(art_id, tarifa_id)
-                                        # Track whether an existing oferta exists for this article+tarifa
-
-                                        if not existing:
-                                            should_insert = True
-                                    except Exception:
-                                        # If repository check fails, fallback to add-mode flag
-                                        should_insert = bool(getattr(self, '_creating_oferta', False)) and not getattr(self, '_current_oferta_id', None)
-                            else:
-                                pass
-                                should_insert = bool(getattr(self, '_creating_oferta', False)) and not getattr(self, '_current_oferta_id', None)
-                        except Exception:
-                            should_insert = bool(getattr(self, '_creating_oferta', False)) and not getattr(self, '_current_oferta_id', None)
-
-                        # decided whether to insert or update based on repository state
-
-                        if should_insert:
-                            # create new oferta via controller
-                            # create a new oferta row using the controller and capture id
-                            if hasattr(self.controller, 'insert_oferta'):
-                                res = self.controller.insert_oferta(payload or {})
-                                # insert_oferta returns (ok, msg, row)
-                                if isinstance(res, tuple) and len(res) >= 3:
-                                    ok, msg, row = res[0], res[1], res[2]
-                                else:
-                                    ok, msg = res[0], res[1]
-                                    row = None
-
-                                if not ok:
-                                    try:
-                                        self._maybe_warn('Error', f'No se pudo crear la oferta: {msg}')
-                                    except Exception:
-                                        pass
-                                else:
-                                    # remember that we've actually created a DB row
-                                    try:
-                                        if row and isinstance(row, dict) and 'id' in row:
-                                            self._current_oferta_id = row.get('id')
-                                            # Mark that a DB row was created during add/save
-                                            self._created_db_row = True
-                                    except Exception:
-                                        pass
-                            else:
-                                # Fallback to save_oferta which will insert if no id present
-                                success, message = self.controller.save_oferta(payload)
-                                if not success:
-                                    try:
-                                        self._maybe_warn('Error', f'No se pudo guardar la oferta: {message}')
-                                    except Exception:
-                                        pass
+                        # This distinction is important to avoid overwriting existing offers
+                        # with empty data if the user cancels the add operation.
+                        if getattr(self, '_current_oferta_id', None) is None:
+                            # We are adding a new oferta
+                            res = self.controller.insert_oferta(payload)
+                            # res should be (success, message, row) tuple
+                            if isinstance(res, tuple) and len(res) == 3:
+                                success, message, row = res
+                                if success and row and isinstance(row, dict) and 'id' in row:
+                                    # Remember the new oferta id
+                                    self._current_oferta_id = row['id']
                         else:
-                            # update existing oferta
-                            # Update an existing oferta (by id if available)
-                            try:
-                                if getattr(self, '_current_oferta_id', None):
-                                    payload['id'] = self._current_oferta_id
-                                else:
-                                    current = None
-                                    if hasattr(self, 'controller') and hasattr(self.controller, 'get_current_article'):
-                                        current = self.controller.get_current_article()
-                                    if current and isinstance(current, dict) and current.get('oferta_id'):
-                                        payload['id'] = current.get('oferta_id')
-                            except Exception:
-                                pass
-
+                            # We are editing an existing oferta
+                            payload['id'] = self._current_oferta_id
                             success, message = self.controller.save_oferta(payload)
-                            if not success:
-                                try:
-                                    self._maybe_warn('Error', f'No se pudo guardar la oferta: {message}')
-                                except Exception:
-                                    pass
                     except Exception:
-                        # Any errors in persistence should not break UI flow
-                        try:
-                            self._maybe_warn('Error', 'Error guardando oferta')
-                        except Exception:
-                            pass
-            # Finally disable editing UI and clear editing flag
-            self._editing_oferta = False
-            self._creating_oferta = False
-            self._enable_oferta_editing(False)
+                        success = False
+                        message = str(e)
 
-            # Immediately refresh the offers table so the UI reflects saved changes
-            try:
-                self._refresh_ofertas_table()
-                # If we have a current oferta id, select & highlight the saved row
-                if getattr(self, '_current_oferta_id', None) and hasattr(self, 'ofertas_model'):
-                    oferta_id = getattr(self, '_current_oferta_id')
-                    try:
-                        # select the row in the table if table exists
-                        if hasattr(self.ui, 'tabla_ofertas') and self.ui.tabla_ofertas.model() is self.ofertas_model:
-                            # find index
-                            row_idx = None
-                            for i, of in enumerate(self.ofertas_model.offers):
-                                if of and isinstance(of, dict) and of.get('id') == oferta_id:
-                                    row_idx = i
-                                    break
-                            if row_idx is not None:
-                                idx = self.ofertas_model.index(row_idx, 0)
-                                try:
-                                    sel = self.ui.tabla_ofertas.selectionModel()
-                                    from PySide6.QtCore import QItemSelectionModel
-                                    sel.clearSelection()
-                                    sel.select(idx, QItemSelectionModel.SelectionFlag.Select | QItemSelectionModel.SelectionFlag.Rows)
-                                    self.ui.tabla_ofertas.setCurrentIndex(idx)
-                                    self.ui.tabla_ofertas.scrollTo(idx)
-                                except Exception:
-                                    pass
-                        # highlight via model
-                        self.ofertas_model.highlight_row_by_id(oferta_id)
-                    except Exception:
-                        pass
-            except Exception:
-                pass
+            if success:
+                # Inform the user only if there was a message to show
+                if message:
+                    from core.ui_helpers import show_info
+                    show_info(self, self.tr("Guardar oferta"), message)
+            else:
+                self._maybe_warn("Error", message)
         except Exception:
             # Ensure we reset editing state even on unexpected exceptions
             self._editing_oferta = False

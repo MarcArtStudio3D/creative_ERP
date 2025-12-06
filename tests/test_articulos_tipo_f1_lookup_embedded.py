@@ -24,7 +24,7 @@ def test_shortcutoverride_f1_is_handled(monkeypatch):
 
     v.controller.current_article = {'id': 1}
 
-    fake_selected = {'id': 777, 'codigo': 'T-OVR', 'descripcion': 'Tipo Override'}
+    fake_selected = {'id': 777, 'codigo': 'T-OVR', 'descripcion': 'Tipo Override', 'requiereEAN': True, 'proveedor': False}
 
     def fake_select(parent, data, headers, campos=None, titulo=None):
         return fake_selected, None
@@ -42,3 +42,7 @@ def test_shortcutoverride_f1_is_handled(monkeypatch):
     assert handled is True
     assert v.controller.current_article.get('id_tipo') == 777
     assert v.ui.txtCodigoTipo.text() == 'T-OVR'
+    if hasattr(v.ui, 'txtcodigo_barras'):
+        assert v.ui.txtcodigo_barras.isVisible() is True
+    if hasattr(v.ui, 'txtcodigo_fabricante'):
+        assert v.ui.txtcodigo_fabricante.isVisible() is False

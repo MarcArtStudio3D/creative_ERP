@@ -239,15 +239,15 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_8.addWidget(self.cboTipoIVA, 8, 1, 1, 1)
 
-        self.txtcodigo_proveedor = QLineEdit(self.tab_articulo)
-        self.txtcodigo_proveedor.setObjectName(u"txtcodigo_proveedor")
-        sizePolicy2.setHeightForWidth(self.txtcodigo_proveedor.sizePolicy().hasHeightForWidth())
-        self.txtcodigo_proveedor.setSizePolicy(sizePolicy2)
-        self.txtcodigo_proveedor.setMinimumSize(QSize(100, 0))
-        self.txtcodigo_proveedor.setMaximumSize(QSize(150, 16777215))
-        self.txtcodigo_proveedor.setProperty(u"locateField", True)
+        self.txtCodigoProveedor = QLineEdit(self.tab_articulo)
+        self.txtCodigoProveedor.setObjectName(u"txtCodigoProveedor")
+        sizePolicy2.setHeightForWidth(self.txtCodigoProveedor.sizePolicy().hasHeightForWidth())
+        self.txtCodigoProveedor.setSizePolicy(sizePolicy2)
+        self.txtCodigoProveedor.setMinimumSize(QSize(100, 0))
+        self.txtCodigoProveedor.setMaximumSize(QSize(150, 16777215))
+        self.txtCodigoProveedor.setProperty(u"locateField", True)
 
-        self.gridLayout_8.addWidget(self.txtcodigo_proveedor, 7, 1, 1, 1)
+        self.gridLayout_8.addWidget(self.txtCodigoProveedor, 7, 1, 1, 1)
 
         self.label_16 = QLabel(self.tab_articulo)
         self.label_16.setObjectName(u"label_16")
@@ -262,10 +262,10 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_8.addWidget(self.txtcodigo, 5, 1, 1, 1)
 
-        self.label_8 = QLabel(self.tab_articulo)
-        self.label_8.setObjectName(u"label_8")
+        self.lblProveedorHabitual = QLabel(self.tab_articulo)
+        self.lblProveedorHabitual.setObjectName(u"lblProveedorHabitual")
 
-        self.gridLayout_8.addWidget(self.label_8, 7, 0, 1, 1)
+        self.gridLayout_8.addWidget(self.lblProveedorHabitual, 7, 0, 1, 1)
 
         self.frame_8 = QFrame(self.tab_articulo)
         self.frame_8.setObjectName(u"frame_8")
@@ -300,11 +300,11 @@ class Ui_FrmArticulos(object):
 
         self.gridLayout_8.addWidget(self.frame_8, 13, 0, 3, 8)
 
-        self.txtproveedor = QLineEdit(self.tab_articulo)
-        self.txtproveedor.setObjectName(u"txtproveedor")
-        self.txtproveedor.setMaximumSize(QSize(16777215, 16777215))
+        self.txtProveedor = QLineEdit(self.tab_articulo)
+        self.txtProveedor.setObjectName(u"txtProveedor")
+        self.txtProveedor.setMaximumSize(QSize(16777215, 16777215))
 
-        self.gridLayout_8.addWidget(self.txtproveedor, 7, 2, 1, 5)
+        self.gridLayout_8.addWidget(self.txtProveedor, 7, 2, 1, 5)
 
         self.label_15 = QLabel(self.tab_articulo)
         self.label_15.setObjectName(u"label_15")
@@ -2282,9 +2282,9 @@ class Ui_FrmArticulos(object):
 " Kit", None))
         self.botBorrar.setText(QCoreApplication.translate("FrmArticulos", u"Borrar", None))
         self.btn_cerrar.setText(QCoreApplication.translate("FrmArticulos", u"Cerrar", None))
-        self.txtcodigo_proveedor.setPlaceholderText(QCoreApplication.translate("FrmArticulos", u"Ctrl+F-Buscar", None))
+        self.txtCodigoProveedor.setPlaceholderText(QCoreApplication.translate("FrmArticulos", u"Ctrl+F-Buscar", None))
         self.label_16.setText(QCoreApplication.translate("FrmArticulos", u"Tipo :", None))
-        self.label_8.setText(QCoreApplication.translate("FrmArticulos", u"Proveedor Habitual:", None))
+        self.lblProveedorHabitual.setText(QCoreApplication.translate("FrmArticulos", u"Proveedor Habitual:", None))
         self.btnEditartarifa.setText(QCoreApplication.translate("FrmArticulos", u"Editar Tarifa", None))
         self.label_15.setText(QCoreApplication.translate("FrmArticulos", u"Precio venta:", None))
         self.label_14.setText(QCoreApplication.translate("FrmArticulos", u"Coste:", None))

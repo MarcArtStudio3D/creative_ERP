@@ -17,8 +17,6 @@ class ArticulosView(QWidget):
         self.ui.setupUi(self)
         # Asegurar que el botón 'Nuevo' utilice el estilo centralizado 'success' desde modern.qss
         try:
-            # DEBUG: mark entry and current flags (help trace unexpected flows)
-            # build payload above; proceed to persistence
             # Establecer una propiedad dinámica 'class' para que coincida con selectores tipo QPushButton[class="success"]
             self.ui.botAnadir.setProperty('class', 'success')
         except Exception:
@@ -55,6 +53,34 @@ class ArticulosView(QWidget):
         self._setup_initial_state()
         
         self._init_complete = True
+
+    def _coerce_flag(self, val, default=False):
+        """Coerce various DB/JSON values to a boolean flag.
+
+        Handles ints (0/1), strings ('0','1','true','false'), booleans and None.
+        Returns `default` when `val` is None or cannot be interpreted.
+        """
+        try:
+            if val is None:
+                return default
+            if isinstance(val, bool):
+                return val
+            # ints (SQLAlchemy may return ints)
+            if isinstance(val, int):
+                return bool(val)
+            # strings
+            s = str(val).strip().lower()
+            if s in ('1', 'true', 't', 'yes', 'y'):
+                return True
+            if s in ('0', 'false', 'f', 'no', 'n', ''):
+                return False
+            # try numeric conversion
+            try:
+                return bool(int(s))
+            except Exception:
+                return default
+        except Exception:
+            return default
     
     # ==================== Database Setup ====================
     
@@ -294,29 +320,66 @@ class ArticulosView(QWidget):
         - proveedor_flag -> shows/hides txtcodigo_fabricante and its label (label_4)
         """
         try:
-            # EAN field + label
+            # EAN field + label. UI sometimes names the label differently
+            # (older generators used 'label_3', newer UI uses 'lblCodigoEAN').
             if hasattr(self.ui, 'txtcodigo_barras'):
                 try:
                     self.ui.txtcodigo_barras.setVisible(bool(requiere_ean))
                 except Exception:
                     pass
-            if hasattr(self.ui, 'label_3'):
+            # Prefer explicit named label if present
+            if hasattr(self.ui, 'lblCodigoEAN'):
                 try:
-                    self.ui.label_3.setVisible(bool(requiere_ean))
+                    self.ui.lblCodigoEAN.setVisible(bool(requiere_ean))
                 except Exception:
                     pass
+            else:
+                if hasattr(self.ui, 'label_3'):
+                    try:
+                        self.ui.label_3.setVisible(bool(requiere_ean))
+                    except Exception:
+                        pass
 
-            # Fabricante/Proveedor-related fields
+            # Fabricante-related field
             if hasattr(self.ui, 'txtcodigo_fabricante'):
                 try:
                     self.ui.txtcodigo_fabricante.setVisible(bool(proveedor_flag))
                 except Exception:
                     pass
-            if hasattr(self.ui, 'label_4'):
-                try:
-                    self.ui.label_4.setVisible(bool(proveedor_flag))
-                except Exception:
-                    pass
+
+            # Provider-related fields - current widget names (with proper casing)
+            # - provider label: 'lblProveedorHabitual'
+            # - provider code field: 'txtCodigoProveedor'
+            # - provider name field: 'txtProveedor'
+            # Keep old names for backwards compatibility
+            try:
+                visible = bool(proveedor_flag)
+            except Exception:
+                visible = False
+
+            # Label for "Proveedor Habitual:" - try all possible names
+            for lbl_name in ('lblProveedorHabitual', 'lblProveedorhabitual', 'label_8', 'lblCodigoenProveedor', 'label_4'):
+                if hasattr(self.ui, lbl_name):
+                    try:
+                        getattr(self.ui, lbl_name).setVisible(visible)
+                    except Exception:
+                        pass
+
+            # Proveedor code field - try all possible names
+            for field_name in ('txtCodigoProveedor', 'txtcodigo_proveedor'):
+                if hasattr(self.ui, field_name):
+                    try:
+                        getattr(self.ui, field_name).setVisible(visible)
+                    except Exception:
+                        pass
+            
+            # Proveedor name field - try all possible names
+            for field_name in ('txtProveedor', 'txtproveedor'):
+                if hasattr(self.ui, field_name):
+                    try:
+                        getattr(self.ui, field_name).setVisible(visible)
+                    except Exception:
+                        pass
         except Exception:
             logging.getLogger(__name__).exception("Error applying tipo flags to UI")
 
@@ -745,16 +808,36 @@ class ArticulosView(QWidget):
             self.ui.botBuscarFamilia.setEnabled(editing and has_section)
         
         # Provider - always set text (clear if no ID)
+        # Try both old and new widget names for backwards compatibility
         id_proveedor = article.get("id_proveedor")
         if id_proveedor:
             cod_prov, nombre_prov = self.controller.get_proveedor_info(id_proveedor)
-            self.ui.txtcodigo_proveedor.setText(cod_prov or "")
-            self.ui.txtproveedor.setText(nombre_prov or "")
+            # Set provider code - try new name first, then old name
+            if hasattr(self.ui, 'txtCodigoProveedor'):
+                self.ui.txtCodigoProveedor.setText(cod_prov or "")
+            elif hasattr(self.ui, 'txtcodigo_proveedor'):
+                self.ui.txtcodigo_proveedor.setText(cod_prov or "")
+            # Set provider name - try new name first, then old name
+            if hasattr(self.ui, 'txtProveedor'):
+                self.ui.txtProveedor.setText(nombre_prov or "")
+            elif hasattr(self.ui, 'txtproveedor'):
+                self.ui.txtproveedor.setText(nombre_prov or "")
         else:
-            self.ui.txtcodigo_proveedor.clear()
-            self.ui.txtproveedor.clear()
+            # Clear provider fields
+            if hasattr(self.ui, 'txtCodigoProveedor'):
+                self.ui.txtCodigoProveedor.clear()
+            elif hasattr(self.ui, 'txtcodigo_proveedor'):
+                self.ui.txtcodigo_proveedor.clear()
+            if hasattr(self.ui, 'txtProveedor'):
+                self.ui.txtProveedor.clear()
+            elif hasattr(self.ui, 'txtproveedor'):
+                self.ui.txtproveedor.clear()
 
         # Tipo: show codigo and descripcion if present
+        # Initialize flags to default (hidden)
+        requiere_ean = False
+        proveedor_flag = False
+        
         id_tipo = article.get('id_tipo')
         if id_tipo:
             try:
@@ -764,44 +847,64 @@ class ArticulosView(QWidget):
                         self.ui.txtCodigoTipo.setText(str(t.get('codigo') or ''))
                     if hasattr(self.ui, 'txtDescripcionTipo'):
                         self.ui.txtDescripcionTipo.setText(str(t.get('descripcion') or ''))
-                    # Apply tipo flags to UI (show/hide controls) if provided
+                    
+                    # Extract tipo flags
+                    requiere_ean = self._coerce_flag(t.get('requiereEAN'), default=False)
+                    proveedor_flag = self._coerce_flag(t.get('proveedor'), default=False)
+                    
+                    # Store transient flags in current article
                     try:
-                        requiere_ean = bool(t.get('requiereEAN')) if t.get('requiereEAN') is not None else False
-                        proveedor_flag = bool(t.get('proveedor')) if t.get('proveedor') is not None else False
-                        # store transient flags
                         if self.controller.current_article is not None:
                             self.controller.current_article['tipo_requiereEAN'] = requiere_ean
                             self.controller.current_article['tipo_proveedor'] = proveedor_flag
-                        self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
                     except Exception:
                         pass
                 else:
-                    # Fallback to any directly stored fields on article
+                    # No tipo found - use fallback fields from article
                     if hasattr(self.ui, 'txtCodigoTipo'):
                         self.ui.txtCodigoTipo.setText(str(article.get('codigo_tipo') or ''))
                     if hasattr(self.ui, 'txtDescripcionTipo'):
                         self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
+                    
+                    # Clear transient flags
+                    try:
+                        if self.controller.current_article is not None:
+                            self.controller.current_article.pop('tipo_requiereEAN', None)
+                            self.controller.current_article.pop('tipo_proveedor', None)
+                    except Exception:
+                        pass
             except Exception:
-                # Fallback to article fields
+                # Error fetching tipo - use fallback fields from article
                 if hasattr(self.ui, 'txtCodigoTipo'):
                     self.ui.txtCodigoTipo.setText(str(article.get('codigo_tipo') or ''))
                 if hasattr(self.ui, 'txtDescripcionTipo'):
                     self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
+                
+                # Clear transient flags
+                try:
+                    if self.controller.current_article is not None:
+                        self.controller.current_article.pop('tipo_requiereEAN', None)
+                        self.controller.current_article.pop('tipo_proveedor', None)
+                except Exception:
+                    pass
         else:
+            # No tipo ID - use fallback fields from article
             if hasattr(self.ui, 'txtCodigoTipo'):
                 self.ui.txtCodigoTipo.setText(str(article.get('codigo_tipo') or ''))
             if hasattr(self.ui, 'txtDescripcionTipo'):
                 self.ui.txtDescripcionTipo.setText(str(article.get('descripcion_tipo') or ''))
-        
-            # if no tipo present, ensure fields hidden
+            
+            # Clear transient flags
             try:
-                # clear transient flags
                 if self.controller.current_article is not None:
                     self.controller.current_article.pop('tipo_requiereEAN', None)
                     self.controller.current_article.pop('tipo_proveedor', None)
             except Exception:
                 pass
-            self._apply_tipo_flags_to_ui(False, False)
+        
+        # ALWAYS apply tipo flags to UI (show/hide fields based on tipo configuration)
+        # This ensures provider fields are shown/hidden correctly every time an article is loaded
+        self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
 
         # Precios: formatear según la configuración de decimales de la empresa
         try:
@@ -1093,9 +1196,9 @@ class ArticulosView(QWidget):
                         t = self.controller.repository.get_articulo_tipo(current.get('id_tipo'))
                         if t:
                             if tipo_requiereEAN is None:
-                                tipo_requiereEAN = bool(t.get('requiereEAN')) if t.get('requiereEAN') is not None else None
+                                tipo_requiereEAN = self._coerce_flag(t.get('requiereEAN'), default=None)
                             if tipo_proveedor is None:
-                                tipo_proveedor = bool(t.get('proveedor')) if t.get('proveedor') is not None else None
+                                tipo_proveedor = self._coerce_flag(t.get('proveedor'), default=None)
                     except Exception:
                         pass
 
@@ -1149,8 +1252,15 @@ class ArticulosView(QWidget):
         self.ui.txtseccion.clear()
         self.ui.txtfamilia.clear()
         self.ui.txtsubfamilia.clear()
-        self.ui.txtproveedor.clear()
-        self.ui.txtcodigo_proveedor.clear()
+        # Clear provider fields - try new names first, then old names
+        if hasattr(self.ui, 'txtProveedor'):
+            self.ui.txtProveedor.clear()
+        elif hasattr(self.ui, 'txtproveedor'):
+            self.ui.txtproveedor.clear()
+        if hasattr(self.ui, 'txtCodigoProveedor'):
+            self.ui.txtCodigoProveedor.clear()
+        elif hasattr(self.ui, 'txtcodigo_proveedor'):
+            self.ui.txtcodigo_proveedor.clear()
         self.ui.txtcoste.clear()
         self.ui.txtCoste_real.clear()
         if hasattr(self.ui, 'txtPrecioVenta'):
@@ -1542,13 +1652,13 @@ class ArticulosView(QWidget):
                     pass
                 # Apply UI visibility rules according to the tipo flags (if available)
                 try:
-                    requiere_ean = bool(tipo.get('requiereEAN')) if tipo.get('requiereEAN') is not None else False
-                    proveedor_flag = bool(tipo.get('proveedor')) if tipo.get('proveedor') is not None else False
-                    # store on transient current article for save/inspection
+                    requiere_ean = self._coerce_flag(t.get('requiereEAN'), default=False)
+                    proveedor_flag = self._coerce_flag(t.get('proveedor'), default=False)
                     try:
-                        if self.controller.current_article is not None:
-                            self.controller.current_article['tipo_requiereEAN'] = requiere_ean
-                            self.controller.current_article['tipo_proveedor'] = proveedor_flag
+                        logging.getLogger(__name__).info(
+                            "[ARTICULO-TIPO] id_tipo=%s raw_requiere=%s coerced_requiere=%s raw_proveedor=%s coerced_proveedor=%s",
+                            id_tipo, t.get('requiereEAN'), requiere_ean, t.get('proveedor'), proveedor_flag
+                        )
                     except Exception:
                         pass
                     self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
@@ -2054,12 +2164,19 @@ class ArticulosView(QWidget):
                     logging.getLogger(__name__).info(f"✅ Tipo seleccionado: {codigo} - {descripcion}")
                     # read flags from selected data (if present) and apply visibility
                     try:
-                        requiere_ean = bool(selected.get('requiereEAN')) if selected.get('requiereEAN') is not None else False
-                        proveedor_flag = bool(selected.get('proveedor')) if selected.get('proveedor') is not None else False
+                        requiere_ean = self._coerce_flag(selected.get('requiereEAN'), default=False)
+                        proveedor_flag = self._coerce_flag(selected.get('proveedor'), default=False)
                         # store transient flags on current_article for later
                         if self.controller.current_article is not None:
                             self.controller.current_article['tipo_requiereEAN'] = requiere_ean
                             self.controller.current_article['tipo_proveedor'] = proveedor_flag
+                        try:
+                            logging.getLogger(__name__).info(
+                                "[SELECT-TIPO] selected_id=%s raw_requiere=%s coerced_requiere=%s raw_proveedor=%s coerced_proveedor=%s",
+                                tipo_id, selected.get('requiereEAN'), requiere_ean, selected.get('proveedor'), proveedor_flag
+                            )
+                        except Exception:
+                            pass
                         self._apply_tipo_flags_to_ui(requiere_ean, proveedor_flag)
                     except Exception:
                         pass

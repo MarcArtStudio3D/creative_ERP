@@ -507,7 +507,7 @@ Editar
             </widget>
            </item>
            <item row="7" column="1">
-            <widget class="QLineEdit" name="txtcodigo_proveedor">
+            <widget class="QLineEdit" name="txtCodigoProveedor">
              <property name="sizePolicy">
               <sizepolicy hsizetype="Maximum" vsizetype="Fixed">
                <horstretch>0</horstretch>
@@ -555,7 +555,7 @@ Editar
             </widget>
            </item>
            <item row="7" column="0">
-            <widget class="QLabel" name="label_8">
+            <widget class="QLabel" name="lblProveedorHabitual">
              <property name="text">
               <string>Proveedor Habitual:</string>
              </property>
@@ -619,7 +619,7 @@ Editar
             </widget>
            </item>
            <item row="7" column="2" colspan="5">
-            <widget class="QLineEdit" name="txtproveedor">
+            <widget class="QLineEdit" name="txtProveedor">
              <property name="maximumSize">
               <size>
                <width>16777215</width>

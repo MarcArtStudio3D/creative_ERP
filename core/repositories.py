@@ -4,6 +4,7 @@
 """Repositorios para acceso a datos."""
 
 from typing import List, Optional, TypeVar, Generic
+from sqlmodel import select
 from .db import SessionLocal
 from modules.clientes.models import Cliente
 
@@ -38,7 +39,8 @@ class ClientRepo:
         """Obtiene todos los clientes."""
         db = SessionLocal()
         try:
-            return db.query(Cliente).all()
+            statement = select(Cliente)
+            return db.exec(statement).all()
         finally:
             db.close()
     
@@ -47,7 +49,8 @@ class ClientRepo:
         """Obtiene un cliente por ID."""
         db = SessionLocal()
         try:
-            return db.query(Cliente).filter(Cliente.id == client_id).first()
+            statement = select(Cliente).where(Cliente.id == client_id)
+            return db.exec(statement).first()
         finally:
             db.close()
     
@@ -83,7 +86,8 @@ class UserRepository:
         """Obtener todos los usuarios."""
         db = SessionLocal()
         try:
-            return db.query(User).all()
+            statement = select(User)
+            return db.exec(statement).all()
         finally:
             db.close()
     
@@ -92,7 +96,8 @@ class UserRepository:
         """Obtener usuario por nombre de usuario."""
         db = SessionLocal()
         try:
-            return db.query(User).filter(User.username == username).first()
+            statement = select(User).where(User.username == username)
+            return db.exec(statement).first()
         finally:
             db.close()
 
@@ -105,7 +110,8 @@ class BusinessGroupRepository:
         """Obtener todos los grupos empresariales."""
         db = SessionLocal()
         try:
-            return db.query(BusinessGroup).all()
+            statement = select(BusinessGroup)
+            return db.exec(statement).all()
         finally:
             db.close()
 
@@ -118,6 +124,7 @@ class CompanyRepository:
         """Obtener empresas de un grupo específico."""
         db = SessionLocal()
         try:
-            return db.query(Empresa).filter(Empresa.group_id == group_id).all()
+            statement = select(Empresa).where(Empresa.group_id == group_id)
+            return db.exec(statement).all()
         finally:
             db.close()

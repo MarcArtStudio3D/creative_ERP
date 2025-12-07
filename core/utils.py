@@ -2,9 +2,11 @@
 Utilidades comunes para formateo numérico y configuración por empresa.
 """
 from __future__ import annotations
-from typing import Dict
+from typing import Dict, Optional
+from datetime import date as _date_type
+from PySide6.QtCore import QDate
 
-def qdate_to_date(qd) -> 'datetime.date | None':
+def qdate_to_date(qd) -> Optional[_date_type]:
     """Convertir un QDate a datetime.date de forma segura.
 
     - Si qd es None o inválido, devuelve None.
@@ -152,3 +154,38 @@ def get_company_decimal_settings(default_totales: int = 2, default_precios: int 
             set_current_database(original_db)
     except Exception:
         return {'decimales_totales': default_totales, 'decimales_precios': default_precios}
+
+def pydate_to_qdate(d) -> QDate:
+    """Convertir un objeto date/datetime/objeto con atributos year/month/day a QDate.
+
+    - Acepta: None, QDate, datetime.date, datetime.datetime, y objetos que expongan
+      year/month/day como atributos o métodos.
+    - Devuelve QDate() (vacío) en caso de fallo o valores no válidos.
+    """
+    if not d:
+        return QDate()
+    try:
+        if isinstance(d, QDate):
+            return d
+
+        def _get_int(o, name):
+            v = getattr(o, name, None)
+            if callable(v):
+                try:
+                    v = v()
+                except Exception:
+                    v = None
+            try:
+                return int(v)
+            except Exception:
+                return 0
+
+        y = _get_int(d, 'year')
+        m = _get_int(d, 'month')
+        day = _get_int(d, 'day')
+
+        if y <= 0 or m <= 0 or day <= 0:
+            return QDate()
+        return QDate(y, m, day)
+    except Exception:
+        return QDate()

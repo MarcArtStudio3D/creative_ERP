@@ -1,13 +1,10 @@
 # -----------------------------
 # core/db.py
 # -----------------------------
-"""Gestión de base de datos con SQLAlchemy."""
+"""Gestión de base de datos con SQLModel."""
 
-from sqlalchemy import create_engine
+from sqlmodel import create_engine, Session, SQLModel
 import logging
-import os
-from sqlalchemy.orm import sessionmaker, scoped_session
-from core.models import Base
 import os
 from sqlalchemy import inspect, text
 from sqlalchemy.sql.sqltypes import Integer, String, DateTime, Date, Float, Text
@@ -47,13 +44,15 @@ def set_current_database(db_name):
     # Crear nuevo motor
     _current_engine = create_engine(
         db_url,
-        connect_args={"check_same_thread": False} if 'sqlite' in db_url else {}
+        connect_args={"check_same_thread": False} if 'sqlite' in db_url else {},
+        echo=False  # Set to True for debugging SQL queries
     )
 
-    # Crear nueva sesión
-    _current_session = scoped_session(
-        sessionmaker(autocommit=False, autoflush=False, bind=_current_engine)
-    )
+    # Crear factory de sesiones (SQLModel usa Session de SQLAlchemy internamente)
+    def _session_factory():
+        return Session(_current_engine, autocommit=False, autoflush=False)
+
+    _current_session = _session_factory
 
     logger = logging.getLogger(__name__)
     logger.debug("Database switched to: %s (%s)", _current_db, db_url)
@@ -84,13 +83,6 @@ DB_PATH = get_database_url(DEFAULT_DB)
 engine = get_engine()
 SessionLocal = _current_session
 
-
-def get_session():
-    """Obtiene una sesión de base de datos para la base de datos actual."""
-    global _current_session
-    if _current_session is None:
-        set_current_database(_current_db)
-    return _current_session()
 
 
 def _is_company_database_pointing_to_artstudio3d() -> bool:
@@ -153,9 +145,8 @@ def init_db(db_name=None, initiator: str | None = None):
     logger.info(f"init_db requested for database: {get_current_database()} by {initiator}")
     if get_current_database() == 'main':
         # Base de datos principal: tablas globales
-        from . import models as core_models
         try:
-            core_models.Base.metadata.create_all(bind=current_engine)
+            SQLModel.metadata.create_all(bind=current_engine)
             logger.info("Global tables created in the main database")
         except Exception as e:
             logger.exception(f"ERROR creating global tables: {e}")
@@ -214,24 +205,11 @@ def init_db(db_name=None, initiator: str | None = None):
     if is_sqlite or is_mysql:
         dialect = 'sqlite' if is_sqlite else 'mysql'
         
-        if get_current_database() == 'artstudio3d':
-            try:
-                _ensure_columns(clientes_models.Base, dialect, engine=current_engine)
-            except Exception:
-                logger.exception("Error ensuring columns for clientes")
-            try:
-                _ensure_columns(tipo_cliente_models.Base, dialect, engine=current_engine)
-            except Exception:
-                logger.exception("Error ensuring columns for tipo_cliente")
-        else:
-            try:
-                _ensure_columns(clientes_models.Base, dialect, engine=current_engine)
-            except Exception:
-                logger.exception("Error ensuring columns for clientes (other)")
-            try:
-                _ensure_columns(facturas_models.Base, dialect, engine=current_engine)
-            except Exception:
-                logger.exception("Error ensuring columns for facturas (other)")
+        # Con SQLModel, usar SQLModel.metadata directamente
+        try:
+            _ensure_columns(SQLModel, dialect, engine=current_engine)
+        except Exception:
+            logger.exception("Error ensuring columns for SQLModel metadata")
 
     # Restaurar base de datos original si se cambió
     if db_name:

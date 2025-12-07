@@ -617,7 +617,7 @@ class MainWindowV2(QMainWindow):
             ModuleCategory.PROYECTOS: self.tr("Proyectos"),
             ModuleCategory.ADMINISTRACION: self.tr("Administración")
         }
-        
+
         for category in [ModuleCategory.VENTAS, ModuleCategory.COMPRAS, 
                         ModuleCategory.ALMACEN, ModuleCategory.FINANCIERO,
                         ModuleCategory.PROYECTOS, ModuleCategory.ADMINISTRACION]:
@@ -909,20 +909,56 @@ class MainWindowV2(QMainWindow):
         Si el módulo ya está en caché, lo muestra y actualiza su posición en LRU.
         Si no está en caché, lo crea y gestiona el límite de caché.
         """
-        # Si el módulo ya está en caché, simplemente lo muestra
+        # Si el módulo ya está en caché, comprobar que el widget aún está en el stacked
         if module_id in self.module_widgets:
             widget = self.module_widgets[module_id]
-            self.stacked_widget.setCurrentWidget(widget)
-            
-            # Actualizar orden de acceso (mover al final = más reciente)
-            if module_id in self.module_access_order:
-                self.module_access_order.remove(module_id)
-            self.module_access_order.append(module_id)
-            
-            msg = self.tr("Módulo {} activo").format(module_id)
-            self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
-            return
-        
+            try:
+                idx = self.stacked_widget.indexOf(widget)
+            except Exception:
+                idx = -1
+
+            if idx != -1:
+                # widget válido en el stacked: verificar que la vista interior (module_view)
+                # sigue existiendo y visible; si fue cerrada por el propio módulo, recreamos.
+                try:
+                    module_view = self._find_module_view(widget)
+                except Exception:
+                    module_view = None
+
+                if module_view is None or not getattr(module_view, 'isVisible', lambda: True)():
+                    # El módulo interno fue cerrado/ocultado: limpiar entrada stale y recrear abajo.
+                    try:
+                        # remover del stacked para evitar widgets huérfanos
+                        self.stacked_widget.removeWidget(widget)
+                    except Exception:
+                        pass
+                    try:
+                        widget.deleteLater()
+                    except Exception:
+                        pass
+                    try:
+                        del self.module_widgets[module_id]
+                    except Exception:
+                        pass
+                    try:
+                        if module_id in self.module_access_order:
+                            self.module_access_order.remove(module_id)
+                    except Exception:
+                        pass
+                    # continue para crear una nueva instancia más abajo
+                else:
+                    # Vista válida: mostrarla
+                    self.stacked_widget.setCurrentWidget(widget)
+                    # Actualizar orden de acceso (mover al final = más reciente)
+                    if module_id in self.module_access_order:
+                        self.module_access_order.remove(module_id)
+                    self.module_access_order.append(module_id)
+
+                    msg = self.tr("Módulo {} activo").format(module_id)
+                    self.statusBar().showMessage(f"{self.get_status_text()} | {msg}")
+                    return
+            # end idx != -1 handling
+
         # Verificar si necesitamos liberar memoria (límite de caché alcanzado)
         if len(self.module_widgets) >= self.max_cached_modules:
             self._cleanup_old_modules()
@@ -1053,6 +1089,18 @@ class MainWindowV2(QMainWindow):
         # Asegurar que el contenido del módulo se expanda
         module_content.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         
+        # Si la vista del módulo expone un botón de cierre (btn_cerrar), conéctalo
+        # para que cierre correctamente el módulo en la MainWindow (evitar stale cache).
+        try:
+            ui_obj = getattr(module_content, 'ui', None)
+            if ui_obj is not None:
+                close_btn = getattr(ui_obj, 'btn_cerrar', None)
+                if close_btn is not None:
+                    # connect to close_module so the main window properly removes cached widget
+                    close_btn.clicked.connect(lambda checked=False, mid=module_id: self.close_module(mid))
+        except Exception:
+            pass
+
         # Añadir al layout para que ocupe todo el espacio disponible
         main_layout.addWidget(module_content)
         

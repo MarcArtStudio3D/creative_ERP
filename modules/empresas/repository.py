@@ -51,7 +51,7 @@ class EmpresaRepository:
             # Fallback to global session if specific connection fails
             return get_session()
 
-    def obtener_todos(self) -> List[Empresa]:
+    def obtener_todos(self) -> list[type[Empresa]]:
         sess = self._session()
         return sess.query(Empresa).order_by(Empresa.nombre_fiscal).all()
         

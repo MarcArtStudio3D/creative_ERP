@@ -38,4 +38,3 @@ def test_load_article_clears_flags_when_no_tipo(monkeypatch):
 
     assert v.ui.txtcodigo_barras.isVisible() is False
     assert v.ui.txtcodigo_fabricante.isVisible() is False
-*** End Patch

@@ -61,12 +61,22 @@ def test_save_subfamilia():
 
     # Verificar en BD
     db_res = session.execute(text('SELECT id, codigo, id_subfamilia FROM articulos WHERE id = :id'), {'id': article_id}).fetchone()
-    print(f"🔎 En BD: id_subfamilia = {db_res[2]}")
+    # Acceso robusto por nombre de columna cuando SQLAlchemy Row lo soporta; caer a índice si no
+    try:
+        id_subfamilia_bd = None
+        if hasattr(db_res, '_mapping'):
+            id_subfamilia_bd = db_res._mapping.get('id_subfamilia')
+        else:
+            id_subfamilia_bd = db_res[2] if len(db_res) > 2 else None
+    except Exception:
+        id_subfamilia_bd = None
 
-    if db_res[2] == sub_id:
+    print(f"🔎 En BD: id_subfamilia = {id_subfamilia_bd}")
+
+    if id_subfamilia_bd == sub_id:
         print('✅ Subfamilia guardada correctamente en la base de datos')
     else:
-        print(f"❌ ERROR: id_subfamilia esperado {sub_id}, obtenido {db_res[2]}")
+        print(f"❌ ERROR: id_subfamilia esperado {sub_id}, obtenido {id_subfamilia_bd}")
 
     session.close()
 

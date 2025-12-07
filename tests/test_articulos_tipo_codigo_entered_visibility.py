@@ -51,4 +51,3 @@ def test_codigo_tipo_empty_hides_flags():
         assert v.ui.txtcodigo_barras.isVisible() is False
     if hasattr(v.ui, 'txtcodigo_fabricante'):
         assert v.ui.txtcodigo_fabricante.isVisible() is False
-*** End Patch

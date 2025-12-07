@@ -3,167 +3,149 @@ Modelos de datos para el módulo de Clientes
 Basado en la estructura original de RedFox SGC (clientes.cpp)
 """
 
-from sqlalchemy import Integer, String, Float, Date, Boolean, Text, ForeignKey, DateTime
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlmodel import SQLModel, Field, Relationship
 from datetime import date, datetime
-from typing import Optional
-from core.db import Base
-from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
+from typing import Optional, List
 
 
-class Cliente(Base):
+class Cliente(SQLModel, table=True):
     """Modelo de Cliente - Refleja la estructura de RedFox SGC"""
     __tablename__ = 'clientes'
     
     # Identificadores
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_web: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    codigo_cliente: Mapped[str] = mapped_column(String(50), unique=True, nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_web: Optional[int] = None
+    codigo_cliente: str = Field(max_length=50, unique=True, index=True)
     
     # Datos personales
-    apellido1: Mapped[Optional[str]] = mapped_column(String(100))
-    apellido2: Mapped[Optional[str]] = mapped_column(String(100))
-    nombre: Mapped[Optional[str]] = mapped_column(String(100))
-    nombre_fiscal: Mapped[Optional[str]] = mapped_column(String(200))
-    nombre_comercial: Mapped[Optional[str]] = mapped_column(String(200))
-    persona_contacto: Mapped[Optional[str]] = mapped_column(String(200))
+    apellido1: Optional[str] = Field(default=None, max_length=100)
+    apellido2: Optional[str] = Field(default=None, max_length=100)
+    nombre: Optional[str] = Field(default=None, max_length=100)
+    nombre_fiscal: Optional[str] = Field(default=None, max_length=200)
+    nombre_comercial: Optional[str] = Field(default=None, max_length=200)
+    persona_contacto: Optional[str] = Field(default=None, max_length=200)
     
     # Identificación fiscal
-    cif_nif_siren: Mapped[Optional[str]] = mapped_column(String(50))
-    siret: Mapped[Optional[str]] = mapped_column(String(14))
-    cif_vies: Mapped[Optional[str]] = mapped_column(String(50))  # NIF intracomunitario
+    cif_nif_siren: Optional[str] = Field(default=None, max_length=50)
+    siret: Optional[str] = Field(default=None, max_length=14)
+    cif_vies: Optional[str] = Field(default=None, max_length=50)  # NIF intracomunitario
     
     # Dirección principal
-    direccion1: Mapped[Optional[str]] = mapped_column(String(255))
-    direccion2: Mapped[Optional[str]] = mapped_column(String(255))
-    cp: Mapped[Optional[str]] = mapped_column(String(10))
-    poblacion: Mapped[Optional[str]] = mapped_column(String(100))
-    provincia: Mapped[Optional[str]] = mapped_column(String(100))
-    pais: Mapped[str] = mapped_column(String(100), default='España')
+    direccion1: Optional[str] = Field(default=None, max_length=255)
+    direccion2: Optional[str] = Field(default=None, max_length=255)
+    cp: Optional[str] = Field(default=None, max_length=10)
+    poblacion: Optional[str] = Field(default=None, max_length=100)
+    provincia: Optional[str] = Field(default=None, max_length=100)
+    pais: str = Field(default='España', max_length=100)
     
     # Contacto
-    telefono1: Mapped[Optional[str]] = mapped_column(String(50))
-    telefono2: Mapped[Optional[str]] = mapped_column(String(50))
-    fax: Mapped[Optional[str]] = mapped_column(String(50))
-    movil: Mapped[Optional[str]] = mapped_column(String(50))
-    email: Mapped[Optional[str]] = mapped_column(String(200))
-    web: Mapped[Optional[str]] = mapped_column(String(200))
+    telefono1: Optional[str] = Field(default=None, max_length=50)
+    telefono2: Optional[str] = Field(default=None, max_length=50)
+    fax: Optional[str] = Field(default=None, max_length=50)
+    movil: Optional[str] = Field(default=None, max_length=50)
+    email: Optional[str] = Field(default=None, max_length=200)
+    web: Optional[str] = Field(default=None, max_length=200)
     
     # Fechas importantes
-    fecha_alta: Mapped[date] = mapped_column(Date, default=date.today)
-    fecha_ultima_compra: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
-    fecha_nacimiento: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    fecha_alta: date = Field(default_factory=date.today)
+    fecha_ultima_compra: Optional[date] = None
+    fecha_nacimiento: Optional[date] = None
     
     # Estadísticas
-    acumulado_ventas: Mapped[float] = mapped_column(Float, default=0.0)
-    ventas_ejercicio: Mapped[float] = mapped_column(Float, default=0.0)
-    riesgo_maximo: Mapped[float] = mapped_column(Float, default=0.0)
-    deuda_actual: Mapped[float] = mapped_column(Float, default=0.0)
-    importe_pendiente: Mapped[float] = mapped_column(Float, default=0.0)
+    acumulado_ventas: float = Field(default=0.0)
+    ventas_ejercicio: float = Field(default=0.0)
+    riesgo_maximo: float = Field(default=0.0)
+    deuda_actual: float = Field(default=0.0)
+    importe_pendiente: float = Field(default=0.0)
     
     # Comentarios y bloqueos
-    comentarios: Mapped[Optional[str]] = mapped_column(Text)
-    bloqueado: Mapped[bool] = mapped_column(Boolean, default=False)
-    comentario_bloqueo: Mapped[Optional[str]] = mapped_column(Text)
-    observaciones: Mapped[Optional[str]] = mapped_column(String(255))
+    comentarios: Optional[str] = None
+    bloqueado: bool = Field(default=False)
+    comentario_bloqueo: Optional[str] = None
+    observaciones: Optional[str] = Field(default=None, max_length=255)
     
     # Datos financieros
-    porc_dto_cliente: Mapped[float] = mapped_column(Float, default=0.0)  # Porcentaje descuento fijo
-    recargo_equivalencia: Mapped[bool] = mapped_column(Boolean, default=False)
-    irpf: Mapped[bool] = mapped_column(Boolean, default=False)  # Cliente empresa (aplicar IRPF)
-    grupo_iva: Mapped[int] = mapped_column(Integer, default=1)  # 1=General, 2=UE, 3=Exento, 4=Exportación
+    porc_dto_cliente: float = Field(default=0.0)  # Porcentaje descuento fijo
+    recargo_equivalencia: bool = Field(default=False)
+    irpf: bool = Field(default=False)  # Cliente empresa (aplicar IRPF)
+    grupo_iva: int = Field(default=1)  # 1=General, 2=UE, 3=Exento, 4=Exportación
     
     # Contabilidad (PGC)
-    cuenta_contable: Mapped[Optional[str]] = mapped_column(String(50))
-    cuenta_iva_repercutido: Mapped[Optional[str]] = mapped_column(String(50))
-    cuenta_deudas: Mapped[Optional[str]] = mapped_column(String(50))
-    cuenta_cobros: Mapped[Optional[str]] = mapped_column(String(50))
+    cuenta_contable: Optional[str] = Field(default=None, max_length=50)
+    cuenta_iva_repercutido: Optional[str] = Field(default=None, max_length=50)
+    cuenta_deudas: Optional[str] = Field(default=None, max_length=50)
+    cuenta_cobros: Optional[str] = Field(default=None, max_length=50)
     
     # Forma de pago
-    id_forma_pago: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)
-    dia_pago1: Mapped[int] = mapped_column(Integer, default=0)
-    dia_pago2: Mapped[int] = mapped_column(Integer, default=0)
+    id_forma_pago: Optional[int] = None
+    dia_pago1: int = Field(default=0)
+    dia_pago2: int = Field(default=0)
     
     # Datos bancarios
-    entidad_bancaria: Mapped[Optional[str]] = mapped_column(String(4))
-    oficina_bancaria: Mapped[Optional[str]] = mapped_column(String(4))
-    dc: Mapped[Optional[str]] = mapped_column(String(2))
-    cuenta_corriente: Mapped[Optional[str]] = mapped_column(String(10))
+    entidad_bancaria: Optional[str] = Field(default=None, max_length=4)
+    oficina_bancaria: Optional[str] = Field(default=None, max_length=4)
+    dc: Optional[str] = Field(default=None, max_length=2)
+    cuenta_corriente: Optional[str] = Field(default=None, max_length=10)
     
     # Importes especiales
-    importe_a_cuenta: Mapped[float] = mapped_column(Float, default=0.0)
-    vales: Mapped[float] = mapped_column(Float, default=0.0)
+    importe_a_cuenta: float = Field(default=0.0)
+    vales: float = Field(default=0.0)
     
     # Tarjetas de crédito
-    visa_distancia1: Mapped[Optional[str]] = mapped_column(String(20))
-    visa_distancia2: Mapped[Optional[str]] = mapped_column(String(20))
-    visa1_caduca_mes: Mapped[int] = mapped_column(Integer, default=0)
-    visa2_caduca_mes: Mapped[int] = mapped_column(Integer, default=0)
-    visa1_caduca_ano: Mapped[int] = mapped_column(Integer, default=0)
-    visa2_caduca_ano: Mapped[int] = mapped_column(Integer, default=0)
-    visa1_cod_valid: Mapped[int] = mapped_column(Integer, default=0)
-    visa2_cod_valid: Mapped[int] = mapped_column(Integer, default=0)
+    visa_distancia1: Optional[str] = Field(default=None, max_length=20)
+    visa_distancia2: Optional[str] = Field(default=None, max_length=20)
+    visa1_caduca_mes: int = Field(default=0)
+    visa2_caduca_mes: int = Field(default=0)
+    visa1_caduca_ano: int = Field(default=0)
+    visa2_caduca_ano: int = Field(default=0)
+    visa1_cod_valid: int = Field(default=0)
+    visa2_cod_valid: int = Field(default=0)
     
     # Acceso web
-    acceso_web: Mapped[Optional[str]] = mapped_column(String(100))
-    password_web: Mapped[Optional[str]] = mapped_column(String(100))
+    acceso_web: Optional[str] = Field(default=None, max_length=100)
+    password_web: Optional[str] = Field(default=None, max_length=100)
     
     # Referencias a otras tablas
-    id_tarifa: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Tarifa de precios
-    id_divisa: Mapped[int] = mapped_column(Integer, default=1)  # Divisa predeterminada
-    id_idioma_documentos: Mapped[int] = mapped_column(Integer, default=1)  # Idioma para documentos
-    id_agente: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Agente comercial
-    id_transportista: Mapped[Optional[int]] = mapped_column(Integer, nullable=True)  # Transportista predeterminado
-    
-    # Relaciones
-#     # invoices = relationship("Invoice", back_populates="client")  # Deshabilitado por import circular  # Deshabilitado por import circular
+    id_tarifa: Optional[int] = None  # Tarifa de precios
+    id_divisa: int = Field(default=1)  # Divisa predeterminada
+    id_idioma_documentos: int = Field(default=1)  # Idioma para documentos
+    id_agente: Optional[int] = None  # Agente comercial
+    id_transportista: Optional[int] = None  # Transportista predeterminado
     
     def __repr__(self):
         return f"<Cliente(id={self.id}, codigo='{self.codigo_cliente}', nombre='{self.nombre_fiscal}')>"
     
     def nombre_completo(self):
         """Devuelve el nombre completo del cliente"""
-        nombre_fiscal = self.nombre_fiscal
-        if nombre_fiscal:
-            return nombre_fiscal
-        nombre = self.nombre
-        apellido1 = self.apellido1
-        apellido2 = self.apellido2
-        if nombre or apellido1:
+        if self.nombre_fiscal:
+            return self.nombre_fiscal
+        if self.nombre or self.apellido1:
             partes = []
-            if nombre:
-                partes.append(nombre)
-            if apellido1:
-                partes.append(apellido1)
-            if apellido2:
-                partes.append(apellido2)
+            if self.nombre:
+                partes.append(self.nombre)
+            if self.apellido1:
+                partes.append(self.apellido1)
+            if self.apellido2:
+                partes.append(self.apellido2)
             return " ".join(partes)
-        else:
-            nombre_comercial = self.nombre_comercial
-            codigo_cliente = self.codigo_cliente
-            return nombre_comercial or codigo_cliente
+        return self.nombre_comercial or self.codigo_cliente
     
     def direccion_completa(self):
         """Devuelve la dirección completa formateada"""
         partes = []
-        direccion1 = self.direccion1
-        direccion2 = self.direccion2
-        cp = self.cp
-        poblacion = self.poblacion
-        provincia = self.provincia
-        if direccion1:
-            partes.append(direccion1)
-        if direccion2:
-            partes.append(direccion2)
-        if cp or poblacion:
+        if self.direccion1:
+            partes.append(self.direccion1)
+        if self.direccion2:
+            partes.append(self.direccion2)
+        if self.cp or self.poblacion:
             linea_ciudad = []
-            if cp:
-                linea_ciudad.append(cp)
-            if poblacion:
-                linea_ciudad.append(poblacion)
+            if self.cp:
+                linea_ciudad.append(self.cp)
+            if self.poblacion:
+                linea_ciudad.append(self.poblacion)
             partes.append(" ".join(linea_ciudad))
-        if provincia:
-            partes.append(provincia)
+        if self.provincia:
+            partes.append(self.provincia)
         return ", ".join(partes)
     
     def to_dict(self):
@@ -184,136 +166,119 @@ class Cliente(Base):
         }
 
 
-class DireccionAlternativa(Base):
+class DireccionAlternativa(SQLModel, table=True):
     """Direcciones alternativas de entrega/facturación"""
     __tablename__ = 'direcciones_alternativas'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_cliente: int = Field(foreign_key="clientes.id")
     
-    descripcion: Mapped[Optional[str]] = mapped_column(String(100))  # Ej: "Almacén principal", "Oficina central"
-    direccion1: Mapped[Optional[str]] = mapped_column(String(255))
-    direccion2: Mapped[Optional[str]] = mapped_column(String(255))
-    cp: Mapped[Optional[str]] = mapped_column(String(10))
-    poblacion: Mapped[Optional[str]] = mapped_column(String(100))
-    provincia: Mapped[Optional[str]] = mapped_column(String(100))
-    pais: Mapped[Optional[str]] = mapped_column(String(100), default='Francia')  # Nombre del país
-    email: Mapped[Optional[str]] = mapped_column(String(200))
-    comentarios: Mapped[Optional[str]] = mapped_column(Text)
+    descripcion: Optional[str] = Field(default=None, max_length=100)  # Ej: "Almacén principal", "Oficina central"
+    direccion1: Optional[str] = Field(default=None, max_length=255)
+    direccion2: Optional[str] = Field(default=None, max_length=255)
+    cp: Optional[str] = Field(default=None, max_length=10)
+    poblacion: Optional[str] = Field(default=None, max_length=100)
+    provincia: Optional[str] = Field(default=None, max_length=100)
+    pais: Optional[str] = Field(default='Francia', max_length=100)
+    email: Optional[str] = Field(default=None, max_length=200)
+    comentarios: Optional[str] = None
     
     # Fechas
-    fecha_creacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.now)
-    fecha_modificacion: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, onupdate=datetime.now)
+    fecha_creacion: datetime = Field(default_factory=datetime.now)
+    fecha_modificacion: datetime = Field(default_factory=datetime.now)
 
 
-class DeudaCliente(Base):
+class DeudaCliente(SQLModel, table=True):
     """Gestión de deudas del cliente (facturas pendientes)"""
     __tablename__ = 'deudas_clientes'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_cliente: int = Field(foreign_key="clientes.id")
     
-    fecha_deuda: Mapped[date] = mapped_column(Date, nullable=False)
-    fecha_vencimiento: Mapped[date] = mapped_column(Date, nullable=False)
-    documento: Mapped[Optional[str]] = mapped_column(String(50))  # Número de factura/documento
-    id_documento: Mapped[Optional[int]] = mapped_column(Integer)  # ID del documento (factura, ticket, etc.)
-    tipo_documento: Mapped[Optional[str]] = mapped_column(String(20))  # 'factura', 'ticket', 'albaran'
+    fecha_deuda: date
+    fecha_vencimiento: date
+    documento: Optional[str] = Field(default=None, max_length=50)  # Número de factura/documento
+    id_documento: Optional[int] = None  # ID del documento (factura, ticket, etc.)
+    tipo_documento: Optional[str] = Field(default=None, max_length=20)  # 'factura', 'ticket', 'albaran'
     
-    importe_total: Mapped[float] = mapped_column(Float, nullable=False)
-    importe_pagado: Mapped[float] = mapped_column(Float, default=0.0)
-    importe_pendiente: Mapped[float] = mapped_column(Float, nullable=False)
+    importe_total: float
+    importe_pagado: float = Field(default=0.0)
+    importe_pendiente: float
     
-    pagado: Mapped[bool] = mapped_column(Boolean, default=False)
-    fecha_pago: Mapped[Optional[date]] = mapped_column(Date, nullable=True)
+    pagado: bool = Field(default=False)
+    fecha_pago: Optional[date] = None
     
-    observaciones: Mapped[Optional[str]] = mapped_column(Text)
+    observaciones: Optional[str] = None
 
 
-class HistorialCliente(Base):
+class HistorialCliente(SQLModel, table=True):
     """Historial de operaciones con el cliente"""
     __tablename__ = 'historial_clientes'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_cliente: int = Field(foreign_key="clientes.id")
     
-    fecha: Mapped[date] = mapped_column(Date, nullable=False, default=date.today)
-    tipo_operacion: Mapped[Optional[str]] = mapped_column(String(50))  # 'venta', 'cobro', 'devolucion', 'nota'
-    documento: Mapped[Optional[str]] = mapped_column(String(50))
-    id_documento: Mapped[Optional[int]] = mapped_column(Integer)
+    fecha: date = Field(default_factory=date.today)
+    tipo_operacion: Optional[str] = Field(default=None, max_length=50)  # 'venta', 'cobro', 'devolucion', 'nota'
+    documento: Optional[str] = Field(default=None, max_length=50)
+    id_documento: Optional[int] = None
     
-    importe: Mapped[float] = mapped_column(Float, default=0.0)
-    descripcion: Mapped[Optional[str]] = mapped_column(Text)
-    usuario: Mapped[Optional[str]] = mapped_column(String(100))  # Usuario que realizó la operación
+    importe: float = Field(default=0.0)
+    descripcion: Optional[str] = None
+    usuario: Optional[str] = Field(default=None, max_length=100)  # Usuario que realizó la operación
 
 
-class EstadisticaClienteMes(Base):
+class EstadisticaClienteMes(SQLModel, table=True):
     """Estadísticas de ventas por mes"""
     __tablename__ = 'estadisticas_clientes_mes'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False)
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_cliente: int = Field(foreign_key="clientes.id")
     
-    anio: Mapped[int] = mapped_column(Integer, nullable=False)
-    mes: Mapped[int] = mapped_column(Integer, nullable=False)  # 1-12
+    anio: int
+    mes: int  # 1-12
     
-    importe_ventas: Mapped[float] = mapped_column(Float, default=0.0)
-    numero_operaciones: Mapped[int] = mapped_column(Integer, default=0)
-    
-    # Índice único para evitar duplicados
-    __table_args__ = (
-        {'sqlite_autoincrement': True},
-    )
+    importe_ventas: float = Field(default=0.0)
+    numero_operaciones: int = Field(default=0)
 
 
+class Ville(SQLModel, table=True):
+    """Modelo de ciudades francesas"""
+    __tablename__ = 'villes'
+    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    code_postal: str = Field(max_length=10, index=True)
+    
     # Región
-    reg_code: Mapped[Optional[str]] = mapped_column(String(10))
-    reg_nom: Mapped[Optional[str]] = mapped_column(String(255))
-
+    reg_code: Optional[str] = Field(default=None, max_length=10)
+    reg_nom: Optional[str] = Field(default=None, max_length=255)
+    
     # Departamento
-    dep_code: Mapped[Optional[str]] = mapped_column(String(10))
-    dep_nom: Mapped[Optional[str]] = mapped_column(String(255))
-
+    dep_code: Optional[str] = Field(default=None, max_length=10)
+    dep_nom: Optional[str] = Field(default=None, max_length=255)
+    
     # Cantón
-    canton_code: Mapped[Optional[str]] = mapped_column(String(10))
-    canton_nom: Mapped[Optional[str]] = mapped_column(String(255))
-
+    canton_code: Optional[str] = Field(default=None, max_length=10)
+    canton_nom: Optional[str] = Field(default=None, max_length=255)
+    
     # Nombres de la ciudad
-    nom_standard: Mapped[Optional[str]] = mapped_column(String(255))
-    nom_standard_majuscule: Mapped[Optional[str]] = mapped_column(String(255))
-
-    # Región
-    reg_code: Mapped[Optional[str]] = mapped_column(String(10))
-    reg_nom: Mapped[Optional[str]] = mapped_column(String(255))
-
-    # Departamento
-    dep_code: Mapped[Optional[str]] = mapped_column(String(10))
-    dep_nom: Mapped[Optional[str]] = mapped_column(String(255))
-
-    # Cantón
-    canton_code: Mapped[Optional[str]] = mapped_column(String(10))
-    canton_nom: Mapped[Optional[str]] = mapped_column(String(255))
-
+    nom_standard: Optional[str] = Field(default=None, max_length=255)
+    nom_standard_majuscule: Optional[str] = Field(default=None, max_length=255)
+    
     def __repr__(self):
         return f"<Ville(code_postal='{self.code_postal}', nom_standard='{self.nom_standard}')>"
-
+    
     def nombre_completo(self):
         """Devuelve el nombre completo de la ciudad"""
         return self.nom_standard or self.nom_standard_majuscule or "Sin nombre"
 
 
-class ClienteTipo(Base):
+class ClienteTipo(SQLModel, table=True):
     """Relación entre clientes y tipos de cliente"""
     __tablename__ = 'clientes_tipos'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_cliente: Mapped[int] = mapped_column(Integer, ForeignKey('clientes.id'), nullable=False)
-    id_tipo: Mapped[int] = mapped_column(Integer, ForeignKey('tipocliente_def.id'), nullable=False)
-    id_subtipo: Mapped[Optional[int]] = mapped_column(Integer, ForeignKey('tiposubcliente_def.id'), nullable=True)
-    
-    # Relaciones
-    tipo = relationship("TipoCliente")
-    subtipo = relationship("TipoSubCliente")
-    
-    __table_args__ = (
-        {'sqlite_autoincrement': True},
-    )
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_cliente: int = Field(foreign_key="clientes.id")
+    id_tipo: int = Field(foreign_key="tipocliente_def.id")
+    id_subtipo: Optional[int] = Field(default=None, foreign_key="tiposubcliente_def.id")
+

@@ -2,7 +2,7 @@
 # requirements.txt
 # -----------------------------
 pyside6>=6.6
-SQLAlchemy>=1.4
+sqlmodel>=0.0.14
 alembic
 Jinja2
 lxml

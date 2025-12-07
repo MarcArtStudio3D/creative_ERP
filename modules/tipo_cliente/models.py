@@ -3,32 +3,25 @@ Modelos de datos para el módulo de Tipos de Cliente
 Basado en la estructura original de RedFox SGC (frmtipocliente.cpp)
 """
 
-from sqlalchemy import Integer, String, Text, ForeignKey
-from sqlalchemy.orm import relationship, Mapped, mapped_column
+from sqlmodel import SQLModel, Field, Relationship
 from typing import Optional, List
-from core.db import Base
 
 
-class TipoCliente(Base):
+class TipoCliente(SQLModel, table=True):
     """
     Modelo de Tipo de Cliente
     Representa las categorías principales de clientes
     """
     __tablename__ = 'tipocliente_def'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    nombre: Mapped[str] = mapped_column(String(100), nullable=False)
-    desc: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    nombre: str = Field(max_length=100)
+    desc: Optional[str] = Field(default=None)
+
     # Relación con subtipos
-    subtipos: Mapped[List["TipoSubCliente"]] = relationship(
-        "TipoSubCliente",
+    subtipos: List["TipoSubCliente"] = Relationship(
         back_populates="tipo",
-        cascade="all, delete-orphan"
-    )
-    
-    __table_args__ = (
-        {'sqlite_autoincrement': True},
+        sa_relationship_kwargs={"cascade": "all, delete-orphan"}
     )
     
     def __repr__(self):
@@ -44,28 +37,21 @@ class TipoCliente(Base):
         }
 
 
-class TipoSubCliente(Base):
+class TipoSubCliente(SQLModel, table=True):
     """
     Modelo de Subtipo de Cliente
     Representa subcategorías dentro de un tipo de cliente
     """
     __tablename__ = 'tiposubcliente_def'
     
-    id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    id_tipocliente: Mapped[int] = mapped_column(Integer, ForeignKey('tipocliente_def.id'), nullable=False)
-    nombre: Mapped[str] = mapped_column(String(100), nullable=False)
-    desc: Mapped[Optional[str]] = mapped_column(Text, nullable=True)
-    
+    id: Optional[int] = Field(default=None, primary_key=True)
+    id_tipocliente: int = Field(foreign_key="tipocliente_def.id")
+    nombre: str = Field(max_length=100)
+    desc: Optional[str] = Field(default=None)
+
     # Relación con tipo padre
-    tipo: Mapped["TipoCliente"] = relationship(
-        "TipoCliente",
-        back_populates="subtipos"
-    )
-    
-    __table_args__ = (
-        {'sqlite_autoincrement': True},
-    )
-    
+    tipo: Optional[TipoCliente] = Relationship(back_populates="subtipos")
+
     def __repr__(self):
         return f"<TipoSubCliente(id={self.id}, nombre='{self.nombre}', id_tipocliente={self.id_tipocliente})>"
     

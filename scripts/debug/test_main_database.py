@@ -19,6 +19,7 @@ def test_main_database():
     try:
         from core.db import get_session, init_main_db
         from core.models import User, BusinessGroup, Empresa
+        from sqlmodel import select
 
         # Inicializar la base de datos principal
         init_main_db()
@@ -28,15 +29,15 @@ def test_main_database():
 
         # Probar consultas básicas
         print("   Querying users...")
-        users = session.query(User).all()
+        users = session.exec(select(User)).all()
         print(f"      Encontrados: {len(users)} usuarios")
 
         print("   Querying company groups...")
-        groups = session.query(BusinessGroup).all()
+        groups = session.exec(select(BusinessGroup)).all()
         print(f"      Encontrados: {len(groups)} grupos")
 
         print("   Querying companies...")
-        empresas = session.query(Empresa).all()
+        empresas = session.exec(select(Empresa)).all()
         print(f"      Encontrados: {len(empresas)} empresas")
 
         session.close()

@@ -43,6 +43,7 @@ def test_clientes_artstudio3d():
         from core.db import set_current_database, get_current_database, get_session
         from modules.clientes.models import Cliente
         from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
+        from sqlmodel import select
 
         # Cambiar a base de datos ArtStudio3D
         set_current_database('artstudio3d')
@@ -51,13 +52,13 @@ def test_clientes_artstudio3d():
         print(f"   Base de datos actual: {get_current_database()}")
 
         # Probar consulta de tipos de cliente
-        tipos = session.query(TipoCliente).all()
+        tipos = session.exec(select(TipoCliente)).all()
         print(f"   Customer types found: {len(tipos)}")
         for tipo in tipos[:3]:  # Mostrar primeros 3
             print(f"      - {tipo.nombre}")
 
         # Probar consulta de clientes
-        clientes = session.query(Cliente).all()
+        clientes = session.exec(select(Cliente)).all()
         print(f"   Clients found: {len(clientes)}")
         for cliente in clientes[:3]:  # Mostrar primeros 3
             print(f"      - {cliente.codigo_cliente}: {cliente.nombre_fiscal or cliente.nombre}")
@@ -74,7 +75,7 @@ def test_clientes_artstudio3d():
         print("      ✅ Cliente de prueba creado")
 
         # Verificar que se creó
-        cliente_creado = session.query(Cliente).filter_by(codigo_cliente="TEST-001").first()
+        cliente_creado = session.exec(select(Cliente).where(Cliente.codigo_cliente == "TEST-001")).first()
         if cliente_creado:
             print(f"      ✅ Cliente verificado: {cliente_creado.nombre_fiscal}")
 

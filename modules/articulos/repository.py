@@ -1,4 +1,4 @@
-from typing import List, Optional, Tuple
+from typing import List, Optional, Tuple, Any, cast
 import logging
 from sqlalchemy import text
 from sqlalchemy.orm import Session
@@ -111,7 +111,8 @@ class ArticuloRepository:
             )
 
             session.commit()
-            return result.lastrowid
+            # SQLAlchemy Result typing doesn't expose lastrowid; cast to Any to access runtime attribute
+            return cast(Any, result).lastrowid
         except Exception as e:
             session.rollback()
             raise e
@@ -135,7 +136,6 @@ class ArticuloRepository:
                 return True
             
             sql = f"UPDATE articulos SET {', '.join(set_clauses)} WHERE id = :id"
-            pass
             session.execute(text(sql), params)
             # Only commit when repository manages the session
             if not self._external_session:
@@ -622,6 +622,9 @@ class ArticuloRepository:
         from core.db import get_current_database, set_current_database, get_session as get_main_session
 
         session = self._session()
+        # Pre-definir variables para evitar warnings de análisis estático
+        main_sess = None
+        from core.models import Empresa
         try:
             # Try company context first
             try:
@@ -634,26 +637,16 @@ class ArticuloRepository:
                         set_current_database('main')
                         main_sess = get_main_session()
                         try:
-                            from core.models import Empresa
-                            empresa = main_sess.query(Empresa).filter_by(id=company_id).first()
-                            if empresa:
-                                # tarifa_predeterminada may be stored as string; try to coerce to int
-                                val = getattr(empresa, 'tarifa_predeterminada', None)
-                                if val is None:
-                                    return 1
-                                try:
-                                    return int(val)
-                                except Exception:
-                                    # not an integer — attempt to parse int part
-                                    try:
-                                        return int(str(val).strip())
-                                    except Exception:
-                                        return 1
-                        finally:
-                            try:
-                                main_sess.close()
-                            except Exception:
-                                pass
+                            empresa = main_sess.get(Empresa, company_id)
+                        except Exception:
+                            # Fallback a select
+                            from sqlmodel import select
+                            empresa = main_sess.exec(select(Empresa).where(Empresa.id == company_id)).first()
+
+                        # Si hemos obtenido la empresa, leer país
+                        if empresa:
+                            pais = empresa.pais
+                            logging.getLogger(__name__).debug(f"Company country: {pais}")
                     finally:
                         set_current_database(orig)
             except Exception:
@@ -720,6 +713,9 @@ class ArticuloRepository:
             Lista de tipos de IVA con campos id, codigo, descripcion, porcentaje
         """
         session = self._session()
+        # Initialize helper variables
+        main_session = None
+        from core.models import Empresa
         try:
             # If no country specified, get from current company
             if not pais:
@@ -728,8 +724,7 @@ class ArticuloRepository:
                 if company_ctx.get('has_company'):
                     # Get company's country from database
                     from core.db import get_session as get_main_session, set_current_database, get_current_database
-                    from core.models import Empresa
-                    
+
                     original_db = get_current_database()
                     set_current_database('main')
                     try:
@@ -742,8 +737,12 @@ class ArticuloRepository:
                             logging.getLogger(__name__).debug(f"Company country: {pais}")
                     finally:
                         set_current_database(original_db)
-                        main_session.close()
-            
+                        if main_session is not None:
+                            try:
+                                main_session.close()
+                            except Exception:
+                                pass
+
             # Default to España if still no country
             if not pais:
                 pais = 'España'
@@ -845,32 +844,56 @@ class ArticuloRepository:
                 {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
             ).fetchone()
 
-            params = {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+            params: dict[str, Any] = {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
             # Prepare only recognized keys (avoid SQL injection)
-            allowed_keys = set([
-                'descripcion', 'activa', 'oferta32', 'oferta_dto', 'oferta_precio_final', 'oferta_web',
+            allowed_keys = {'descripcion', 'activa', 'oferta32', 'oferta_dto', 'oferta_precio_final', 'oferta_web',
                 'unidades', 'regalo', 'dto_local', 'dto_web', 'precio_final',
-                'fecha_inicio', 'fecha_fin'
-            ])
+                'fecha_inicio', 'fecha_fin'}
 
             if existing:
                 # Build update
                 set_clauses = []
                 for k, v in oferta_data.items():
                     if k in allowed_keys:
+                        # Sanitize descripcion placeholder values
+                        if k == 'descripcion' and isinstance(v, str):
+                            v_str = v.strip()
+                            if v_str and v_str.lower() == 'other':
+                                logging.getLogger(__name__).warning(
+                                    "Sanitizando descripcion de oferta no válida '%s' -> se reemplaza por NULL (articulo %s, tarifa %s)",
+                                    v_str, articulo_id, id_tarifa
+                                )
+                                v = None
                         set_clauses.append(f"{k} = :{k}")
                         # Coerce booleans to integers for databases that store booleans as tinyint
-                        params[k] = int(v) if isinstance(v, bool) else v
+                        if isinstance(v, bool):
+                            params[k] = int(v)
+                        else:
+                            # Convert date/datetime to ISO strings to avoid type warnings and ensure DB drivers accept them
+                            try:
+                                from datetime import date as _date, datetime as _dt
+                                if isinstance(v, (_date, _dt)):
+                                    params[k] = v.isoformat()
+                                else:
+                                    params[k] = v
+                            except Exception:
+                                params[k] = v
 
                 if not set_clauses:
                     return True
 
                 sql = f"UPDATE articulos_ofertas SET {', '.join(set_clauses)} WHERE id = :id"
                 params['id'] = existing[0]
+                # Debug output via logging
+                logging.getLogger(__name__).debug("UPD upsert_oferta SQL: %s", sql)
+                logging.getLogger(__name__).debug("UPD params: %s", params)
                 session.execute(text(sql), params)
                 # Debug: fetch back the saved row to inspect values
                 try:
-                    r = session.execute(text("SELECT id, fecha_inicio, fecha_fin, activa FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"), {"id_articulo": articulo_id, "id_tarifa": id_tarifa}).fetchone()
+                    r = session.execute(
+                        text("SELECT id, fecha_inicio, fecha_fin, activa FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"),
+                        {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+                    ).fetchone()
                 except Exception:
                     pass
             else:
@@ -899,16 +922,33 @@ class ArticuloRepository:
                 # Merge defaults but allow oferta_data to override
                 merged = {**defaults, **{k: v for k, v in oferta_data.items() if k in allowed_keys}}
 
+                # Sanitize descripcion if needed
+                desc = merged.get('descripcion')
+                if isinstance(desc, str):
+                    desc_clean = desc.strip()
+                    if desc_clean and desc_clean.lower() == 'other':
+                        logging.getLogger(__name__).warning(
+                            "Sanitizando descripcion de oferta no válida '%s' para articulo %s/tarifa %s -> se usa NULL",
+                            desc_clean, articulo_id, id_tarifa
+                        )
+                        merged['descripcion'] = None
+
                 for k, v in merged.items():
                     cols.append(k)
                     vals.append(f":{k}")
-                    params[k] = int(v) if isinstance(v, bool) else v
+                    # Keep date/datetime as-is
+                    params[k] = v
 
                 sql = f"INSERT INTO articulos_ofertas ({', '.join(cols)}) VALUES ({', '.join(vals)})"
+                logging.getLogger(__name__).debug("INS upsert_oferta SQL: %s", sql)
+                logging.getLogger(__name__).debug("INS params: %s", params)
                 session.execute(text(sql), params)
                 # Debug: fetch back the saved row to inspect values
                 try:
-                    r = session.execute(text("SELECT id, fecha_inicio, fecha_fin, activa FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"), {"id_articulo": articulo_id, "id_tarifa": id_tarifa}).fetchone()
+                    r = session.execute(
+                        text("SELECT id, fecha_inicio, fecha_fin, activa FROM articulos_ofertas WHERE id_articulo = :id_articulo AND id_tarifa = :id_tarifa LIMIT 1"),
+                        {"id_articulo": articulo_id, "id_tarifa": id_tarifa}
+                    ).fetchone()
                 except Exception:
                     pass
 
@@ -945,15 +985,22 @@ class ArticuloRepository:
             if not oferta_data:
                 return True
             set_clauses = []
-            params = { 'id': oferta_id }
-            allowed_keys = set([
-                'descripcion', 'activa', 'oferta32', 'oferta_dto', 'oferta_precio_final', 'oferta_web',
+            params: dict[str, Any] = { 'id': oferta_id }
+            allowed_keys = {'descripcion', 'activa', 'oferta32', 'oferta_dto', 'oferta_precio_final', 'oferta_web',
                 'unidades', 'regalo', 'dto_local', 'dto_web', 'precio_final',
-                'fecha_inicio', 'fecha_fin'
-            ])
+                'fecha_inicio', 'fecha_fin'}
 
             for k, v in oferta_data.items():
                 if k in allowed_keys:
+                    # Sanitize descripcion to evitar undesired placeholder values like 'other'
+                    if k == 'descripcion' and isinstance(v, str):
+                        v_str = v.strip()
+                        if v_str and v_str.lower() == 'other':
+                            logging.getLogger(__name__).warning(
+                                "Sanitizando descripcion de oferta no válida '%s' -> se reemplaza por NULL (oferta id=%s)",
+                                v_str, oferta_id
+                            )
+                            v = None
                     set_clauses.append(f"{k} = :{k}")
                     params[k] = int(v) if isinstance(v, bool) else v
 
@@ -961,6 +1008,7 @@ class ArticuloRepository:
                 return True
 
             sql = f"UPDATE articulos_ofertas SET {', '.join(set_clauses)} WHERE id = :id"
+            logging.getLogger(__name__).debug("Executing update_oferta_by_id SQL: %s params=%s", sql, params)
             session.execute(text(sql), params)
 
             if not self._external_session:
@@ -1023,13 +1071,25 @@ class ArticuloRepository:
                     if k in allowed_keys:
                         merged[k] = int(v) if isinstance(v, bool) else v
 
-            params = { 'id_articulo': articulo_id, 'id_tarifa': id_tarifa }
+            # Sanitize description if it contains undesired placeholder values
+            desc = merged.get('descripcion')
+            if isinstance(desc, str):
+                desc_clean = desc.strip()
+                if desc_clean and desc_clean.lower() == 'other':
+                    logging.getLogger(__name__).warning(
+                        "Sanitizando descripcion de oferta no válida '%s' para articulo %s/tarifa %s -> se usa NULL",
+                        desc_clean, articulo_id, id_tarifa
+                    )
+                    merged['descripcion'] = None
+
+            params: dict[str, Any] = { 'id_articulo': articulo_id, 'id_tarifa': id_tarifa }
             cols = ["id_articulo", "id_tarifa"]
             vals = [":id_articulo", ":id_tarifa"]
 
             for k, v in merged.items():
                 cols.append(k)
                 vals.append(f":{k}")
+                # Keep date/datetime as-is
                 params[k] = v
 
             sql = f"INSERT INTO articulos_ofertas ({', '.join(cols)}) VALUES ({', '.join(vals)})"

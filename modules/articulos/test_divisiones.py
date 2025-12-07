@@ -9,6 +9,7 @@ import os
 sys.path.insert(0, os.path.abspath(os.path.join(os.path.dirname(__file__), '../..')))
 
 from core.db import init_db, get_session, set_current_database
+from sqlmodel import select
 import logging
 from modules.articulos.models import Seccion, Familia, Subfamilia, Articulo
 
@@ -34,16 +35,16 @@ def test_crear_tablas():
         logging.getLogger(__name__).info("\n2. Verificando tablas...")
         
         # Intentar contar registros en cada tabla
-        count_secciones = session.query(Seccion).count()
+        count_secciones = session.exec(select(Seccion)).count()
         logging.getLogger(__name__).info(f"   ✅ Tabla 'secciones' existe ({count_secciones} registros)")
         
-        count_familias = session.query(Familia).count()
+        count_familias = session.exec(select(Familia)).count()
         logging.getLogger(__name__).info(f"   ✅ Tabla 'familias' existe ({count_familias} registros)")
         
-        count_subfamilias = session.query(Subfamilia).count()
+        count_subfamilias = session.exec(select(Subfamilia)).count()
         logging.getLogger(__name__).info(f"   ✅ Tabla 'subfamilias' existe ({count_subfamilias} registros)")
         
-        count_articulos = session.query(Articulo).count()
+        count_articulos = session.exec(select(Articulo)).count()
         logging.getLogger(__name__).info(f"   ✅ Tabla 'articulos' existe ({count_articulos} registros)")
         
         logging.getLogger(__name__).info("\n3. Probando creación de datos de ejemplo...")
@@ -51,13 +52,12 @@ def test_crear_tablas():
         # Crear una sección de ejemplo
         seccion = Seccion(
             codigo="S001",
-            nombre="Electrónica",
-            descripcion="Productos electrónicos",
-            activo=True
+            seccion="Electrónica",
+            comentario="Productos electrónicos",
         )
         
         # Verificar si ya existe
-        seccion_existente = session.query(Seccion).filter_by(codigo="S001").first()
+        seccion_existente = session.exec(select(Seccion).where(Seccion.codigo == "S001")).first()
         if seccion_existente:
             logging.getLogger(__name__).info(f"   ℹ️  Sección 'S001' ya existe, usando la existente")
             seccion = seccion_existente
@@ -68,16 +68,14 @@ def test_crear_tablas():
             logging.getLogger(__name__).info(f"   ✅ Sección creada: {seccion}")
         
         # Crear una familia de ejemplo
-        familia_existente = session.query(Familia).filter_by(codigo="F001").first()
+        familia_existente = session.exec(select(Familia).where(Familia.codigo == "F001")).first()
         if familia_existente:
             logging.getLogger(__name__).info(f"   ℹ️  Familia 'F001' ya existe")
         else:
             familia = Familia(
                 codigo="F001",
-                nombre="Smartphones",
-                descripcion="Teléfonos inteligentes",
+                familia="Smartphones",
                 id_seccion=seccion.id,
-                activo=True
             )
             session.add(familia)
             session.commit()
@@ -87,10 +85,8 @@ def test_crear_tablas():
             # Crear una subfamilia de ejemplo
             subfamilia = Subfamilia(
                 codigo="SF001",
-                nombre="Android",
-                descripcion="Smartphones Android",
+                subfamilia="Android",
                 id_familia=familia.id,
-                activo=True
             )
             session.add(subfamilia)
             session.commit()

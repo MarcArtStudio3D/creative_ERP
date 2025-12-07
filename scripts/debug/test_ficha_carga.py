@@ -47,8 +47,9 @@ def test_cliente_ficha_loading():
         
         # Buscar un cliente para probar
         from modules.clientes.models import Cliente
-        cliente = session.query(Cliente).first()
-        
+        from sqlmodel import select
+        cliente = session.exec(select(Cliente)).first()
+
         if not cliente:
             print("❌ No hay clientes en la base de datos")
             return False

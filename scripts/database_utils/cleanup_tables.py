@@ -4,7 +4,7 @@ Script para eliminar las tablas no utilizadas (invoices, invoice_lines) de las b
 import sys
 import sqlite3
 from pathlib import Path
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -43,7 +43,8 @@ def clean_mariadb():
     print("=" * 60)
     
     try:
-        engine = create_engine(MARIADB_URL)
+        from core.db import get_engine_from_url
+        engine = get_engine_from_url(MARIADB_URL)
         with engine.connect() as connection:
             for table in TABLES_TO_DROP:
                 print(f"Eliminando tabla: {table}")

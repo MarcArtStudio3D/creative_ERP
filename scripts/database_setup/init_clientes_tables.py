@@ -4,7 +4,6 @@ Script para crear las tablas de clientes en todas las bases de datos de empresas
 """
 
 import sys
-import os
 from pathlib import Path
 
 # Añadir el directorio raíz al path
@@ -14,14 +13,12 @@ sys.path.insert(0, str(project_root))
 from core.db import get_session, Base
 from core.models import Empresa
 from core.config import get_database_url_for_company
-from sqlalchemy import create_engine
+from core.db import get_engine_from_url
+from sqlmodel import select
 
-# Importar todos los modelos para que SQLAlchemy los conozca
-from modules.clientes.models import (
-    Cliente, DireccionAlternativa, DeudaCliente, 
-    HistorialCliente, EstadisticaClienteMes, ClienteTipo
-)
-from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
+# Importar módulos de modelos para que SQLModel/SQLAlchemy registren metadata
+import modules.clientes.models as clientes_models
+import modules.tipo_cliente.models as tipo_cliente_models
 
 
 def create_tables_for_company(empresa: Empresa):
@@ -34,16 +31,19 @@ def create_tables_for_company(empresa: Empresa):
         db_url = get_database_url_for_company(empresa.id)
         print(f"   URL: {db_url.split('@')[1] if '@' in db_url else db_url}")  # Ocultar password
         
-        # Crear engine
-        engine = create_engine(db_url)
-        
+        # Crear engine (centralizado)
+        engine = get_engine_from_url(db_url)
+
         # Crear todas las tablas
         Base.metadata.create_all(engine)
         
         print("   ✅ Tablas creadas correctamente")
         
-        engine.dispose()
-        
+        try:
+            engine.dispose()
+        except Exception:
+            pass
+
     except Exception as e:
         print(f"   ❌ Error: {e}")
 
@@ -58,8 +58,8 @@ def main():
     try:
         # Obtener todas las empresas
         session = get_session()
-        empresas = session.query(Empresa).all()
-        
+        empresas = session.exec(select(Empresa)).all()
+
         if not empresas:
             print("\n⚠️  No hay empresas registradas")
             return

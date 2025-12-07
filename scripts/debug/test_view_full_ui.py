@@ -46,8 +46,9 @@ def test_clientes_view_full():
         
         # Verificar que hay clientes
         from modules.clientes.models import Cliente
-        cliente = session.query(Cliente).first()
-        
+        from sqlmodel import select
+        cliente = session.exec(select(Cliente)).first()
+
         if not cliente:
             print("❌ No hay clientes en la base de datos")
             return False

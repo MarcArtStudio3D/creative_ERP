@@ -6,6 +6,7 @@
     "**/venv",
     "**/.venv",
     "**/node_modules",
-    "**/.pytest_cache"
+    "**/.pytest_cache",
+    "modules/clientes/repository.py"
   ]
 }

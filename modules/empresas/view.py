@@ -1,14 +1,11 @@
 from typing import Optional
 from PySide6.QtWidgets import QWidget, QTableView, QHeaderView, QMessageBox
-from core.ui_helpers import show_warning, show_info, show_critical
+from core.ui_helpers import show_warning, show_info, show_critical, show_question
 from PySide6.QtCore import Qt, QCoreApplication
-from PySide6.QtSql import QSqlDatabase
-import os
 
 from modules.empresas.ui_frmempresas import Ui_FrmEmpresas
 from modules.empresas.controller import EmpresasController
 from core.models import Empresa
-from modules.common.db_consulta_view import DBConsultaView
 
 
 class EmpresasView(QWidget):
@@ -73,9 +70,10 @@ class EmpresasView(QWidget):
         usar_frances = locale == "fr" if locale else False
         
         try:
+            import logging
             paises = self.controller.obtener_paises()
-            print(f"[DEBUG] Países obtenidos: {len(paises) if paises else 0}")
-            
+            logging.getLogger(__name__).debug("Países obtenidos: %s", (len(paises) if paises else 0))
+
             # Llenar combo cboPais
             if hasattr(self.ui, 'cboPais'):
                 combo = self.ui.cboPais
@@ -88,10 +86,9 @@ class EmpresasView(QWidget):
 
                 
         except Exception as e:
-            print(f"Error cargando países: {e}")
-            import traceback
-            traceback.print_exc()
-        
+            import logging
+            logging.getLogger(__name__).exception("Error cargando países: %s", e)
+
         # Conectar evento de Enter en campo de código postal
         if hasattr(self.ui, 'txtcp'):
             self.ui.txtcp.returnPressed.connect(self._handle_postal_code_search)
@@ -475,7 +472,8 @@ class EmpresasView(QWidget):
             if hasattr(w, 'txtAPE'): w.txtAPE.setText(getattr(empresa, 'ape_naf', '') or '')
 
         except Exception as e:
-            print(f"Error mapping to form: {e}")
+            import logging
+            logging.getLogger(__name__).exception("Error mapping to form: %s", e)
             pass
 
     def _map_from_form(self) -> Empresa:
@@ -580,7 +578,7 @@ class EmpresasView(QWidget):
             if hasattr(w, 'txtUsuarioPostgreSQL'): # Renamed from txtUsuarioMariaDB_2
                 empresa.usuario_postgresql = w.txtUsuarioPostgreSQL.text()
             if hasattr(w, 'txtPasswordPostgreSQL'): # Renamed from txtPasswordMariaDB_2
-                empresa.password_postgresql = w.txtPasswordPostgreSQL.text()
+                empresa.password_postgreSQL = w.txtPasswordPostgreSQL.text()
 
             # --- NUEVOS CAMPOS ---
             
@@ -688,14 +686,15 @@ class EmpresasView(QWidget):
             if hasattr(w, 'txtAPE'): empresa.ape_naf = w.txtAPE.text()
 
         except AttributeError as e:
-            print(f"Error: Widget attribute not found - {e}")
+            import logging
+            logging.getLogger(__name__).exception("Error: Widget attribute not found - %s", e)
         except ValueError as e:
-            print(f"Error: Invalid value in form field - {e}")
+            import logging
+            logging.getLogger(__name__).exception("Error: Invalid value in form field - %s", e)
         except Exception as e:
-            print(f"Unexpected error mapping from form: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            
+            import logging
+            logging.getLogger(__name__).exception("Unexpected error mapping from form: %s: %s", type(e).__name__, e)
+
         return empresa
 
     def _handle_postal_code_search(self):
@@ -772,7 +771,8 @@ class EmpresasView(QWidget):
                     QSqlDatabase.removeDatabase("country_connection_cp")
                         
         except Exception as e:
-            print(f"Error in postal code search: {e}")
+            import logging
+            logging.getLogger(__name__).exception("Error in postal code search: %s", e)
             pass
 
     def _handle_poblacion_search(self):
@@ -872,7 +872,8 @@ class EmpresasView(QWidget):
                     QSqlDatabase.removeDatabase("country_connection_poblacion")
                         
         except Exception as e:
-            print(f"Error in population search: {e}")
+            import logging
+            logging.getLogger(__name__).exception("Error in population search: %s", e)
             pass
     
     def test_mariadb_connection(self):
@@ -897,13 +898,14 @@ class EmpresasView(QWidget):
         
         # Intentar conexión
         try:
-            from sqlalchemy import create_engine, text
-            
+            from sqlalchemy import text
+            from core.db import get_engine_from_url
+
             # Construir URL de conexión
             db_url = f"mysql+pymysql://{user}:{password}@{host}:{port}/{database}"
             
             # Crear engine y probar conexión
-            engine = create_engine(db_url, connect_args={'connect_timeout': 5})
+            engine = get_engine_from_url(db_url, connect_args={'connect_timeout': 5})
             with engine.connect() as conn:
                 result = conn.execute(text("SELECT VERSION()"))
                 version = result.scalar()
@@ -956,13 +958,14 @@ class EmpresasView(QWidget):
         
         # Intentar conexión
         try:
-            from sqlalchemy import create_engine, text
-            
+            from sqlalchemy import text
+            from core.db import get_engine_from_url
+
             # Construir URL de conexión
             db_url = f"postgresql://{user}:{password}@{host}:{port}/{database}"
             
             # Crear engine y probar conexión
-            engine = create_engine(db_url, connect_args={'connect_timeout': 5})
+            engine = get_engine_from_url(db_url, connect_args={'connect_timeout': 5})
             with engine.connect() as conn:
                 result = conn.execute(text("SELECT version()"))
                 version = result.scalar()

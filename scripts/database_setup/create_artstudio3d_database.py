@@ -28,10 +28,11 @@ def create_artstudio3d_database():
     try:
         from sqlalchemy import create_engine, text, MetaData
         from sqlalchemy.orm import sessionmaker
+        from core.db import get_engine_from_url
 
         # Primero crear la base de datos conectándose sin especificar BD
         temp_url = 'mysql+pymysql://admin:admin123@127.0.0.1:3306'
-        temp_engine = create_engine(temp_url)
+        temp_engine = get_engine_from_url(temp_url)
 
         # Crear la base de datos si no existe
         with temp_engine.connect() as conn:
@@ -41,11 +42,11 @@ def create_artstudio3d_database():
         temp_engine.dispose()
 
         # Ahora conectarse a la base de datos específica
-        artstudio_engine = create_engine(artstudio_db_url)
+        artstudio_engine = get_engine_from_url(artstudio_db_url)
         artstudio_metadata = MetaData()
 
         # Crear motor para la base de datos actual
-        current_engine = create_engine(current_db_url)
+        current_engine = get_engine_from_url(current_db_url)
 
         # Crear tablas específicas en la nueva base de datos
         print("Creating specific tables...")

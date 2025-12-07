@@ -4,7 +4,8 @@ Esta tabla no se usa en la aplicación principal (se usa france.db SQLite para b
 """
 import sys
 from pathlib import Path
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+from core.db import get_engine_from_url
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -19,7 +20,7 @@ def drop_villes_table():
     print("=" * 60)
     
     try:
-        engine = create_engine(MARIADB_URL)
+        engine = get_engine_from_url(MARIADB_URL)
         with engine.connect() as connection:
             print("Deleting table 'villes'...")
             try:

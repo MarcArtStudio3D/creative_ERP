@@ -7,7 +7,7 @@ Script para migrar y unificar las tablas companies y empresas.
 import sys
 import sqlite3
 from pathlib import Path
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -60,7 +60,8 @@ def migrate_mariadb():
     print("=" * 60)
     
     try:
-        engine = create_engine(MARIADB_URL)
+        from core.db import get_engine_from_url
+        engine = get_engine_from_url(MARIADB_URL)
         with engine.connect() as connection:
             # 1. Añadir columna group_id si no existe
             print("Verificando columna group_id en empresas...")

@@ -1,132 +1,152 @@
 """
-Script de diagnóstico para verificar la conexión y estado de MariaDB
+Script de diagnóstico para MariaDB (modo JSON).
+
+Comportamiento:
+- Lee credenciales desde variables de entorno (MARIADB_HOST, MARIADB_PORT, MARIADB_USER,
+  MARIADB_PASSWORD, MARIADB_DB). Si no están definidas usa valores por defecto de desarrollo.
+- Ejecuta 4 comprobaciones: conexión directa (pymysql), listar bases, conexión SQLAlchemy, y
+  comprobación de modelos (metadata).
+- Escribe un JSON resumen en stdout y en logs/test_mariadb_result.json.
 """
+
 import sys
 from pathlib import Path
+import os
+import json
+import logging
 
-# Add project root to Python path
-project_root = Path(__file__).parent.parent
+# Root del proyecto
+project_root = Path(__file__).resolve().parents[2]
+log_dir = project_root / 'logs'
+os.makedirs(log_dir, exist_ok=True)
+result_path = log_dir / 'test_mariadb_result.json'
+log_file = log_dir / 'test_mariadb_run.log'
+
+# Logging básico (fichero + consola)
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s %(levelname)s %(message)s',
+    handlers=[
+        logging.FileHandler(log_file, encoding='utf-8'),
+        logging.StreamHandler(sys.stdout)
+    ]
+)
+
+# Añadir la raíz del proyecto al sys.path
 sys.path.insert(0, str(project_root))
 
 import pymysql
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import text, inspect
+from core.db import get_engine_from_url
 
-MARIADB_URL = "mysql+pymysql://root:1234@127.0.0.1:3306/creative_erp"
+# Obtener credenciales desde variables de entorno con defaults de desarrollo
+HOST = os.getenv('MARIADB_HOST', '127.0.0.1')
+PORT = int(os.getenv('MARIADB_PORT', '3306'))
+USER = os.getenv('MARIADB_USER', 'root')
+PASSWORD = os.getenv('MARIADB_PASSWORD', '1234')
+DB = os.getenv('MARIADB_DB', 'creative_erp')
+MARIADB_URL = os.getenv('MARIADB_URL', f"mysql+pymysql://{USER}:{PASSWORD}@{HOST}:{PORT}/{DB}")
 
-print("=" * 60)
-print("DIAGNÓSTICO DE CONEXIÓN MARIADB")
-print("=" * 60)
+def run_checks():
+    result = {
+        'ok': True,
+        'host': HOST,
+        'port': PORT,
+        'user': USER,
+        'database': DB,
+        'checks': {
+            'pymysql_connect': None,
+            'list_databases': None,
+            'sqlalchemy_connect': None,
+            'models_metadata': None
+        }
+    }
 
-# Test 1: Conexión directa con pymysql
-print("\n1️⃣ Probando conexión directa con pymysql...")
-try:
-    conn = pymysql.connect(
-        host="127.0.0.1",
-        port=3306,
-        user="root",
-        password="1234",
-        database="creative_erp"
-    )
-    print("   ✅ Conexión exitosa con pymysql a la base de datos 'creative_erp'")
-    
-    cursor = conn.cursor()
-    cursor.execute("SELECT VERSION();")
-    version = cursor.fetchone()
-    print(f"   MariaDB version: {version[0]}")
-    
-    cursor.execute("SELECT DATABASE();")
-    db = cursor.fetchone()
-    print(f"   Current database: {db[0]}")
-    
-    # Listar tablas en la base de datos actual
-    print("\n   Listing tables in 'creative_erp':")
-    cursor.execute("SHOW TABLES;")
-    tables = cursor.fetchall()
-    if tables:
-        for table in tables:
-            print(f"      - {table[0]}")
-            # Contar registros en cada tabla
-            cursor.execute(f"SELECT COUNT(*) FROM {table[0]};")
-            count = cursor.fetchone()
-            print(f"        ({count[0]} registros)")
-    else:
-        print("      ⚠️  NO HAY TABLAS EN ESTA BASE DE DATOS")
-    
-    cursor.close()
-    conn.close()
-    
-except pymysql.err.OperationalError as e:
-    if e.args[0] == 1049:  # Unknown database error
-        print(f"   ❌ La base de datos 'creative_erp' NO EXISTE")
-        print(f"   Note: You need to create the database first")
-    else:
-        print(f"   ❌ Error de conexión: {e}")
-except Exception as e:
-    print(f"   ❌ Error con pymysql: {e}")
-    print(f"   Tipo de error: {type(e).__name__}")
+    # 1) pymysql connect
+    try:
+        conn = pymysql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, database=DB, connect_timeout=5)
+        cur = conn.cursor()
+        cur.execute('SELECT VERSION()')
+        version = cur.fetchone()
+        cur.execute('SELECT DATABASE()')
+        current_db = cur.fetchone()
+        cur.execute('SHOW TABLES')
+        tables = [r[0] for r in cur.fetchall()]
+        cur.close()
+        conn.close()
 
-# Test 2: Listar todas las bases de datos disponibles
-print("\n2️⃣ Listando todas las bases de datos disponibles...")
-try:
-    conn = pymysql.connect(
-        host="127.0.0.1",
-        port=3306,
-        user="root",
-        password="1234"
-    )
-    cursor = conn.cursor()
-    cursor.execute("SHOW DATABASES;")
-    databases = cursor.fetchall()
-    print("   Databases found:")
-    for db in databases:
-        print(f"      - {db[0]}")
-    
-    cursor.close()
-    conn.close()
-    
-except Exception as e:
-    print(f"   ❌ Error listando bases de datos: {e}")
+        result['checks']['pymysql_connect'] = {
+            'ok': True,
+            'version': version[0] if version else None,
+            'current_db': current_db[0] if current_db else None,
+            'tables_count': len(tables),
+            'tables': tables[:50]
+        }
+    except Exception as e:
+        logging.exception('Error connecting with pymysql')
+        result['ok'] = False
+        result['checks']['pymysql_connect'] = {'ok': False, 'error': str(e)}
 
-# Test 3: Conexión con SQLAlchemy e inspección
-print("\n3️⃣ Probando conexión con SQLAlchemy...")
-try:
-    engine = create_engine(MARIADB_URL)
-    with engine.connect() as connection:
-        result = connection.execute(text("SELECT DATABASE();"))
-        db = result.fetchone()
-        print(f"   ✅ Conexión exitosa con SQLAlchemy")
-        print(f"   Database: {db[0]}")
-        
-        # Usar inspector para ver tablas
+    # 2) list databases
+    try:
+        conn = pymysql.connect(host=HOST, port=PORT, user=USER, password=PASSWORD, connect_timeout=5)
+        cur = conn.cursor()
+        cur.execute('SHOW DATABASES')
+        dbs = [r[0] for r in cur.fetchall()]
+        cur.close()
+        conn.close()
+        result['checks']['list_databases'] = {'ok': True, 'databases': dbs}
+    except Exception as e:
+        logging.exception('Error listing databases')
+        result['ok'] = False
+        result['checks']['list_databases'] = {'ok': False, 'error': str(e)}
+
+    # 3) SQLAlchemy connection + inspector
+    try:
+        engine = get_engine_from_url(MARIADB_URL)
+        with engine.connect() as conn:
+            res = conn.execute(text('SELECT DATABASE()'))
+            db_name = res.fetchone()[0]
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        print(f"\n   Tables detected by SQLAlchemy ({len(tables)}):")
-        if tables:
-            for table in tables:
-                print(f"      - {table}")
-        else:
-            print("      ⚠️  NO HAY TABLAS")
-        
-except Exception as e:
-    print(f"   ❌ Error con SQLAlchemy: {e}")
-    print(f"   Tipo de error: {type(e).__name__}")
+        result['checks']['sqlalchemy_connect'] = {'ok': True, 'database': db_name, 'tables': tables[:200], 'tables_count': len(tables)}
+    except Exception as e:
+        logging.exception('Error connecting with SQLAlchemy')
+        result['ok'] = False
+        result['checks']['sqlalchemy_connect'] = {'ok': False, 'error': str(e)}
 
-# Test 4: Verificar modelos de SQLAlchemy
-print("\n4️⃣ Verificando modelos de SQLAlchemy...")
-try:
-    from core.models import Base
-    from modules.clientes.models import (
-        Cliente, DireccionAlternativa, DeudaCliente, 
-        HistorialCliente, EstadisticaClienteMes, Ville, ClienteTipo
-    )
-    
-    print(f"   Tables defined in Base.metadata ({len(Base.metadata.tables)}):")
-    for table_name in Base.metadata.tables.keys():
-        print(f"      - {table_name}")
-    
-except Exception as e:
-    print(f"   ❌ Error cargando modelos: {e}")
+    # 4) Models metadata
+    try:
+        # Usar SQLModel.metadata (no hay 'Base' en core.models con SQLModel)
+        from sqlmodel import SQLModel
+        # Importar módulos que definen modelos para asegurarnos de que metadata se registre
+        import core.models as core_models
+        import modules.clientes.models as clientes_models
+        import modules.tipo_cliente.models as tipo_cliente_models
+        tables = list(SQLModel.metadata.tables.keys())
+        result['checks']['models_metadata'] = {'ok': True, 'defined_tables': tables}
+    except Exception as e:
+        logging.exception('Error loading models metadata')
+        result['ok'] = False
+        result['checks']['models_metadata'] = {'ok': False, 'error': str(e)}
 
-print("\n" + "=" * 60)
-print("FIN DEL DIAGNÓSTICO")
-print("=" * 60)
+    return result
+
+def main():
+    out = run_checks()
+    # Escribir JSON en fichero de resultado
+    try:
+        with open(result_path, 'w', encoding='utf-8') as f:
+            json.dump(out, f, indent=2, ensure_ascii=False)
+    except Exception:
+        logging.exception('Error escribiendo resultado JSON')
+
+    # Imprimir JSON en stdout para pipelines
+    print(json.dumps(out, indent=2, ensure_ascii=False))
+
+    # Exit code non-zero si fallo
+    if not out.get('ok', False):
+        sys.exit(2)
+
+if __name__ == '__main__':
+    main()

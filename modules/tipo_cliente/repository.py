@@ -5,6 +5,7 @@ Maneja todas las operaciones CRUD y lógica de negocio
 
 from sqlalchemy.orm import Session
 from sqlalchemy import and_, or_
+from sqlmodel import select
 from typing import List, Optional
 from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
 
@@ -19,16 +20,18 @@ class TipoClienteRepository:
     
     def obtener_todos_tipos(self) -> List[TipoCliente]:
         """Obtiene todos los tipos de cliente"""
-        return self.session.query(TipoCliente).order_by(TipoCliente.nombre).all()
-    
+        stmt = select(TipoCliente).order_by(TipoCliente.nombre)
+        return self.session.exec(stmt).all()
+
     def obtener_tipo_por_id(self, id_tipo: int) -> Optional[TipoCliente]:
         """Obtiene un tipo de cliente por su ID"""
-        return self.session.query(TipoCliente).filter(TipoCliente.id == id_tipo).first()
-    
+        return self.session.get(TipoCliente, id_tipo)
+
     def obtener_tipo_por_nombre(self, nombre: str) -> Optional[TipoCliente]:
         """Obtiene un tipo de cliente por su nombre"""
-        return self.session.query(TipoCliente).filter(TipoCliente.nombre == nombre).first()
-    
+        stmt = select(TipoCliente).where(TipoCliente.nombre == nombre)
+        return self.session.exec(stmt).first()
+
     def crear_tipo(self, nombre: str, desc: str = "") -> TipoCliente:
         """
         Crea un nuevo tipo de cliente
@@ -132,15 +135,13 @@ class TipoClienteRepository:
         Returns:
             Lista de subtipos
         """
-        return self.session.query(TipoSubCliente)\
-            .filter(TipoSubCliente.id_tipocliente == id_tipo)\
-            .order_by(TipoSubCliente.nombre)\
-            .all()
-    
+        stmt = select(TipoSubCliente).where(TipoSubCliente.id_tipocliente == id_tipo).order_by(TipoSubCliente.nombre)
+        return self.session.exec(stmt).all()
+
     def obtener_subtipo_por_id(self, id_subtipo: int) -> Optional[TipoSubCliente]:
         """Obtiene un subtipo de cliente por su ID"""
-        return self.session.query(TipoSubCliente).filter(TipoSubCliente.id == id_subtipo).first()
-    
+        return self.session.get(TipoSubCliente, id_subtipo)
+
     def crear_subtipo(self, id_tipo: int, nombre: str, desc: str = "") -> TipoSubCliente:
         """
         Crea un nuevo subtipo de cliente
@@ -241,14 +242,14 @@ class TipoClienteRepository:
             Lista de tipos que coinciden
         """
         termino = f"%{termino}%"
-        return self.session.query(TipoCliente)\
-            .filter(or_(
+        stmt = select(TipoCliente).where(
+            or_(
                 TipoCliente.nombre.like(termino),
                 TipoCliente.desc.like(termino)
-            ))\
-            .order_by(TipoCliente.nombre)\
-            .all()
-    
+            )
+        ).order_by(TipoCliente.nombre)
+        return self.session.exec(stmt).all()
+
     def buscar_subtipos(self, termino: str, id_tipo: Optional[int] = None) -> List[TipoSubCliente]:
         """
         Busca subtipos de cliente por nombre o descripción
@@ -261,13 +262,15 @@ class TipoClienteRepository:
             Lista de subtipos que coinciden
         """
         termino = f"%{termino}%"
-        query = self.session.query(TipoSubCliente)\
-            .filter(or_(
+        stmt = select(TipoSubCliente).where(
+            or_(
                 TipoSubCliente.nombre.like(termino),
                 TipoSubCliente.desc.like(termino)
-            ))
-        
+            )
+        )
+
         if id_tipo is not None:
-            query = query.filter(TipoSubCliente.id_tipocliente == id_tipo)
-        
-        return query.order_by(TipoSubCliente.nombre).all()
+            stmt = stmt.where(TipoSubCliente.id_tipocliente == id_tipo)
+
+        stmt = stmt.order_by(TipoSubCliente.nombre)
+        return self.session.exec(stmt).all()

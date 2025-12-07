@@ -31,7 +31,8 @@ def create_main_database():
 
         # Primero crear la base de datos conectándose sin especificar BD
         temp_url = 'mysql+pymysql://admin:admin123@127.0.0.1:3306'
-        temp_engine = create_engine(temp_url)
+        from core.db import get_engine_from_url
+        temp_engine = get_engine_from_url(temp_url)
 
         # Crear la base de datos si no existe
         with temp_engine.connect() as conn:
@@ -41,11 +42,11 @@ def create_main_database():
         temp_engine.dispose()
 
         # Ahora conectarse a la base de datos específica
-        main_engine = create_engine(main_db_url)
+        main_engine = get_engine_from_url(main_db_url)
         main_metadata = MetaData()
 
         # Crear motor para la base de datos actual
-        current_engine = create_engine(current_db_url)
+        current_engine = get_engine_from_url(current_db_url)
 
         # Crear tablas globales en la nueva base de datos
         print("Creating global tables...")

@@ -1,7 +1,7 @@
 from typing import Optional, Dict, Any, List
-from datetime import date
 from modules.articulos.repository import ArticuloRepository
 import logging
+from PySide6.QtCore import QCoreApplication
 
 
 class ArticuloController:
@@ -209,8 +209,8 @@ class ArticuloController:
         Devuelve (exito: bool, mensaje: str)
         """
         if not self.current_article:
-            return False, "No article loaded"
-        
+            return False, QCoreApplication.translate("ArticuloController", "No article loaded")
+
         # Validate required fields
         validation_error = self._validate_form_data(form_data)
         if validation_error:
@@ -232,8 +232,8 @@ class ArticuloController:
             )
             
             if existing:
-                return False, f"Ya existe un artículo con ese código, código de barras o código de fabricante: {existing.get('descripcion_reducida', '')}"
-            
+                return False, QCoreApplication.translate("ArticuloController", "Ya existe un artículo con ese código, código de barras o código de fabricante: {desc}").format(desc=existing.get('descripcion_reducida', ''))
+
             # Generate slug from description
             if "descripcion_reducida" in form_data:
                 form_data["slug"] = self._slugify(form_data["descripcion_reducida"])
@@ -316,7 +316,7 @@ class ArticuloController:
                 except Exception:
                     pass
                 session.close()
-                return False, f"Error al guardar: {str(e)}"
+                return False, QCoreApplication.translate("ArticuloController", "Error al guardar: {err}").format(err=str(e))
             finally:
                 # ensure session closed if not already
                 try:
@@ -343,21 +343,21 @@ class ArticuloController:
                     self.current_article['oferta_fecha_fin'] = None
                     self.current_article['oferta_activa'] = False
                 self.is_new = False
-                return True, "Artículo guardado correctamente"
+                return True, QCoreApplication.translate("ArticuloController", "Artículo guardado correctamente")
             else:
-                return False, "Error al guardar el artículo"
-                
+                return False, QCoreApplication.translate("ArticuloController", "Error al guardar el artículo")
+
         except Exception as e:
-            return False, f"Error al guardar: {str(e)}"
-    
+            return False, QCoreApplication.translate("ArticuloController", "Error al guardar: {err}").format(err=str(e))
+
     def delete(self) -> tuple[bool, str]:
         """
         Eliminar el artículo actual.
         Devuelve (exito: bool, mensaje: str)
         """
         if not self.current_article:
-            return False, "No hay artículo seleccionado"
-        
+            return False, QCoreApplication.translate("ArticuloController", "No hay artículo seleccionado")
+
         try:
             # Check if article is part of any kit
             # TODO: Implement kit check when kits are added
@@ -370,13 +370,13 @@ class ArticuloController:
                 if not self.next_article():
                     self.prev_article()
                 
-                return True, "Artículo borrado correctamente"
+                return True, QCoreApplication.translate("ArticuloController", "Artículo borrado correctamente")
             else:
-                return False, "Error al borrar el artículo"
-                
+                return False, QCoreApplication.translate("ArticuloController", "Error al borrar el artículo")
+
         except Exception as e:
-            return False, f"Error al borrar: {str(e)}"
-    
+            return False, QCoreApplication.translate("ArticuloController", "Error al borrar: {err}").format(err=str(e))
+
     def clear(self):
         """Limpiar el artículo actual en memoria (reset estado de edición)."""
         self.current_article = None
@@ -393,18 +393,18 @@ class ArticuloController:
         errors = []
         
         if not form_data.get("codigo"):
-            errors.append("Código de artículo")
-        
+            errors.append(QCoreApplication.translate("ArticuloController", "Código de artículo"))
+
         if not form_data.get("descripcion_reducida"):
-            errors.append("Nombre del artículo")
-        
+            errors.append(QCoreApplication.translate("ArticuloController", "Nombre del artículo"))
+
         # Section is optional for now (TODO: implement section lookup)
         # if not form_data.get("id_seccion"):
         #     errors.append("Sección")
         
         if errors:
-            return "Debe especificar los siguientes campos:\n" + "\n".join(errors)
-        
+            return QCoreApplication.translate("ArticuloController", "Debe especificar los siguientes campos:\n{fields}").format(fields="\n".join(errors))
+
         return None
     
     # ==================== Code Generation ====================
@@ -483,8 +483,13 @@ class ArticuloController:
 
         Devuelve (success: bool, message: str)
         """
+        # Debug: ensure this function is being called and current_article is present
+        try:
+            print("ENTER save_oferta current_article:", self.current_article)
+        except Exception:
+            pass
         if not self.current_article:
-            return False, "No article loaded"
+            return False, QCoreApplication.translate("ArticuloController", "No article loaded")
 
         try:
             from core.db import get_engine
@@ -502,23 +507,54 @@ class ArticuloController:
                     # If oferta id is known, update by id. Otherwise create a new oferta for this article+tarifa.
                     tarifa_id = tx_repo.get_default_tarifa()
                     oferta_id = oferta_payload.get('id') or self.current_article.get('oferta_id')
+
+                    logging.getLogger(__name__).debug("save_oferta: oferta_id=%s tarifa=%s payload=%s", oferta_id, tarifa_id, oferta_payload)
+                    # DEBUG: imprimir payload en stdout para tests (se mostrará con -s)
+                    try:
+                        print("DEBUG save_oferta: oferta_id=", oferta_id, "tarifa=", tarifa_id, "payload=", oferta_payload)
+                    except Exception:
+                        pass
+
+                    # Sanitize descripcion in payload (protect against placeholder values like 'other')
+                    try:
+                        if oferta_payload and isinstance(oferta_payload.get('descripcion'), str):
+                            desc = oferta_payload.get('descripcion').strip()
+                            if desc and desc.lower() == 'other':
+                                logging.getLogger(__name__).warning(
+                                    "Sanitizando descripcion de oferta no válida en controlador: '%s' -> se limpia",
+                                    desc
+                                )
+                                oferta_payload['descripcion'] = None
+                    except Exception:
+                        pass
+
                     if oferta_id:
-                        ok = tx_repo.update_oferta_by_id(oferta_id, oferta_payload)
+                        # Use upsert to update the oferta row for this article+tarifa. This is robust
+                        # even if oferta_id is present or mismatched; upsert handles both update and insert
+                        ok = tx_repo.upsert_oferta(self.current_article['id'], tarifa_id, oferta_payload)
+                        logging.getLogger(__name__).debug("upsert_oferta (update path) returned: %s", ok)
+                        try:
+                            print("DEBUG upsert returned:", ok)
+                        except Exception:
+                            pass
                         if not ok:
-                            raise Exception('Repository update failed')
+                            raise Exception('Repository upsert failed')
                     else:
-                        row = tx_repo.insert_oferta(self.current_article['id'], tarifa_id, oferta_payload)
-                        if not row:
-                            raise Exception('Repository insert failed')
-                        # capture new id
-                        oferta_id = row.get('id')
+                        ok = tx_repo.upsert_oferta(self.current_article['id'], tarifa_id, oferta_payload)
+                        logging.getLogger(__name__).debug("upsert_oferta (insert path) returned: %s", ok)
+                        try:
+                            print("DEBUG upsert returned:", ok)
+                        except Exception:
+                            pass
+                        if not ok:
+                            raise Exception('Repository upsert failed')
             except Exception as e:
                 try:
                     session.rollback()
                 except Exception:
                     pass
                 session.close()
-                return False, f"Error guardando oferta: {e}"
+                return False, QCoreApplication.translate("ArticuloController", "Error guardando oferta: {err}").format(err=str(e))
             finally:
                 try:
                     session.close()
@@ -532,6 +568,8 @@ class ArticuloController:
                     oferta = self.repository.get_oferta_by_id(oferta_id)
                 if not oferta:
                     oferta = self.repository.get_oferta_for_article(self.current_article['id'])
+
+                logging.getLogger(__name__).debug("Post-save fetched oferta=%s", oferta)
 
                 if oferta:
                     self.current_article['oferta_id'] = oferta.get('id')
@@ -555,11 +593,11 @@ class ArticuloController:
                 # Non-fatal: ignore refresh errors
                 pass
 
-            return True, "Oferta guardada correctamente"
+            return True, QCoreApplication.translate("ArticuloController", "Oferta guardada correctamente")
         except Exception as e:
-            return False, f"Error guardando oferta: {e}"
+            return False, QCoreApplication.translate("ArticuloController", "Error guardando oferta: {err}").format(err=str(e))
 
-    def insert_oferta(self, oferta_payload: Dict[str, Any] | None = None) -> tuple[bool, str]:
+    def insert_oferta(self, oferta_payload: Dict[str, Any] | None = None) -> tuple[bool, str, Optional[dict]]:
         """
         Create a new oferta row for the currently loaded article using oferta_payload (or defaults)
         and refresh controller.current_article oferta fields.
@@ -567,7 +605,7 @@ class ArticuloController:
         Returns (success: bool, message: str)
         """
         if not self.current_article:
-            return False, "No article loaded"
+            return False, QCoreApplication.translate("ArticuloController", "No article loaded"), None
 
         try:
             from core.db import get_engine
@@ -582,6 +620,19 @@ class ArticuloController:
                     tx_repo = ArticuloRepository(session=session)
 
                     tarifa_id = tx_repo.get_default_tarifa()
+
+                    # Sanitize payload description
+                    try:
+                        if oferta_payload and isinstance(oferta_payload.get('descripcion'), str):
+                            d = oferta_payload.get('descripcion').strip()
+                            if d and d.lower() == 'other':
+                                logging.getLogger(__name__).warning(
+                                    "Sanitizando descripcion de oferta no válida en controlador.insert_oferta: '%s' -> se limpia",
+                                    d
+                                )
+                                oferta_payload['descripcion'] = None
+                    except Exception:
+                        pass
 
                     row = tx_repo.insert_oferta(self.current_article['id'], tarifa_id, oferta_payload or {})
                     if not row:
@@ -606,7 +657,7 @@ class ArticuloController:
                 except Exception:
                     pass
                 session.close()
-                return False, f"Error insertando oferta: {e}", None
+                return False, QCoreApplication.translate("ArticuloController", "Error insertando oferta: {err}").format(err=str(e)), None
             finally:
                 try:
                     session.close()
@@ -627,16 +678,16 @@ class ArticuloController:
             except Exception:
                 pass
 
-            return True, 'Oferta creada', row
+            return True, QCoreApplication.translate('ArticuloController', 'Oferta creada'), row
         except Exception as e:
-            return False, f"Error insertando oferta: {e}", None
+            return False, QCoreApplication.translate("ArticuloController", "Error insertando oferta: {err}").format(err=str(e)), None
 
     def delete_oferta(self) -> tuple[bool, str]:
         """
         Delete the oferta for the currently loaded article (default tarifa) and refresh controller.current_article
         """
         if not self.current_article:
-            return False, "No article loaded"
+            return False, QCoreApplication.translate("ArticuloController", "No article loaded")
 
         try:
             # Prefer deletion by oferta id if present
@@ -647,7 +698,7 @@ class ArticuloController:
                 tarifa_id = self.repository.get_default_tarifa()
                 ok = self.repository.delete_oferta(self.current_article['id'], tarifa_id)
             if not ok:
-                return False, 'Deletion failed'
+                return False, QCoreApplication.translate('ArticuloController', 'Operación de borrado fallida')
 
             # Clear oferta fields including id
             self.current_article['oferta_id'] = None
@@ -663,10 +714,10 @@ class ArticuloController:
             self.current_article['oferta_oferta32'] = None
             self.current_article['oferta_oferta_dto'] = None
             self.current_article['oferta_oferta_web'] = None
-            return True, 'Oferta eliminada'
+            return True, QCoreApplication.translate('ArticuloController', 'Oferta eliminada')
         except Exception as e:
-            return False, f"Error eliminando oferta: {e}"
-    
+            return False, QCoreApplication.translate("ArticuloController", "Error eliminando oferta: {err}").format(err=str(e))
+
     def get_article_id(self) -> Optional[int]:
         """Obtener el ID del artículo actualmente cargado"""
         return self.current_article.get("id") if self.current_article else None

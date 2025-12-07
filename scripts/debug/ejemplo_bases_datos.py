@@ -59,12 +59,13 @@ def ejemplo_operaciones_clientes():
 
     try:
         print("1. Consultando tipos de cliente:")
-        tipos = session.query(TipoCliente).all()
+        from sqlmodel import select
+        tipos = session.exec(select(TipoCliente)).all()
         for tipo in tipos:
             print(f"   - {tipo.nombre}: {tipo.desc or 'Sin descripción'}")
 
         print("\n2. Consultando clientes activos:")
-        clientes = session.query(Cliente).filter(Cliente.bloqueado == False).limit(5).all()
+        clientes = session.exec(select(Cliente).where(Cliente.bloqueado == False).limit(5)).all()
         for cliente in clientes:
             nombre = cliente.nombre_fiscal or cliente.nombre_comercial or cliente.nombre or "Sin nombre"
             print(f"   - {cliente.codigo_cliente}: {nombre}")
@@ -89,14 +90,15 @@ def ejemplo_operaciones_clientes():
         print("   ✅ Cliente creado exitosamente")
 
         # Verificar creación
-        cliente_verificado = session.query(Cliente).filter_by(codigo_cliente="EJEMPLO-001").first()
+        cliente_verificado = session.exec(select(Cliente).where(Cliente.codigo_cliente == "EJEMPLO-001")).first()
         if cliente_verificado:
             print(f"   ✅ Verificado: {cliente_verificado.nombre_fiscal}")
 
         print("\n4. Limpiando datos de ejemplo:")
-        session.delete(cliente_verificado)
-        session.commit()
-        print("   ✅ Cliente de ejemplo eliminado")
+        if cliente_verificado:
+            session.delete(cliente_verificado)
+            session.commit()
+            print("   ✅ Cliente de ejemplo eliminado")
 
     except Exception as e:
         print(f"❌ Error en operaciones: {e}")

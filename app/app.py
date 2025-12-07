@@ -7,7 +7,12 @@ from PySide6.QtWidgets import QApplication
 from PySide6.QtCore import QSettings
 import sys
 
-from core.db import init_db
+from core.db import init_db, close_all_engines
+import atexit
+
+# Registrar cierre de engines al salir de la aplicación
+atexit.register(close_all_engines)
+
 import logging
 from core.auth import AuthenticationManager
 from core.module_manager import ModuleManager

@@ -34,7 +34,8 @@ def test_imports():
                 # Probar acceso a base de datos
                 from core.db import get_session
                 session = get_session()
-                clientes = session.query(Cliente).limit(3).all()
+                from sqlmodel import select
+                clientes = session.exec(select(Cliente).limit(3)).all()
                 print(f"✅ Clientes encontrados: {len(clientes)}")
                 session.close()
                 

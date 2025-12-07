@@ -1,6 +1,6 @@
 import sys
-import os
-from sqlalchemy import create_engine, inspect, text
+from sqlalchemy import inspect, text
+from core.db import get_engine_from_url
 
 # Add project root to path
 sys.path.append('/home/marc/Documents/Artstudio3D/Creative_ERP')
@@ -10,7 +10,7 @@ def inspect_db():
     print(f"Connecting to {db_url}...")
     
     try:
-        engine = create_engine(db_url)
+        engine = get_engine_from_url(db_url)
         inspector = inspect(engine)
         
         # Check if table exists

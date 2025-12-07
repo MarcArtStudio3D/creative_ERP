@@ -59,6 +59,7 @@ class CompanyDatabaseManager:
         try:
             from core.db import set_current_database, get_current_database, get_session
             from core.models import Empresa
+            from sqlmodel import select
 
             # Guardar base de datos actual
             original_db = get_current_database()
@@ -66,9 +67,11 @@ class CompanyDatabaseManager:
             # Cambiar a base de datos principal
             set_current_database('main')
 
+            session = None
             try:
                 session = get_session()
-                empresas = session.query(Empresa).filter(Empresa.activa == 1).all()
+                stmt = select(Empresa).where(Empresa.activa == 1)
+                empresas = session.exec(stmt).all()
 
                 companies = []
                 for empresa in empresas:
@@ -86,7 +89,8 @@ class CompanyDatabaseManager:
             finally:
                 # Restaurar base de datos original
                 set_current_database(original_db)
-                session.close()
+                if session:
+                    session.close()
 
         except Exception as e:
             logging.getLogger(__name__).exception("ERROR getting companies")
@@ -102,16 +106,20 @@ class CompanyDatabaseManager:
 
             info = get_company_database_info(company_id)
 
-            # Intentar conectar a la base de datos
-            from sqlalchemy import create_engine, text
+            # Intentar conectar a la base de datos usando el helper central
+            from core.db import get_engine_from_url
+            from sqlalchemy import text
 
-            engine = create_engine(info['database_url'])
-            with engine.connect() as conn:
-                # Probar una consulta simple
-                result = conn.execute(text("SELECT 1"))
-                result.fetchone()
-
-            engine.dispose()
+            engine = get_engine_from_url(info['database_url'])
+            try:
+                with engine.connect() as conn:
+                    result = conn.execute(text("SELECT 1"))
+                    result.fetchone()
+            finally:
+                try:
+                    engine.dispose()
+                except Exception:
+                    pass
 
             return {
                 'valid': True,
@@ -141,9 +149,11 @@ class CompanyDatabaseManager:
             # Cambiar a base de datos principal
             set_current_database('main')
 
+            session = None
             try:
                 session = get_session()
-                empresa = session.query(Empresa).filter_by(id=company_id).first()
+                # Usar session.get para obtener por PK (más directo y eficiente)
+                empresa = session.get(Empresa, company_id)
 
                 if not empresa:
                     raise ValueError(f"Empresa con ID {company_id} no encontrada")
@@ -160,7 +170,8 @@ class CompanyDatabaseManager:
 
             finally:
                 set_current_database(original_db)
-                session.close()
+                if session:
+                    session.close()
 
         except Exception as e:
             logging.getLogger(__name__).exception("ERROR updating configuration")

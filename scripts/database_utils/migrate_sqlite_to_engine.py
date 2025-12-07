@@ -9,7 +9,7 @@ Uso:
 
 import sys
 from pathlib import Path
-from sqlalchemy import create_engine
+from core.db import get_engine_from_url
 from sqlalchemy.orm import sessionmaker
 from sqlalchemy.exc import SQLAlchemyError
 
@@ -59,12 +59,12 @@ def get_destination_url(arg: str) -> str:
 
 def migrate(sqlite_url: str, dest_url: str):
     print(f"Loading source SQLite: {sqlite_url}")
-    source_engine = create_engine(sqlite_url)
+    source_engine = get_engine_from_url(sqlite_url)
     SourceSession = sessionmaker(bind=source_engine)
     source_session = SourceSession()
 
     print(f"Connecting to destination: {dest_url}")
-    dest_engine = create_engine(dest_url)
+    dest_engine = get_engine_from_url(dest_url)
     DestSession = sessionmaker(bind=dest_engine)
     dest_session = DestSession()
 
@@ -125,7 +125,8 @@ def migrate(sqlite_url: str, dest_url: str):
                 print(f"   ⚠ No hay modelo ORM para {table.name}, saltando.")
                 continue
 
-            rows = source_session.query(model).all()
+            from sqlmodel import select
+            rows = source_session.exec(select(model)).all()
             if not rows:
                 print("   (vacía)")
                 continue

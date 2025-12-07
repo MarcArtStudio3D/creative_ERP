@@ -43,7 +43,7 @@ class GestorModulosView(QWidget):
         layout = QVBoxLayout(self)
         
         # Encabezado
-        header = QLabel('Gestor de Módulos y Permisos por Rol')
+        header = QLabel(self.tr('Gestor de Módulos y Permisos por Rol'))
         header.setStyleSheet('font-weight: bold; font-size: 16pt;')
         layout.addWidget(header)
 
@@ -59,7 +59,7 @@ class GestorModulosView(QWidget):
         layout.addWidget(self.list_modules)
         
         # Etiqueta de contador de selección
-        self.selection_label = QLabel('Ningún módulo seleccionado')
+        self.selection_label = QLabel(self.tr('Ningún módulo seleccionado'))
         self.selection_label.setStyleSheet('color: gray; font-style: italic;')
         layout.addWidget(self.selection_label)
         
@@ -67,7 +67,7 @@ class GestorModulosView(QWidget):
         controls = QHBoxLayout()
         
         # Selector de rol
-        controls.addWidget(QLabel('Rol:'))
+        controls.addWidget(QLabel(self.tr('Rol:')))
         self.cbo_role = QComboBox()
         for r in UserRole:
             self.cbo_role.addItem(r.value)
@@ -82,32 +82,33 @@ class GestorModulosView(QWidget):
         perm_names = ['READ', 'CREATE', 'UPDATE', 'DELETE', 'ADMIN', 'EXPORT', 'IMPORT', 'PRINT']
         
         for idx, pname in enumerate(perm_names):
-            cb = QCheckBox(pname.capitalize())
+            # Translate permission display names
+            cb = QCheckBox(self.tr(pname.capitalize()))
             self.perm_checks[pname] = cb
             perms_layout.addWidget(cb, idx // 4, idx % 4)
 
         controls.addWidget(perms_widget)
 
         # Botones de selección rápida
-        btn_select_all = QPushButton('✓ Todos')
-        btn_select_all.setToolTip('Seleccionar todos los permisos')
+        btn_select_all = QPushButton(self.tr('✓ Todos'))
+        btn_select_all.setToolTip(self.tr('Seleccionar todos los permisos'))
         btn_select_all.clicked.connect(self._select_all_permissions)
         controls.addWidget(btn_select_all)
 
-        btn_deselect_all = QPushButton('✗ Ninguno')
-        btn_deselect_all.setToolTip('Deseleccionar todos los permisos')
+        btn_deselect_all = QPushButton(self.tr('✗ Ninguno'))
+        btn_deselect_all.setToolTip(self.tr('Deseleccionar todos los permisos'))
         btn_deselect_all.clicked.connect(self._deselect_all_permissions)
         controls.addWidget(btn_deselect_all)
 
         # Botón asignar
-        btn_set = QPushButton('Asignar')
+        btn_set = QPushButton(self.tr('Asignar'))
         btn_set.clicked.connect(self._assign_permissions)
         controls.addWidget(btn_set)
 
         layout.addLayout(controls)
 
         # Botón guardar cambios
-        self.btn_save = QPushButton('Guardar cambios')
+        self.btn_save = QPushButton(self.tr('Guardar cambios'))
         self.btn_save.clicked.connect(self._save_changes)
         self.btn_save.setEnabled(False)  # Deshabilitado inicialmente
         layout.addWidget(self.btn_save)
@@ -126,12 +127,12 @@ class GestorModulosView(QWidget):
         
         # Actualizar etiqueta de selección
         if not selected_items:
-            self.selection_label.setText('Ningún módulo seleccionado')
+            self.selection_label.setText(self.tr('Ningún módulo seleccionado'))
         elif len(selected_items) == 1:
-            self.selection_label.setText(f'1 módulo seleccionado: {selected_items[0].data(1)}')
+            self.selection_label.setText(self.tr('1 módulo seleccionado: {id}').format(id=selected_items[0].data(1)))
         else:
-            self.selection_label.setText(f'{len(selected_items)} módulos seleccionados')
-        
+            self.selection_label.setText(self.tr('{n} módulos seleccionados').format(n=len(selected_items)))
+
         # Resetear checkboxes
         for cb in self.perm_checks.values():
             cb.setChecked(False)
@@ -184,7 +185,7 @@ class GestorModulosView(QWidget):
         selected_items = self.list_modules.selectedItems()
         
         if not selected_items:
-            show_info(self, 'Selecciona', 'Selecciona al menos un módulo primero')
+            show_info(self, self.tr('Selecciona'), self.tr('Selecciona al menos un módulo primero'))
             return
         
         role = self.cbo_role.currentText()
@@ -200,23 +201,29 @@ class GestorModulosView(QWidget):
         
         # Mensaje informativo
         if count == 1:
-            show_info(self, 'Asignado', f'Asignados {perms} a {role} en {module_ids[0]}')
+            show_info(self, self.tr('Asignado'), self.tr('Asignados {perms} a {role} en {module}').format(perms=perms, role=role, module=module_ids[0]))
         else:
             modules_preview = ', '.join(module_ids[:5])
             if len(module_ids) > 5:
                 modules_preview += '...'
-            
-            show_info(self, 'Asignado', f'Asignados {perms} a {role} en {count} módulos:\n{modules_preview}')
+
+            show_info(
+                self,
+                self.tr('Asignado'),
+                self.tr('Asignados {perms} a {role} en {count} módulos:\n{preview}').format(
+                    perms=perms, role=role, count=count, preview=modules_preview
+                ),
+            )
 
     def _save_changes(self) -> bool:
         """Guarda los cambios en el archivo JSON."""
         if self.manager.save():
             self._has_unsaved_changes = False
             self.btn_save.setEnabled(False)
-            show_info(self, 'Guardado', 'Permisos guardados correctamente.')
+            show_info(self, self.tr('Guardado'), self.tr('Permisos guardados correctamente.'))
             return True
         else:
-            show_warning(self, 'Error', 'No se pudo guardar los permisos.')
+            show_warning(self, self.tr('Error'), self.tr('No se pudo guardar los permisos.'))
             return False
     
     def has_unsaved_changes(self) -> bool:

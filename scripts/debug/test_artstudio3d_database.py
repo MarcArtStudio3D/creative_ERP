@@ -21,11 +21,11 @@ def test_artstudio3d_database():
         artstudio_db_url = os.environ.get('ARTSTUDIO3D_DB',
                                          'mysql+pymysql://admin:admin123@127.0.0.1:3306/artstudio3d')
 
-        from sqlalchemy import create_engine, text
-        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy import text
+        from core.db import get_engine_from_url
 
-        # Crear motor para ArtStudio3D
-        artstudio_engine = create_engine(artstudio_db_url)
+        # Crear motor para ArtStudio3D (centralizado)
+        artstudio_engine = get_engine_from_url(artstudio_db_url)
 
         # Probar consultas básicas
         with artstudio_engine.connect() as conn:

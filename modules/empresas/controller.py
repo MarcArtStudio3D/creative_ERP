@@ -5,9 +5,8 @@ from PySide6.QtWidgets import QMessageBox
 
 from modules.empresas.repository import EmpresaRepository
 from core.models import Empresa, BusinessGroup
-from core.db import get_session
-from sqlalchemy import create_engine, text
 from core.db import set_database_for_company
+from sqlalchemy import text
 import logging
 
 
@@ -55,7 +54,7 @@ class EmpresasController(QObject):
                 self.model.appendRow(items)
             self.data_changed.emit()
         except Exception as e:
-            self.error_occurred.emit(f"No se pudieron cargar empresas: {e}")
+            self.error_ocurrido.emit(f"No se pudieron cargar empresas: {e}")
 
     def obtener_empresa(self, id_: int) -> Optional[Empresa]:
         """Obtiene una empresa por ID."""
@@ -141,7 +140,7 @@ class EmpresasController(QObject):
         try:
             empresa = self.obtener_por_id_internal(company_id)
             if not empresa:
-                self.error_occurred.emit(self.tr("Empresa no encontrada"))
+                self.error_ocurrido.emit(self.tr("Empresa no encontrada"))
                 return False
 
             # Pick DB connection info depending on engine type
@@ -164,7 +163,7 @@ class EmpresasController(QObject):
                 driver = 'postgresql+psycopg2'
 
             if not host or not dbname:
-                self.error_occurred.emit(self.tr("Faltan datos de conexión para crear la BD"))
+                self.error_ocurrido.emit(self.tr("Faltan datos de conexión para crear la BD"))
                 return False
 
             # Try to connect to the server (default database) and create the DB
@@ -188,7 +187,8 @@ class EmpresasController(QObject):
 
                 engine_url = f"{driver}://{user}:{pwd}@{host}:{port}/{default_db}"
 
-                tmp_engine = create_engine(engine_url)
+                from core.db import get_engine_from_url
+                tmp_engine = get_engine_from_url(engine_url)
                 with tmp_engine.connect() as conn:
                     # Create database for MariaDB/Postgres with safe charset/collation for MySQL
                     if engine_type == 'mariadb':
@@ -219,12 +219,12 @@ class EmpresasController(QObject):
                 return True
             except Exception as e:
                 logger.exception(f"Error inicializando BD para la empresa: {e}")
-                self.error_occurred.emit(str(e))
+                self.error_ocurrido.emit(str(e))
                 return False
 
         except Exception as e:
             logger.exception(f"Unexpected error en crear_y_inicializar_db: {e}")
-            self.error_occurred.emit(str(e))
+            self.error_ocurrido.emit(str(e))
             return False
 
     def obtener_por_id_internal(self, id_: int) -> Optional[Empresa]:

@@ -5,6 +5,7 @@ Sigue el patrón Repository para acceso a datos
 
 from typing import List, Optional
 from sqlalchemy.orm import Session
+from sqlmodel import select
 from core.db import get_session
 from modules.articulos.models import Seccion, Familia, Subfamilia
 
@@ -32,16 +33,18 @@ class DivisionesRepository:
     
     def obtener_todas_secciones(self) -> List[Seccion]:
         """Obtiene todas las secciones ordenadas por código"""
-        return self._session.query(Seccion).order_by(Seccion.codigo).all()
-    
+        stmt = select(Seccion).order_by(Seccion.codigo)
+        return self._session.exec(stmt).all()
+
     def obtener_seccion_por_id(self, id_: int) -> Optional[Seccion]:
         """Obtiene una sección por ID"""
-        return self._session.query(Seccion).filter(Seccion.id == id_).first()
-    
+        return self._session.get(Seccion, id_)
+
     def obtener_seccion_por_codigo(self, codigo: str) -> Optional[Seccion]:
         """Obtiene una sección por código"""
-        return self._session.query(Seccion).filter(Seccion.codigo == codigo).first()
-    
+        stmt = select(Seccion).where(Seccion.codigo == codigo)
+        return self._session.exec(stmt).first()
+
     def guardar_seccion(self, seccion: Seccion) -> Seccion:
         """Guarda o actualiza una sección"""
         if seccion.id is None:
@@ -73,7 +76,7 @@ class DivisionesRepository:
     
     def generar_codigo_seccion(self) -> str:
         """Genera el siguiente código de sección disponible (S001, S002, etc.)"""
-        ultima = self._session.query(Seccion).order_by(Seccion.codigo.desc()).first()
+        ultima = self._session.exec(select(Seccion).order_by(Seccion.codigo.desc())).first()
         if not ultima or not ultima.codigo:
             return "S001"
         
@@ -89,22 +92,23 @@ class DivisionesRepository:
     
     def obtener_todas_familias(self) -> List[Familia]:
         """Obtiene todas las familias ordenadas por código"""
-        return self._session.query(Familia).order_by(Familia.codigo).all()
-    
+        stmt = select(Familia).order_by(Familia.codigo)
+        return self._session.exec(stmt).all()
+
     def obtener_familias_por_seccion(self, id_seccion: int) -> List[Familia]:
         """Obtiene todas las familias de una sección específica"""
-        return self._session.query(Familia).filter(
-            Familia.id_seccion == id_seccion
-        ).order_by(Familia.codigo).all()
-    
+        stmt = select(Familia).where(Familia.id_seccion == id_seccion).order_by(Familia.codigo)
+        return self._session.exec(stmt).all()
+
     def obtener_familia_por_id(self, id_: int) -> Optional[Familia]:
         """Obtiene una familia por ID"""
-        return self._session.query(Familia).filter(Familia.id == id_).first()
-    
+        return self._session.get(Familia, id_)
+
     def obtener_familia_por_codigo(self, codigo: str) -> Optional[Familia]:
         """Obtiene una familia por código"""
-        return self._session.query(Familia).filter(Familia.codigo == codigo).first()
-    
+        stmt = select(Familia).where(Familia.codigo == codigo)
+        return self._session.exec(stmt).first()
+
     def guardar_familia(self, familia: Familia) -> Familia:
         """Guarda o actualiza una familia"""
         if familia.id is None:
@@ -139,10 +143,8 @@ class DivisionesRepository:
         Genera el siguiente código de familia disponible para una sección.
         Formato: F001, F002, etc.
         """
-        ultima = self._session.query(Familia).filter(
-            Familia.id_seccion == id_seccion
-        ).order_by(Familia.codigo.desc()).first()
-        
+        ultima = self._session.exec(select(Familia).where(Familia.id_seccion == id_seccion).order_by(Familia.codigo.desc())).first()
+
         if not ultima or not ultima.codigo:
             return "F001"
         
@@ -158,22 +160,23 @@ class DivisionesRepository:
     
     def obtener_todas_subfamilias(self) -> List[Subfamilia]:
         """Obtiene todas las subfamilias ordenadas por código"""
-        return self._session.query(Subfamilia).order_by(Subfamilia.codigo).all()
-    
+        stmt = select(Subfamilia).order_by(Subfamilia.codigo)
+        return self._session.exec(stmt).all()
+
     def obtener_subfamilias_por_familia(self, id_familia: int) -> List[Subfamilia]:
         """Obtiene todas las subfamilias de una familia específica"""
-        return self._session.query(Subfamilia).filter(
-            Subfamilia.id_familia == id_familia
-        ).order_by(Subfamilia.codigo).all()
-    
+        stmt = select(Subfamilia).where(Subfamilia.id_familia == id_familia).order_by(Subfamilia.codigo)
+        return self._session.exec(stmt).all()
+
     def obtener_subfamilias_por_id(self, id_: int) -> Optional[Subfamilia]:
         """Obtiene una subfamilia por ID"""
-        return self._session.query(Subfamilia).filter(Subfamilia.id == id_).first()
-    
+        return self._session.get(Subfamilia, id_)
+
     def obtener_subfamilias_por_codigo(self, codigo: str) -> Optional[Subfamilia]:
         """Obtiene una subfamilia por código"""
-        return self._session.query(Subfamilia).filter(Subfamilia.codigo == codigo).first()
-    
+        stmt = select(Subfamilia).where(Subfamilia.codigo == codigo)
+        return self._session.exec(stmt).first()
+
     def guardar_subfamilia(self, subfamilia: Subfamilia) -> Subfamilia:
         """Guarda o actualiza una subfamilia"""
         if subfamilia.id is None:
@@ -202,10 +205,8 @@ class DivisionesRepository:
         Genera el siguiente código de subfamilia disponible para una familia.
         Formato: SF001, SF002, etc.
         """
-        ultima = self._session.query(Subfamilia).filter(
-            Subfamilia.id_familia == id_familia
-        ).order_by(Subfamilia.codigo.desc()).first()
-        
+        ultima = self._session.exec(select(Subfamilia).where(Subfamilia.id_familia == id_familia).order_by(Subfamilia.codigo.desc())).first()
+
         if not ultima or not ultima.codigo:
             return "SF001"
         

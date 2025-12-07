@@ -6,6 +6,7 @@ Coordina la lógica de negocio entre la vista y el repository
 from typing import Optional, List, Tuple
 from modules.articulos.divisiones_repository import DivisionesRepository
 from modules.articulos.models import Seccion, Familia, Subfamilia
+from PySide6.QtCore import QCoreApplication
 
 
 class DivisionesController:
@@ -41,12 +42,12 @@ class DivisionesController:
         """Crea una nueva sección directamente"""
         try:
             if not codigo or not nombre:
-                return (False, "Código y nombre son obligatorios")
-            
+                return (False, QCoreApplication.translate("DivisionesController", "Código y nombre son obligatorios"))
+
             existente = self.repository.obtener_seccion_por_codigo(codigo)
             if existente:
-                return (False, f"Ya existe una sección con el código '{codigo}'")
-            
+                return (False, QCoreApplication.translate("DivisionesController", "Ya existe una sección con el código '{codigo}'").format(codigo=codigo))
+
             seccion = Seccion(codigo=codigo, seccion=nombre)
             self.repository.guardar_seccion(seccion)
             return (True, "")
@@ -56,15 +57,15 @@ class DivisionesController:
     def actualizar_seccion_actual(self, codigo: str, nombre: str) -> Tuple[bool, str]:
         """Actualiza la sección seleccionada"""
         if not self.seccion_actual:
-            return (False, "No hay sección seleccionada")
-        
+            return (False, QCoreApplication.translate("DivisionesController", "No hay sección seleccionada"))
+
         try:
             # Verificar duplicados si cambia el código
             if self.seccion_actual.codigo != codigo:
                 existente = self.repository.obtener_seccion_por_codigo(codigo)
                 if existente:
-                    return (False, f"Ya existe una sección con el código '{codigo}'")
-            
+                    return (False, QCoreApplication.translate("DivisionesController", "Ya existe una sección con el código '{codigo}'").format(codigo=codigo))
+
             self.seccion_actual.codigo = codigo
             self.seccion_actual.seccion = nombre
             self.repository.guardar_seccion(self.seccion_actual)
@@ -74,13 +75,13 @@ class DivisionesController:
             
     def borrar_seccion_actual(self) -> Tuple[bool, str]:
         if not self.seccion_actual:
-            return (False, "No hay sección seleccionada")
-        
+            return (False, QCoreApplication.translate("DivisionesController", "No hay sección seleccionada"))
+
         try:
             familias = self.repository.obtener_familias_por_seccion(self.seccion_actual.id)
             if familias:
-                return (False, f"La sección tiene {len(familias)} familias asociadas")
-            
+                return (False, QCoreApplication.translate("DivisionesController", "La sección tiene {n} familias asociadas").format(n=len(familias)))
+
             self.repository.borrar_seccion(self.seccion_actual)
             self.seccion_actual = None
             self.tipo_seleccion = None
@@ -106,16 +107,16 @@ class DivisionesController:
     
     def crear_familia(self, codigo: str, nombre: str) -> Tuple[bool, str]:
         if not self.seccion_actual:
-            return (False, "Debe seleccionar una sección")
-            
+            return (False, QCoreApplication.translate("DivisionesController", "Debe seleccionar una sección"))
+
         try:
             if not codigo or not nombre:
-                return (False, "Código y nombre son obligatorios")
-                
+                return (False, QCoreApplication.translate("DivisionesController", "Código y nombre son obligatorios"))
+
             existente = self.repository.obtener_familia_por_codigo(codigo)
             if existente:
-                return (False, f"Ya existe una familia con el código '{codigo}'")
-                
+                return (False, QCoreApplication.translate("DivisionesController", "Ya existe una familia con el código '{codigo}'").format(codigo=codigo))
+
             familia = Familia(codigo=codigo, familia=nombre, id_seccion=self.seccion_actual.id)
             self.repository.guardar_familia(familia)
             return (True, "")
@@ -124,14 +125,14 @@ class DivisionesController:
             
     def actualizar_familia_actual(self, codigo: str, nombre: str) -> Tuple[bool, str]:
         if not self.familia_actual:
-            return (False, "No hay familia seleccionada")
-            
+            return (False, QCoreApplication.translate("DivisionesController", "No hay familia seleccionada"))
+
         try:
             if self.familia_actual.codigo != codigo:
                 existente = self.repository.obtener_familia_por_codigo(codigo)
                 if existente:
-                    return (False, f"Ya existe una familia con el código '{codigo}'")
-            
+                    return (False, QCoreApplication.translate("DivisionesController", "Ya existe una familia con el código '{codigo}'").format(codigo=codigo))
+
             self.familia_actual.codigo = codigo
             self.familia_actual.familia = nombre
             self.repository.guardar_familia(self.familia_actual)
@@ -141,13 +142,13 @@ class DivisionesController:
 
     def borrar_familia_actual(self) -> Tuple[bool, str]:
         if not self.familia_actual:
-            return (False, "No hay familia seleccionada")
-            
+            return (False, QCoreApplication.translate("DivisionesController", "No hay familia seleccionada"))
+
         try:
             subfamilias = self.repository.obtener_subfamilias_por_familia(self.familia_actual.id)
             if subfamilias:
-                return (False, f"La familia tiene {len(subfamilias)} subfamilias asociadas")
-            
+                return (False, QCoreApplication.translate("DivisionesController", "La familia tiene {n} subfamilias asociadas").format(n=len(subfamilias)))
+
             self.repository.borrar_familia(self.familia_actual)
             self.familia_actual = None
             self.tipo_seleccion = 'seccion'
@@ -168,16 +169,16 @@ class DivisionesController:
     
     def crear_subfamilia(self, codigo: str, nombre: str) -> Tuple[bool, str]:
         if not self.familia_actual:
-            return (False, "Debe seleccionar una familia")
-            
+            return (False, QCoreApplication.translate("DivisionesController", "Debe seleccionar una familia"))
+
         try:
             if not codigo or not nombre:
-                return (False, "Código y nombre son obligatorios")
-                
+                return (False, QCoreApplication.translate("DivisionesController", "Código y nombre son obligatorios"))
+
             existente = self.repository.obtener_subfamilias_por_codigo(codigo)
             if existente:
-                return (False, f"Ya existe una subfamilia con el código '{codigo}'")
-                
+                return (False, QCoreApplication.translate("DivisionesController", "Ya existe una subfamilia con el código '{codigo}'").format(codigo=codigo))
+
             subfamilia = Subfamilia(codigo=codigo, subfamilia=nombre, id_familia=self.familia_actual.id)
             self.repository.guardar_subfamilia(subfamilia)
             return (True, "")
@@ -186,14 +187,14 @@ class DivisionesController:
             
     def actualizar_subfamilia_actual(self, codigo: str, nombre: str) -> Tuple[bool, str]:
         if not self.subfamilia_actual:
-            return (False, "No hay subfamilia seleccionada")
-            
+            return (False, QCoreApplication.translate("DivisionesController", "No hay subfamilia seleccionada"))
+
         try:
             if self.subfamilia_actual.codigo != codigo:
                 existente = self.repository.obtener_subfamilias_por_codigo(codigo)
                 if existente:
-                    return (False, f"Ya existe una subfamilia con el código '{codigo}'")
-            
+                    return (False, QCoreApplication.translate("DivisionesController", "Ya existe una subfamilia con el código '{codigo}'").format(codigo=codigo))
+
             self.subfamilia_actual.codigo = codigo
             self.subfamilia_actual.subfamilia = nombre
             self.repository.guardar_subfamilia(self.subfamilia_actual)
@@ -203,8 +204,8 @@ class DivisionesController:
 
     def borrar_subfamilia_actual(self) -> Tuple[bool, str]:
         if not self.subfamilia_actual:
-            return (False, "No hay subfamilia seleccionada")
-            
+            return (False, QCoreApplication.translate("DivisionesController", "No hay subfamilia seleccionada"))
+
         try:
             self.repository.borrar_subfamilia(self.subfamilia_actual)
             self.subfamilia_actual = None

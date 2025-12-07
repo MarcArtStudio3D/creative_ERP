@@ -7,6 +7,7 @@ Maneja la lógica de carga, validación, normalización y guardado de permisos p
 from typing import Dict, List, Set, Optional
 import json
 import os
+import logging
 
 
 class RolePermissionsManager:
@@ -47,7 +48,7 @@ class RolePermissionsManager:
             else:
                 self.permissions = {}
         except Exception as e:
-            print(f"Error al cargar permisos: {e}")
+            logging.getLogger(__name__).exception("Error al cargar permisos: %s", e)
             self.permissions = {}
         
         # Normalizar después de cargar
@@ -107,7 +108,7 @@ class RolePermissionsManager:
                 changed = True
         
         except Exception as e:
-            print(f"Error al normalizar permisos: {e}")
+            logging.getLogger(__name__).exception("Error al normalizar permisos: %s", e)
             return False
         
         # Si hubo cambios, persistir automáticamente
@@ -133,7 +134,7 @@ class RolePermissionsManager:
             return True
         
         except Exception as e:
-            print(f"Error al guardar permisos: {e}")
+            logging.getLogger(__name__).exception("Error al guardar permisos: %s", e)
             return False
     
     def get_module_permissions(self, role: str, module_id: str) -> List[str]:

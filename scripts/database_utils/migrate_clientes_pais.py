@@ -3,7 +3,7 @@ Script para migrar la columna id_pais de la tabla clientes de INT a VARCHAR(100)
 """
 import sys
 from pathlib import Path
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -18,7 +18,8 @@ def migrate_mariadb():
     print("=" * 60)
     
     try:
-        engine = create_engine(MARIADB_URL)
+        from core.db import get_engine_from_url
+        engine = get_engine_from_url(MARIADB_URL)
         with engine.connect() as connection:
             # 1. Modificar columna id_pais
             print("Modifying column id_pais to VARCHAR(100)...")

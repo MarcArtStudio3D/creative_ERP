@@ -8,7 +8,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import text, inspect
+from core.db import get_engine_from_url
 
 MARIADB_URL = "mysql+pymysql://root:1234@127.0.0.1:3306/creative_erp"
 
@@ -20,8 +21,8 @@ print("\nAttempting to connect to MariaDB...")
 print(f"   URL: {MARIADB_URL}")
 
 try:
-    engine = create_engine(MARIADB_URL, echo=False)
-    
+    engine = get_engine_from_url(MARIADB_URL, echo=False)
+
     # Test connection
     with engine.connect() as connection:
         print("\nCONNECTION SUCCESSFUL")

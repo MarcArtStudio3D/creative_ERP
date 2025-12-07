@@ -1,8 +1,9 @@
 from typing import List, Optional
-from sqlalchemy import create_engine, text
-from sqlalchemy.orm import sessionmaker
-from core.db import get_session, get_database_url
+from sqlalchemy import text
+from core.db import get_session, get_session_for_database
 from core.models import Empresa, BusinessGroup
+from sqlmodel import select
+import logging
 
 
 def remove_accents(input_str):
@@ -16,7 +17,6 @@ class EmpresaRepository:
     def __init__(self, session=None):
         self._external_session = session
         self._main_session = None
-        self._engine = None
 
     def _session(self):
         # Si se proporcionó una sesión externa, usarla (útil para tests)
@@ -35,34 +35,33 @@ class EmpresaRepository:
                     self._main_session.close()
                 self._main_session = None
 
-        # Crear conexión explícita a la base de datos 'main'
-        # Esto es necesario porque el contexto global de la app puede estar apuntando
-        # a una base de datos de empresa (tenant), pero las empresas siempre están en 'main'.
+        # Obtener una sesión ligada al engine de la BD 'main' usando el helper central.
+        # Esto evita crear engines locales y centraliza la gestión de conexiones.
         try:
-            if not self._engine:
-                db_url = get_database_url('main')
-                self._engine = create_engine(db_url)
-            
-            Session = sessionmaker(bind=self._engine)
-            self._main_session = Session()
+            if not self._main_session:
+                self._main_session = get_session_for_database('main')
             return self._main_session
         except Exception as e:
-            print(f"Error connecting to main database: {e}")
+            logging.getLogger(__name__).exception("Error connecting to main database: %s", e)
             # Fallback to global session if specific connection fails
             return get_session()
 
     def obtener_todos(self) -> list[type[Empresa]]:
         sess = self._session()
-        return sess.query(Empresa).order_by(Empresa.nombre_fiscal).all()
-        
+        stmt = select(Empresa).order_by(Empresa.nombre_fiscal)
+        return sess.exec(stmt).all()
+
     def obtener_grupos(self) -> List[BusinessGroup]:
         """Obtiene todos los grupos empresariales de la BD principal."""
         sess = self._session()
-        return sess.query(BusinessGroup).all()
+        return sess.exec(select(BusinessGroup)).all()
 
     def obtener_por_id(self, id_: int) -> Optional[Empresa]:
         sess = self._session()
-        return sess.query(Empresa).get(id_)
+        try:
+            return sess.get(Empresa, id_)
+        except Exception:
+            return sess.exec(select(Empresa).where(Empresa.id == id_)).first()
 
     def guardar(self, empresa: Empresa) -> Empresa:
         sess = self._session()
@@ -97,7 +96,7 @@ class EmpresaRepository:
             conn.close()
             return paises
         except Exception as e:
-            print(f"Error en repositorio obteniendo países: {e}")
+            logging.getLogger(__name__).exception("Error en repositorio obteniendo países: %s", e)
             return []
 
     def buscar_poblacion(self, cp: str, pais: str):
@@ -152,7 +151,7 @@ class EmpresaRepository:
             return results, db_path, db_config
             
         except Exception as e:
-            print(f"Error en repositorio buscando población: {e}")
+            logging.getLogger(__name__).exception("Error en repositorio buscando población: %s", e)
             return [], db_path, db_config
 
 
@@ -208,7 +207,7 @@ class EmpresaRepository:
             return results, db_path, db_config
             
         except Exception as e:
-            print(f"Error en repositorio buscando códigos postales: {e}")
+            logging.getLogger(__name__).exception("Error en repositorio buscando códigos postales: %s", e)
             return [], db_path, db_config
 
     def __del__(self):
@@ -216,10 +215,5 @@ class EmpresaRepository:
         if self._main_session:
             try:
                 self._main_session.close()
-            except:
-                pass
-        if self._engine:
-            try:
-                self._engine.dispose()
-            except:
+            except Exception:
                 pass

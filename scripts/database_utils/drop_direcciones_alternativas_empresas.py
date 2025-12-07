@@ -12,7 +12,7 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent.parent
 sys.path.insert(0, str(project_root))
 
-from core.db import get_session, get_engine, get_database_url
+from core.db import get_session, get_engine_for_database, get_engine_from_url
 import logging
 from sqlalchemy import text, inspect
 
@@ -41,7 +41,7 @@ def main():
     # 1. Base de datos principal (main)
     logging.getLogger(__name__).info("\n1️⃣  Base de datos MAIN:")
     try:
-        main_engine = get_engine('main')
+        main_engine = get_engine_for_database('main')
         drop_table_if_exists(main_engine, 'direcciones_alternativas_empresas')
     except Exception as e:
         print(f"  ❌ Error en base de datos main: {e}")
@@ -50,9 +50,10 @@ def main():
     logging.getLogger(__name__).info("\n2️⃣  Bases de datos de EMPRESAS:")
     try:
         from core.models import Empresa
+        from sqlmodel import select
         session = get_session()
-        empresas = session.query(Empresa).all()
-        
+        empresas = session.exec(select(Empresa)).all()
+
         if not empresas:
             logging.getLogger(__name__).info("  ℹ️  No hay empresas registradas")
         else:
@@ -63,14 +64,15 @@ def main():
                     from core.config import get_database_url_for_company
                     db_url = get_database_url_for_company(empresa.id)
                     
-                    # Crear engine para esta empresa
-                    from sqlalchemy import create_engine
-                    empresa_engine = create_engine(db_url)
-                    
+                    # Crear engine para esta empresa (centralizado por URL)
+                    empresa_engine = get_engine_from_url(db_url)
+
                     drop_table_if_exists(empresa_engine, 'direcciones_alternativas_empresas')
-                    
-                    empresa_engine.dispose()
-                    
+                    try:
+                        empresa_engine.dispose()
+                    except Exception:
+                        pass
+
                 except Exception as e:
                     logging.getLogger(__name__).exception(f"    ❌ Error procesando empresa {empresa.id}")
         

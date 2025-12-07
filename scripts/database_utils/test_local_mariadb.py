@@ -7,7 +7,8 @@ from pathlib import Path
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from sqlalchemy import create_engine, text, inspect
+from sqlalchemy import text, inspect
+from core.db import get_engine_from_url
 
 # Probar diferentes combinaciones de host
 configs = [
@@ -21,8 +22,8 @@ for host_name, url in configs:
     print(f"{'='*70}")
     
     try:
-        engine = create_engine(url, echo=False)
-        
+        engine = get_engine_from_url(url, echo=False)
+
         with engine.connect() as connection:
             result = connection.execute(text("SELECT DATABASE(), VERSION();"))
             db, version = result.fetchone()

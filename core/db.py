@@ -75,6 +75,75 @@ def get_session():
         set_current_database(_current_db)
     return _current_session()
 
+# Cache de engines por clave de base de datos (evita crear múltiples engines para la misma URL)
+_engines = {}
+
+def get_engine_for_database(db_key: str):
+    """Devuelve un engine para la base de datos indicada, creando y cacheando si es necesario.
+
+    Usa la configuración en DATABASE_CONFIGS para obtener la URL. Este helper permite que
+    varios módulos reutilicen engines sin duplicar la lógica de creación.
+    """
+    global _engines
+    if db_key in _engines:
+        return _engines[db_key]
+
+    db_url = get_database_url(db_key)
+    engine = create_engine(
+        db_url,
+        connect_args={"check_same_thread": False} if 'sqlite' in db_url else {},
+        echo=False
+    )
+    _engines[db_key] = engine
+    return engine
+
+def get_session_for_database(db_key: str):
+    """Devuelve una sesión ligada al engine de la base de datos indicada.
+
+    Es un helper simple que crea una Session ligada al engine devuelto por
+    get_engine_for_database().
+    """
+    engine = get_engine_for_database(db_key)
+    return Session(engine)
+
+def close_all_engines():
+    """Dispose y limpiar todos los engines cacheados.
+
+    Útil en el shutdown de la aplicación o en tests para liberar recursos.
+    """
+    global _engines, _current_engine, _current_session
+    for key, eng in list(_engines.items()):
+        try:
+            eng.dispose()
+        except Exception:
+            logging.getLogger(__name__).exception("Error disposing engine %s", key)
+    _engines.clear()
+    # Reset current engine/session pointers to allow recreación limpia
+    _current_engine = None
+    _current_session = None
+
+def get_engine_from_url(db_url: str, **kwargs):
+    """Devuelve (y cachea) un engine creado a partir de una URL completa.
+
+    Útil para scripts y utilidades que crean engines a partir de URLs dinámicas
+    (p.ej. migraciones). Se cachea por URL para evitar crear múltiples engines
+    para la misma URL.
+    """
+    global _engines
+    # Usar la URL como clave de cache (simple y efectivo)
+    key = f"url::{db_url}"
+    if key in _engines:
+        return _engines[key]
+
+    # Pasar kwargs directamente a create_engine; establecer connect_args por defecto para sqlite
+    connect_args = kwargs.pop('connect_args', None)
+    if connect_args is None and 'sqlite' in db_url:
+        connect_args = {"check_same_thread": False}
+
+    engine = create_engine(db_url, connect_args=connect_args or {}, **kwargs)
+    _engines[key] = engine
+    return engine
+
 # Inicializar con la base de datos por defecto
 set_current_database(DEFAULT_DB)
 

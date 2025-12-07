@@ -5,7 +5,8 @@ Script para inspeccionar la estructura de las tablas de divisiones en MariaDB
 
 import sys
 import os
-from sqlalchemy import create_engine, inspect
+from sqlalchemy import inspect
+from core.db import get_engine_from_url
 import logging
 
 # Añadir el directorio raíz al path
@@ -23,7 +24,7 @@ def inspeccionar_tablas():
         db_url = get_database_url_for_company(1)
         logging.getLogger(__name__).info(f"Conectando a: {db_url}")
         
-        engine = create_engine(db_url)
+        engine = get_engine_from_url(db_url)
         inspector = inspect(engine)
         
         tablas = ['secciones', 'familias', 'subfamilias']

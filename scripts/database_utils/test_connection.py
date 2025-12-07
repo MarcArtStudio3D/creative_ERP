@@ -9,7 +9,8 @@ project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
 import psycopg2
-from sqlalchemy import create_engine, text
+from sqlalchemy import text
+from core.db import get_engine_from_url
 
 POSTGRES_URL = "postgresql://admin:admin123@192.168.1.28:5432/creative_erp"
 
@@ -83,7 +84,7 @@ except Exception as e:
 # Test 3: Conexión con SQLAlchemy
 print("\n3️⃣ Probando conexión con SQLAlchemy...")
 try:
-    engine = create_engine(POSTGRES_URL)
+    engine = get_engine_from_url(POSTGRES_URL)
     with engine.connect() as connection:
         result = connection.execute(text("SELECT current_database();"))
         db = result.fetchone()

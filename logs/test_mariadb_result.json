@@ -1,0 +1,25 @@
+{
+  "ok": false,
+  "host": "127.0.0.1",
+  "port": 3306,
+  "user": "root",
+  "database": "creative_erp",
+  "checks": {
+    "pymysql_connect": {
+      "ok": false,
+      "error": "(1698, \"Access denied for user 'root'@'localhost'\")"
+    },
+    "list_databases": {
+      "ok": false,
+      "error": "(1698, \"Access denied for user 'root'@'localhost'\")"
+    },
+    "sqlalchemy_connect": {
+      "ok": false,
+      "error": "(pymysql.err.OperationalError) (1698, \"Access denied for user 'root'@'localhost'\")\n(Background on this error at: https://sqlalche.me/e/20/e3q8)"
+    },
+    "models_metadata": {
+      "ok": false,
+      "error": "cannot import name 'Base' from 'core.models' (/home/marc/Documents/Artstudio3D/Creative_ERP/core/models.py)"
+    }
+  }
+}

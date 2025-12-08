@@ -2,22 +2,24 @@
 Script para inicializar la base de datos con datos de ejemplo
 """
 
-from core.db import init_db, get_session
+from datetime import date
+
+from core.db import get_session, init_db
 from modules.clientes.models import Cliente
 from modules.clientes.repository import ClienteRepository
-from datetime import date
+
 
 def crear_clientes_demo():
     """Crea clientes de demostración"""
     session = get_session()
     repository = ClienteRepository(session)
-    
+
     # Verificar si ya existen clientes
     clientes_existentes = repository.obtener_todos()
     if len(clientes_existentes) > 0:
         print(f"Ya existen {len(clientes_existentes)} clientes en la base de datos")
         return
-    
+
     clientes_demo = [
         Cliente(
             codigo_cliente="C00001",
@@ -32,7 +34,7 @@ def crear_clientes_demo():
             provincia="Madrid",
             telefono1="666123456",
             email="juan@example.com",
-            fecha_alta=date(2023, 1, 15)
+            fecha_alta=date(2023, 1, 15),
         ),
         Cliente(
             codigo_cliente="C00002",
@@ -50,7 +52,7 @@ def crear_clientes_demo():
             movil="655234567",
             email="maria@estudiomartinez.com",
             web="www.estudiomartinez.com",
-            fecha_alta=date(2023, 3, 20)
+            fecha_alta=date(2023, 3, 20),
         ),
         Cliente(
             codigo_cliente="C00003",
@@ -65,7 +67,7 @@ def crear_clientes_demo():
             provincia="Valencia",
             telefono1="666345678",
             email="pedro@example.com",
-            fecha_alta=date(2023, 5, 10)
+            fecha_alta=date(2023, 5, 10),
         ),
         Cliente(
             codigo_cliente="C00004",
@@ -80,7 +82,7 @@ def crear_clientes_demo():
             telefono2="954123456",
             email="info@creativosunidos.com",
             web="www.creativosunidos.com",
-            fecha_alta=date(2023, 7, 5)
+            fecha_alta=date(2023, 7, 5),
         ),
         Cliente(
             codigo_cliente="C00005",
@@ -95,15 +97,15 @@ def crear_clientes_demo():
             provincia="Vizcaya",
             telefono1="666567890",
             email="carlos@example.com",
-            fecha_alta=date(2023, 9, 15)
+            fecha_alta=date(2023, 9, 15),
         ),
     ]
-    
+
     print("Creando clientes de demostración...")
     for cliente in clientes_demo:
         repository.crear(cliente)
         print(f"  ✓ {cliente.nombre_fiscal}")
-    
+
     print(f"\n✅ {len(clientes_demo)} clientes creados correctamente")
     session.close()
 
@@ -112,8 +114,8 @@ if __name__ == "__main__":
     print("Inicializando base de datos...")
     init_db()
     print("✓ Tablas creadas")
-    
+
     print("\nCreando datos de ejemplo...")
     crear_clientes_demo()
-    
+
     print("\n¡Listo! Se han agregado clientes a la tabla clientes.")

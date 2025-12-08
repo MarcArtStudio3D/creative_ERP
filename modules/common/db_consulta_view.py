@@ -1,9 +1,9 @@
-from typing import Optional, List, Dict
 import unicodedata
+from typing import Dict, List, Optional
 
+from PySide6.QtCore import QAbstractTableModel, QEvent, QModelIndex, Qt
+from PySide6.QtSql import QSqlDatabase, QSqlQueryModel
 from PySide6.QtWidgets import QDialog
-from PySide6.QtSql import QSqlQueryModel, QSqlDatabase
-from PySide6.QtCore import Qt, QEvent, QAbstractTableModel, QModelIndex
 
 from modules.common.ui_db_consulta_view import Ui_db_consulta_view
 
@@ -12,13 +12,14 @@ from modules.common.ui_db_consulta_view import Ui_db_consulta_view
 def _normalize_header(h: str) -> str:
     """Normalize header to a candidate key: remove accents, lower, replace non-alnum with underscore."""
     if not h:
-        return ''
-    nfkd = unicodedata.normalize('NFKD', h)
-    only_ascii = nfkd.encode('ascii', 'ignore').decode('ascii')
+        return ""
+    nfkd = unicodedata.normalize("NFKD", h)
+    only_ascii = nfkd.encode("ascii", "ignore").decode("ascii")
     lower = only_ascii.lower()
     # replace any non-alphanumeric by underscore
     import re
-    key = re.sub(r'[^a-z0-9]+', '_', lower).strip('_')
+
+    key = re.sub(r"[^a-z0-9]+", "_", lower).strip("_")
     return key
 
 
@@ -28,6 +29,7 @@ class DataTableModel(QAbstractTableModel):
     Detecta automáticamente las claves de las columnas a partir de headers y
     las keys disponibles en los datos (por ejemplo 'familia', 'subfamilia').
     """
+
     def __init__(self, data, headers):
         super().__init__()
         self._data = data
@@ -51,24 +53,24 @@ class DataTableModel(QAbstractTableModel):
                 chosen = cand_norm
             else:
                 # try removing underscores
-                cand2 = cand.replace('_', '')
+                cand2 = cand.replace("_", "")
                 if cand2 in available:
                     chosen = cand2
                 else:
                     mapping = {
-                        'codigo': 'codigo',
-                        'código': 'codigo',
-                        'seccion': 'seccion',
-                        'sección': 'seccion',
-                        'familia': 'familia',
-                        'subfamilia': 'subfamilia',
-                        'id': 'id'
+                        "codigo": "codigo",
+                        "código": "codigo",
+                        "seccion": "seccion",
+                        "sección": "seccion",
+                        "familia": "familia",
+                        "subfamilia": "subfamilia",
+                        "id": "id",
                     }
                     kn = cand_norm
                     if kn in mapping and mapping[kn] in available:
                         chosen = mapping[kn]
                     else:
-                        non_id_keys = [k for k in available if k != 'id']
+                        non_id_keys = [k for k in available if k != "id"]
                         chosen = non_id_keys[0] if non_id_keys else cand
 
             self._col_keys.append(chosen)
@@ -80,7 +82,11 @@ class DataTableModel(QAbstractTableModel):
         return len(self._headers)
 
     def data(self, index, role):
-        if not index.isValid() or index.row() >= len(self._filtered_data) or index.column() >= len(self._headers):
+        if (
+            not index.isValid()
+            or index.row() >= len(self._filtered_data)
+            or index.column() >= len(self._headers)
+        ):
             return None
 
         if role == Qt.ItemDataRole.DisplayRole:
@@ -90,13 +96,16 @@ class DataTableModel(QAbstractTableModel):
             if 0 <= col < len(self._col_keys):
                 key = self._col_keys[col]
             if key is None:
-                return ''
-            return str(row_data.get(key, ''))
+                return ""
+            return str(row_data.get(key, ""))
 
         return None
 
     def headerData(self, section, orientation, role):
-        if orientation == Qt.Orientation.Horizontal and role == Qt.ItemDataRole.DisplayRole:
+        if (
+            orientation == Qt.Orientation.Horizontal
+            and role == Qt.ItemDataRole.DisplayRole
+        ):
             if 0 <= section < len(self._headers):
                 return self._headers[section]
         return None
@@ -112,7 +121,7 @@ class DataTableModel(QAbstractTableModel):
 
             for row in self._data:
                 if search_field:
-                    field_value = str(row.get(search_field, '')).lower()
+                    field_value = str(row.get(search_field, "")).lower()
                     if search_lower in field_value:
                         self._filtered_data.append(row)
                 else:
@@ -127,17 +136,16 @@ class DataTableModel(QAbstractTableModel):
         self.endResetModel()
 
 
-
 class DBConsultaView(QDialog):
     """Generic DB lookup dialog.
 
     It wraps the generated UI `Ui_db_consulta_view` and provides helpers to set
     SQL, headers, column sizes and delegates, and returns the selected row.
-    
+
     Example usage:
         from modules.common.db_consulta_view import DBConsultaView
         sql = "SELECT id, poblacion, provincia FROM poblaciones WHERE cp = 28001"
-        id, record = DBConsultaView.select_from_sql(parent, sql, db='group', 
+        id, record = DBConsultaView.select_from_sql(parent, sql, db='group',
                                                     headers=['id','poblacion','provincia'],
                                                     campos=['poblacion'])
         if id:
@@ -154,8 +162,8 @@ class DBConsultaView(QDialog):
         self.ui.resultado_list.installEventFilter(self)
         self.id = 0
         self._r = None
-        self.cSQL = ''
-        self.cSQLFiltered = ''
+        self.cSQL = ""
+        self.cSQLFiltered = ""
         self.modelo: Optional[QSqlQueryModel] = None
         self.db: Optional[str | QSqlDatabase] = None
         self.headers: List[str] = []
@@ -166,15 +174,23 @@ class DBConsultaView(QDialog):
         self.ui.cboSentido.addItems(["A-Z", "Z-A"])
 
         # wire signals
-        self.ui.lineaTextoBuscar.textChanged.connect(self.on_lineaTextoBuscar_textChanged)
+        self.ui.lineaTextoBuscar.textChanged.connect(
+            self.on_lineaTextoBuscar_textChanged
+        )
         self.ui.resultado_list.clicked.connect(self.on_resultado_list_clicked)
-        self.ui.resultado_list.doubleClicked.connect(self.on_resultado_list_doubleClicked)
+        self.ui.resultado_list.doubleClicked.connect(
+            self.on_resultado_list_doubleClicked
+        )
         self.ui.btn_aceptar.clicked.connect(self.accept)
         self.ui.btn_cancelar.clicked.connect(self.reject)
-        
+
         # Connect comboboxes to update filter immediately
-        self.ui.cboSentido.currentIndexChanged.connect(lambda: self.set_filtro(self.ui.lineaTextoBuscar.text()))
-        self.ui.cboCampoBusqueda.currentIndexChanged.connect(lambda: self.set_filtro(self.ui.lineaTextoBuscar.text()))
+        self.ui.cboSentido.currentIndexChanged.connect(
+            lambda: self.set_filtro(self.ui.lineaTextoBuscar.text())
+        )
+        self.ui.cboCampoBusqueda.currentIndexChanged.connect(
+            lambda: self.set_filtro(self.ui.lineaTextoBuscar.text())
+        )
 
     # helper getters
     def get_selected_id(self) -> int:
@@ -216,39 +232,39 @@ class DBConsultaView(QDialog):
             pass
 
     def set_filtro(self, filtro: str):
-        sentido = ''
-        if self.ui.cboSentido.currentText() == 'Z-A':
-            sentido = 'DESC'
-        self.cSQLFiltered = ''
+        sentido = ""
+        if self.ui.cboSentido.currentText() == "Z-A":
+            sentido = "DESC"
+        self.cSQLFiltered = ""
         if not self.cSQL:
             return
-        self.cSQLFiltered = ''
+        self.cSQLFiltered = ""
         if not self.cSQL:
             return
-            
+
         # Strip existing ORDER BY to avoid syntax errors (e.g. ... ORDER BY ... WHERE ...)
         base_sql = self.cSQL
         lower_sql = base_sql.lower()
-        
+
         # Strip LIMIT first (it's usually at the end)
-        limit_index = lower_sql.rfind(' limit ')
+        limit_index = lower_sql.rfind(" limit ")
         if limit_index != -1:
             base_sql = base_sql[:limit_index]
-            lower_sql = base_sql.lower() # update lower_sql for order by check
-            
-        order_by_index = lower_sql.rfind(' order by ')
+            lower_sql = base_sql.lower()  # update lower_sql for order by check
+
+        order_by_index = lower_sql.rfind(" order by ")
         if order_by_index != -1:
             base_sql = base_sql[:order_by_index]
-            
+
         self.cSQLFiltered = base_sql
-        
-        if 'where' in base_sql.lower():
-            self.cSQLFiltered += ' and '
+
+        if "where" in base_sql.lower():
+            self.cSQLFiltered += " and "
         else:
-            self.cSQLFiltered += ' where '
-            
+            self.cSQLFiltered += " where "
+
         # Use the current selected field to filter
-        campo = self.ui.cboCampoBusqueda.currentText().strip() or ''
+        campo = self.ui.cboCampoBusqueda.currentText().strip() or ""
         if campo:
             # Escape single quotes in filtro to prevent SQL injection
             filtro_escaped = filtro.replace("'", "''")
@@ -267,11 +283,13 @@ class DBConsultaView(QDialog):
                 # We go back to base_sql which has no ORDER BY, but we will add it later
                 self.cSQLFiltered = base_sql
         # extra filters (example from old code for articles)
-        if self.ui.lbltabla.text() == 'articulos' and ('vista_art_prov' not in self.cSQL):
+        if self.ui.lbltabla.text() == "articulos" and (
+            "vista_art_prov" not in self.cSQL
+        ):
             if self.id_tarifa_cliente:
                 self.cSQLFiltered += f" and tarifa = {int(self.id_tarifa_cliente)} "
         # append ordering
-        self.cSQLFiltered += ' order by ' + (campo or '1') + f' {sentido}'
+        self.cSQLFiltered += " order by " + (campo or "1") + f" {sentido}"
         try:
             if self.modelo is None:
                 return  # No model set, cannot filter
@@ -303,18 +321,17 @@ class DBConsultaView(QDialog):
 
     def set_tamano_columnas(self, tamanos: List[int]):
         """Set column widths. Last column will stretch to fill remaining space.
-        
+
         Args:
             tamanos: List of column widths in pixels. If fewer widths than columns,
                     remaining columns use default width. Last column always stretches.
         """
-        from PySide6.QtWidgets import QHeaderView
-        
+
         # Set specific widths for provided columns
         for i, t in enumerate(tamanos):
             if i < self.ui.resultado_list.model().columnCount():
                 self.ui.resultado_list.setColumnWidth(i, int(t))
-        
+
         # Make the last visible column stretch to fill remaining space
         last_col = self.ui.resultado_list.model().columnCount() - 1
         if last_col >= 0:
@@ -323,11 +340,14 @@ class DBConsultaView(QDialog):
     def set_delegate_monetary(self, cols):
         # Delegates are project-specific; no-op if not available
         from importlib import import_module
+
         try:
-            Monetary = import_module('modules.auxiliares.monetarydelegate')
+            Monetary = import_module("modules.auxiliares.monetarydelegate")
             for pos in cols:
                 try:
-                    self.ui.resultado_list.setItemDelegateForColumn(int(pos), Monetary.MonetaryDelegate(self))
+                    self.ui.resultado_list.setItemDelegateForColumn(
+                        int(pos), Monetary.MonetaryDelegate(self)
+                    )
                 except Exception:
                     pass
         except Exception:
@@ -335,11 +355,14 @@ class DBConsultaView(QDialog):
 
     def set_delegate_fecha(self, cols):
         from importlib import import_module
+
         try:
-            DateD = import_module('modules.auxiliares.datedelegate')
+            DateD = import_module("modules.auxiliares.datedelegate")
             for pos in cols:
                 try:
-                    self.ui.resultado_list.setItemDelegateForColumn(int(pos), DateD.DateDelegate(self))
+                    self.ui.resultado_list.setItemDelegateForColumn(
+                        int(pos), DateD.DateDelegate(self)
+                    )
                 except Exception:
                     pass
         except Exception:
@@ -403,9 +426,15 @@ class DBConsultaView(QDialog):
         return 0, None
 
     @staticmethod
-    def select_from_sql(parent, sql: str, db: Optional[str | QSqlDatabase] = None, 
-                       headers: Optional[List[str]] = None, campos: Optional[List[str]] = None, 
-                       titulo: Optional[str] = None, tamanos: Optional[List[int]] = None):
+    def select_from_sql(
+        parent,
+        sql: str,
+        db: Optional[str | QSqlDatabase] = None,
+        headers: Optional[List[str]] = None,
+        campos: Optional[List[str]] = None,
+        titulo: Optional[str] = None,
+        tamanos: Optional[List[int]] = None,
+    ):
         """Convenience method to show dialog and return (id, record) after user selects.
 
         Parameters:
@@ -432,58 +461,65 @@ class DBConsultaView(QDialog):
         if tamanos:
             dlg.set_tamano_columnas(tamanos)
         return dlg.exec_select()
-    
+
     @staticmethod
-    def select_from_data(parent, data: List[Dict], headers: List[str], 
-                        campos: Optional[List[str]] = None, titulo: Optional[str] = None):
+    def select_from_data(
+        parent,
+        data: List[Dict],
+        headers: List[str],
+        campos: Optional[List[str]] = None,
+        titulo: Optional[str] = None,
+    ):
         """Convenience method to show dialog with dictionary data and return selected item.
-        
+
         This is a direct alternative to select_from_sql that works with Python data
         without requiring QSqlDatabase connections.
-        
+
         Parameters:
             parent: parent widget
             data: list of dictionaries with the data to display
-            headers: column headers (strings) 
+            headers: column headers (strings)
             campos: optional list of fields for search combobox
             titulo: optional window title
-        
+
         Returns:
             (selected_dict, None) if user selects, (None, None) if cancelled
         """
-        from PySide6.QtSql import QSqlRecord, QSqlField
-        
+        from PySide6.QtSql import QSqlField, QSqlRecord
+
         # Create dialog
         dlg = DBConsultaView(parent)
-        
+
         # Set title
         if titulo:
             dlg.set_titulo(titulo)
-            
+
         # Set search fields
         if campos:
             dlg.set_campoBusqueda(campos)
-            
+
         # Create and set custom model
         model = DataTableModel(data, headers)
         dlg.modelo = model
         dlg.ui.resultado_list.setModel(model)
-        
+
         # Set headers
         if headers:
             dlg.set_headers(headers)
             # Also set table headers directly for custom model
             dlg.ui.resultado_list.model().headers = headers
-        
+
         # Override filter method to work with our custom model
-        original_filter = dlg.set_filtro
+        dlg.set_filtro
+
         def custom_filter(filtro_text):
             search_field = dlg.ui.cboCampoBusqueda.currentText().strip()
             if not search_field and campos:
                 search_field = campos[0] if campos else None
             model.filter_data(filtro_text, search_field)
+
         dlg.set_filtro = custom_filter
-        
+
         # Override click handler to work with filtered data
         def custom_click_handler():
             current_index = dlg.ui.resultado_list.currentIndex()
@@ -495,21 +531,23 @@ class DBConsultaView(QDialog):
                     record = QSqlRecord()
                     for i, header in enumerate(headers):
                         key = None
-                        if hasattr(model, '_col_keys') and i < len(model._col_keys):
+                        if hasattr(model, "_col_keys") and i < len(model._col_keys):
                             key = model._col_keys[i]
                         if not key:
                             key = header.lower()
 
                         field = QSqlField(key)
-                        field.setValue(str(selected_data.get(key, '')))
+                        field.setValue(str(selected_data.get(key, "")))
                         record.append(field)
-                    
-                    dlg.id = selected_data.get('id', 0)
+
+                    dlg.id = selected_data.get("id", 0)
                     dlg._r = record
-        
+
         dlg.ui.resultado_list.clicked.connect(custom_click_handler)
-        dlg.ui.resultado_list.doubleClicked.connect(lambda: (custom_click_handler(), dlg.accept()))
-        
+        dlg.ui.resultado_list.doubleClicked.connect(
+            lambda: (custom_click_handler(), dlg.accept())
+        )
+
         # Show dialog
         if dlg.exec() == dlg.DialogCode.Accepted:
             current_index = dlg.ui.resultado_list.currentIndex()
@@ -517,5 +555,5 @@ class DBConsultaView(QDialog):
                 row = current_index.row()
                 if 0 <= row < len(model._filtered_data):
                     return model._filtered_data[row], dlg._r
-        
+
         return None, None

@@ -1,5 +1,7 @@
-from PySide6.QtWidgets import QMessageBox
 import logging
+
+from PySide6.QtWidgets import QMessageBox
+
 
 def show_warning(parent, title: str, message: str):
     """Show a warning message to the user.
@@ -11,7 +13,8 @@ def show_warning(parent, title: str, message: str):
     """
     try:
         import os
-        if os.environ.get('PYTEST_CURRENT_TEST'):
+
+        if os.environ.get("PYTEST_CURRENT_TEST"):
             # Running under pytest — log instead of showing a modal to avoid blocking
             logging.getLogger(__name__).warning("%s: %s", title, message)
             return
@@ -24,11 +27,13 @@ def show_warning(parent, title: str, message: str):
         # Last resort fallback to logging if QMessageBox can't be shown (headless)
         logging.getLogger(__name__).exception("%s: %s", title, message)
 
+
 def show_info(parent, title: str, message: str):
     """Show an information message (non-blocking in tests)."""
     try:
         import os
-        if os.environ.get('PYTEST_CURRENT_TEST'):
+
+        if os.environ.get("PYTEST_CURRENT_TEST"):
             logging.getLogger(__name__).info("%s: %s", title, message)
             return
     except Exception:
@@ -39,11 +44,13 @@ def show_info(parent, title: str, message: str):
     except Exception:
         logging.getLogger(__name__).exception("%s: %s", title, message)
 
+
 def show_critical(parent, title: str, message: str):
     """Show a critical message (non-blocking in tests)."""
     try:
         import os
-        if os.environ.get('PYTEST_CURRENT_TEST'):
+
+        if os.environ.get("PYTEST_CURRENT_TEST"):
             logging.getLogger(__name__).error("%s: %s", title, message)
             return
     except Exception:
@@ -69,7 +76,8 @@ def show_question(parent, title: str, message: str, buttons=None, default=None):
     """
     try:
         import os
-        if os.environ.get('PYTEST_CURRENT_TEST'):
+
+        if os.environ.get("PYTEST_CURRENT_TEST"):
             # Running under pytest — log the question and return the default
             logging.getLogger(__name__).info("%s: %s", title, message)
             # Default to Yes if not specified to allow destructive actions in tests

@@ -2,13 +2,16 @@
 """
 Tests for the PVP fixed-price input: formatting and saving.
 """
-import os, sys
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from PySide6.QtWidgets import QApplication
+
 from core.db import set_current_database
-from modules.articulos.view import ArticulosView
 from modules.articulos.repository import ArticuloRepository
+from modules.articulos.view import ArticulosView
 
 
 def ensure_qapp():
@@ -19,7 +22,7 @@ def ensure_qapp():
 
 
 def test_pvp_field_formats_and_saves():
-    set_current_database('artstudio3d')
+    set_current_database("artstudio3d")
     ensure_qapp()
 
     v = ArticulosView()
@@ -31,7 +34,7 @@ def test_pvp_field_formats_and_saves():
     # find an article with no oferta for the tarifa
     art = None
     for a in repo.get_all(limit=10):
-        exists = repo.get_oferta_for_article(a['id'], tarifa)
+        exists = repo.get_oferta_for_article(a["id"], tarifa)
         if not exists:
             art = a
             break
@@ -41,9 +44,9 @@ def test_pvp_field_formats_and_saves():
         all_a = repo.get_all(limit=1)
         assert all_a
         art = all_a[0]
-        repo.delete_ofertas_for_article(art['id'])
+        repo.delete_ofertas_for_article(art["id"])
 
-    assert v.controller.load_by_id(art['id'])
+    assert v.controller.load_by_id(art["id"])
 
     # go to promotions, enable editing
     v.ui.Pestanas.setCurrentWidget(v.ui.tab_promociones)
@@ -51,11 +54,13 @@ def test_pvp_field_formats_and_saves():
     v._on_add_oferta()
 
     # canonical widget name
-    pvp_widget = getattr(v.ui, 'txtofertaPvpFijo', None)
-    assert pvp_widget is not None, 'No PVP fixed-price widget available in this UI generation'
+    pvp_widget = getattr(v.ui, "txtofertaPvpFijo", None)
+    assert (
+        pvp_widget is not None
+    ), "No PVP fixed-price widget available in this UI generation"
 
     # enter a value using thousands separator and comma decimal
-    pvp_widget.setText('1.234,56')
+    pvp_widget.setText("1.234,56")
     # simulate user finishing editing so formatting hook runs
     try:
         pvp_widget.editingFinished.emit()
@@ -65,12 +70,12 @@ def test_pvp_field_formats_and_saves():
 
     # Expect formatted result (company uses comma separator and default decimals)
     formatted = pvp_widget.text()
-    assert formatted != ''
+    assert formatted != ""
 
     # Save offer and verify persisted value
     v._on_save_oferta()
 
-    oferta = repo.get_oferta_for_article(art['id'], tarifa)
+    oferta = repo.get_oferta_for_article(art["id"], tarifa)
     assert oferta is not None
     # precio_final stored as numeric value in DB - should equal parsed float
-    assert abs((float(oferta.get('precio_final') or 0) - 1234.56)) < 0.001
+    assert abs((float(oferta.get("precio_final") or 0) - 1234.56)) < 0.001

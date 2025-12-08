@@ -4,13 +4,14 @@ Ejemplo de cómo integrar el sistema de traducciones en Creative ERP.
 Este archivo muestra cómo modificar app.py para soportar traducciones.
 """
 
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QSettings
+import logging
 import sys
 
-from core.db import init_db
-import logging
+from PySide6.QtCore import QSettings
+from PySide6.QtWidgets import QApplication
+
 from core.auth import AuthenticationManager
+from core.db import init_db
 from core.module_manager import ModuleManager
 from core.translations import load_translation  # NUEVO
 
@@ -20,7 +21,7 @@ class CreativeERPApp:
     Aplicación principal del ERP.
     Gestiona el ciclo de vida completo de la aplicación.
     """
-    
+
     def __init__(self):
         self.qapp = None
         self.auth_manager = AuthenticationManager()
@@ -28,7 +29,7 @@ class CreativeERPApp:
         self.main_window = None
         self.login_window = None
         self.translator = None  # NUEVO: Guardar referencia al traductor
-    
+
     def initialize(self):
         """Inicializa la aplicación."""
         # Crear aplicación Qt
@@ -36,40 +37,40 @@ class CreativeERPApp:
         self.qapp.setApplicationName("Creative ERP")
         self.qapp.setOrganizationName("ArtStudio3D")
         self.qapp.setOrganizationDomain("artstudio3d.com")
-        
+
         # ========== NUEVO: Cargar traducciones ==========
         # Opción 1: Detectar idioma del sistema automáticamente
         self.translator = load_translation(self.qapp)
-        
+
         # Opción 2: Usar un idioma específico
         # self.translator = load_translation(self.qapp, 'es')  # Español
         # self.translator = load_translation(self.qapp, 'en')  # Inglés
         # self.translator = load_translation(self.qapp, 'ca')  # Catalán
-        
+
         # Opción 3: Leer idioma de configuración guardada
         # settings = QSettings()
         # language = settings.value("language", "es")  # Por defecto español
         # self.translator = load_translation(self.qapp, language)
         # ================================================
-        
+
         # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
         # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
-        
+
         # Inicializar base de datos
         logging.getLogger(__name__).info("Inicializando base de datos...")
         init_db()
         logging.getLogger(__name__).info("✓ Base de datos lista")
-        
+
         return True
-    
+
     def show_login(self):
         """Muestra la ventana de login multi-empresa."""
         from app.views.login_window_multi import LoginWindowMultiCompany
-        
+
         self.login_window = LoginWindowMultiCompany(self.auth_manager)
         self.login_window.login_successful.connect(self.on_login_success)
         self.login_window.show()
-    
+
     def on_login_success(self):
         """Callback cuando el login es exitoso."""
         if self.login_window is not None:
@@ -78,61 +79,64 @@ class CreativeERPApp:
             except Exception:
                 pass
         self.show_main_window()
-    
+
     def show_main_window(self):
         """Muestra la ventana principal con los módulos del usuario."""
         from app.views.main_window_v2 import MainWindowV2
-        
+
         session = self.auth_manager.get_current_session()
         if not session:
             self.show_login()
             return
-        
+
         logging.getLogger(__name__).info(f"\n✓ Usuario: {session.user.full_name}")
         logging.getLogger(__name__).info(f"✓ Rol: {session.user.role.value}")
-        
+
         self.main_window = MainWindowV2(session)
         self.main_window.logout_requested.connect(self.on_logout)
         self.main_window.show()
-    
+
     def on_logout(self):
         """Callback cuando se cierra sesión."""
         if self.main_window:
             self.main_window.close()
         self.auth_manager.logout()
         self.show_login()
-    
+
     # ========== NUEVO: Método para cambiar idioma ==========
     def change_language(self, language_code: str):
         """
         Cambia el idioma de la aplicación.
-        
+
         Args:
             language_code: Código de idioma ('es', 'en', 'ca')
         """
         from core.translations import change_language
-        
+
         if self.qapp:
             self.translator = change_language(self.qapp, self.translator, language_code)
-            
+
             # Guardar preferencia
             settings = QSettings()
             settings.setValue("language", language_code)
-            
+
             # Recargar ventanas para aplicar traducciones
             # (Esto requeriría cerrar y reabrir las ventanas)
             logging.getLogger(__name__).info(f"Idioma cambiado a: {language_code}")
-            logging.getLogger(__name__).info("Nota: Reinicia la aplicación para ver todos los cambios")
+            logging.getLogger(__name__).info(
+                "Nota: Reinicia la aplicación para ver todos los cambios"
+            )
+
     # =======================================================
-    
+
     def run(self):
         """Ejecuta la aplicación."""
         if not self.initialize():
             return 1
-        
+
         # Mostrar login al inicio
         self.show_login()
-        
+
         # Ejecutar loop de eventos Qt
         # Asegurar para el analizador de tipos que `qapp` no es None
         qapp = self.qapp

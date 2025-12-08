@@ -5,15 +5,14 @@ Revises: 6271f8dcd28d
 Create Date: 2025-11-18 14:22:31.454854
 
 """
+
 from typing import Sequence, Union
 
 from alembic import op
-import sqlalchemy as sa
-
 
 # revision identifiers, used by Alembic.
-revision: str = '1cb380bca415'
-down_revision: Union[str, Sequence[str], None] = '6271f8dcd28d'
+revision: str = "1cb380bca415"
+down_revision: Union[str, Sequence[str], None] = "6271f8dcd28d"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -21,7 +20,8 @@ depends_on: Union[str, Sequence[str], None] = None
 def upgrade() -> None:
     """Upgrade schema."""
     # Insertar clientes de ejemplo
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO clients (id, name, email, country, vat_number, address, created_at) VALUES
         (1, 'Empresa Ejemplo SL', 'contacto@empresa-ejemplo.com', 'ES', 'B12345678', 'Calle Mayor 123, Madrid', '2025-01-15 10:00:00'),
         (2, 'Tech Solutions SARL', 'info@techsolutions.fr', 'FR', 'FR12345678901', '15 Rue de la Paix, Paris', '2025-02-01 09:30:00'),
@@ -33,20 +33,24 @@ def upgrade() -> None:
         (8, 'IT Services Marseille', 'support@itservices.fr', 'FR', 'FR77788899900', '45 Rue de la République, Marseille', '2025-05-01 13:15:00'),
         (9, 'Comercial Valencia SL', 'info@comercialvalencia.es', 'ES', 'B33344455', 'Plaza de la Reina 12, Valencia', '2025-05-20 10:45:00'),
         (10, 'Agence Marketing Toulouse', 'marketing@agence.fr', 'FR', 'FR66677788811', '18 Place du Capitole, Toulouse', '2025-06-01 15:30:00')
-    """)
+    """
+    )
 
     # Insertar algunas facturas de ejemplo
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO invoices (id, number, client_id, date, status, total, currency) VALUES
         (1, 'INV-2025-001', 1, '2025-06-15', 'paid', 1250.50, 'EUR'),
         (2, 'INV-2025-002', 2, '2025-06-20', 'pending', 890.75, 'EUR'),
         (3, 'INV-2025-003', 3, '2025-07-01', 'draft', 2100.00, 'EUR'),
         (4, 'INV-2025-004', 4, '2025-07-05', 'paid', 675.25, 'EUR'),
         (5, 'INV-2025-005', 5, '2025-07-10', 'sent', 445.80, 'EUR')
-    """)
+    """
+    )
 
     # Insertar líneas de factura de ejemplo
-    op.execute("""
+    op.execute(
+        """
         INSERT INTO invoice_lines (id, invoice_id, description, qty, unit_price, vat) VALUES
         (1, 1, 'Desarrollo software personalizado', 40.0, 25.00, 21.0),
         (2, 1, 'Instalación y configuración', 8.0, 15.00, 21.0),
@@ -58,7 +62,8 @@ def upgrade() -> None:
         (8, 4, 'Informe técnico', 1.0, 175.25, 20.0),
         (9, 5, 'Suministro de equipos', 2.0, 180.00, 21.0),
         (10, 5, 'Instalación in situ', 1.0, 85.80, 21.0)
-    """)
+    """
+    )
 
 
 def downgrade() -> None:

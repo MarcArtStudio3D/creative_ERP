@@ -3,17 +3,18 @@ Aplicación principal del Creative ERP.
 Gestiona el inicio, login y navegación entre módulos.
 """
 
-from PySide6.QtWidgets import QApplication
-from PySide6.QtCore import QSettings
+import atexit
 import sys
 
-from core.db import init_db, close_all_engines
-import atexit
+from PySide6.QtWidgets import QApplication
+
+from core.db import close_all_engines
 
 # Registrar cierre de engines al salir de la aplicación
 atexit.register(close_all_engines)
 
 import logging
+
 from core.auth import AuthenticationManager
 from core.module_manager import ModuleManager
 
@@ -23,14 +24,14 @@ class CreativeERPApp:
     Aplicación principal del ERP.
     Gestiona el ciclo de vida completo de la aplicación.
     """
-    
+
     def __init__(self):
         self.qapp = None
         self.auth_manager = AuthenticationManager()
         self.module_manager = ModuleManager()
         self.main_window = None
         self.login_window = None
-    
+
     def initialize(self):
         """Inicializa la aplicación."""
         # Crear aplicación Qt
@@ -38,26 +39,37 @@ class CreativeERPApp:
         self.qapp.setApplicationName("Creative ERP")
         self.qapp.setOrganizationName("ArtStudio3D")
         self.qapp.setOrganizationDomain("artstudio3d.com")
-        
+
         # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
         # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
-        
+
         # Cargar hoja de estilos moderna
         try:
             import os
-            style_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resources', 'styles', 'modern.qss')
+
+            style_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)),
+                "resources",
+                "styles",
+                "modern.qss",
+            )
             if os.path.exists(style_path):
-                with open(style_path, 'r') as f:
+                with open(style_path, "r") as f:
                     self.qapp.setStyleSheet(f.read())
-                    logging.getLogger(__name__).info(f"✓ Estilo moderno cargado desde {style_path}")
+                    logging.getLogger(__name__).info(
+                        f"✓ Estilo moderno cargado desde {style_path}"
+                    )
             else:
-                    logging.getLogger(__name__).warning(f"⚠ No se encontró el archivo de estilo: {style_path}")
+                logging.getLogger(__name__).warning(
+                    f"⚠ No se encontró el archivo de estilo: {style_path}"
+                )
         except Exception as e:
             logging.getLogger(__name__).exception(f"⚠ Error al cargar estilo: {e}")
-        
+
         # Set global application icon (try resource first, fallback to file path)
         try:
             from PySide6.QtGui import QIcon
+
             # resource path will exist after compiling designer.qrc -> modules/designer_rc.py
             # Try both prefixes in the qrc (some builds include it under PNG prefix)
             icon = QIcon(":/ICO/LogoIconoCreative.ico")
@@ -66,37 +78,49 @@ class CreativeERPApp:
             if icon.isNull():
                 # Fallback to filesystem path in repository
                 import os
-                ico_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'resources', 'icons', 'ico', 'LogoIconoCreative.ico')
+
+                ico_path = os.path.join(
+                    os.path.dirname(os.path.dirname(__file__)),
+                    "resources",
+                    "icons",
+                    "ico",
+                    "LogoIconoCreative.ico",
+                )
                 if os.path.exists(ico_path):
                     icon = QIcon(ico_path)
 
             if not icon.isNull():
                 self.qapp.setWindowIcon(icon)
-                logging.getLogger(__name__).info("✓ Application icon set from LogoIconoCreative.ico")
+                logging.getLogger(__name__).info(
+                    "✓ Application icon set from LogoIconoCreative.ico"
+                )
             else:
-                logging.getLogger(__name__).warning("⚠️ Application icon not found (resource and fallback missing)")
+                logging.getLogger(__name__).warning(
+                    "⚠️ Application icon not found (resource and fallback missing)"
+                )
         except Exception as e:
-            logging.getLogger(__name__).exception(f"⚠️ Error setting application icon: {e}")
+            logging.getLogger(__name__).exception(
+                f"⚠️ Error setting application icon: {e}"
+            )
 
         # Nota: crear tablas en la base de datos es una acción explícita y
         # potencialmente destructiva. No la ejecutamos automáticamente al
         # iniciar la aplicación; la creación/migración de esquemas debe ser
         # una acción manual (admin) o parte de un flujo controlado.
-        
+
         # Inicializar CompanyManager
-        from core.company_manager import company_manager
         logging.getLogger(__name__).info("✓ CompanyManager inicializado")
-        
+
         return True
-    
+
     def show_login(self):
         """Muestra la ventana de login multi-empresa."""
         from app.views.login_window_multi import LoginWindowMultiCompany
-        
+
         self.login_window = LoginWindowMultiCompany(self.auth_manager)
         self.login_window.login_successful.connect(self.on_login_success)
         self.login_window.show()
-    
+
     def on_login_success(self):
         """Callback cuando el login es exitoso."""
         if self.login_window is not None:
@@ -105,38 +129,38 @@ class CreativeERPApp:
             except Exception:
                 pass
         self.show_main_window()
-    
+
     def show_main_window(self):
         """Muestra la ventana principal con los módulos del usuario."""
         from app.views.main_window_v2 import MainWindowV2
-        
+
         session = self.auth_manager.get_current_session()
         if not session:
             self.show_login()
             return
-        
+
         logging.getLogger(__name__).info(f"\n✓ Usuario: {session.user.full_name}")
         logging.getLogger(__name__).info(f"✓ Rol: {session.user.role.value}")
-        
+
         self.main_window = MainWindowV2(session)
         self.main_window.logout_requested.connect(self.on_logout)
         self.main_window.show()
-    
+
     def on_logout(self):
         """Callback cuando se cierra sesión."""
         if self.main_window:
             self.main_window.close()
         self.auth_manager.logout()
         self.show_login()
-    
+
     def run(self):
         """Ejecuta la aplicación."""
         if not self.initialize():
             return 1
-        
+
         # Mostrar login al inicio
         self.show_login()
-        
+
         # Ejecutar loop de eventos Qt
         # Asegurar para el analizador de tipos que `qapp` no es None
         qapp = self.qapp

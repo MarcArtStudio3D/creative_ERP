@@ -12,26 +12,31 @@ from pathlib import Path
 root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
+
 def create_main_database():
     """Crea la base de datos principal 'Creative_ERP' y migra las tablas globales."""
 
     print("Creating main database 'Creative_ERP'...")
 
     # Configuración de la nueva base de datos principal
-    main_db_url = os.environ.get('CREATIVE_ERP_MAIN_DB',
-                                'mysql+pymysql://admin:admin123@127.0.0.1:3306/creative_erp_main')
+    main_db_url = os.environ.get(
+        "CREATIVE_ERP_MAIN_DB",
+        "mysql+pymysql://admin:admin123@127.0.0.1:3306/creative_erp_main",
+    )
 
     # Configuración de la base de datos actual
-    current_db_url = os.environ.get('CREATIVE_ERP_CURRENT_DB',
-                                   'mysql+pymysql://admin:admin123@127.0.0.1:3306/creative_erp')
+    current_db_url = os.environ.get(
+        "CREATIVE_ERP_CURRENT_DB",
+        "mysql+pymysql://admin:admin123@127.0.0.1:3306/creative_erp",
+    )
 
     try:
-        from sqlalchemy import create_engine, text, MetaData
-        from sqlalchemy.orm import sessionmaker
+        from sqlalchemy import MetaData, text
 
         # Primero crear la base de datos conectándose sin especificar BD
-        temp_url = 'mysql+pymysql://admin:admin123@127.0.0.1:3306'
+        temp_url = "mysql+pymysql://admin:admin123@127.0.0.1:3306"
         from core.db import get_engine_from_url
+
         temp_engine = get_engine_from_url(temp_url)
 
         # Crear la base de datos si no existe
@@ -43,7 +48,7 @@ def create_main_database():
 
         # Ahora conectarse a la base de datos específica
         main_engine = get_engine_from_url(main_db_url)
-        main_metadata = MetaData()
+        MetaData()
 
         # Crear motor para la base de datos actual
         current_engine = get_engine_from_url(current_db_url)
@@ -53,7 +58,9 @@ def create_main_database():
 
         # Tabla users
         with main_engine.connect() as conn:
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE TABLE IF NOT EXISTS users (
                     id INTEGER PRIMARY KEY AUTO_INCREMENT,
                     username VARCHAR(50) UNIQUE NOT NULL,
@@ -66,10 +73,14 @@ def create_main_database():
                     last_login DATETIME NULL,
                     allowed_groups TEXT DEFAULT '[]'
                 )
-            """))
+            """
+                )
+            )
 
             # Tabla business_groups
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE TABLE IF NOT EXISTS business_groups (
                     id INTEGER PRIMARY KEY AUTO_INCREMENT,
                     name VARCHAR(100) NOT NULL,
@@ -77,10 +88,14 @@ def create_main_database():
                     description TEXT,
                     created_at DATETIME DEFAULT CURRENT_TIMESTAMP
                 )
-            """))
+            """
+                )
+            )
 
             # Tabla empresas
-            conn.execute(text("""
+            conn.execute(
+                text(
+                    """
                 CREATE TABLE IF NOT EXISTS empresas (
                     id INTEGER PRIMARY KEY AUTO_INCREMENT,
                     group_id INTEGER DEFAULT 1,
@@ -143,7 +158,9 @@ def create_main_database():
                     password_db VARCHAR(100) DEFAULT 'admin123',
                     FOREIGN KEY (group_id) REFERENCES business_groups(id)
                 )
-            """))
+            """
+                )
+            )
             conn.commit()
 
         # Migrar datos desde la base de datos actual
@@ -155,15 +172,27 @@ def create_main_database():
             result = source_conn.execute(text("SELECT * FROM users"))
             users = result.fetchall()
             for user in users:
-                dest_conn.execute(text("""
+                dest_conn.execute(
+                    text(
+                        """
                     INSERT IGNORE INTO users
                     (id, username, email, full_name, password_hash, role, is_active, created_at, last_login, allowed_groups)
                     VALUES (:id, :username, :email, :full_name, :password_hash, :role, :is_active, :created_at, :last_login, :allowed_groups)
-                """), {
-                    'id': user[0], 'username': user[1], 'email': user[2], 'full_name': user[3],
-                    'password_hash': user[4], 'role': user[5], 'is_active': user[6],
-                    'created_at': user[7], 'last_login': user[8], 'allowed_groups': user[9]
-                })
+                """
+                    ),
+                    {
+                        "id": user[0],
+                        "username": user[1],
+                        "email": user[2],
+                        "full_name": user[3],
+                        "password_hash": user[4],
+                        "role": user[5],
+                        "is_active": user[6],
+                        "created_at": user[7],
+                        "last_login": user[8],
+                        "allowed_groups": user[9],
+                    },
+                )
             dest_conn.commit()
 
             # Migrar business_groups
@@ -171,14 +200,22 @@ def create_main_database():
             result = source_conn.execute(text("SELECT * FROM business_groups"))
             groups = result.fetchall()
             for group in groups:
-                dest_conn.execute(text("""
+                dest_conn.execute(
+                    text(
+                        """
                     INSERT IGNORE INTO business_groups
                     (id, name, code, description, created_at)
                     VALUES (:id, :name, :code, :description, :created_at)
-                """), {
-                    'id': group[0], 'name': group[1], 'code': group[2],
-                    'description': group[3], 'created_at': group[4]
-                })
+                """
+                    ),
+                    {
+                        "id": group[0],
+                        "name": group[1],
+                        "code": group[2],
+                        "description": group[3],
+                        "created_at": group[4],
+                    },
+                )
             dest_conn.commit()
 
             # Migrar empresas
@@ -187,9 +224,13 @@ def create_main_database():
             empresas = result.fetchall()
             for empresa in empresas:
                 # Asegurarse de que tenemos suficientes campos (llenar con valores por defecto si faltan)
-                empresa_data = list(empresa) + [None] * (39 - len(empresa))  # 39 es el número total de campos
-                
-                dest_conn.execute(text("""
+                empresa_data = list(empresa) + [None] * (
+                    39 - len(empresa)
+                )  # 39 es el número total de campos
+
+                dest_conn.execute(
+                    text(
+                        """
                     INSERT IGNORE INTO empresas
                     (id, group_id, codigo_empresa, nombre_fiscal, nombre_comercial, cif_nif,
                      direccion, cp, poblacion, provincia, id_pais, telefono, email, web,
@@ -217,32 +258,73 @@ def create_main_database():
                      :motor_base_datos, :nombre_base_datos_maria_db, :nombre_base_datos_postgresql,
                      :host_maria_db, :puerto_maria_db, :host_postgresql, :puerto_postgresql,
                      :usuario_db, :password_db)
-                """), {
-                    'id': empresa_data[0], 'group_id': empresa_data[1] or 1, 'codigo_empresa': empresa_data[2],
-                    'nombre_fiscal': empresa_data[3], 'nombre_comercial': empresa_data[4], 'cif_nif': empresa_data[5],
-                    'direccion': empresa_data[6], 'cp': empresa_data[7], 'poblacion': empresa_data[8],
-                    'provincia': empresa_data[9], 'id_pais': empresa_data[10] or 1, 'telefono': empresa_data[11],
-                    'email': empresa_data[12], 'web': empresa_data[13], 'fecha_alta': empresa_data[14],
-                    'activa': empresa_data[15] or 1, 'notas': empresa_data[16], 'tipo_sociedad': empresa_data[17],
-                    'fecha_constitucion': empresa_data[18], 'objeto_social': empresa_data[19],
-                    'capital_social': empresa_data[20] or 0.0, 'moneda_capital': empresa_data[21] or 'EUR',
-                    'persona_contacto': empresa_data[22], 'cargo_contacto': empresa_data[23],
-                    'telefono_contacto': empresa_data[24], 'movil_contacto': empresa_data[25],
-                    'fax': empresa_data[26], 'direccion_fiscal': empresa_data[27], 'cp_fiscal': empresa_data[28],
-                    'poblacion_fiscal': empresa_data[29], 'provincia_fiscal': empresa_data[30],
-                    'banco': empresa_data[31], 'sucursal': empresa_data[32], 'dc': empresa_data[33],
-                    'numero_cuenta': empresa_data[34], 'iban': empresa_data[35], 'swift_bic': empresa_data[36],
-                    'regimen_iva': empresa_data[37] or 'General', 'tipo_retencion': empresa_data[38],
-                    'porcentaje_retencion': 0.0, 'exento_iva': 0, 'intracomunitario': 0,
-                    'limite_credito': 0.0, 'dias_pago': 30, 'descuento_general': 0.0,
-                    'forma_pago_predeterminada': None, 'sector_actividad': None, 'numero_empleados': None,
-                    'facturacion_anual': None, 'sitio_web': None, 'observaciones_internas': None,
-                    'fecha_modificacion': None, 'usuario_modificacion': None,
-                    'motor_base_datos': 'mariadb', 'nombre_base_datos_maria_db': None,
-                    'nombre_base_datos_postgresql': None, 'host_maria_db': '127.0.0.1',
-                    'puerto_maria_db': 3306, 'host_postgresql': '127.0.0.1',
-                    'puerto_postgresql': 5432, 'usuario_db': 'admin', 'password_db': 'admin123'
-                })
+                """
+                    ),
+                    {
+                        "id": empresa_data[0],
+                        "group_id": empresa_data[1] or 1,
+                        "codigo_empresa": empresa_data[2],
+                        "nombre_fiscal": empresa_data[3],
+                        "nombre_comercial": empresa_data[4],
+                        "cif_nif": empresa_data[5],
+                        "direccion": empresa_data[6],
+                        "cp": empresa_data[7],
+                        "poblacion": empresa_data[8],
+                        "provincia": empresa_data[9],
+                        "id_pais": empresa_data[10] or 1,
+                        "telefono": empresa_data[11],
+                        "email": empresa_data[12],
+                        "web": empresa_data[13],
+                        "fecha_alta": empresa_data[14],
+                        "activa": empresa_data[15] or 1,
+                        "notas": empresa_data[16],
+                        "tipo_sociedad": empresa_data[17],
+                        "fecha_constitucion": empresa_data[18],
+                        "objeto_social": empresa_data[19],
+                        "capital_social": empresa_data[20] or 0.0,
+                        "moneda_capital": empresa_data[21] or "EUR",
+                        "persona_contacto": empresa_data[22],
+                        "cargo_contacto": empresa_data[23],
+                        "telefono_contacto": empresa_data[24],
+                        "movil_contacto": empresa_data[25],
+                        "fax": empresa_data[26],
+                        "direccion_fiscal": empresa_data[27],
+                        "cp_fiscal": empresa_data[28],
+                        "poblacion_fiscal": empresa_data[29],
+                        "provincia_fiscal": empresa_data[30],
+                        "banco": empresa_data[31],
+                        "sucursal": empresa_data[32],
+                        "dc": empresa_data[33],
+                        "numero_cuenta": empresa_data[34],
+                        "iban": empresa_data[35],
+                        "swift_bic": empresa_data[36],
+                        "regimen_iva": empresa_data[37] or "General",
+                        "tipo_retencion": empresa_data[38],
+                        "porcentaje_retencion": 0.0,
+                        "exento_iva": 0,
+                        "intracomunitario": 0,
+                        "limite_credito": 0.0,
+                        "dias_pago": 30,
+                        "descuento_general": 0.0,
+                        "forma_pago_predeterminada": None,
+                        "sector_actividad": None,
+                        "numero_empleados": None,
+                        "facturacion_anual": None,
+                        "sitio_web": None,
+                        "observaciones_internas": None,
+                        "fecha_modificacion": None,
+                        "usuario_modificacion": None,
+                        "motor_base_datos": "mariadb",
+                        "nombre_base_datos_maria_db": None,
+                        "nombre_base_datos_postgresql": None,
+                        "host_maria_db": "127.0.0.1",
+                        "puerto_maria_db": 3306,
+                        "host_postgresql": "127.0.0.1",
+                        "puerto_postgresql": 5432,
+                        "usuario_db": "admin",
+                        "password_db": "admin123",
+                    },
+                )
             dest_conn.commit()
 
         print("✅ Migración completada exitosamente!")
@@ -273,27 +355,35 @@ def create_main_database():
     except Exception as e:
         print(f"❌ Error durante la migración: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     return True
+
 
 if __name__ == "__main__":
     print("Main Database Creation Script")
     print("=" * 50)
 
     # Confirmar antes de proceder
-    response = input("⚠️  Esta operación creará una nueva base de datos 'creative_erp_main' y migrará las tablas globales. ¿Continuar? (y/N): ")
-    if response.lower() != 'y':
+    response = input(
+        "⚠️  Esta operación creará una nueva base de datos 'creative_erp_main' y migrará las tablas globales. ¿Continuar? (y/N): "
+    )
+    if response.lower() != "y":
         print("❌ Operación cancelada")
         sys.exit(0)
 
     success = create_main_database()
     if success:
         print("\nNext steps:")
-        print("1. Actualizar la configuración en core/db.py para usar 'creative_erp_main'")
+        print(
+            "1. Actualizar la configuración en core/db.py para usar 'creative_erp_main'"
+        )
         print("2. Probar la aplicación con la nueva base de datos")
-        print("3. Una vez verificado, se pueden eliminar las tablas globales de 'creative_erp'")
+        print(
+            "3. Una vez verificado, se pueden eliminar las tablas globales de 'creative_erp'"
+        )
     else:
         print("\n❌ La migración falló. Revisa los errores arriba.")
         sys.exit(1)

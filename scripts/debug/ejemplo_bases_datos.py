@@ -6,7 +6,6 @@ Este script demuestra cómo alternar entre diferentes bases de datos
 y realizar operaciones específicas según el contexto.
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -14,16 +13,17 @@ from pathlib import Path
 root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
+
 def ejemplo_uso_basico():
     """Ejemplo básico de cambio entre bases de datos."""
     print("Ejemplo Básico: Cambio entre Bases de Datos")
     print("-" * 50)
 
-    from core.db import set_current_database, get_current_database, get_session
+    from core.db import get_current_database, get_session, set_current_database
 
     # Cambiar a base de datos principal para operaciones globales
     print("1. Usando base de datos principal para datos globales:")
-    set_current_database('main')
+    set_current_database("main")
     print(f"   Base actual: {get_current_database()}")
 
     # Aquí irían operaciones con usuarios, empresas, grupos empresariales
@@ -33,7 +33,7 @@ def ejemplo_uso_basico():
 
     # Cambiar a base de datos ArtStudio3D para operaciones específicas
     print("\n2. Usando base de datos ArtStudio3D para clientes:")
-    set_current_database('artstudio3d')
+    set_current_database("artstudio3d")
     print(f"   Base actual: {get_current_database()}")
 
     # Aquí irían operaciones con clientes específicos de ArtStudio3D
@@ -44,30 +44,39 @@ def ejemplo_uso_basico():
     session_main.close()
     session_artstudio.close()
 
+
 def ejemplo_operaciones_clientes():
     """Ejemplo de operaciones CRUD con clientes en ArtStudio3D."""
     print("\nAdvanced Example: CRUD operations with Clients")
     print("-" * 55)
 
-    from core.db import set_current_database, get_session
+    from core.db import get_session, set_current_database
     from modules.clientes.models import Cliente
     from modules.tipo_cliente.models import TipoCliente
 
     # Cambiar a ArtStudio3D
-    set_current_database('artstudio3d')
+    set_current_database("artstudio3d")
     session = get_session()
 
     try:
         print("1. Consultando tipos de cliente:")
         from sqlmodel import select
+
         tipos = session.exec(select(TipoCliente)).all()
         for tipo in tipos:
             print(f"   - {tipo.nombre}: {tipo.desc or 'Sin descripción'}")
 
         print("\n2. Consultando clientes activos:")
-        clientes = session.exec(select(Cliente).where(Cliente.bloqueado == False).limit(5)).all()
+        clientes = session.exec(
+            select(Cliente).where(Cliente.bloqueado == False).limit(5)
+        ).all()
         for cliente in clientes:
-            nombre = cliente.nombre_fiscal or cliente.nombre_comercial or cliente.nombre or "Sin nombre"
+            nombre = (
+                cliente.nombre_fiscal
+                or cliente.nombre_comercial
+                or cliente.nombre
+                or "Sin nombre"
+            )
             print(f"   - {cliente.codigo_cliente}: {nombre}")
 
         print("\n3. Creando un nuevo cliente:")
@@ -82,7 +91,7 @@ def ejemplo_operaciones_clientes():
             cp="28001",
             poblacion="Madrid",
             provincia="Madrid",
-            id_pais="España"
+            id_pais="España",
         )
 
         session.add(nuevo_cliente)
@@ -90,7 +99,9 @@ def ejemplo_operaciones_clientes():
         print("   ✅ Cliente creado exitosamente")
 
         # Verificar creación
-        cliente_verificado = session.exec(select(Cliente).where(Cliente.codigo_cliente == "EJEMPLO-001")).first()
+        cliente_verificado = session.exec(
+            select(Cliente).where(Cliente.codigo_cliente == "EJEMPLO-001")
+        ).first()
         if cliente_verificado:
             print(f"   ✅ Verificado: {cliente_verificado.nombre_fiscal}")
 
@@ -106,13 +117,15 @@ def ejemplo_operaciones_clientes():
     finally:
         session.close()
 
+
 def ejemplo_contexto_manager():
     """Ejemplo usando un context manager para cambio automático de BD."""
     print("\nAdvanced Example: Database Context Manager")
     print("-" * 58)
 
     from contextlib import contextmanager
-    from core.db import set_current_database, get_current_database
+
+    from core.db import get_current_database, set_current_database
 
     @contextmanager
     def usar_base_datos(db_name):
@@ -128,14 +141,15 @@ def ejemplo_contexto_manager():
 
     # Usar context manager
     print("1. Operaciones en base principal:")
-    with usar_base_datos('main'):
+    with usar_base_datos("main"):
         # Aquí irían operaciones con datos globales
         print("   ✅ Operaciones globales completadas")
 
     print("\n2. Operaciones en ArtStudio3D:")
-    with usar_base_datos('artstudio3d'):
+    with usar_base_datos("artstudio3d"):
         # Aquí irían operaciones con clientes
         print("   ✅ Operaciones de clientes completadas")
+
 
 def mostrar_configuracion():
     """Muestra la configuración actual de bases de datos."""
@@ -148,11 +162,12 @@ def mostrar_configuracion():
     print("\nConfiguraciones disponibles:")
     for name, url in DATABASE_CONFIGS.items():
         # Ocultar credenciales en la URL para seguridad
-        display_url = url.replace('admin:admin123@', '***:***@')
+        display_url = url.replace("admin:admin123@", "***:***@")
         print(f"  {name}: {display_url}")
 
     print("\nPara cambiar la base por defecto, establece la variable de entorno:")
     print("  export CREATIVE_ERP_DEFAULT_DB=artstudio3d")
+
 
 def main():
     """Función principal del ejemplo."""
@@ -176,6 +191,7 @@ def main():
     print("   • Cada base de datos tiene sus propias tablas y datos")
     print("   • Las sesiones son independientes por base de datos")
     print("   • Recuerda cerrar las sesiones después de usarlas")
+
 
 if __name__ == "__main__":
     main()

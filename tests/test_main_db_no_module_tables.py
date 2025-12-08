@@ -1,5 +1,6 @@
-from core.db import set_current_database, get_engine
 from sqlalchemy import inspect
+
+from core.db import get_engine, set_current_database
 
 
 def test_main_db_has_no_module_tables():
@@ -10,13 +11,25 @@ def test_main_db_has_no_module_tables():
     """
     # Define module-specific tables we must not see in `main`
     forbidden = {
-        'articulos', 'articulos_imagenes', 'articulos_ofertas', 'articulos_ofertas',
-        'clientes', 'clientes_tipos', 'deudas_clientes', 'direcciones_alternativas',
-        'familias', 'subfamilias', 'tarifas', 'kits', 'proveedores_frecuentes',
-        'historial_clientes', 'estadisticas_clientes_mes', 'acum_articulos'
+        "articulos",
+        "articulos_imagenes",
+        "articulos_ofertas",
+        "articulos_ofertas",
+        "clientes",
+        "clientes_tipos",
+        "deudas_clientes",
+        "direcciones_alternativas",
+        "familias",
+        "subfamilias",
+        "tarifas",
+        "kits",
+        "proveedores_frecuentes",
+        "historial_clientes",
+        "estadisticas_clientes_mes",
+        "acum_articulos",
     }
 
-    set_current_database('main')
+    set_current_database("main")
     engine = get_engine()
     inspector = inspect(engine)
 

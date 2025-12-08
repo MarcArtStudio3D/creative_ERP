@@ -17,10 +17,11 @@ class _DummyWidget:
 
 def test_promo_dates_respect_edit_mode():
     """Los campos de fecha solo deben ser editables si el checkbox está marcado y estamos en modo edición."""
+
     # Build a fake view that holds only the UI attributes we need
     class FakeView:
         def __init__(self):
-            self.ui = type('u', (), {})()
+            self.ui = type("u", (), {})()
             self.ui.txtOferta_Fecha_ini = _DummyWidget(False)
             self.ui.txtOferta_Fecha_fin = _DummyWidget(False)
             self.ui.botGuardar = _DummyWidget(False)  # locked by default

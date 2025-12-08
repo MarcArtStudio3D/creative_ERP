@@ -1,10 +1,14 @@
 """
 Utilidades comunes para formateo numérico y configuración por empresa.
 """
+
 from __future__ import annotations
-from typing import Dict, Optional
+
 from datetime import date as _date_type
+from typing import Dict, Optional
+
 from PySide6.QtCore import QDate
+
 
 def qdate_to_date(qd) -> Optional[_date_type]:
     """Convertir un QDate a datetime.date de forma segura.
@@ -20,7 +24,7 @@ def qdate_to_date(qd) -> Optional[_date_type]:
 
     try:
         # isValid existe en QDate; comprobar antes de convertir
-        if hasattr(qd, 'isValid') and not qd.isValid():
+        if hasattr(qd, "isValid") and not qd.isValid():
             return None
 
         # Preferir toPython() cuando está disponible
@@ -28,12 +32,14 @@ def qdate_to_date(qd) -> Optional[_date_type]:
             return qd.toPython()
         except Exception:
             from datetime import date as _date
+
             try:
                 return _date(qd.year(), qd.month(), qd.day())
             except Exception:
                 return None
     except Exception:
         return None
+
 
 def format_decimal_value(value, decimals: int = 2, use_comma: bool = True) -> str:
     """Formato seguro para mostrar números en UI.
@@ -58,7 +64,7 @@ def format_decimal_value(value, decimals: int = 2, use_comma: bool = True) -> st
 
     formatted = f"{num:.{d}f}"
     if use_comma:
-        return formatted.replace('.', ',')
+        return formatted.replace(".", ",")
     return formatted
 
 
@@ -75,47 +81,49 @@ def parse_decimal_input(text: str) -> float:
     Falls back to float() where possible, otherwise raises ValueError.
     """
     if text is None:
-        raise ValueError('No input')
+        raise ValueError("No input")
 
     s = str(text).strip()
-    if s == '':
-        raise ValueError('Empty input')
+    if s == "":
+        raise ValueError("Empty input")
 
     # Detect both separators present
-    has_dot = '.' in s
-    has_comma = ',' in s
+    has_dot = "." in s
+    has_comma = "," in s
 
     # If both present, assume the last one is the decimal separator
     if has_dot and has_comma:
         # decide based on position: rightmost separator is decimal
-        last_dot = s.rfind('.')
-        last_comma = s.rfind(',')
+        last_dot = s.rfind(".")
+        last_comma = s.rfind(",")
         if last_comma > last_dot:
             # comma is decimal, remove dots
-            normalized = s.replace('.', '')
-            normalized = normalized.replace(',', '.')
+            normalized = s.replace(".", "")
+            normalized = normalized.replace(",", ".")
         else:
             # dot is decimal, remove commas
-            normalized = s.replace(',', '')
+            normalized = s.replace(",", "")
     else:
         # Only comma present -> comma is decimal
         if has_comma:
-            normalized = s.replace('.', '').replace(',', '.')
+            normalized = s.replace(".", "").replace(",", ".")
         else:
             # Only dot or no separator -> try converting directly
             normalized = s
 
     # Final cleanup: remove spaces
-    normalized = normalized.replace(' ', '')
+    normalized = normalized.replace(" ", "")
 
     # Attempt float conversion
     try:
         return float(normalized)
     except Exception as e:
-        raise ValueError(f'Cannot parse number: {text}') from e
+        raise ValueError(f"Cannot parse number: {text}") from e
 
 
-def get_company_decimal_settings(default_totales: int = 2, default_precios: int = 2) -> Dict[str, int]:
+def get_company_decimal_settings(
+    default_totales: int = 2, default_precios: int = 2
+) -> Dict[str, int]:
     """Lee las preferencias de decimales para la empresa actualmente seleccionada.
 
     Retorna dict con claves 'decimales_totales' y 'decimales_precios'.
@@ -123,28 +131,43 @@ def get_company_decimal_settings(default_totales: int = 2, default_precios: int 
     """
     try:
         from core.company_manager import get_current_company_context
-        from core.db import get_current_database, set_current_database, get_session
+        from core.db import get_current_database, get_session, set_current_database
         from core.models import Empresa
 
         ctx = get_current_company_context()
-        if not ctx.get('has_company'):
-            return {'decimales_totales': default_totales, 'decimales_precios': default_precios}
+        if not ctx.get("has_company"):
+            return {
+                "decimales_totales": default_totales,
+                "decimales_precios": default_precios,
+            }
 
-        company_id = ctx.get('company_id')
+        company_id = ctx.get("company_id")
         if not company_id:
-            return {'decimales_totales': default_totales, 'decimales_precios': default_precios}
+            return {
+                "decimales_totales": default_totales,
+                "decimales_precios": default_precios,
+            }
 
         original_db = get_current_database()
-        set_current_database('main')
+        set_current_database("main")
         session = get_session()
         try:
             empresa = session.query(Empresa).filter_by(id=company_id).first()
             if not empresa:
-                return {'decimales_totales': default_totales, 'decimales_precios': default_precios}
+                return {
+                    "decimales_totales": default_totales,
+                    "decimales_precios": default_precios,
+                }
 
             return {
-                'decimales_totales': int(getattr(empresa, 'decimales_totales', default_totales) or default_totales),
-                'decimales_precios': int(getattr(empresa, 'decimales_precios', default_precios) or default_precios)
+                "decimales_totales": int(
+                    getattr(empresa, "decimales_totales", default_totales)
+                    or default_totales
+                ),
+                "decimales_precios": int(
+                    getattr(empresa, "decimales_precios", default_precios)
+                    or default_precios
+                ),
             }
         finally:
             try:
@@ -153,7 +176,11 @@ def get_company_decimal_settings(default_totales: int = 2, default_precios: int 
                 pass
             set_current_database(original_db)
     except Exception:
-        return {'decimales_totales': default_totales, 'decimales_precios': default_precios}
+        return {
+            "decimales_totales": default_totales,
+            "decimales_precios": default_precios,
+        }
+
 
 def pydate_to_qdate(d) -> QDate:
     """Convertir un objeto date/datetime/objeto con atributos year/month/day a QDate.
@@ -180,9 +207,9 @@ def pydate_to_qdate(d) -> QDate:
             except Exception:
                 return 0
 
-        y = _get_int(d, 'year')
-        m = _get_int(d, 'month')
-        day = _get_int(d, 'day')
+        y = _get_int(d, "year")
+        m = _get_int(d, "month")
+        day = _get_int(d, "day")
 
         if y <= 0 or m <= 0 or day <= 0:
             return QDate()

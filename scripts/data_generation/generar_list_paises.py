@@ -2,7 +2,7 @@ import sqlite3
 
 # Lista de países en español y francés (alineados por posición)
 paises = [
-    ("Afganistán", "Afghanistan"), 
+    ("Afganistán", "Afghanistan"),
     ("Albania", "Albanie"),
     ("Argelia", "Algérie"),
     ("Andorra", "Andorre"),
@@ -192,7 +192,7 @@ paises = [
     ("Vietnam", "Vietnam"),
     ("Yemen", "Yémen"),
     ("Zambia", "Zambie"),
-    ("Zimbabue", "Zimbabwe")
+    ("Zimbabue", "Zimbabwe"),
 ]
 
 # Crear SQLite

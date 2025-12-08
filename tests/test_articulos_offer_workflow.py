@@ -2,8 +2,10 @@
 - Clicking 'Añadir oferta' enables save and undo, disables add/edit.
 - After 'Guardar oferta' or 'Deshacer oferta' the buttons revert to non-edit state.
 """
+
 import pytest
 from PySide6.QtWidgets import QApplication
+
 from modules.articulos.view import ArticulosView
 
 

@@ -3,40 +3,48 @@ Modelos de datos para el módulo de Artículos
 Basado en la estructura original de RedFox SGC (articulo.cpp)
 """
 
-from sqlmodel import SQLModel, Field
 from datetime import date
 from typing import Optional
+
+from sqlmodel import Field, SQLModel
 
 
 class Seccion(SQLModel, table=True):
     """Modelo de Sección - Primera división del almacén"""
-    __tablename__ = 'secciones'
-    
+
+    __tablename__ = "secciones"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     codigo: str = Field(max_length=10, unique=True, index=True)
     seccion: str = Field(max_length=100)
 
     def __repr__(self):
-        return f"<Seccion(id={self.id}, codigo='{self.codigo}', seccion='{self.seccion}')>"
+        return (
+            f"<Seccion(id={self.id}, codigo='{self.codigo}', seccion='{self.seccion}')>"
+        )
 
 
 class Familia(SQLModel, table=True):
     """Modelo de Familia - Segunda división del almacén (pertenece a una sección)"""
-    __tablename__ = 'familias'
-    
+
+    __tablename__ = "familias"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_seccion: int = Field(foreign_key="secciones.id")
     codigo: str = Field(max_length=10, unique=True, index=True)
     familia: str = Field(max_length=100)
 
     def __repr__(self):
-        return f"<Familia(id={self.id}, codigo='{self.codigo}', familia='{self.familia}')>"
+        return (
+            f"<Familia(id={self.id}, codigo='{self.codigo}', familia='{self.familia}')>"
+        )
 
 
 class Subfamilia(SQLModel, table=True):
     """Modelo de Subfamilia - Tercera división del almacén (pertenece a una familia)"""
-    __tablename__ = 'subfamilias'
-    
+
+    __tablename__ = "subfamilias"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_familia: int = Field(foreign_key="familias.id")
     codigo: str = Field(max_length=10, unique=True, index=True)
@@ -49,8 +57,9 @@ class Subfamilia(SQLModel, table=True):
 
 class Articulo(SQLModel, table=True):
     """Modelo de Artículo - Refleja la estructura de RedFox SGC"""
-    __tablename__ = 'articulos'
-    
+
+    __tablename__ = "articulos"
+
     # Identificadores
     id: Optional[int] = Field(default=None, primary_key=True)
     id_web: Optional[int] = None
@@ -136,8 +145,9 @@ class Articulo(SQLModel, table=True):
 
 class Tarifa(SQLModel, table=True):
     """Tarifas de precios por artículo, país y moneda"""
-    __tablename__ = 'tarifas'
-    
+
+    __tablename__ = "tarifas"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_articulo: int = Field(foreign_key="articulos.id")
     id_codigo_tarifa: int
@@ -154,7 +164,8 @@ class Tarifa(SQLModel, table=True):
 
 class TarifaTipo(SQLModel, table=True):
     """Tipos de tarifa / códigos de tarifa (lookup)"""
-    __tablename__ = 'tarifas_tipo'
+
+    __tablename__ = "tarifas_tipo"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     codigo: Optional[str] = Field(default=None, max_length=50, unique=True)
@@ -167,7 +178,8 @@ class TarifaTipo(SQLModel, table=True):
 
 class ArticuloTipo(SQLModel, table=True):
     """Tipos de artículo (lookup): código + descripción"""
-    __tablename__ = 'articulo_tipo'
+
+    __tablename__ = "articulo_tipo"
 
     id: Optional[int] = Field(default=None, primary_key=True)
     codigo: Optional[str] = Field(default=None, max_length=50, unique=True)
@@ -180,8 +192,9 @@ class ArticuloTipo(SQLModel, table=True):
 
 class ProveedorFrecuente(SQLModel, table=True):
     """Proveedores frecuentes de un artículo"""
-    __tablename__ = 'proveedores_frecuentes'
-    
+
+    __tablename__ = "proveedores_frecuentes"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_art: int = Field(foreign_key="articulos.id")
     id_prov: int
@@ -200,8 +213,9 @@ class ProveedorFrecuente(SQLModel, table=True):
 
 class ArticuloOferta(SQLModel, table=True):
     """Ofertas y promociones de artículos"""
-    __tablename__ = 'articulos_ofertas'
-    
+
+    __tablename__ = "articulos_ofertas"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_articulo: int = Field(foreign_key="articulos.id")
     id_tarifa: int
@@ -232,8 +246,9 @@ class ArticuloOferta(SQLModel, table=True):
 
 class ArticuloImagen(SQLModel, table=True):
     """Imágenes de artículos"""
-    __tablename__ = 'articulos_imagenes'
-    
+
+    __tablename__ = "articulos_imagenes"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_articulo: int = Field(foreign_key="articulos.id", unique=True)
 
@@ -248,8 +263,9 @@ class ArticuloImagen(SQLModel, table=True):
 
 class AcumArticulo(SQLModel, table=True):
     """Acumulados de artículos por empresa (estadísticas mensuales)"""
-    __tablename__ = 'acum_articulos'
-    
+
+    __tablename__ = "acum_articulos"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     id_articulo: int = Field(foreign_key="articulos.id")
     id_empresa: int
@@ -288,8 +304,9 @@ class AcumArticulo(SQLModel, table=True):
 
 class Kit(SQLModel, table=True):
     """Componentes de kits (artículos compuestos)"""
-    __tablename__ = 'kits'
-    
+
+    __tablename__ = "kits"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     codigo_kit: str = Field(max_length=50)
     id_componente: int = Field(foreign_key="articulos.id")

@@ -5,15 +5,16 @@ Revises: 1cb380bca415
 Create Date: 2025-11-18 14:36:24.817061
 
 """
+
 from typing import Sequence, Union
 
-from alembic import op
 import sqlalchemy as sa
 
+from alembic import op
 
 # revision identifiers, used by Alembic.
-revision: str = 'e401056e286b'
-down_revision: Union[str, Sequence[str], None] = '1cb380bca415'
+revision: str = "e401056e286b"
+down_revision: Union[str, Sequence[str], None] = "1cb380bca415"
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -24,9 +25,11 @@ def upgrade() -> None:
     # Primero, obtener el máximo ID actual en clientes para evitar conflictos
     result = op.get_bind().execute(sa.text("SELECT COALESCE(MAX(id), 0) FROM clientes"))
     max_id = result.fetchone()[0]
-    
+
     # Insertar datos de clients en clientes, asignando nuevos IDs
-    op.get_bind().execute(sa.text("""
+    op.get_bind().execute(
+        sa.text(
+            """
         INSERT INTO clientes (
             id, codigo_cliente, nombre, nombre_fiscal, cif_nif_siren, 
             email, direccion1, id_pais, fecha_alta, acumulado_ventas, 
@@ -69,32 +72,41 @@ def upgrade() -> None:
             1,    -- id_divisa
             1     -- id_idioma_documentos
         FROM clients
-    """), {"max_id": max_id})
-    
+    """
+        ),
+        {"max_id": max_id},
+    )
+
     # Actualizar las referencias en invoices
-    op.get_bind().execute(sa.text("""
+    op.get_bind().execute(
+        sa.text(
+            """
         UPDATE invoices 
         SET client_id = client_id + :max_id
         WHERE client_id IN (SELECT id FROM clients)
-    """), {"max_id": max_id})
-    
+    """
+        ),
+        {"max_id": max_id},
+    )
+
     # Eliminar la tabla clients
-    op.drop_table('clients')
+    op.drop_table("clients")
 
 
 def downgrade() -> None:
     """Downgrade schema."""
     # Recrear tabla clients
-    op.create_table('clients',
-        sa.Column('id', sa.Integer(), nullable=False),
-        sa.Column('name', sa.String(), nullable=False),
-        sa.Column('email', sa.String(), nullable=True),
-        sa.Column('country', sa.String(), nullable=False),
-        sa.Column('vat_number', sa.String(), nullable=True),
-        sa.Column('address', sa.Text(), nullable=True),
-        sa.Column('created_at', sa.DateTime(), nullable=True),
-        sa.PrimaryKeyConstraint('id')
+    op.create_table(
+        "clients",
+        sa.Column("id", sa.Integer(), nullable=False),
+        sa.Column("name", sa.String(), nullable=False),
+        sa.Column("email", sa.String(), nullable=True),
+        sa.Column("country", sa.String(), nullable=False),
+        sa.Column("vat_number", sa.String(), nullable=True),
+        sa.Column("address", sa.Text(), nullable=True),
+        sa.Column("created_at", sa.DateTime(), nullable=True),
+        sa.PrimaryKeyConstraint("id"),
     )
-    
+
     # Nota: No podemos deshacer completamente la migración de datos
     # porque los IDs han cambiado

@@ -85,69 +85,70 @@ ADDITIONAL_TRANSLATIONS = {
 
 def translate_remaining(input_file: Path):
     """Traduce los strings restantes."""
-    
-    with open(input_file, 'r', encoding='utf-8') as f:
+
+    with open(input_file, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     translations_count = 0
-    
+
     # Buscar todos los bloques <message> con translation unfinished
     pattern = r'(<message>.*?<source>(.*?)</source>.*?<translation type="unfinished"></translation>.*?</message>)'
-    
+
     def replace_translation(match):
         nonlocal translations_count
         full_block = match.group(1)
         source_text = match.group(2)
-        
+
         # Buscar traducción
         if source_text in ADDITIONAL_TRANSLATIONS:
             translation = ADDITIONAL_TRANSLATIONS[source_text]
             # Reemplazar el bloque completo
             new_block = full_block.replace(
                 '<translation type="unfinished"></translation>',
-                f'<translation>{translation}</translation>'
+                f"<translation>{translation}</translation>",
             )
             translations_count += 1
             return new_block
-        
+
         return full_block
-    
+
     # Aplicar traducciones
     new_content = re.sub(pattern, replace_translation, content, flags=re.DOTALL)
-    
+
     # Guardar archivo traducido
-    with open(input_file, 'w', encoding='utf-8') as f:
+    with open(input_file, "w", encoding="utf-8") as f:
         f.write(new_content)
-    
+
     return translations_count
 
 
 def main():
     input_file = Path("translations/creative_erp_fr.ts")
-    
+
     print("=" * 60)
     print("Completando traducciones restantes al francés")
     print("=" * 60)
-    
+
     count = translate_remaining(input_file)
-    
+
     print(f"\n{count} additional translations applied")
     print(f"File updated: {input_file}")
-    
+
     # Verificar cuántas quedan
     import subprocess
+
     result = subprocess.run(
         ["grep", "-c", 'type="unfinished"', str(input_file)],
         capture_output=True,
-        text=True
+        text=True,
     )
-    
+
     remaining = int(result.stdout.strip()) if result.returncode == 0 else 0
     print(f"\nRemaining untranslated strings: {remaining}")
-    
+
     if remaining == 0:
         print("\nAll translations completed!")
-    
+
     print("\nPróximo paso:")
     print("  python scripts/compile_translations.py")
     print()

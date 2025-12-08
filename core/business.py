@@ -7,59 +7,60 @@ Los proyectos pueden ser compartidos entre empresas del mismo grupo.
 """
 
 from dataclasses import dataclass, field
-from typing import Optional, List
 from datetime import datetime
+from typing import Optional
 
 
 @dataclass
 class BusinessGroup:
     """
     Grupo empresarial.
-    
+
     Un grupo puede contener múltiples empresas que comparten
     ciertos recursos (como proyectos) pero mantienen contabilidades separadas.
-    
+
     Ejemplo: "ArtStudio" contiene "ArtStudio Software" y "ArtStudio Music"
     """
+
     id: int
-    name: str                          # Nombre del grupo (ej: "ArtStudio")
-    code: str                          # Código corto (ej: "AS")
+    name: str  # Nombre del grupo (ej: "ArtStudio")
+    code: str  # Código corto (ej: "AS")
     description: str = ""
     is_active: bool = True
     created_at: datetime = field(default_factory=datetime.now)
-    
+
     # Logo del grupo
     logo_path: Optional[str] = None
-    
+
     # Configuración
     default_currency: str = "EUR"
-    default_country: str = "ES"        # País principal (ES, FR, etc)
+    default_country: str = "ES"  # País principal (ES, FR, etc)
 
 
 from core.models import Empresa as Company  # Alias para compatibilidad
-
 
 
 @dataclass
 class CompanyContext:
     """
     Contexto de empresa activo en la sesión.
-    
+
     Cuando un usuario inicia sesión, selecciona:
     - Un grupo empresarial
     - Una empresa dentro de ese grupo
-    
+
     Todos los datos (clientes, facturas, etc) se filtran por esta empresa.
     """
+
     group: BusinessGroup
     company: Company
-    
+
     def get_invoice_number_prefix(self) -> str:
         """Genera el prefijo para números de factura."""
         # Usar serie A por defecto si no existe
-        series = getattr(self.company, 'invoice_series', 'A')
+        series = getattr(self.company, "invoice_series", "A")
         return f"{series}/{datetime.now().year}/"
-    
+
     def can_share_projects_with(self, other_company_id: int) -> bool:
         """
         Verifica si esta empresa puede compartir proyectos con otra.
@@ -67,21 +68,24 @@ class CompanyContext:
         """
         # TODO: Consultar si la otra empresa pertenece al mismo grupo
         return True  # Por ahora siempre true
-    
+
     def __str__(self):
-        name = getattr(self.company, 'nombre_comercial', '') or getattr(self.company, 'nombre_fiscal', 'Empresa')
+        name = getattr(self.company, "nombre_comercial", "") or getattr(
+            self.company, "nombre_fiscal", "Empresa"
+        )
         return f"{self.group.name} - {name}"
 
 
 # Funciones helper para trabajar con contextos multi-empresa
 
+
 def filter_by_company(query, company_id: int):
     """
     Filtra una query de SQLAlchemy por empresa.
-    
+
     Uso:
         companies = filter_by_company(
-            db.query(Client), 
+            db.query(Client),
             session.company_context.company.id
         ).all()
     """
@@ -91,9 +95,8 @@ def filter_by_company(query, company_id: int):
 def get_shared_projects(group_id: int):
     """
     Obtiene proyectos compartidos dentro de un grupo.
-    
+
     Los proyectos pueden ser de una empresa específica o compartidos
     entre varias empresas del mismo grupo.
     """
     # TODO: Implementar consulta de proyectos compartidos
-    pass

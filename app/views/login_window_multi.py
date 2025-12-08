@@ -2,29 +2,37 @@
 Ventana de login multi-empresa con diseño moderno.
 """
 
-from PySide6.QtWidgets import (QDialog, QVBoxLayout, QHBoxLayout, QLabel, 
-                               QLineEdit, QPushButton, QFrame, QComboBox, QGraphicsDropShadowEffect)
-from PySide6.QtGui import QIcon, QFont, QPixmap
-from PySide6.QtCore import Signal, Qt
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont, QIcon, QPixmap
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QFrame,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+)
 
-from core.repositories import UserRepository, BusinessGroupRepository, CompanyRepository
 from core.auth import AuthenticationManager, User, UserRole
-from core.business import BusinessGroup, Company, CompanyContext
+from core.business import CompanyContext
 from core.company_manager import company_manager
+from core.repositories import BusinessGroupRepository, CompanyRepository, UserRepository
 
 
 class LoginWindowMultiCompany(QDialog):
     """
     Ventana de login multi-empresa.
-    
+
     Permite seleccionar:
     - Usuario
     - Grupo empresarial
     - Empresa
     """
-    
+
     login_successful = Signal(object)  # Emite el CompanyContext
-    
+
     def __init__(self, auth_manager: AuthenticationManager):
         super().__init__()
         self.auth_manager = auth_manager
@@ -39,29 +47,29 @@ class LoginWindowMultiCompany(QDialog):
         # calling setFocus in __init__ may not always apply if the dialog is not
         # yet shown — ensure focus is applied when the dialog actually appears
         # by setting focus in showEvent (see below).
-    
+
     def setup_ui(self):
         """Configura la interfaz basada en la imagen de referencia."""
         self.setWindowTitle(self.tr("Creative ERP - Acceso"))
         # Hacemos la ventana más alta para que el logo grande encaje sin apretar
         self.setFixedSize(540, 820)
         self.setModal(True)
-        
+
         # Layout principal
         main_layout = QVBoxLayout()
         main_layout.setSpacing(0)
         main_layout.setContentsMargins(60, 50, 60, 50)
-        
+
         # Espaciado superior
         main_layout.addSpacing(20)
-        
+
         # header textual eliminado (usaremos solo el logo grande centrado)
         # dejamos un pequeño margen superior para balance visual
         main_layout.addSpacing(10)
-        
+
         # ========== LOGO ISOMÉTRICO ==========
         logo_label = QLabel()
-        logo_label.setObjectName('loginLogo')
+        logo_label.setObjectName("loginLogo")
         self.login_logo = logo_label
         try:
             pix = QPixmap(":/PNG/resources/icons/png/LogoCreative.png")
@@ -72,7 +80,11 @@ class LoginWindowMultiCompany(QDialog):
                 available_width = self.width() - (margins.left() + margins.right())
                 # input containers usan 15px de padding a izquierda y derecha
                 target_width = max(120, available_width - 30)
-                logo_label.setPixmap(pix.scaledToWidth(int(target_width), Qt.TransformationMode.SmoothTransformation))
+                logo_label.setPixmap(
+                    pix.scaledToWidth(
+                        int(target_width), Qt.TransformationMode.SmoothTransformation
+                    )
+                )
             else:
                 # Fallback si no hay logo
                 logo_label.setText("🎨")
@@ -80,11 +92,11 @@ class LoginWindowMultiCompany(QDialog):
         except Exception:
             logo_label.setText("🎨")
             logo_label.setStyleSheet("font-size: 80px; background: transparent;")
-        
+
         logo_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         main_layout.addWidget(logo_label)
         main_layout.addSpacing(40)
-        
+
         # ========== FORMULARIO ==========
         # Usuario con icono
         user_container = QFrame()
@@ -92,32 +104,36 @@ class LoginWindowMultiCompany(QDialog):
         user_layout = QHBoxLayout(user_container)
         user_layout.setContentsMargins(15, 0, 15, 0)
         user_layout.setSpacing(10)
-        
+
         user_icon = QLabel("👤")
-        user_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        user_icon.setStyleSheet(
+            "font-size: 20px; color: #95a5a6; background: transparent;"
+        )
         user_layout.addWidget(user_icon)
-        
+
         self.user_combo = QComboBox()
         self.user_combo.setObjectName("loginCombo")
         self.user_combo.setMinimumHeight(50)
         self.user_combo.setPlaceholderText(self.tr("Username"))
         self._setup_combo_popup(self.user_combo)
         user_layout.addWidget(self.user_combo)
-        
+
         main_layout.addWidget(user_container)
         main_layout.addSpacing(15)
-        
+
         # Contraseña con icono
         password_container = QFrame()
         password_container.setObjectName("inputField")
         password_layout = QHBoxLayout(password_container)
         password_layout.setContentsMargins(15, 0, 15, 0)
         password_layout.setSpacing(10)
-        
+
         password_icon = QLabel("🔒")
-        password_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        password_icon.setStyleSheet(
+            "font-size: 20px; color: #95a5a6; background: transparent;"
+        )
         password_layout.addWidget(password_icon)
-        
+
         self.password_input = QLineEdit()
         self.password_input.setObjectName("loginInput")
         self.password_input.setEchoMode(QLineEdit.EchoMode.Password)
@@ -125,21 +141,23 @@ class LoginWindowMultiCompany(QDialog):
         self.password_input.setPlaceholderText(self.tr("Password"))
         self.password_input.returnPressed.connect(self.on_login_clicked)
         password_layout.addWidget(self.password_input)
-        
+
         main_layout.addWidget(password_container)
         main_layout.addSpacing(15)
-        
+
         # Grupo con icono
         group_container = QFrame()
         group_container.setObjectName("inputField")
         group_layout = QHBoxLayout(group_container)
         group_layout.setContentsMargins(15, 0, 15, 0)
         group_layout.setSpacing(10)
-        
+
         group_icon = QLabel("🏢")
-        group_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        group_icon.setStyleSheet(
+            "font-size: 20px; color: #95a5a6; background: transparent;"
+        )
         group_layout.addWidget(group_icon)
-        
+
         self.group_combo = QComboBox()
         self.group_combo.setObjectName("loginCombo")
         self.group_combo.setMinimumHeight(50)
@@ -147,31 +165,33 @@ class LoginWindowMultiCompany(QDialog):
         self.group_combo.currentIndexChanged.connect(self.on_group_changed)
         self._setup_combo_popup(self.group_combo)
         group_layout.addWidget(self.group_combo)
-        
+
         main_layout.addWidget(group_container)
         main_layout.addSpacing(15)
-        
+
         # Empresa con icono
         company_container = QFrame()
         company_container.setObjectName("inputField")
         company_layout = QHBoxLayout(company_container)
         company_layout.setContentsMargins(15, 0, 15, 0)
         company_layout.setSpacing(10)
-        
+
         company_icon = QLabel("🏭")
-        company_icon.setStyleSheet("font-size: 20px; color: #95a5a6; background: transparent;")
+        company_icon.setStyleSheet(
+            "font-size: 20px; color: #95a5a6; background: transparent;"
+        )
         company_layout.addWidget(company_icon)
-        
+
         self.company_combo = QComboBox()
         self.company_combo.setObjectName("loginCombo")
         self.company_combo.setMinimumHeight(50)
         self.company_combo.setPlaceholderText(self.tr("Company"))
         self._setup_combo_popup(self.company_combo)
         company_layout.addWidget(self.company_combo)
-        
+
         main_layout.addWidget(company_container)
         main_layout.addSpacing(30)
-        
+
         # ========== BOTÓN LOGIN ==========
         self.access_button = QPushButton(self.tr("LOGIN"))
         self.access_button.setObjectName("loginButton")
@@ -183,13 +203,13 @@ class LoginWindowMultiCompany(QDialog):
         self.access_button.setFont(access_font)
         self.access_button.clicked.connect(self.on_login_clicked)
         main_layout.addWidget(self.access_button)
-        
+
         main_layout.addSpacing(20)
-        
+
         # ========== ENLACES INFERIORES ==========
         links_layout = QHBoxLayout()
         links_layout.setSpacing(30)
-        
+
         # Forgot Password
         forgot_link = QPushButton(self.tr("Forgot Password?"))
         forgot_link.setObjectName("linkButton")
@@ -197,10 +217,10 @@ class LoginWindowMultiCompany(QDialog):
         forgot_link.setCursor(Qt.CursorShape.PointingHandCursor)
         forgot_link.clicked.connect(self.reject)  # Por ahora solo cierra
         links_layout.addWidget(forgot_link)
-        
+
         # Small configuration button (icon only) — kept for quick access from login
         self.config_btn = QPushButton()
-        self.config_btn.setObjectName('configButton')
+        self.config_btn.setObjectName("configButton")
         try:
             cfg_icon = QIcon(":/PNG/resources/icons/png/LogoIcono.png")
             self.config_btn.setIcon(cfg_icon)
@@ -214,7 +234,7 @@ class LoginWindowMultiCompany(QDialog):
         self.config_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.config_btn.clicked.connect(self.open_config)
         links_layout.addWidget(self.config_btn)
-        
+
         # Create Account (abre configuración)
         create_link = QPushButton(self.tr("Create Account"))
         create_link.setObjectName("linkButton")
@@ -222,63 +242,70 @@ class LoginWindowMultiCompany(QDialog):
         create_link.setCursor(Qt.CursorShape.PointingHandCursor)
         create_link.clicked.connect(self.open_config)
         links_layout.addWidget(create_link)
-        
+
         main_layout.addLayout(links_layout)
         main_layout.addStretch()
-        
+
         self.setLayout(main_layout)
-        
+
         # Aplicar estilos
         self.apply_styles()
-    
-    
+
     def _setup_combo_popup(self, combo: QComboBox):
         """Configura el popup del combobox con un diseño personalizado."""
-        from PySide6.QtWidgets import QFrame, QVBoxLayout, QPushButton
         from PySide6.QtCore import QPoint
-        
+        from PySide6.QtWidgets import QFrame, QPushButton, QVBoxLayout
+
         # Guardar el showPopup original
-        original_show_popup = combo.showPopup
-        
+        combo.showPopup
+
         def custom_show_popup():
             # Crear un frame personalizado para el popup
             popup_frame = QFrame()
-            popup_frame.setWindowFlags(Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
+            popup_frame.setWindowFlags(
+                Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint
+            )
             popup_frame.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
             popup_frame.setObjectName("customPopup")
-            
+
             # Layout para los items
             layout = QVBoxLayout(popup_frame)
             layout.setContentsMargins(0, 0, 0, 0)
             layout.setSpacing(0)
-            
+
             # Container con borde redondeado
             container = QFrame()
             container.setObjectName("popupContainer")
             container_layout = QVBoxLayout(container)
             container_layout.setContentsMargins(8, 8, 8, 8)
             container_layout.setSpacing(2)
-            
+
             # Añadir items
             for i in range(combo.count()):
                 item_btn = QPushButton(combo.itemText(i))
                 item_btn.setObjectName("popupItem")
                 item_btn.setCursor(Qt.CursorShape.PointingHandCursor)
                 item_btn.setMinimumHeight(40)
-                
+
                 # Marcar el item seleccionado
                 if i == combo.currentIndex():
                     item_btn.setProperty("selected", True)
-                
+
                 # Conectar el click
-                item_btn.clicked.connect(lambda checked=False, idx=i: (combo.setCurrentIndex(idx), popup_frame.close()))
-                
+                item_btn.clicked.connect(
+                    lambda checked=False, idx=i: (
+                        combo.setCurrentIndex(idx),
+                        popup_frame.close(),
+                    )
+                )
+
                 container_layout.addWidget(item_btn)
-            
+
             layout.addWidget(container)
-            
+
             # Aplicar estilos
-            popup_frame.setStyleSheet("""
+            popup_frame.setStyleSheet(
+                """
                 QFrame#customPopup {
                     background: transparent;
                 }
@@ -309,26 +336,24 @@ class LoginWindowMultiCompany(QDialog):
                         stop:1 #ff7a28);
                     color: white;
                 }
-            """)
-            
+            """
+            )
+
             # Posicionar el popup
             global_pos = combo.mapToGlobal(QPoint(0, combo.height()))
             popup_frame.move(global_pos)
             popup_frame.setMinimumWidth(combo.width())
-            
+
             # Mostrar
             popup_frame.show()
-        
+
         # Reemplazar el método showPopup
         combo.showPopup = custom_show_popup
-    
-    
-    
-    
-    
+
     def apply_styles(self):
         """Aplica los estilos CSS basados en la imagen de referencia."""
-        self.setStyleSheet("""
+        self.setStyleSheet(
+            """
             QDialog {
                 /* Fondo ahora igual al fondo del logo */
                 background: #021323;
@@ -420,8 +445,9 @@ class LoginWindowMultiCompany(QDialog):
             QPushButton#linkButton:hover {
                 color: #ff8c42;
             }
-        """)
-    
+        """
+        )
+
     def load_demo_data(self):
         """Carga datos de usuarios, grupos y empresas desde la base de datos."""
         # Cargar usuarios
@@ -432,14 +458,17 @@ class LoginWindowMultiCompany(QDialog):
         # Seleccionar el usuario por defecto (preferir sesión actual si existe)
         try:
             session = None
-            if hasattr(self.auth_manager, 'get_current_session'):
+            if hasattr(self.auth_manager, "get_current_session"):
                 session = self.auth_manager.get_current_session()
             if users:
-                if session and getattr(session, 'user', None):
+                if session and getattr(session, "user", None):
                     # buscar el índice del usuario en la lista
                     for i in range(self.user_combo.count()):
                         data = self.user_combo.itemData(i)
-                        if data and getattr(data, 'username', None) == session.user.username:
+                        if (
+                            data
+                            and getattr(data, "username", None) == session.user.username
+                        ):
                             self.user_combo.setCurrentIndex(i)
                             break
                     else:
@@ -450,26 +479,30 @@ class LoginWindowMultiCompany(QDialog):
         except Exception:
             # no bloquear si algo falla al aplicar la selección por defecto
             pass
-        
+
         # Cargar grupos empresariales
         groups = BusinessGroupRepository.get_all_groups()
         for group in groups:
             self.group_combo.addItem(group.name, group)  # type: ignore
-        
+
         # Las empresas se cargarán al seleccionar grupo
         if groups:
             # seleccionar grupo por defecto: preferir el grupo de la sesión si existe
             try:
                 # obtener session si está disponible
                 session = None
-                if hasattr(self.auth_manager, 'get_current_session'):
+                if hasattr(self.auth_manager, "get_current_session"):
                     session = self.auth_manager.get_current_session()
 
-                if session and getattr(session, 'company_context', None) and getattr(session.company_context, 'group', None):
+                if (
+                    session
+                    and getattr(session, "company_context", None)
+                    and getattr(session.company_context, "group", None)
+                ):
                     target_group_id = session.company_context.group.id
                     for i in range(self.group_combo.count()):
                         data = self.group_combo.itemData(i)
-                        if data and getattr(data, 'id', None) == target_group_id:
+                        if data and getattr(data, "id", None) == target_group_id:
                             self.group_combo.setCurrentIndex(i)
                             break
                     else:
@@ -483,19 +516,21 @@ class LoginWindowMultiCompany(QDialog):
 
             # Forzar carga de empresas del grupo seleccionado
             self.on_group_changed(self.group_combo.currentIndex())
-    
+
     def on_group_changed(self, index: int):
         """Cuando cambia el grupo, cargar las empresas de ese grupo."""
         self.company_combo.clear()
-        
+
         group = self.group_combo.currentData()
         if not group:
             return
-        
+
         # Cargar empresas desde la base de datos
         companies = CompanyRepository.get_empresas_by_group(group.id)
         for company in companies:
-            name = getattr(company, 'nombre_comercial', '') or getattr(company, 'nombre_fiscal', 'Empresa')
+            name = getattr(company, "nombre_comercial", "") or getattr(
+                company, "nombre_fiscal", "Empresa"
+            )
             self.company_combo.addItem(name, company)  # type: ignore
 
         # Intentar seleccionar la empresa por defecto:
@@ -505,15 +540,22 @@ class LoginWindowMultiCompany(QDialog):
         try:
             desired_company_id = None
             session = None
-            if hasattr(self.auth_manager, 'get_current_session'):
+            if hasattr(self.auth_manager, "get_current_session"):
                 session = self.auth_manager.get_current_session()
 
-            if session and getattr(session, 'company_context', None) and getattr(session.company_context, 'company', None):
+            if (
+                session
+                and getattr(session, "company_context", None)
+                and getattr(session.company_context, "company", None)
+            ):
                 desired_company_id = session.company_context.company.id
             else:
                 try:
                     # company_manager puede contener la última empresa seleccionada en la sesión actual
-                    if hasattr(company_manager, 'current_company_id') and company_manager.current_company_id:
+                    if (
+                        hasattr(company_manager, "current_company_id")
+                        and company_manager.current_company_id
+                    ):
                         desired_company_id = company_manager.current_company_id
                 except Exception:
                     desired_company_id = None
@@ -522,7 +564,7 @@ class LoginWindowMultiCompany(QDialog):
                 # buscar y seleccionar
                 for idx in range(self.company_combo.count()):
                     data = self.company_combo.itemData(idx)
-                    if data and getattr(data, 'id', None) == desired_company_id:
+                    if data and getattr(data, "id", None) == desired_company_id:
                         self.company_combo.setCurrentIndex(idx)
                         break
                 else:
@@ -535,76 +577,87 @@ class LoginWindowMultiCompany(QDialog):
             # no bloquear si falla la selección por defecto
             if self.company_combo.count() > 0:
                 self.company_combo.setCurrentIndex(0)
-    
+
     def on_login_clicked(self):
         """Maneja el click en Acceder."""
         username = self.user_combo.currentText()
         password = self.password_input.text()
-        
+
         if not username or not password:
             from core.ui_helpers import show_warning
-            show_warning(self, self.tr("Error"), self.tr("Ingresa usuario y contraseña"))
+
+            show_warning(
+                self, self.tr("Error"), self.tr("Ingresa usuario y contraseña")
+            )
             return
-        
+
         group = self.group_combo.currentData()
         company = self.company_combo.currentData()
-        
+
         if not group or not company:
             from core.ui_helpers import show_warning
+
             show_warning(self, self.tr("Error"), self.tr("Selecciona grupo y empresa"))
             return
-        
+
         # Intentar login
         if self.try_login(username, password):
             # Crear contexto de empresa
             context = CompanyContext(group=group, company=company)
-            
+
             # Guardar en la sesión
             self.auth_manager._current_session.company_context = context  # type: ignore
-            
+
             # IMPORTANTE: Configurar la base de datos de la empresa
             try:
                 company_id = company.id
                 success = company_manager.select_company(company_id)
                 if success:
-                    print(f"✅ Base de datos configurada para empresa: {company.nombre_fiscal}")
+                    print(
+                        f"✅ Base de datos configurada para empresa: {company.nombre_fiscal}"
+                    )
                 else:
-                    print(f"⚠️  Error configurando BD para empresa: {company.nombre_fiscal}")
+                    print(
+                        f"⚠️  Error configurando BD para empresa: {company.nombre_fiscal}"
+                    )
             except Exception as e:
                 print(f"❌ Error configurando empresa: {e}")
-            
+
             self.login_successful.emit(context)
         else:
             from core.ui_helpers import show_warning
-            show_warning(self, self.tr("Error"), self.tr("Usuario o contraseña incorrectos"))
+
+            show_warning(
+                self, self.tr("Error"), self.tr("Usuario o contraseña incorrectos")
+            )
             self.password_input.clear()
-    
+
     def try_login(self, username: str, password: str) -> bool:
         """Intenta autenticar (usa los usuarios demo)."""
         demo_users = self.create_demo_users()
-        
+
         for user in demo_users:
             if user.username == username and user.verify_password(password):
-                from core.auth import Session
-                from datetime import datetime
                 import secrets
-                
+                from datetime import datetime
+
+                from core.auth import Session
+
                 session = Session(
                     user=user,
                     login_time=datetime.now(),
-                    token=secrets.token_urlsafe(32)
+                    token=secrets.token_urlsafe(32),
                 )
-                
+
                 self.auth_manager._current_session = session
                 return True
-        
+
         return False
-    
+
     def create_demo_users(self):
         """Crea usuarios de demostración."""
-        from core.auth import User, UserRole
         from datetime import datetime
-        
+
         return [
             User(
                 id=1,
@@ -616,7 +669,7 @@ class LoginWindowMultiCompany(QDialog):
                 is_active=True,
                 created_at=datetime.now(),
                 allowed_groups=[1, 2],
-                allowed_companies=[1, 2, 3]
+                allowed_companies=[1, 2, 3],
             ),
             User(
                 id=2,
@@ -628,7 +681,7 @@ class LoginWindowMultiCompany(QDialog):
                 is_active=True,
                 created_at=datetime.now(),
                 allowed_groups=[1],
-                allowed_companies=[1, 2]
+                allowed_companies=[1, 2],
             ),
             User(
                 id=3,
@@ -640,27 +693,27 @@ class LoginWindowMultiCompany(QDialog):
                 is_active=True,
                 created_at=datetime.now(),
                 allowed_groups=[1],
-                allowed_companies=[1]
+                allowed_companies=[1],
             ),
         ]
-    
+
     def open_config(self):
         """Abre la configuración."""
         from app.views.config_dialog import ConfigDialog
-        
+
         dialog = ConfigDialog(self)
-        
+
         # Conectar señal de cambio de idioma
         dialog.language_changed.connect(self.on_language_changed)
-        
+
         dialog.exec()
-    
+
     def on_language_changed(self, language_code: str):
         """Maneja el cambio de idioma."""
-        from core.translations import change_language
         from PySide6.QtWidgets import QApplication
+
         from core.ui_helpers import show_info
-        
+
         app = QApplication.instance()
         if app:
             # Cambiar el idioma (necesitaremos guardar el translator en algún lugar)
@@ -669,7 +722,9 @@ class LoginWindowMultiCompany(QDialog):
             show_info(
                 self,
                 self.tr("Cambio de idioma"),
-                self.tr("La aplicación debe reiniciarse para aplicar todos los cambios")
+                self.tr(
+                    "La aplicación debe reiniciarse para aplicar todos los cambios"
+                ),
             )
 
     def showEvent(self, event):
@@ -678,10 +733,8 @@ class LoginWindowMultiCompany(QDialog):
             # Defer focus set to the next iteration of the event loop so it
             # happens after Qt has finished processing the show sequence.
             from PySide6.QtCore import QTimer
+
             QTimer.singleShot(0, self.password_input.setFocus)
         except Exception:
             pass
         super().showEvent(event)
-
-    
-

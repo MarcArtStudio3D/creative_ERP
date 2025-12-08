@@ -3,7 +3,6 @@
 Script para probar los módulos de clientes con las diferentes bases de datos
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -11,19 +10,21 @@ from pathlib import Path
 root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
+
 def test_clientes_main_db():
     """Prueba las operaciones de clientes en la base de datos principal."""
     print("Testing clients in main database...")
 
     try:
-        from core.db import set_current_database, get_current_database
-        from core.models import Empresa
+        from core.db import get_current_database, set_current_database
 
         # Cambiar a base de datos principal
-        set_current_database('main')
+        set_current_database("main")
 
         # Probar consulta de empresas
-        session = get_current_database()  # Esto debería devolver el nombre, no la sesión
+        session = (
+            get_current_database()
+        )  # Esto debería devolver el nombre, no la sesión
         print(f"   Base de datos actual: {get_current_database()}")
 
         # Aquí iría la lógica para probar empresas en la BD principal
@@ -35,18 +36,20 @@ def test_clientes_main_db():
 
     return True
 
+
 def test_clientes_artstudio3d():
     """Prueba las operaciones de clientes en la base de datos ArtStudio3D."""
     print("Testing clients in ArtStudio3D database...")
 
     try:
-        from core.db import set_current_database, get_current_database, get_session
-        from modules.clientes.models import Cliente
-        from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
         from sqlmodel import select
 
+        from core.db import get_current_database, get_session, set_current_database
+        from modules.clientes.models import Cliente
+        from modules.tipo_cliente.models import TipoCliente
+
         # Cambiar a base de datos ArtStudio3D
-        set_current_database('artstudio3d')
+        set_current_database("artstudio3d")
         session = get_session()
 
         print(f"   Base de datos actual: {get_current_database()}")
@@ -61,21 +64,25 @@ def test_clientes_artstudio3d():
         clientes = session.exec(select(Cliente)).all()
         print(f"   Clients found: {len(clientes)}")
         for cliente in clientes[:3]:  # Mostrar primeros 3
-            print(f"      - {cliente.codigo_cliente}: {cliente.nombre_fiscal or cliente.nombre}")
+            print(
+                f"      - {cliente.codigo_cliente}: {cliente.nombre_fiscal or cliente.nombre}"
+            )
 
         # Probar crear un nuevo cliente (solo para prueba)
         print("   ➕ Probando creación de cliente de prueba...")
         nuevo_cliente = Cliente(
             codigo_cliente="TEST-001",
             nombre_fiscal="Cliente de Prueba SA",
-            email="test@cliente.com"
+            email="test@cliente.com",
         )
         session.add(nuevo_cliente)
         session.commit()
         print("      ✅ Cliente de prueba creado")
 
         # Verificar que se creó
-        cliente_creado = session.exec(select(Cliente).where(Cliente.codigo_cliente == "TEST-001")).first()
+        cliente_creado = session.exec(
+            select(Cliente).where(Cliente.codigo_cliente == "TEST-001")
+        ).first()
         if cliente_creado:
             print(f"      ✅ Cliente verificado: {cliente_creado.nombre_fiscal}")
 
@@ -90,31 +97,33 @@ def test_clientes_artstudio3d():
     except Exception as e:
         print(f"   ❌ Error en ArtStudio3D: {e}")
         import traceback
+
         traceback.print_exc()
         return False
 
     return True
+
 
 def test_database_switching():
     """Prueba el cambio entre diferentes bases de datos."""
     print("Testing database switching...")
 
     try:
-        from core.db import set_current_database, get_current_database
+        from core.db import get_current_database, set_current_database
 
         # Probar cambio a main
-        set_current_database('main')
-        assert get_current_database() == 'main'
+        set_current_database("main")
+        assert get_current_database() == "main"
         print("   ✅ Cambio a 'main' exitoso")
 
         # Probar cambio a artstudio3d
-        set_current_database('artstudio3d')
-        assert get_current_database() == 'artstudio3d'
+        set_current_database("artstudio3d")
+        assert get_current_database() == "artstudio3d"
         print("   ✅ Cambio a 'artstudio3d' exitoso")
 
         # Probar cambio de vuelta a main
-        set_current_database('main')
-        assert get_current_database() == 'main'
+        set_current_database("main")
+        assert get_current_database() == "main"
         print("   ✅ Cambio de vuelta a 'main' exitoso")
 
         print("   ✅ Sistema de cambio de base de datos funcionando correctamente")
@@ -124,6 +133,7 @@ def test_database_switching():
         return False
 
     return True
+
 
 def main():
     """Función principal para ejecutar todas las pruebas."""
@@ -160,6 +170,7 @@ def main():
     else:
         print("❌ Algunas pruebas fallaron. Revisa los errores arriba.")
         return False
+
 
 if __name__ == "__main__":
     success = main()

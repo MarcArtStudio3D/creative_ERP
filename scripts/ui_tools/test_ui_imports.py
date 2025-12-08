@@ -6,43 +6,52 @@ This script tests all generated UI files to ensure they import without errors
 and that their classes can be instantiated.
 """
 
-import sys
-import os
 import importlib
 import importlib.util
+import os
+import sys
 import traceback
 from pathlib import Path
+
 
 def find_ui_files(root_dir):
     """Find all generated UI Python files."""
     ui_files = []
     # Only consider generated UI modules that are part of the app (modules/* and app/views or app/ui_generated)
-    for py_file in Path(root_dir).rglob('ui_*.py'):
+    for py_file in Path(root_dir).rglob("ui_*.py"):
         if not py_file.is_file():
             continue
 
         str_path = str(py_file)
         # Skip helper modules / non-generated UI files like core/ui_helpers.py
-        if os.path.basename(str_path) == 'ui_helpers.py':
+        if os.path.basename(str_path) == "ui_helpers.py":
             continue
 
         # Only include UI files that live under 'modules/' or 'app/views/' or 'app/ui_generated/'
-        if (str_path.startswith('modules/') or '/modules/' in str_path
-            or str_path.startswith('app/views/') or '/app/views/' in str_path
-            or str_path.startswith('app/ui_generated/') or '/app/ui_generated/' in str_path):
+        if (
+            str_path.startswith("modules/")
+            or "/modules/" in str_path
+            or str_path.startswith("app/views/")
+            or "/app/views/" in str_path
+            or str_path.startswith("app/ui_generated/")
+            or "/app/ui_generated/" in str_path
+        ):
             ui_files.append(py_file)
     return sorted(ui_files)
+
 
 def test_ui_import(ui_file_path):
     """Test importing a single UI file."""
     try:
         # Get module name from file path relative to project root
         rel_path = os.path.relpath(ui_file_path)
-        module_name = rel_path.replace('/', '.').replace('\\', '.').replace('.py', '')
+        module_name = rel_path.replace("/", ".").replace("\\", ".").replace(".py", "")
 
         # Import the module directly from file location to avoid executing package __init__ code
         try:
-            spec = importlib.util.spec_from_file_location(f"_ui_test_{os.path.basename(ui_file_path)}", ui_file_path)
+            spec = importlib.util.spec_from_file_location(
+                f"_ui_test_{os.path.basename(ui_file_path)}", ui_file_path
+            )
             module = importlib.util.module_from_spec(spec)
             spec.loader.exec_module(module)
         except Exception:
@@ -50,8 +59,11 @@ def test_ui_import(ui_file_path):
             module = importlib.import_module(module_name)
 
         # Find UI classes (they start with 'Ui_')
-        ui_classes = [obj for name, obj in vars(module).items()
-                     if name.startswith('Ui_') and isinstance(obj, type)]
+        ui_classes = [
+            obj
+            for name, obj in vars(module).items()
+            if name.startswith("Ui_") and isinstance(obj, type)
+        ]
 
         if not ui_classes:
             return False, f"No UI classes found in {ui_file_path}"
@@ -61,7 +73,7 @@ def test_ui_import(ui_file_path):
             try:
                 instance = ui_class()
                 # Just check that the instance was created and has expected attributes
-                if not hasattr(instance, 'setupUi'):
+                if not hasattr(instance, "setupUi"):
                     return False, f"UI class {ui_class.__name__} missing setupUi method"
             except Exception as e:
                 return False, f"Failed to instantiate {ui_class.__name__}: {e}"
@@ -70,6 +82,7 @@ def test_ui_import(ui_file_path):
 
     except Exception as e:
         return False, f"Import failed: {e}"
+
 
 def main():
     if len(sys.argv) < 2:
@@ -135,5 +148,6 @@ def main():
     else:
         print("All UI imports successful!")
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     main()

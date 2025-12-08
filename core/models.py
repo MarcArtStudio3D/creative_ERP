@@ -3,15 +3,17 @@
 # -----------------------------
 """Modelos de base de datos con SQLModel."""
 
-from sqlmodel import SQLModel, Field, Relationship
-from typing import Optional, List
-from datetime import datetime, date
+from datetime import date, datetime
+from typing import List, Optional
+
+from sqlmodel import Field, Relationship, SQLModel
 
 
 class User(SQLModel, table=True):
     """Modelo de Usuario para autenticación."""
-    __tablename__ = 'users'
-    
+
+    __tablename__ = "users"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     username: str = Field(max_length=50, unique=True, index=True)
     email: str = Field(max_length=100, unique=True, index=True)
@@ -21,29 +23,31 @@ class User(SQLModel, table=True):
     is_active: int = Field(default=1)  # SQLite boolean
     created_at: datetime = Field(default_factory=datetime.utcnow)
     last_login: Optional[datetime] = None
-    
+
     # Multi-empresa
-    allowed_groups: str = Field(default='[]')  # JSON array of group IDs
+    allowed_groups: str = Field(default="[]")  # JSON array of group IDs
 
 
 class BusinessGroup(SQLModel, table=True):
     """Modelo de Grupo Empresarial."""
-    __tablename__ = 'business_groups'
-    
+
+    __tablename__ = "business_groups"
+
     id: Optional[int] = Field(default=None, primary_key=True)
     name: str = Field(max_length=100)
     code: str = Field(max_length=10, unique=True, index=True)
     description: Optional[str] = None
     created_at: datetime = Field(default_factory=datetime.utcnow)
-    
+
     # Relaciones
     empresas: List["Empresa"] = Relationship(back_populates="group")
 
 
 class Empresa(SQLModel, table=True):
     """Modelo de Empresa."""
+
     __tablename__ = "empresas"
-    
+
     id: Optional[int] = Field(default=None, primary_key=True)
     group_id: int = Field(foreign_key="business_groups.id", default=1)
     codigo_empresa: str = Field(max_length=50, unique=True, index=True)
@@ -54,34 +58,36 @@ class Empresa(SQLModel, table=True):
     cp: Optional[str] = Field(default=None, max_length=10)
     poblacion: Optional[str] = Field(default=None, max_length=100)
     provincia: Optional[str] = Field(default=None, max_length=100)
-    pais: str = Field(default='España', max_length=100)
+    pais: str = Field(default="España", max_length=100)
     telefono: Optional[str] = Field(default=None, max_length=50)
     email: Optional[str] = Field(default=None, max_length=200)
     web: Optional[str] = Field(default=None, max_length=200)
     fecha_alta: datetime = Field(default_factory=datetime.utcnow)
     activa: int = Field(default=1)  # Boolean en SQLite
     notas: Optional[str] = None
-    
+
     # Información fiscal adicional
-    tipo_sociedad: Optional[str] = Field(default=None, max_length=100)  # S.L., S.A., etc.
+    tipo_sociedad: Optional[str] = Field(
+        default=None, max_length=100
+    )  # S.L., S.A., etc.
     fecha_constitucion: Optional[date] = None
     objeto_social: Optional[str] = None
     capital_social: float = Field(default=0.0)
-    moneda_capital: str = Field(default='EUR', max_length=3)
-    
+    moneda_capital: str = Field(default="EUR", max_length=3)
+
     # Datos de contacto adicionales
     persona_contacto: Optional[str] = Field(default=None, max_length=200)
     cargo_contacto: Optional[str] = Field(default=None, max_length=100)
     telefono_contacto: Optional[str] = Field(default=None, max_length=50)
     movil_contacto: Optional[str] = Field(default=None, max_length=50)
     fax: Optional[str] = Field(default=None, max_length=50)
-    
+
     # Dirección fiscal (si es diferente)
     direccion_fiscal: Optional[str] = Field(default=None, max_length=255)
     cp_fiscal: Optional[str] = Field(default=None, max_length=10)
     poblacion_fiscal: Optional[str] = Field(default=None, max_length=100)
     provincia_fiscal: Optional[str] = Field(default=None, max_length=100)
-    
+
     # Información bancaria
     banco: Optional[str] = Field(default=None, max_length=100)
     sucursal: Optional[str] = Field(default=None, max_length=100)
@@ -89,49 +95,49 @@ class Empresa(SQLModel, table=True):
     numero_cuenta: Optional[str] = Field(default=None, max_length=10)
     iban: Optional[str] = Field(default=None, max_length=34)
     swift_bic: Optional[str] = Field(default=None, max_length=11)
-    
+
     # Configuración fiscal
-    regimen_iva: str = Field(default='General', max_length=50)
+    regimen_iva: str = Field(default="General", max_length=50)
     tipo_retencion: Optional[str] = Field(default=None, max_length=50)
     porcentaje_retencion: float = Field(default=0.0)
     exento_iva: int = Field(default=0)  # Boolean
     intracomunitario: int = Field(default=0)  # Boolean
-    
+
     # Límites y condiciones comerciales
     limite_credito: float = Field(default=0.0)
     dias_pago: int = Field(default=30)
     descuento_general: float = Field(default=0.0)
     forma_pago_predeterminada: Optional[str] = Field(default=None, max_length=50)
-    
+
     # Información adicional
     sector_actividad: Optional[str] = Field(default=None, max_length=100)
     numero_empleados: Optional[int] = None
     facturacion_anual: Optional[float] = None
     sitio_web: Optional[str] = Field(default=None, max_length=200)
     observaciones_internas: Optional[str] = None
-    
+
     # Metadatos
     fecha_modificacion: datetime = Field(default_factory=datetime.utcnow)
     usuario_modificacion: Optional[str] = Field(default=None, max_length=100)
 
     # Configuración de base de datos por empresa
-    motor_base_datos: str = Field(default='mariadb', max_length=20)
+    motor_base_datos: str = Field(default="mariadb", max_length=20)
     nombre_base_datos_maria_db: Optional[str] = Field(default=None, max_length=100)
     nombre_base_datos_postgresql: Optional[str] = Field(default=None, max_length=100)
-    host_mariadb: str = Field(default='localhost', max_length=100)
+    host_mariadb: str = Field(default="localhost", max_length=100)
     puerto_mariadb: int = Field(default=3306)
-    usuario_mariadb: str = Field(default='admin', max_length=50)
-    password_mariadb: str = Field(default='admin123', max_length=255)
-    host_postgresql: str = Field(default='localhost', max_length=100)
+    usuario_mariadb: str = Field(default="admin", max_length=50)
+    password_mariadb: str = Field(default="admin123", max_length=255)
+    host_postgresql: str = Field(default="localhost", max_length=100)
     puerto_postgresql: int = Field(default=5432)
-    usuario_postgresql: str = Field(default='postgres', max_length=50)
-    password_postgresql: str = Field(default='postgres', max_length=255)
-    
+    usuario_postgresql: str = Field(default="postgres", max_length=50)
+    password_postgresql: str = Field(default="postgres", max_length=255)
+
     # SQLite
     ruta_base_datos_sqlite: Optional[str] = Field(default=None, max_length=255)
 
     # Configuración y Divisas
-    moneda_predeterminada: str = Field(default='EUR', max_length=10)
+    moneda_predeterminada: str = Field(default="EUR", max_length=10)
     actualizar_divisas: int = Field(default=0)
     aplicar_irpf: int = Field(default=0)
     porcentaje_irpf: float = Field(default=0.0)
@@ -183,23 +189,23 @@ class Empresa(SQLModel, table=True):
     cuenta_clientes: Optional[str] = Field(default=None, max_length=20)
     cuenta_cobros: Optional[str] = Field(default=None, max_length=20)
     cuenta_pagos: Optional[str] = Field(default=None, max_length=20)
-    
+
     # Cuentas IVA (Repercutido y Soportado)
     cuenta_iva_repercutido_1: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_repercutido_2: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_repercutido_3: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_repercutido_4: Optional[str] = Field(default=None, max_length=20)
-    
+
     cuenta_iva_repercutido_re_1: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_repercutido_re_2: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_repercutido_re_3: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_repercutido_re_4: Optional[str] = Field(default=None, max_length=20)
-    
+
     cuenta_iva_soportado_1: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_soportado_2: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_soportado_3: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_soportado_4: Optional[str] = Field(default=None, max_length=20)
-    
+
     cuenta_iva_soportado_re_1: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_soportado_re_2: Optional[str] = Field(default=None, max_length=20)
     cuenta_iva_soportado_re_3: Optional[str] = Field(default=None, max_length=20)
@@ -215,4 +221,3 @@ class Empresa(SQLModel, table=True):
 
     # Relación
     group: Optional[BusinessGroup] = Relationship(back_populates="empresas")
-

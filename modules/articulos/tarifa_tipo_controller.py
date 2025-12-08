@@ -1,10 +1,12 @@
-from typing import Optional
-from modules.articulos.repository import ArticuloRepository
 import logging
+from typing import Optional
+
+from modules.articulos.repository import ArticuloRepository
 
 
 class TarifaTipoController:
     """Controller para manejar la tabla tarifas_tipo (tipos de tarifa)."""
+
     def __init__(self, repository: Optional[ArticuloRepository] = None):
         self.repository = repository or ArticuloRepository()
         self.current: dict | None = None
@@ -29,13 +31,15 @@ class TarifaTipoController:
                 self.current = data
                 # set index if present in index_list
                 for i, item in enumerate(self.index_list):
-                    if item.get('id') == tipo_id:
+                    if item.get("id") == tipo_id:
                         self.current_index = i
                         break
                 return True
             return False
         except Exception:
-            logging.getLogger(__name__).exception(f"Error loading tarifa tipo {tipo_id}")
+            logging.getLogger(__name__).exception(
+                f"Error loading tarifa tipo {tipo_id}"
+            )
             return False
 
     def create(self, payload: dict) -> int | None:
@@ -69,7 +73,9 @@ class TarifaTipoController:
                 self.list_all()
                 # adjust current index
                 if self.index_list:
-                    self.current_index = min(self.current_index, len(self.index_list) - 1)
+                    self.current_index = min(
+                        self.current_index, len(self.index_list) - 1
+                    )
                     self.current = self.index_list[self.current_index]
                 else:
                     self.current_index = -1

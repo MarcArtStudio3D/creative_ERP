@@ -3,6 +3,7 @@
 It reuses the already implemented `TarifasBaseView` from `modules.articulos.view_tarifas_base` so
 we don't duplicate logic.
 """
+
 from PySide6.QtWidgets import QDialog
 
 from modules.articulos.view_tarifas_base import TarifasBaseView

@@ -2,11 +2,12 @@
 """
 Verify that the application sets a non-null window icon on initialize.
 """
-import sys, os
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.app import CreativeERPApp
-from PySide6.QtWidgets import QApplication
 
 
 def test_app_sets_icon():
@@ -21,6 +22,6 @@ def test_app_sets_icon():
     assert not icon.isNull(), "Application window icon is null"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     test_app_sets_icon()
-    print('OK')
+    print("OK")

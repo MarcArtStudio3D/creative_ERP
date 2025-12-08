@@ -10,56 +10,59 @@ from pathlib import Path
 root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
+
 def test_cliente_save():
     """Prueba que se pueda guardar un cliente sin errores."""
     try:
+        from datetime import date
+
         from core.company_manager import CompanyDatabaseManager
         from core.db import get_session
         from modules.clientes.models import Cliente
         from modules.clientes.repository import ClienteRepository
-        from datetime import date
-        
+
         print("TEST: Save client")
         print("=" * 40)
-        
+
         # Configurar empresa
         company_manager = CompanyDatabaseManager()
         empresas = company_manager.get_available_companies()
-        
+
         if not empresas:
             print("❌ No hay empresas disponibles")
             return False
-        
-        company_id = empresas[0]['id']
+
+        company_id = empresas[0]["id"]
         success = company_manager.select_company(company_id)
-        
+
         if not success:
             print(f"❌ No se pudo seleccionar empresa {company_id}")
             return False
-        
+
         print(f"✅ Empresa {company_id} seleccionada")
-        
+
         # Obtener sesión y crear repositorio
         session = get_session()
         repository = ClienteRepository(session)
-        
+
         print("Checking available tables...")
         from sqlalchemy import inspect
+
         from core.db import get_engine
-        
+
         engine = get_engine()
         inspector = inspect(engine)
         tables = inspector.get_table_names()
-        
-        required_tables = ['clientes', 'historial_clientes', 'deudas_clientes']
+
+        required_tables = ["clientes", "historial_clientes", "deudas_clientes"]
         missing_tables = [t for t in required_tables if t not in tables]
-        
+
         if missing_tables:
             print(f"❌ Tablas faltantes: {missing_tables}")
             return False
-        
+
         print("✅ Todas las tablas necesarias están presentes")
-        
+
         # Crear un cliente de prueba
         print("Creating test client...")
         cliente_test = Cliente(
@@ -73,15 +76,15 @@ def test_cliente_save():
             poblacion="Ciudad Test",
             provincia="Provincia Test",
             id_pais="España",
-            fecha_alta=date.today()
+            fecha_alta=date.today(),
         )
-        
+
         # Intentar guardar el cliente
         print("Saving client...")
         try:
             cliente_guardado = repository.crear(cliente_test)
             print(f"✅ Cliente guardado con ID: {cliente_guardado.id}")
-            
+
             # Verificar que se puede recuperar
             cliente_recuperado = repository.obtener_por_id(cliente_guardado.id)
             if cliente_recuperado:
@@ -89,7 +92,7 @@ def test_cliente_save():
             else:
                 print("❌ No se pudo recuperar el cliente guardado")
                 return False
-            
+
             # Limpiar - eliminar cliente de prueba
             try:
                 session.delete(cliente_recuperado)
@@ -97,7 +100,7 @@ def test_cliente_save():
                 print("✅ Cliente de prueba eliminado")
             except Exception as e:
                 print(f"⚠️ No se pudo eliminar cliente de prueba: {e}")
-            
+
         except Exception as e:
             print(f"❌ Error al guardar cliente: {e}")
             # Intentar rollback
@@ -107,17 +110,19 @@ def test_cliente_save():
             except Exception as rb_error:
                 print(f"❌ Error en rollback: {rb_error}")
             return False
-        
+
         finally:
             session.close()
-        
+
         return True
-        
+
     except Exception as e:
         print(f"❌ Error en la prueba: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 def main():
     if test_cliente_save():
@@ -129,6 +134,7 @@ def main():
     else:
         print("\n❌ La prueba falló")
         return False
+
 
 if __name__ == "__main__":
     success = main()

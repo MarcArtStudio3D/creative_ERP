@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 """Script de prueba para verificar traducciones"""
 
-from PySide6.QtWidgets import QApplication, QDialog
-from PySide6.QtCore import QTranslator, QCoreApplication, QSettings
 import sys
+
+from PySide6.QtCore import QSettings, QTranslator
+from PySide6.QtWidgets import QApplication, QDialog
 
 # Crear aplicación
 app = QApplication(sys.argv)
@@ -14,7 +15,7 @@ settings.setValue("language", "fr")
 
 # Cargar traductor
 translator = QTranslator()
-if translator.load('translations/creative_erp_fr.qm'):
+if translator.load("translations/creative_erp_fr.qm"):
     app.installTranslator(translator)
     print("✓ Traductor instalado")
 else:
@@ -28,7 +29,7 @@ ui = Ui_frmClientes()
 ui.setupUi(dialog)
 
 # Verificar algunos textos
-print(f"\nTextos en el widget:")
+print("\nTextos en el widget:")
 print(f"  btnAnadir: '{ui.btnAnadir.text()}'")
 print(f"  btnEditar: '{ui.btnEditar.text()}'")
 print(f"  btnGuardar: '{ui.btnGuardar.text()}'")

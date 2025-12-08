@@ -5,14 +5,15 @@ def test_listwidget_is_palette_like():
     v = ArticulosView()
 
     # If UI is not present (headless test harness), skip
-    if not hasattr(v.ui, 'listWidget'):
+    if not hasattr(v.ui, "listWidget"):
         return
 
     lw = v.ui.listWidget
 
-        # Expect icon-mode (grid of swatches) and a reasonably large icon/grid size
+    # Expect icon-mode (grid of swatches) and a reasonably large icon/grid size
     try:
         from PySide6.QtWidgets import QListView
+
         assert lw.viewMode() == QListView.ViewMode.IconMode
     except Exception:
         # Some envs or PySide builds may behave slightly differently in headless CI
@@ -26,7 +27,7 @@ def test_listwidget_is_palette_like():
 def test_listwidget_items_render_as_swatches():
     v = ArticulosView()
 
-    if not hasattr(v.ui, 'listWidget'):
+    if not hasattr(v.ui, "listWidget"):
         return
 
     lw = v.ui.listWidget
@@ -35,6 +36,6 @@ def test_listwidget_items_render_as_swatches():
     for i in range(lw.count()):
         it = lw.item(i)
         # text is hidden so label should be empty
-        assert it.text() == ''
+        assert it.text() == ""
         # icon exists (may be null in headless env) but attribute should be present
-        assert hasattr(it, 'icon')
+        assert hasattr(it, "icon")

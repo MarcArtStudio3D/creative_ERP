@@ -28,7 +28,6 @@ TRANSLATIONS = {
     "Anterior": "Précédent",
     "Siguiente": "Suivant",
     "Acceder": "Accéder",
-    
     # Avisos
     "Postergar:": "Reporter :",
     "minutos:": "minutes :",
@@ -37,7 +36,6 @@ TRANSLATIONS = {
     "Fecha/hora:": "Date/heure :",
     "Aviso:": "Avis :",
     "Dar aviso por cerrado/Recibido.": "Marquer l'avis comme fermé/reçu.",
-    
     # Empresas
     "Gestión de empresas": "Gestion des entreprises",
     "Gestión de Empresas": "Gestion des Entreprises",
@@ -71,7 +69,6 @@ TRANSLATIONS = {
     "Móvil:": "Mobile :",
     "Otros datos": "Autres données",
     "Otros": "Autres",
-    
     # Formas jurídicas francesas (ya están en francés)
     "EI (Entreprise Individuelle)": "EI (Entreprise Individuelle)",
     "EIRL": "EIRL",
@@ -84,50 +81,41 @@ TRANSLATIONS = {
     "SCOP / SCIC": "SCOP / SCIC",
     "SEM": "SEM",
     "RM": "RM",
-    
     # Facturas
     "Facturas": "Factures",
     "Digitos Factura:": "Chiffres facture :",
     "Serie Factura:": "Série facture :",
-    
     # Divisas
     "Divisas": "Devises",
     "Actualizar divisas al entrar": "Actualiser les devises à l'entrée",
     "Divisa: ": "Devise : ",
-    
     # Artículos
     "Articulos": "Articles",
     "Auto codificar los nuevos artículos": "Codifier automatiquement les nouveaux articles",
     "Tamaño del código en caracteres:": "Taille du code en caractères :",
-    
     # Decimales
     "Decimales": "Décimales",
     "Decimales en totales": "Décimales dans les totaux",
     "Decimales precios:": "Décimales prix :",
-    
     # IRPF
     "IRPF": "Retenue à la source",
     "Autonomo / IRPF": "Indépendant / Retenue",
     "%IRPF:": "% Retenue :",
-    
     # Tarifas
     "Tarifas": "Tarifs",
     "Margen Mínimo:": "Marge minimale :",
     "Margen:": "Marge :",
     "Tarifa predeterminada:": "Tarif par défaut :",
-    
     # Varios
     "Varios": "Divers",
     "Enlace Web.": "Lien Web.",
     "Gestión Internacional": "Gestion internationale",
     "Cierre ejercicio fiscal:": "Clôture exercice fiscal :",
     "Logotipo": "Logo",
-    
     # Comentarios
     "Comentarios": "Commentaires",
     "Comentarios en Albaranes": "Commentaires sur les bons de livraison",
     "Comentarios en Facturas:": "Commentaires sur les factures :",
-    
     # Agenda
     "Agenda": "Agenda",
     "Horario Lunes:": "Horaire lundi :",
@@ -142,7 +130,6 @@ TRANSLATIONS = {
     "oauth Acces Token:": "Jeton d'accès OAuth :",
     "oauth Refresh Token:": "Jeton de rafraîchissement OAuth :",
     " Token Expirity:": " Expiration du jeton :",
-    
     # Contabilidad
     "Contabilidad": "Comptabilité",
     "Activar contabilidad": "Activer la comptabilité",
@@ -158,7 +145,6 @@ TRANSLATIONS = {
     "IVA repercutido RE": "TVA collectée RE",
     "Cuenta cobros:": "Compte encaissements :",
     "Cuenta Pagos:": "Compte paiements :",
-    
     # Base de datos
     "Datos conexión Base de datos": "Données de connexion à la base de données",
     "Motor Activo de Base de Datos": "Moteur de base de données actif",
@@ -178,8 +164,7 @@ TRANSLATIONS = {
     "...": "...",
     "Migrar a BD Multipuesto": "Migrer vers BD multi-postes",
     "Ruta SQLite Empresa": "Chemin SQLite Entreprise",
-    "<html><head/><body><p><span style=\" font-weight:700; color:#ffffff;\">Acceso a SQLite (Para empresas con un solo ordenador)</span></p><p><span style=\" font-weight:700; color:#ffffff;\"><br/></span></p></body></html>": "<html><head/><body><p><span style=\" font-weight:700; color:#ffffff;\">Accès à SQLite (Pour les entreprises avec un seul ordinateur)</span></p><p><span style=\" font-weight:700; color:#ffffff;\"><br/></span></p></body></html>",
-    
+    '<html><head/><body><p><span style=" font-weight:700; color:#ffffff;">Acceso a SQLite (Para empresas con un solo ordenador)</span></p><p><span style=" font-weight:700; color:#ffffff;"><br/></span></p></body></html>': '<html><head/><body><p><span style=" font-weight:700; color:#ffffff;">Accès à SQLite (Pour les entreprises avec un seul ordinateur)</span></p><p><span style=" font-weight:700; color:#ffffff;"><br/></span></p></body></html>',
     # Clientes
     "Gestion de clientes": "Gestion des clients",
     "Cliente:": "Client :",
@@ -220,13 +205,11 @@ TRANSLATIONS = {
     "Comentarios:": "Commentaires :",
     "Añadir nueva dirección alternativa": "Ajouter une nouvelle adresse alternative",
     "Borrar una dirección alternativa": "Supprimer une adresse alternative",
-    
     # Búsqueda
     "Buscar...": "Rechercher...",
     "Ordenar Por:": "Trier par :",
     "Buscar:": "Rechercher :",
     "Sentido:": "Sens :",
-    
     # Configuración
     "Configuración de Creative ERP": "Configuration de Creative ERP",
     "Idioma": "Langue",
@@ -234,7 +217,6 @@ TRANSLATIONS = {
     "Française": "Français",
     "Català": "Catalan",
     "English": "Anglais",
-    
     # Login y acceso
     "Creative ERP - Acceso Usuarios": "Creative ERP - Accès utilisateurs",
     "CREATIVE ERP": "CREATIVE ERP",
@@ -245,7 +227,6 @@ TRANSLATIONS = {
     "Empresa:": "Entreprise :",
     "Configuración": "Configuration",
     "Empresas": "Entreprises",
-    
     # Módulos
     "Ventas": "Ventes",
     "Compras": "Achats",
@@ -258,7 +239,6 @@ TRANSLATIONS = {
     "Configuración y usuarios": "Configuration et utilisateurs",
     "Gestor de Módulos": "Gestionnaire de modules",
     "Gestión de módulos": "Gestion des modules",
-    
     # Números de cuenta (mantener)
     "610": "610",
     "600": "600",
@@ -271,7 +251,6 @@ TRANSLATIONS = {
     "N": "N",
     "SR": "SR",
     "0": "0",
-    
     # Adicionales con & (atajos de teclado)
     "&Nuevo": "&Nouveau",
     "&Siguiente": "&Suivant",
@@ -281,7 +260,6 @@ TRANSLATIONS = {
     "&Guardar": "&Enregistrer",
     "&Deshacer": "&Annuler",
     "B&orrar": "&Supprimer",
-    
     # Datos bancarios
     "Datos Bancarios y Financieros": "Données bancaires et financières",
     "Tarifa Cliente:": "Tarif client :",
@@ -297,7 +275,6 @@ TRANSLATIONS = {
     "BIC/SWIFT:": "BIC/SWIFT :",
     "Banco:": "Banque :",
     "Titular:": "Titulaire :",
-    
     # Más términos
     "Datos Comerciales": "Données commerciales",
     "Datos Contables": "Données comptables",
@@ -341,7 +318,6 @@ TRANSLATIONS = {
     "Base": "Base",
     "Descuento": "Remise",
     "Recargo": "Majoration",
-    
     # Términos de interfaz
     "Aceptar y cerrar": "Accepter et fermer",
     "Cancelar y cerrar": "Annuler et fermer",
@@ -382,54 +358,54 @@ TRANSLATIONS = {
 
 def translate_ts_file(input_file: Path, output_file: Path):
     """Traduce un archivo .ts del español al francés."""
-    
-    with open(input_file, 'r', encoding='utf-8') as f:
+
+    with open(input_file, "r", encoding="utf-8") as f:
         content = f.read()
-    
+
     # Contar traducciones realizadas
     translations_count = 0
-    
+
     # Buscar todos los bloques <message> con translation unfinished
     pattern = r'(<message>.*?<source>(.*?)</source>.*?<translation type="unfinished"></translation>.*?</message>)'
-    
+
     def replace_translation(match):
         nonlocal translations_count
         full_block = match.group(1)
         source_text = match.group(2)
-        
+
         # Buscar traducción
         if source_text in TRANSLATIONS:
             translation = TRANSLATIONS[source_text]
             # Reemplazar el bloque completo
             new_block = full_block.replace(
                 '<translation type="unfinished"></translation>',
-                f'<translation>{translation}</translation>'
+                f"<translation>{translation}</translation>",
             )
             translations_count += 1
             return new_block
-        
+
         return full_block
-    
+
     # Aplicar traducciones
     new_content = re.sub(pattern, replace_translation, content, flags=re.DOTALL)
-    
+
     # Guardar archivo traducido
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         f.write(new_content)
-    
+
     return translations_count
 
 
 def main():
     input_file = Path("translations/creative_erp_fr.ts")
     output_file = input_file  # Sobrescribir el mismo archivo
-    
+
     print("=" * 60)
     print("Traduciendo creative_erp_fr.ts al francés")
     print("=" * 60)
-    
+
     count = translate_ts_file(input_file, output_file)
-    
+
     print(f"\n✓ {count} traducciones aplicadas")
     print(f"✓ Archivo actualizado: {output_file}")
     print("\nPróximo paso:")

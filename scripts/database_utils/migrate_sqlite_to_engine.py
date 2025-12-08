@@ -9,9 +9,11 @@ Uso:
 
 import sys
 from pathlib import Path
-from core.db import get_engine_from_url
-from sqlalchemy.orm import sessionmaker
+
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import sessionmaker
+
+from core.db import get_engine_from_url
 
 # Add project root to Python path
 project_root = Path(__file__).parent.parent
@@ -21,14 +23,9 @@ sys.path.insert(0, str(project_root))
 from core.models import Base
 
 # Import all models so SQLAlchemy can resolve foreign keys
-from modules.clientes.models import (
-    Cliente, DireccionAlternativa, DeudaCliente, 
-    HistorialCliente, EstadisticaClienteMes, Ville, ClienteTipo
-)
-from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
 # Import other module models if they exist
 try:
-    from modules.facturas.models import *
+    pass
 except ImportError:
     pass
 
@@ -57,6 +54,7 @@ def get_destination_url(arg: str) -> str:
 # MIGRACIÓN
 # ------------------------------
 
+
 def migrate(sqlite_url: str, dest_url: str):
     print(f"Loading source SQLite: {sqlite_url}")
     source_engine = get_engine_from_url(sqlite_url)
@@ -71,7 +69,7 @@ def migrate(sqlite_url: str, dest_url: str):
     # Limpiar tablas destino si existen (para evitar duplicados)
     print("Cleaning existing destination tables...")
     Base.metadata.drop_all(dest_engine)
-    
+
     # Crear tablas destino
     print("Creating destination tables...")
     Base.metadata.create_all(dest_engine)
@@ -88,35 +86,36 @@ def migrate(sqlite_url: str, dest_url: str):
         # Handle None values
         if value is None:
             return None
-        
+
         # Special handling for id_pais field (country names -> IDs)
-        if col_name == 'id_pais' and isinstance(value, str):
+        if col_name == "id_pais" and isinstance(value, str):
             # If it's a country name string, convert to default ID
             return 1  # Default country ID
-        
+
         # Handle integer fields that might have string values
-        if 'Integer' in str(col_type):
+        if "Integer" in str(col_type):
             if isinstance(value, str):
                 # Try to convert string to int, use default if fails
                 try:
                     return int(value)
                 except (ValueError, TypeError):
-                    return -1 if col_name.startswith('id_') else 0
-        
+                    return -1 if col_name.startswith("id_") else 0
+
         return value
 
     try:
         # Get list of tables that actually exist in source database
         from sqlalchemy import inspect as sqla_inspect
+
         source_inspector = sqla_inspect(source_engine)
         existing_tables = set(source_inspector.get_table_names())
-        
+
         for table in Base.metadata.sorted_tables:
             # Skip tables that don't exist in source
             if table.name not in existing_tables:
                 print(f"⏭  Saltando tabla: {table.name} (no existe en origen)")
                 continue
-                
+
             print(f"➡ Migrando tabla: {table.name}")
 
             # Get the ORM model for this table
@@ -126,6 +125,7 @@ def migrate(sqlite_url: str, dest_url: str):
                 continue
 
             from sqlmodel import select
+
             rows = source_session.exec(select(model)).all()
             if not rows:
                 print("   (vacía)")
@@ -138,7 +138,9 @@ def migrate(sqlite_url: str, dest_url: str):
                 for col in table.columns:
                     value = getattr(row, col.name)
                     # Convert value if needed
-                    converted_value = convert_value(table.name, col.name, value, col.type)
+                    converted_value = convert_value(
+                        table.name, col.name, value, col.type
+                    )
                     setattr(dest_row, col.name, converted_value)
 
                 dest_session.add(dest_row)

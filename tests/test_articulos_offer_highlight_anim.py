@@ -2,13 +2,16 @@
 """
 Test that highlight animation is started when highlight_row_by_id is called.
 """
-import os, sys
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from PySide6.QtWidgets import QApplication
+
 from core.db import set_current_database
-from modules.articulos.view import ArticulosView
 from modules.articulos.repository import ArticuloRepository
+from modules.articulos.view import ArticulosView
 
 
 def ensure_qapp():
@@ -19,7 +22,7 @@ def ensure_qapp():
 
 
 def test_highlight_starts_animation():
-    set_current_database('artstudio3d')
+    set_current_database("artstudio3d")
     ensure_qapp()
 
     v = ArticulosView()
@@ -29,7 +32,7 @@ def test_highlight_starts_animation():
     # pick some article; ensure at least one oferta exists
     offers_found = None
     for a in repo.get_all(limit=5):
-        art_id = a.get('id')
+        art_id = a.get("id")
         offers = repo.get_ofertas_for_article(art_id)
         if offers:
             offers_found = (art_id, offers)
@@ -38,9 +41,11 @@ def test_highlight_starts_animation():
     if not offers_found:
         # create an oferta for first article
         candidate = repo.get_all(limit=1)
-        assert candidate, 'No articles for test'
-        art_id = candidate[0]['id']
-        res = repo.insert_oferta(art_id, tarifa, {'descripcion': 'AnimTest', 'activa': True})
+        assert candidate, "No articles for test"
+        art_id = candidate[0]["id"]
+        res = repo.insert_oferta(
+            art_id, tarifa, {"descripcion": "AnimTest", "activa": True}
+        )
         assert res
         # reload
         offers = repo.get_ofertas_for_article(art_id)
@@ -51,12 +56,15 @@ def test_highlight_starts_animation():
     # ensure UI populates model
     v._load_form_from_article()
 
-    assert hasattr(v, 'ofertas_model')
+    assert hasattr(v, "ofertas_model")
     assert v.ofertas_model.rowCount() >= 1
 
-    oferta_id = v.ofertas_model.offers[0].get('id')
+    oferta_id = v.ofertas_model.offers[0].get("id")
     # trigger highlight animation
     v.ofertas_model.highlight_row_by_id(oferta_id, duration_ms=200)
 
     # Expect either an active animation reference or an opacity entry
-    assert oferta_id in v.ofertas_model._active_animations or oferta_id in v.ofertas_model._highlighted_ids
+    assert (
+        oferta_id in v.ofertas_model._active_animations
+        or oferta_id in v.ofertas_model._highlighted_ids
+    )

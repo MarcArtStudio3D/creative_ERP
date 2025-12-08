@@ -11,6 +11,7 @@ from pathlib import Path
 root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
+
 def test_artstudio3d_database():
     """Prueba la conexión a la base de datos ArtStudio3D."""
 
@@ -18,10 +19,13 @@ def test_artstudio3d_database():
 
     try:
         # Configurar la conexión a ArtStudio3D
-        artstudio_db_url = os.environ.get('ARTSTUDIO3D_DB',
-                                         'mysql+pymysql://admin:admin123@127.0.0.1:3306/artstudio3d')
+        artstudio_db_url = os.environ.get(
+            "ARTSTUDIO3D_DB",
+            "mysql+pymysql://admin:admin123@127.0.0.1:3306/artstudio3d",
+        )
 
         from sqlalchemy import text
+
         from core.db import get_engine_from_url
 
         # Crear motor para ArtStudio3D (centralizado)
@@ -56,13 +60,19 @@ def test_artstudio3d_database():
             # Mostrar algunos ejemplos
             if tipos_count > 0:
                 print("\n   Examples of customer types:")
-                result = conn.execute(text("SELECT id, nombre FROM tipocliente_def LIMIT 3"))
+                result = conn.execute(
+                    text("SELECT id, nombre FROM tipocliente_def LIMIT 3")
+                )
                 for row in result:
                     print(f"      - {row[0]}: {row[1]}")
 
             if clientes_count > 0:
                 print("\n   Examples of customers:")
-                result = conn.execute(text("SELECT id, codigo_cliente, nombre_fiscal FROM clientes LIMIT 3"))
+                result = conn.execute(
+                    text(
+                        "SELECT id, codigo_cliente, nombre_fiscal FROM clientes LIMIT 3"
+                    )
+                )
                 for row in result:
                     print(f"      - {row[1]}: {row[2] or 'Sin nombre fiscal'}")
 
@@ -72,8 +82,10 @@ def test_artstudio3d_database():
     except Exception as e:
         print(f"❌ Error conectando a la base de datos 'ArtStudio3D': {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     print("ARTSTUDIO3D DATABASE TEST")

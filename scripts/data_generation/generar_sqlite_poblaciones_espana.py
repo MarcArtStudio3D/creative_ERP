@@ -1,17 +1,18 @@
+import csv
 import os
 import sqlite3
 import tempfile
-import csv
-from urllib.request import Request, urlopen
 from urllib.error import HTTPError, URLError
+from urllib.request import Request, urlopen
 
 # URLs de los CSV en GitHub
-URL_CP = "https://raw.githubusercontent.com/inigoflores/ds-codigos-postales-ine-es/master/data/codigos_postales_municipios.csv"  # CP → municipio_id :contentReference[oaicite:2]{index=2}  
-URL_MUNICIPIOS = "https://raw.githubusercontent.com/codeforspain/ds-organizacion-administrativa/master/data/municipios.csv"  # municipio_id → provincia_id, nombre municipio :contentReference[oaicite:3]{index=3}  
-URL_PROVINCIAS = "https://raw.githubusercontent.com/codeforspain/ds-organizacion-administrativa/master/data/provincias.csv"  # provincia_id → nombre provincia :contentReference[oaicite:4]{index=4}  
+URL_CP = "https://raw.githubusercontent.com/inigoflores/ds-codigos-postales-ine-es/master/data/codigos_postales_municipios.csv"  # CP → municipio_id :contentReference[oaicite:2]{index=2}
+URL_MUNICIPIOS = "https://raw.githubusercontent.com/codeforspain/ds-organizacion-administrativa/master/data/municipios.csv"  # municipio_id → provincia_id, nombre municipio :contentReference[oaicite:3]{index=3}
+URL_PROVINCIAS = "https://raw.githubusercontent.com/codeforspain/ds-organizacion-administrativa/master/data/provincias.csv"  # provincia_id → nombre provincia :contentReference[oaicite:4]{index=4}
 
 DB_PATH = "cp_poblacion_provincia.sqlite"
 TABLE_NAME = "cp_info"
+
 
 def descargar_csv(url):
     print(f"Descargando {url} …")
@@ -31,6 +32,7 @@ def descargar_csv(url):
     print("Guardado en:", tmpfile)
     return tmpfile
 
+
 def cargar_provincias(csv_prov):
     """Lee el CSV de provincias y devuelve dict provincia_id → nombre_provincia."""
     d = {}
@@ -43,6 +45,7 @@ def cargar_provincias(csv_prov):
             if pid is not None and nombre is not None:
                 d[pid] = nombre
     return d
+
 
 def cargar_municipios(csv_mun, provincias_map):
     """
@@ -62,19 +65,22 @@ def cargar_municipios(csv_mun, provincias_map):
             d[mid] = (nombre_mun, nombre_prov)
     return d
 
+
 def importar_a_sqlite(csv_cp, municipios_map, sqlite_path):
     conn = sqlite3.connect(sqlite_path)
     cur = conn.cursor()
 
     # Crear tabla
     cur.execute(f"DROP TABLE IF EXISTS {TABLE_NAME}")
-    cur.execute(f"""
+    cur.execute(
+        f"""
         CREATE TABLE {TABLE_NAME} (
             cp TEXT,
             poblacion TEXT,
             provincia TEXT
         )
-    """)
+    """
+    )
     conn.commit()
 
     # Leer CP y cruzar
@@ -91,13 +97,16 @@ def importar_a_sqlite(csv_cp, municipios_map, sqlite_path):
                 # si no está en el mapeo, usar el valor del CSV de CP si existe el nombre
                 poblacion = row.get("municipio_nombre", "")
             # Insertar
-            cur.execute(f"INSERT INTO {TABLE_NAME} (cp, poblacion, provincia) VALUES (?, ?, ?)",
-                        (cp, poblacion, provincia))
+            cur.execute(
+                f"INSERT INTO {TABLE_NAME} (cp, poblacion, provincia) VALUES (?, ?, ?)",
+                (cp, poblacion, provincia),
+            )
             inserted += 1
 
     conn.commit()
     conn.close()
     print(f"Insertadas {inserted} filas en la base de datos {sqlite_path}")
+
 
 def main():
     tmp_cp = descargar_csv(URL_CP)
@@ -114,6 +123,7 @@ def main():
     os.remove(tmp_mun)
     os.remove(tmp_prov)
     print("SQLite generado:", DB_PATH)
+
 
 if __name__ == "__main__":
     main()

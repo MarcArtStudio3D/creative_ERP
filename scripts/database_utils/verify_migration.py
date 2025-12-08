@@ -1,6 +1,7 @@
 """
 Script para verificar que la migración se realizó correctamente
 """
+
 import sys
 from pathlib import Path
 
@@ -12,20 +13,21 @@ import psycopg2
 import pymysql
 
 POSTGRES_CONFIG = {
-    'host': '192.168.1.28',
-    'port': 5432,
-    'user': 'admin',
-    'password': 'admin123',
-    'database': 'creative_erp'
+    "host": "192.168.1.28",
+    "port": 5432,
+    "user": "admin",
+    "password": "admin123",
+    "database": "creative_erp",
 }
 
 MARIADB_CONFIG = {
-    'host': '192.168.1.28',
-    'port': 3306,
-    'user': 'admin',
-    'password': 'admin123',
-    'database': 'creative_erp'
+    "host": "192.168.1.28",
+    "port": 3306,
+    "user": "admin",
+    "password": "admin123",
+    "database": "creative_erp",
 }
+
 
 def verify_postgres():
     print("=" * 80)
@@ -35,23 +37,25 @@ def verify_postgres():
     print(f"Usuario: {POSTGRES_CONFIG['user']}")
     print(f"Base de datos: {POSTGRES_CONFIG['database']}")
     print()
-    
+
     try:
         conn = psycopg2.connect(**POSTGRES_CONFIG)
         cursor = conn.cursor()
-        
+
         # Listar tablas
-        cursor.execute("""
+        cursor.execute(
+            """
             SELECT table_name 
             FROM information_schema.tables 
             WHERE table_schema = 'public' 
             ORDER BY table_name
-        """)
+        """
+        )
         tables = cursor.fetchall()
-        
-        print(f"✅ Conexión exitosa")
+
+        print("✅ Conexión exitosa")
         print(f"Tables found ({len(tables)}):\n")
-        
+
         total_records = 0
         for table in tables:
             table_name = table[0]
@@ -60,16 +64,17 @@ def verify_postgres():
             total_records += count
             status = "✅" if count > 0 else "  "
             print(f"   {status} {table_name}: {count} registros")
-        
+
         print(f"\nTotal records: {total_records}")
-        
+
         cursor.close()
         conn.close()
         return True
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
         return False
+
 
 def verify_mariadb():
     print("\n" + "=" * 80)
@@ -79,15 +84,15 @@ def verify_mariadb():
     print(f"Usuario: {MARIADB_CONFIG['user']}")
     print(f"Base de datos: {MARIADB_CONFIG['database']}")
     print()
-    
+
     try:
         conn = pymysql.connect(**MARIADB_CONFIG)
         cursor = conn.cursor()
-        
+
         # Verificar si la base de datos existe
         cursor.execute("SHOW DATABASES LIKE 'creative_erp'")
         db_exists = cursor.fetchone()
-        
+
         if not db_exists:
             print("⚠️  La base de datos 'creative_erp' NO existe en MariaDB")
             print("\nNote: To create the database, run:")
@@ -97,14 +102,14 @@ def verify_mariadb():
             cursor.close()
             conn.close()
             return False
-        
+
         # Listar tablas
         cursor.execute("SHOW TABLES")
         tables = cursor.fetchall()
-        
-        print(f"✅ Conexión exitosa")
+
+        print("✅ Conexión exitosa")
         print(f"Tables found ({len(tables)}):\n")
-        
+
         total_records = 0
         for table in tables:
             table_name = table[0]
@@ -113,21 +118,22 @@ def verify_mariadb():
             total_records += count
             status = "✅" if count > 0 else "  "
             print(f"   {status} {table_name}: {count} registros")
-        
+
         print(f"\nTotal records: {total_records}")
-        
+
         cursor.close()
         conn.close()
         return True
-        
+
     except Exception as e:
         print(f"❌ Error: {e}")
         return False
 
+
 if __name__ == "__main__":
     pg_ok = verify_postgres()
     mb_ok = verify_mariadb()
-    
+
     print("\n" + "=" * 80)
     print("RESUMEN")
     print("=" * 80)

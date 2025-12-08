@@ -1,9 +1,10 @@
 import pytest
-from PySide6.QtWidgets import QApplication, QSizePolicy
+from PySide6.QtWidgets import QApplication
+
 from modules.articulos.view_tarifas_base import TarifasBaseView
 
 
-@pytest.fixture(scope='module', autouse=True)
+@pytest.fixture(scope="module", autouse=True)
 def qapp():
     app = QApplication.instance()
     if not app:
@@ -15,7 +16,16 @@ def test_tarifas_panel_api_methods_exist_and_basic_behaviour(qapp):
     v = TarifasBaseView()
 
     # methods existence
-    for name in ('list', 'nuevo', 'editar', 'borrar', 'search', 'filter_records', 'get_search_options', 'filtrar'):
+    for name in (
+        "list",
+        "nuevo",
+        "editar",
+        "borrar",
+        "search",
+        "filter_records",
+        "get_search_options",
+        "filtrar",
+    ):
         assert hasattr(v, name), f"Missing public API method: {name}"
 
     # list should switch to table view
@@ -37,7 +47,7 @@ def test_tarifas_panel_api_methods_exist_and_basic_behaviour(qapp):
     # get_search_options must return dict with keys
     opts = v.get_search_options()
     assert isinstance(opts, dict)
-    assert 'sort_fields' in opts and 'search_placeholder' in opts
+    assert "sort_fields" in opts and "search_placeholder" in opts
 
 
 def test_typing_updates_table_live(qapp):

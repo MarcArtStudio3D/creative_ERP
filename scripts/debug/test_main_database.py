@@ -3,7 +3,6 @@
 Script para probar la conexión a la nueva base de datos principal
 """
 
-import os
 import sys
 from pathlib import Path
 
@@ -11,15 +10,17 @@ from pathlib import Path
 root_dir = Path(__file__).parent
 sys.path.insert(0, str(root_dir))
 
+
 def test_main_database():
     """Prueba la conexión a la base de datos principal."""
 
     print("Testing connection to the main database...")
 
     try:
-        from core.db import get_session, init_main_db
-        from core.models import User, BusinessGroup, Empresa
         from sqlmodel import select
+
+        from core.db import get_session, init_main_db
+        from core.models import BusinessGroup, Empresa, User
 
         # Inicializar la base de datos principal
         init_main_db()
@@ -48,8 +49,10 @@ def test_main_database():
     except Exception as e:
         print(f"❌ Error conectando a la base de datos principal: {e}")
         import traceback
+
         traceback.print_exc()
         return False
+
 
 if __name__ == "__main__":
     print("MAIN DATABASE TEST")

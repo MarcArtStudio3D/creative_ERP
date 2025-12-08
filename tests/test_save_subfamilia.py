@@ -4,25 +4,32 @@ Test de guardado de subfamilia en artículos
 Verifica que el id_subfamilia se guarda correctamente en la base de datos
 """
 
-import sys, os
+import os
+import sys
+
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from core.db import set_current_database, get_session
 from sqlalchemy import text
+
+from core.db import get_session, set_current_database
 from modules.articulos.controller import ArticuloController
 
 
 def test_save_subfamilia():
     print("🧪 Test de guardado de subfamilia en artículo")
-    set_current_database('artstudio3d')
+    set_current_database("artstudio3d")
 
     controller = ArticuloController()
     session = get_session()
 
     # Obtener un artículo de prueba
-    art = session.execute(text("SELECT id, codigo FROM articulos WHERE codigo IN ('ART001','ART002','ART003') LIMIT 1")).fetchone()
+    art = session.execute(
+        text(
+            "SELECT id, codigo FROM articulos WHERE codigo IN ('ART001','ART002','ART003') LIMIT 1"
+        )
+    ).fetchone()
     if not art:
-        print('❌ No se encontraron artículos de prueba')
+        print("❌ No se encontraron artículos de prueba")
         return
 
     article_id = art[0]
@@ -31,9 +38,13 @@ def test_save_subfamilia():
     controller.load_by_id(article_id)
 
     # Obtener una subfamilia (sin filtrar por familia para la prueba)
-    sub = session.execute(text("SELECT id, id_familia, codigo, subfamilia FROM subfamilias ORDER BY id LIMIT 1")).fetchone()
+    sub = session.execute(
+        text(
+            "SELECT id, id_familia, codigo, subfamilia FROM subfamilias ORDER BY id LIMIT 1"
+        )
+    ).fetchone()
     if not sub:
-        print('❌ No hay subfamilias para seleccionar en la BD')
+        print("❌ No hay subfamilias para seleccionar en la BD")
         return
 
     sub_id, id_familia, sub_codigo, sub_nombre = sub
@@ -41,31 +52,36 @@ def test_save_subfamilia():
 
     success = controller.set_subfamilia_from_lookup(sub_id, sub_codigo, sub_nombre)
     if not success:
-        print('❌ Error al establecer subfamilia en controller')
+        print("❌ Error al establecer subfamilia en controller")
         return
 
-    print('✅ Subfamilia establecida en controller. Simulando guardado...')
+    print("✅ Subfamilia establecida en controller. Simulando guardado...")
 
     form_data = {
-        'codigo': controller.get_current_article().get('codigo'),
-        'descripcion_reducida': controller.get_current_article().get('descripcion_reducida', 'Test'),
-        'coste': controller.get_current_article().get('coste', 0),
-        'id_subfamilia': controller.get_current_article().get('id_subfamilia')
+        "codigo": controller.get_current_article().get("codigo"),
+        "descripcion_reducida": controller.get_current_article().get(
+            "descripcion_reducida", "Test"
+        ),
+        "coste": controller.get_current_article().get("coste", 0),
+        "id_subfamilia": controller.get_current_article().get("id_subfamilia"),
     }
 
     ok, msg = controller.save(form_data)
     print(f"Resultado al guardar: {ok} - {msg}")
     if not ok:
-        print('❌ No se pudo guardar el artículo')
+        print("❌ No se pudo guardar el artículo")
         return
 
     # Verificar en BD
-    db_res = session.execute(text('SELECT id, codigo, id_subfamilia FROM articulos WHERE id = :id'), {'id': article_id}).fetchone()
+    db_res = session.execute(
+        text("SELECT id, codigo, id_subfamilia FROM articulos WHERE id = :id"),
+        {"id": article_id},
+    ).fetchone()
     # Acceso robusto por nombre de columna cuando SQLAlchemy Row lo soporta; caer a índice si no
     try:
         id_subfamilia_bd = None
-        if hasattr(db_res, '_mapping'):
-            id_subfamilia_bd = db_res._mapping.get('id_subfamilia')
+        if hasattr(db_res, "_mapping"):
+            id_subfamilia_bd = db_res._mapping.get("id_subfamilia")
         else:
             id_subfamilia_bd = db_res[2] if len(db_res) > 2 else None
     except Exception:
@@ -74,11 +90,12 @@ def test_save_subfamilia():
     print(f"🔎 En BD: id_subfamilia = {id_subfamilia_bd}")
 
     if id_subfamilia_bd == sub_id:
-        print('✅ Subfamilia guardada correctamente en la base de datos')
+        print("✅ Subfamilia guardada correctamente en la base de datos")
     else:
         print(f"❌ ERROR: id_subfamilia esperado {sub_id}, obtenido {id_subfamilia_bd}")
 
     session.close()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     test_save_subfamilia()

@@ -4,105 +4,93 @@ Sistema de configuración de entornos para Creative ERP
 Gestiona diferentes configuraciones para desarrollo, testing y producción
 """
 
+import json
 import os
 from pathlib import Path
-from typing import Dict, Any
-import json
+from typing import Any, Dict
+
 
 class EnvironmentConfig:
     """Gestor de configuración de entornos."""
 
     def __init__(self):
-        self.current_env = os.environ.get('CREATIVE_ERP_ENV', 'development')
-        self.config_dir = Path(__file__).parent / 'config'
+        self.current_env = os.environ.get("CREATIVE_ERP_ENV", "development")
+        self.config_dir = Path(__file__).parent / "config"
         self.config_dir.mkdir(exist_ok=True)
 
         # Configuraciones por defecto para cada entorno
         self.default_configs = {
-            'development': {
-                'database': {
-                    'main': {
-                        'driver': 'mysql+pymysql',
-                        'host': '127.0.0.1',
-                        'port': 3306,
-                        'database': 'creative_erp_main',
-                        'username': 'admin',
-                        'password': 'admin123'
+            "development": {
+                "database": {
+                    "main": {
+                        "driver": "mysql+pymysql",
+                        "host": "127.0.0.1",
+                        "port": 3306,
+                        "database": "creative_erp_main",
+                        "username": "admin",
+                        "password": "admin123",
                     },
-                    'artstudio3d': {
-                        'driver': 'mysql+pymysql',
-                        'host': '127.0.0.1',
-                        'port': 3306,
-                        'database': 'artstudio3d',
-                        'username': 'admin',
-                        'password': 'admin123'
-                    }
+                    "artstudio3d": {
+                        "driver": "mysql+pymysql",
+                        "host": "127.0.0.1",
+                        "port": 3306,
+                        "database": "artstudio3d",
+                        "username": "admin",
+                        "password": "admin123",
+                    },
                 },
-                'logging': {
-                    'level': 'DEBUG',
-                    'file': 'logs/creative_erp_dev.log'
-                },
-                'ui': {
-                    'theme': 'default',
-                    'language': 'es'
-                }
+                "logging": {"level": "DEBUG", "file": "logs/creative_erp_dev.log"},
+                "ui": {"theme": "default", "language": "es"},
             },
-            'testing': {
-                'database': {
-                    'main': {
-                        'driver': 'mysql+pymysql',
-                        'host': '127.0.0.1',
-                        'port': 3306,
-                        'database': 'creative_erp_test',
-                        'username': 'admin',
-                        'password': 'admin123'
+            "testing": {
+                "database": {
+                    "main": {
+                        "driver": "mysql+pymysql",
+                        "host": "127.0.0.1",
+                        "port": 3306,
+                        "database": "creative_erp_test",
+                        "username": "admin",
+                        "password": "admin123",
                     },
-                    'artstudio3d': {
-                        'driver': 'mysql+pymysql',
-                        'host': '127.0.0.1',
-                        'port': 3306,
-                        'database': 'artstudio3d_test',
-                        'username': 'admin',
-                        'password': 'admin123'
-                    }
+                    "artstudio3d": {
+                        "driver": "mysql+pymysql",
+                        "host": "127.0.0.1",
+                        "port": 3306,
+                        "database": "artstudio3d_test",
+                        "username": "admin",
+                        "password": "admin123",
+                    },
                 },
-                'logging': {
-                    'level': 'INFO',
-                    'file': 'logs/creative_erp_test.log'
-                },
-                'ui': {
-                    'theme': 'default',
-                    'language': 'es'
-                }
+                "logging": {"level": "INFO", "file": "logs/creative_erp_test.log"},
+                "ui": {"theme": "default", "language": "es"},
             },
-            'production': {
-                'database': {
-                    'main': {
-                        'driver': 'mysql+pymysql',
-                        'host': os.environ.get('DB_HOST', 'localhost'),
-                        'port': int(os.environ.get('DB_PORT', 3306)),
-                        'database': os.environ.get('DB_NAME_MAIN', 'creative_erp_prod'),
-                        'username': os.environ.get('DB_USER', 'creative_erp'),
-                        'password': os.environ.get('DB_PASSWORD', '')
+            "production": {
+                "database": {
+                    "main": {
+                        "driver": "mysql+pymysql",
+                        "host": os.environ.get("DB_HOST", "localhost"),
+                        "port": int(os.environ.get("DB_PORT", 3306)),
+                        "database": os.environ.get("DB_NAME_MAIN", "creative_erp_prod"),
+                        "username": os.environ.get("DB_USER", "creative_erp"),
+                        "password": os.environ.get("DB_PASSWORD", ""),
                     },
-                    'artstudio3d': {
-                        'driver': 'mysql+pymysql',
-                        'host': os.environ.get('DB_HOST', 'localhost'),
-                        'port': int(os.environ.get('DB_PORT', 3306)),
-                        'database': os.environ.get('DB_NAME_ARTSTUDIO3D', 'artstudio3d_prod'),
-                        'username': os.environ.get('DB_USER', 'creative_erp'),
-                        'password': os.environ.get('DB_PASSWORD', '')
-                    }
+                    "artstudio3d": {
+                        "driver": "mysql+pymysql",
+                        "host": os.environ.get("DB_HOST", "localhost"),
+                        "port": int(os.environ.get("DB_PORT", 3306)),
+                        "database": os.environ.get(
+                            "DB_NAME_ARTSTUDIO3D", "artstudio3d_prod"
+                        ),
+                        "username": os.environ.get("DB_USER", "creative_erp"),
+                        "password": os.environ.get("DB_PASSWORD", ""),
+                    },
                 },
-                'logging': {
-                    'level': 'WARNING',
-                    'file': '/var/log/creative_erp/creative_erp.log'
+                "logging": {
+                    "level": "WARNING",
+                    "file": "/var/log/creative_erp/creative_erp.log",
                 },
-                'ui': {
-                    'theme': 'professional',
-                    'language': 'es'
-                }
-            }
+                "ui": {"theme": "professional", "language": "es"},
+            },
         }
 
         self.config = self._load_config()
@@ -110,18 +98,23 @@ class EnvironmentConfig:
     def _load_config(self) -> Dict[str, Any]:
         """Carga la configuración para el entorno actual."""
         # Cargar configuración por defecto
-        config = self.default_configs.get(self.current_env, self.default_configs['development']).copy()
+        config = self.default_configs.get(
+            self.current_env, self.default_configs["development"]
+        ).copy()
 
         # Cargar configuración personalizada si existe
-        config_file = self.config_dir / f'{self.current_env}.json'
+        config_file = self.config_dir / f"{self.current_env}.json"
         if config_file.exists():
             try:
-                with open(config_file, 'r', encoding='utf-8') as f:
+                with open(config_file, "r", encoding="utf-8") as f:
                     custom_config = json.load(f)
                     self._merge_config(config, custom_config)
             except Exception as e:
                 import logging
-                logging.getLogger(__name__).warning("Error cargando configuración personalizada: %s", e)
+
+                logging.getLogger(__name__).warning(
+                    "Error cargando configuración personalizada: %s", e
+                )
 
         # Sobrescribir con variables de entorno
         self._override_with_env_vars(config)
@@ -131,7 +124,11 @@ class EnvironmentConfig:
     def _merge_config(self, base_config: Dict[str, Any], custom_config: Dict[str, Any]):
         """Fusiona configuración personalizada con la base."""
         for key, value in custom_config.items():
-            if isinstance(value, dict) and key in base_config and isinstance(base_config[key], dict):
+            if (
+                isinstance(value, dict)
+                and key in base_config
+                and isinstance(base_config[key], dict)
+            ):
                 self._merge_config(base_config[key], value)
             else:
                 base_config[key] = value
@@ -139,38 +136,42 @@ class EnvironmentConfig:
     def _override_with_env_vars(self, config: Dict[str, Any]):
         """Sobrescribe configuración con variables de entorno."""
         # Database overrides
-        if 'DB_HOST' in os.environ:
-            for db_config in config['database'].values():
+        if "DB_HOST" in os.environ:
+            for db_config in config["database"].values():
                 if isinstance(db_config, dict):
-                    db_config['host'] = os.environ['DB_HOST']
+                    db_config["host"] = os.environ["DB_HOST"]
 
-        if 'DB_PORT' in os.environ:
-            for db_config in config['database'].values():
+        if "DB_PORT" in os.environ:
+            for db_config in config["database"].values():
                 if isinstance(db_config, dict):
-                    db_config['port'] = int(os.environ['DB_PORT'])
+                    db_config["port"] = int(os.environ["DB_PORT"])
 
-        if 'DB_USER' in os.environ:
-            for db_config in config['database'].values():
+        if "DB_USER" in os.environ:
+            for db_config in config["database"].values():
                 if isinstance(db_config, dict):
-                    db_config['username'] = os.environ['DB_USER']
+                    db_config["username"] = os.environ["DB_USER"]
 
-        if 'DB_PASSWORD' in os.environ:
-            for db_config in config['database'].values():
+        if "DB_PASSWORD" in os.environ:
+            for db_config in config["database"].values():
                 if isinstance(db_config, dict):
-                    db_config['password'] = os.environ['DB_PASSWORD']
+                    db_config["password"] = os.environ["DB_PASSWORD"]
 
     def get_database_url(self, db_name: str) -> str:
         """Obtiene la URL de conexión para una base de datos específica."""
-        if db_name not in self.config['database']:
-            raise ValueError(f"Base de datos '{db_name}' no configurada para entorno '{self.current_env}'")
+        if db_name not in self.config["database"]:
+            raise ValueError(
+                f"Base de datos '{db_name}' no configurada para entorno '{self.current_env}'"
+            )
 
-        db_config = self.config['database'][db_name]
-        return (f"{db_config['driver']}://{db_config['username']}:{db_config['password']}@"
-                f"{db_config['host']}:{db_config['port']}/{db_config['database']}")
+        db_config = self.config["database"][db_name]
+        return (
+            f"{db_config['driver']}://{db_config['username']}:{db_config['password']}@"
+            f"{db_config['host']}:{db_config['port']}/{db_config['database']}"
+        )
 
     def get(self, key: str, default=None):
         """Obtiene un valor de configuración usando notación de puntos."""
-        keys = key.split('.')
+        keys = key.split(".")
         value = self.config
 
         for k in keys:
@@ -183,18 +184,18 @@ class EnvironmentConfig:
 
     def set_custom_config(self, key: str, value: Any):
         """Establece una configuración personalizada para el entorno actual."""
-        config_file = self.config_dir / f'{self.current_env}.json'
+        config_file = self.config_dir / f"{self.current_env}.json"
         custom_config = {}
 
         if config_file.exists():
             try:
-                with open(config_file, 'r', encoding='utf-8') as f:
+                with open(config_file, "r", encoding="utf-8") as f:
                     custom_config = json.load(f)
             except:
                 pass
 
         # Establecer valor usando notación de puntos
-        keys = key.split('.')
+        keys = key.split(".")
         current = custom_config
 
         for k in keys[:-1]:
@@ -205,7 +206,7 @@ class EnvironmentConfig:
         current[keys[-1]] = value
 
         # Guardar configuración
-        with open(config_file, 'w', encoding='utf-8') as f:
+        with open(config_file, "w", encoding="utf-8") as f:
             json.dump(custom_config, f, indent=2, ensure_ascii=False)
 
         # Recargar configuración
@@ -224,33 +225,39 @@ class EnvironmentConfig:
         if env_name not in self.default_configs:
             raise ValueError(f"Entorno '{env_name}' no válido")
 
-        config_file = self.config_dir / f'{env_name}.json'
+        config_file = self.config_dir / f"{env_name}.json"
         if not config_file.exists():
-            with open(config_file, 'w', encoding='utf-8') as f:
+            with open(config_file, "w", encoding="utf-8") as f:
                 json.dump({}, f, indent=2, ensure_ascii=False)
             import logging
-            logging.getLogger(__name__).info("Archivo de configuración creado: %s", config_file)
+
+            logging.getLogger(__name__).info(
+                "Archivo de configuración creado: %s", config_file
+            )
+
 
 # Instancia global de configuración
 config = EnvironmentConfig()
+
 
 def get_database_url_for_company(company_id: int) -> str:
     """
     Obtiene la URL de base de datos para una empresa específica.
     Busca la configuración en la tabla empresas.
     """
-    from core.db import set_current_database, get_session
+    from core.db import get_session, set_current_database
     from core.models import Empresa
 
     # Cambiar a base de datos principal para consultar empresas
     original_db = None
     try:
         from core.db import get_current_database
+
         original_db = get_current_database()
     except:
         pass
 
-    set_current_database('main')
+    set_current_database("main")
 
     try:
         session = get_session()
@@ -260,45 +267,60 @@ def get_database_url_for_company(company_id: int) -> str:
             raise ValueError(f"Empresa con ID {company_id} no encontrada")
 
         # Normalizar motor
-        motor = empresa.motor_base_datos.strip().lower() if empresa.motor_base_datos else 'mariadb'
+        motor = (
+            empresa.motor_base_datos.strip().lower()
+            if empresa.motor_base_datos
+            else "mariadb"
+        )
 
         # Determinar qué base de datos usar según el motor configurado
-        if motor == 'postgresql':
+        if motor == "postgresql":
             if not empresa.nombre_base_datos_postgresql:
-                raise ValueError(f"Empresa {company_id} no tiene configurada base de datos PostgreSQL")
+                raise ValueError(
+                    f"Empresa {company_id} no tiene configurada base de datos PostgreSQL"
+                )
 
             # Construir URL para PostgreSQL
-            url = (f"postgresql://{empresa.usuario_postgresql}:{empresa.password_postgresql}@"
-                   f"{empresa.host_postgresql}:{empresa.puerto_postgresql}/"
-                   f"{empresa.nombre_base_datos_postgresql}")
+            url = (
+                f"postgresql://{empresa.usuario_postgresql}:{empresa.password_postgresql}@"
+                f"{empresa.host_postgresql}:{empresa.puerto_postgresql}/"
+                f"{empresa.nombre_base_datos_postgresql}"
+            )
 
-        elif motor in ['mariadb', 'mysql']:
+        elif motor in ["mariadb", "mysql"]:
             if not empresa.nombre_base_datos_maria_db:
-                raise ValueError(f"Empresa {company_id} no tiene configurada base de datos MariaDB")
+                raise ValueError(
+                    f"Empresa {company_id} no tiene configurada base de datos MariaDB"
+                )
 
             # Construir URL para MariaDB/MySQL
-            url = (f"mysql+pymysql://{empresa.usuario_mariadb}:{empresa.password_mariadb}@"
-                   f"{empresa.host_mariadb}:{empresa.puerto_mariadb}/"
-                   f"{empresa.nombre_base_datos_maria_db}")
+            url = (
+                f"mysql+pymysql://{empresa.usuario_mariadb}:{empresa.password_mariadb}@"
+                f"{empresa.host_mariadb}:{empresa.puerto_mariadb}/"
+                f"{empresa.nombre_base_datos_maria_db}"
+            )
 
-        elif motor == 'sqlite':
+        elif motor == "sqlite":
             # Usar ruta configurada o por defecto
-            ruta = getattr(empresa, 'ruta_base_datos_sqlite', None)
+            ruta = getattr(empresa, "ruta_base_datos_sqlite", None)
             if not ruta:
                 # Fallback a convención por defecto
                 ruta = f"datos/company_{company_id}.sqlite"
-            
+
             # Asegurar ruta absoluta si es necesario o relativa al proyecto
             import os
+
             if not os.path.isabs(ruta):
                 # Asumir relativa a la raíz del proyecto
                 base_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
                 ruta = os.path.join(base_dir, ruta)
-                
+
             url = f"sqlite:///{ruta}"
 
         else:
-            raise ValueError(f"Motor de base de datos '{empresa.motor_base_datos}' no soportado")
+            raise ValueError(
+                f"Motor de base de datos '{empresa.motor_base_datos}' no soportado"
+            )
 
         return url
 
@@ -307,6 +329,7 @@ def get_database_url_for_company(company_id: int) -> str:
         if original_db:
             set_current_database(original_db)
         session.close()
+
 
 def set_database_for_company(company_id: int, init: bool = False):
     """
@@ -318,30 +341,41 @@ def set_database_for_company(company_id: int, init: bool = False):
     url = get_database_url_for_company(company_id)
 
     # Agregar dinámicamente la configuración de la empresa
-    DATABASE_CONFIGS[f'company_{company_id}'] = url
+    DATABASE_CONFIGS[f"company_{company_id}"] = url
 
     # Cambiar a la base de datos de la empresa
     from core.db import set_current_database
-    set_current_database(f'company_{company_id}')
+
+    set_current_database(f"company_{company_id}")
 
     # No creamos automáticamente tablas por defecto — la creación de esquema
     # debe ser una acción explícita y deliberada (p. ej. flujo admin con confirmación).
     if init:
         from core.db import init_db
+
         init_db()
 
     import logging
-    logging.getLogger(__name__).debug("Database switched for company %s: %s", company_id, url)
+
+    logging.getLogger(__name__).debug(
+        "Database switched for company %s: %s", company_id, url
+    )
+
 
 if __name__ == "__main__":
     # Ejemplo de uso
     import logging
+
     logging.getLogger(__name__).info("Entorno actual: %s", config.get_current_env())
-    logging.getLogger(__name__).info("URL BD main: %s", config.get_database_url('main'))
-    logging.getLogger(__name__).info("URL BD artstudio3d: %s", config.get_database_url('artstudio3d'))
+    logging.getLogger(__name__).info("URL BD main: %s", config.get_database_url("main"))
+    logging.getLogger(__name__).info(
+        "URL BD artstudio3d: %s", config.get_database_url("artstudio3d")
+    )
 
     # Listar entornos disponibles
-    logging.getLogger(__name__).info("Entornos disponibles: %s", config.list_available_envs())
+    logging.getLogger(__name__).info(
+        "Entornos disponibles: %s", config.list_available_envs()
+    )
 
     # Crear archivo de configuración para desarrollo si no existe
-    config.create_env_file('development')
+    config.create_env_file("development")

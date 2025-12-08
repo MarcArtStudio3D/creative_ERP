@@ -1,18 +1,18 @@
-from typing import Optional, List
-from PySide6.QtCore import QObject, Signal, Qt
-from PySide6.QtGui import QStandardItemModel, QStandardItem
-from PySide6.QtWidgets import QMessageBox
-
-from modules.empresas.repository import EmpresaRepository
-from core.models import Empresa, BusinessGroup
-from core.db import set_database_for_company
-from sqlalchemy import text
 import logging
+from typing import List, Optional
+
+from PySide6.QtCore import QObject, Qt, Signal
+from PySide6.QtGui import QStandardItem, QStandardItemModel
+from sqlalchemy import text
+
+from core.db import set_database_for_company
+from core.models import BusinessGroup, Empresa
+from modules.empresas.repository import EmpresaRepository
 
 
 class EmpresasController(QObject):
     """Controlador para el módulo de Empresas."""
-    
+
     # Señales para comunicar eventos a la vista
     data_changed = Signal()
     error_occurred = Signal(str)
@@ -22,7 +22,9 @@ class EmpresasController(QObject):
         super().__init__(parent)
         self.repo = EmpresaRepository()
         self.model = QStandardItemModel(0, 4)
-        self.model.setHorizontalHeaderLabels(["Código", "Nombre Fiscal", "CIF/NIF", "Población"])
+        self.model.setHorizontalHeaderLabels(
+            ["Código", "Nombre Fiscal", "CIF/NIF", "Población"]
+        )
         self._empresa_actual: Optional[Empresa] = None
 
     @property
@@ -40,17 +42,17 @@ class EmpresasController(QObject):
             empresas = self.repo.obtener_todos()
             for e in empresas:
                 items = [
-                    QStandardItem(getattr(e, 'codigo_empresa', '') or ''),
-                    QStandardItem(getattr(e, 'nombre_fiscal', '') or ''),
-                    QStandardItem(getattr(e, 'cif_nif', '') or ''),
-                    QStandardItem(getattr(e, 'poblacion', '') or ''),
+                    QStandardItem(getattr(e, "codigo_empresa", "") or ""),
+                    QStandardItem(getattr(e, "nombre_fiscal", "") or ""),
+                    QStandardItem(getattr(e, "cif_nif", "") or ""),
+                    QStandardItem(getattr(e, "poblacion", "") or ""),
                 ]
                 for it in items:
                     it.setEditable(False)
-                
+
                 # Almacenar el ID en la primera columna como datos ocultos
                 items[0].setData(e.id, Qt.ItemDataRole.UserRole)
-                
+
                 self.model.appendRow(items)
             self.data_changed.emit()
         except Exception as e:
@@ -93,7 +95,7 @@ class EmpresasController(QObject):
             if not empresa:
                 self.error_occurred.emit("Empresa no encontrada")
                 return False
-                
+
             self.repo.borrar(empresa)
             self.cargar_empresas()
             self.operation_success.emit("Empresa borrada correctamente")
@@ -101,6 +103,7 @@ class EmpresasController(QObject):
         except Exception as e:
             self.error_occurred.emit(f"Error al borrar: {e}")
             return False
+
     def cargar_grupos(self) -> List[BusinessGroup]:
         """Carga todos los grupos empresariales."""
         try:
@@ -128,14 +131,16 @@ class EmpresasController(QObject):
         """Busca códigos postales por nombre de población."""
         return self.repo.buscar_codigos_postales(poblacion, pais)
 
-    def crear_y_inicializar_db(self, company_id: int, engine_type: str, initiator: str | None = None) -> bool:
+    def crear_y_inicializar_db(
+        self, company_id: int, engine_type: str, initiator: str | None = None
+    ) -> bool:
         """Crea la base de datos en el motor especificado y la inicializa (init_db).
 
         engine_type: 'mariadb' or 'postgresql'
         initiator: username or id for audit logs
         Returns True on success, False on failure.
         """
-        logger = logging.getLogger('modules.empresas.controller')
+        logger = logging.getLogger("modules.empresas.controller")
 
         try:
             empresa = self.obtener_por_id_internal(company_id)
@@ -144,26 +149,28 @@ class EmpresasController(QObject):
                 return False
 
             # Pick DB connection info depending on engine type
-            if engine_type == 'mariadb':
-                host = getattr(empresa, 'host_mariadb', None)
-                port = int(getattr(empresa, 'puerto_mariadb', 3306) or 3306)
-                dbname = getattr(empresa, 'nombre_base_datos_maria_db', None)
-                user = getattr(empresa, 'usuario_mariadb', None)
-                pwd = getattr(empresa, 'password_mariadb', None)
-                default_db = 'mysql'
-                driver = 'mysql+pymysql'
+            if engine_type == "mariadb":
+                host = getattr(empresa, "host_mariadb", None)
+                port = int(getattr(empresa, "puerto_mariadb", 3306) or 3306)
+                dbname = getattr(empresa, "nombre_base_datos_maria_db", None)
+                user = getattr(empresa, "usuario_mariadb", None)
+                pwd = getattr(empresa, "password_mariadb", None)
+                default_db = "mysql"
+                driver = "mysql+pymysql"
             else:
                 # default to postgresql
-                host = getattr(empresa, 'host_postgresql', None)
-                port = int(getattr(empresa, 'puerto_postgresql', 5432) or 5432)
-                dbname = getattr(empresa, 'nombre_base_datos_postgresql', None)
-                user = getattr(empresa, 'usuario_postgresql', None)
-                pwd = getattr(empresa, 'password_postgresql', None)
-                default_db = 'postgres'
-                driver = 'postgresql+psycopg2'
+                host = getattr(empresa, "host_postgresql", None)
+                port = int(getattr(empresa, "puerto_postgresql", 5432) or 5432)
+                dbname = getattr(empresa, "nombre_base_datos_postgresql", None)
+                user = getattr(empresa, "usuario_postgresql", None)
+                pwd = getattr(empresa, "password_postgresql", None)
+                default_db = "postgres"
+                driver = "postgresql+psycopg2"
 
             if not host or not dbname:
-                self.error_ocurrido.emit(self.tr("Faltan datos de conexión para crear la BD"))
+                self.error_ocurrido.emit(
+                    self.tr("Faltan datos de conexión para crear la BD")
+                )
                 return False
 
             # Try to connect to the server (default database) and create the DB
@@ -171,15 +178,16 @@ class EmpresasController(QObject):
                 # If credentials missing, try using main DB admin credentials from config
                 if not user:
                     from core.config import config as env_config
+
                     # attempt to use main database credentials as fallback
-                    main_url = env_config.get_database_url('main')
+                    main_url = env_config.get_database_url("main")
                     # parse main_url (simple split) to extract user/pwd
                     # format: driver://user:pass@host:port/db
                     try:
-                        suffix = main_url.split('://', 1)[1]
-                        creds_host = suffix.split('@', 1)[0]
-                        if ':' in creds_host:
-                            u, p = creds_host.split(':', 1)
+                        suffix = main_url.split("://", 1)[1]
+                        creds_host = suffix.split("@", 1)[0]
+                        if ":" in creds_host:
+                            u, p = creds_host.split(":", 1)
                             user = user or u
                             pwd = pwd or p
                     except Exception:
@@ -188,14 +196,17 @@ class EmpresasController(QObject):
                 engine_url = f"{driver}://{user}:{pwd}@{host}:{port}/{default_db}"
 
                 from core.db import get_engine_from_url
+
                 tmp_engine = get_engine_from_url(engine_url)
                 with tmp_engine.connect() as conn:
                     # Create database for MariaDB/Postgres with safe charset/collation for MySQL
-                    if engine_type == 'mariadb':
-                        stmt = text(f"CREATE DATABASE IF NOT EXISTS `{dbname}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;")
+                    if engine_type == "mariadb":
+                        stmt = text(
+                            f"CREATE DATABASE IF NOT EXISTS `{dbname}` DEFAULT CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+                        )
                     else:
                         # PostgreSQL: try to create database (requires superuser normally)
-                        stmt = text(f"CREATE DATABASE \"{dbname}\";")
+                        stmt = text(f'CREATE DATABASE "{dbname}";')
                     try:
                         conn.execute(stmt)
                     except Exception as e:
@@ -204,18 +215,24 @@ class EmpresasController(QObject):
                         # attempt raw SQL execution
                         try:
                             conn.execute(text(str(stmt)))
-                        except Exception as e2:
-                            logger.exception("Failed to create database (may need admin privileges)")
+                        except Exception:
+                            logger.exception(
+                                "Failed to create database (may need admin privileges)"
+                            )
                             # continue, maybe DB exists or admin required
 
             except Exception as outer_e:
-                logger.exception(f"Error conectando al servidor para crear la BD: {outer_e}")
+                logger.exception(
+                    f"Error conectando al servidor para crear la BD: {outer_e}"
+                )
                 # still proceed to initialization attempt (it may already exist)
 
             # Now initialize schema in the target DB (this will create tables via init_db)
             try:
                 set_database_for_company(company_id, init=True, initiator=initiator)
-                self.operation_success.emit(self.tr("Base de datos creada/inicializada"))
+                self.operation_success.emit(
+                    self.tr("Base de datos creada/inicializada")
+                )
                 return True
             except Exception as e:
                 logger.exception(f"Error inicializando BD para la empresa: {e}")

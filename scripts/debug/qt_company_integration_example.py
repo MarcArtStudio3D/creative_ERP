@@ -13,19 +13,32 @@ sys.path.insert(0, str(root_dir))
 
 # Importar módulos necesarios
 try:
-    from PySide6.QtWidgets import (
-            QApplication, QMainWindow, QWidget, QVBoxLayout, QHBoxLayout,
-            QLabel, QComboBox, QPushButton, QTextEdit, QGroupBox, QFormLayout,
-            QStatusBar
-    )
     from PySide6.QtCore import Qt, Signal
-    from PySide6.QtGui import QFont, QPalette, QColor
+    from PySide6.QtGui import QColor, QFont, QPalette
+    from PySide6.QtWidgets import (
+        QApplication,
+        QComboBox,
+        QFormLayout,
+        QGroupBox,
+        QLabel,
+        QMainWindow,
+        QPushButton,
+        QStatusBar,
+        QTextEdit,
+        QVBoxLayout,
+        QWidget,
+    )
 except ImportError:
     print("❌ PySide6 no está instalado. Instalar con: pip install PySide6")
     sys.exit(1)
 
-from core.company_manager import company_manager, setup_company_selection_combo, on_company_selected, get_current_company_context
-from core.ui_helpers import show_warning, show_info, show_critical, show_question
+from core.company_manager import (
+    company_manager,
+    get_current_company_context,
+    on_company_selected,
+    setup_company_selection_combo,
+)
+from core.ui_helpers import show_critical, show_info, show_warning
 
 
 class CompanySelectionWidget(QWidget):
@@ -105,7 +118,11 @@ class CompanySelectionWidget(QWidget):
             self.log_message(self.tr("✅ Empresas cargadas exitosamente"))
         except Exception as e:
             self.log_message(f"❌ Error cargando empresas: {e}")
-            show_critical(self, self.tr("Error"), self.tr("Error cargando empresas:\n{}").format(str(e)))
+            show_critical(
+                self,
+                self.tr("Error"),
+                self.tr("Error cargando empresas:\n{}").format(str(e)),
+            )
 
     def on_company_combo_changed(self, index):
         """Maneja el cambio de selección en el combo de empresas."""
@@ -134,7 +151,13 @@ class CompanySelectionWidget(QWidget):
             self.log_message(self.tr("❌ Error seleccionando empresa"))
             # Resetear combo a opción por defecto
             self.company_combo.setCurrentIndex(0)
-            show_warning(self, self.tr("Error"), self.tr("No se pudo seleccionar la empresa.\nVerifique la configuración de base de datos."))
+            show_warning(
+                self,
+                self.tr("Error"),
+                self.tr(
+                    "No se pudo seleccionar la empresa.\nVerifique la configuración de base de datos."
+                ),
+            )
 
     def validate_current_company(self):
         """Valida la configuración de la empresa actualmente seleccionada."""
@@ -142,7 +165,9 @@ class CompanySelectionWidget(QWidget):
         company_id = self.company_combo.itemData(current_index)
 
         if company_id is None:
-            show_info(self, self.tr("Validación"), self.tr("Seleccione una empresa primero."))
+            show_info(
+                self, self.tr("Validación"), self.tr("Seleccione una empresa primero.")
+            )
             return
 
         self.log_message(f"Validando configuración de empresa ID: {company_id}")
@@ -150,33 +175,47 @@ class CompanySelectionWidget(QWidget):
         try:
             validation = company_manager.validate_company_database(company_id)
 
-            if validation['valid']:
+            if validation["valid"]:
                 self.log_message("✅ Configuración de base de datos válida")
-                show_info(self, self.tr("Validación Exitosa"),
-                    self.tr("La configuración de base de datos es correcta.\nEmpresa: {company}\nMotor: {motor}\nBase de datos: {db}").format(
-                        company=validation['company_info']['company_name'],
-                        motor=validation['company_info']['motor_base_datos'],
-                        db=validation['company_info']['database_name']
-                    ))
+                show_info(
+                    self,
+                    self.tr("Validación Exitosa"),
+                    self.tr(
+                        "La configuración de base de datos es correcta.\nEmpresa: {company}\nMotor: {motor}\nBase de datos: {db}"
+                    ).format(
+                        company=validation["company_info"]["company_name"],
+                        motor=validation["company_info"]["motor_base_datos"],
+                        db=validation["company_info"]["database_name"],
+                    ),
+                )
             else:
                 self.log_message(f"❌ Configuración inválida: {validation['message']}")
-                show_warning(self, self.tr("Validación Fallida"),
-                    self.tr("La configuración de base de datos no es válida:\n{}").format(validation['message']))
+                show_warning(
+                    self,
+                    self.tr("Validación Fallida"),
+                    self.tr(
+                        "La configuración de base de datos no es válida:\n{}"
+                    ).format(validation["message"]),
+                )
 
         except Exception as e:
             self.log_message(f"❌ Error en validación: {e}")
-            show_critical(self, self.tr("Error"), self.tr("Error validando configuración:\n{}").format(str(e)))
+            show_critical(
+                self,
+                self.tr("Error"),
+                self.tr("Error validando configuración:\n{}").format(str(e)),
+            )
 
     def update_company_info(self, context):
         """Actualiza la información mostrada de la empresa actual."""
-        if not context or not context.get('has_company'):
+        if not context or not context.get("has_company"):
             self.company_name_label.setText("Ninguna empresa seleccionada")
             self.database_label.setText("N/A")
             self.motor_label.setText("N/A")
         else:
-            self.company_name_label.setText(context['company_name'])
-            self.database_label.setText(context['database_name'])
-            self.motor_label.setText(context['motor_bd'])
+            self.company_name_label.setText(context["company_name"])
+            self.database_label.setText(context["database_name"])
+            self.motor_label.setText(context["motor_bd"])
 
     def log_message(self, message):
         """Agrega un mensaje al log."""
@@ -227,10 +266,16 @@ class MainWindow(QMainWindow):
         content_group = QGroupBox(self.tr("Contenido de la Aplicación"))
         content_layout = QVBoxLayout()
 
-        self.content_label = QLabel(self.tr("Aquí iría el contenido principal de tu aplicación.\n"
-                       "Cuando cambies de empresa, esta área se actualizaría automáticamente."))
+        self.content_label = QLabel(
+            self.tr(
+                "Aquí iría el contenido principal de tu aplicación.\n"
+                "Cuando cambies de empresa, esta área se actualizaría automáticamente."
+            )
+        )
         self.content_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.content_label.setStyleSheet("QLabel { padding: 20px; border: 1px solid #ccc; border-radius: 5px; }")
+        self.content_label.setStyleSheet(
+            "QLabel { padding: 20px; border: 1px solid #ccc; border-radius: 5px; }"
+        )
         content_layout.addWidget(self.content_label)
 
         content_group.setLayout(content_layout)
@@ -241,21 +286,29 @@ class MainWindow(QMainWindow):
         # Barra de estado
         self.status_bar = QStatusBar()
         self.setStatusBar(self.status_bar)
-        self.status_bar.showMessage(self.tr("Listo - Seleccione una empresa para comenzar"))
+        self.status_bar.showMessage(
+            self.tr("Listo - Seleccione una empresa para comenzar")
+        )
 
     def on_company_changed(self, context):
         """Maneja el cambio de empresa."""
-        if context['has_company']:
-            self.status_bar.showMessage(f"Empresa activa: {context['company_name']} - BD: {context['database_name']}")
+        if context["has_company"]:
+            self.status_bar.showMessage(
+                f"Empresa activa: {context['company_name']} - BD: {context['database_name']}"
+            )
 
             # Actualizar contenido de ejemplo
-            self.content_label.setText(f"Company: {context['company_name']}\n"
-                                     f"Database: {context['database_name']}\n"
-                                     f"⚙️  Motor: {context['motor_bd']}\n\n"
-                                     "¡Aquí puedes cargar los módulos específicos de esta empresa!")
+            self.content_label.setText(
+                f"Company: {context['company_name']}\n"
+                f"Database: {context['database_name']}\n"
+                f"⚙️  Motor: {context['motor_bd']}\n\n"
+                "¡Aquí puedes cargar los módulos específicos de esta empresa!"
+            )
         else:
             self.status_bar.showMessage("Ninguna empresa seleccionada")
-            self.content_label.setText(self.tr("Seleccione una empresa para ver su contenido."))
+            self.content_label.setText(
+                self.tr("Seleccione una empresa para ver su contenido.")
+            )
 
 
 def main():
@@ -263,7 +316,7 @@ def main():
     app = QApplication(sys.argv)
 
     # Configurar estilo de la aplicación
-    app.setStyle('Fusion')
+    app.setStyle("Fusion")
 
     # Paleta oscura opcional
     palette = QPalette()

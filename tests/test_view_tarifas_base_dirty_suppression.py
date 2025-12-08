@@ -1,4 +1,3 @@
-
 import pytest
 from PySide6.QtWidgets import QApplication
 
@@ -19,7 +18,9 @@ def test_fill_form_does_not_mark_search_dirty():
     # Simulate user previously having marked fields dirty
     v._search_dirty = True
 
-    v._fill_form({'codigo': 'C1', 'nombre': 'Name', 'moneda': 'EUR', 'descripcion': 'desc'})
+    v._fill_form(
+        {"codigo": "C1", "nombre": "Name", "moneda": "EUR", "descripcion": "desc"}
+    )
 
     # After programmatic fill, the search must be considered clean
     assert v._search_dirty is False

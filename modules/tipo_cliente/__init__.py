@@ -7,4 +7,4 @@ from modules.tipo_cliente.models import TipoCliente, TipoSubCliente
 from modules.tipo_cliente.repository import TipoClienteRepository
 from modules.tipo_cliente.view import TipoClienteView
 
-__all__ = ['TipoCliente', 'TipoSubCliente', 'TipoClienteRepository', 'TipoClienteView']
+__all__ = ["TipoCliente", "TipoSubCliente", "TipoClienteRepository", "TipoClienteView"]

@@ -2,6 +2,7 @@
 """Ensure opening the configuration dialog from the login window doesn't crash."""
 
 import sys
+
 from PySide6.QtWidgets import QApplication
 
 from app.views.login_window_multi import LoginWindowMultiCompany
@@ -13,7 +14,7 @@ class DummyAuthManager:
 
 
 def test_open_config_no_crash(monkeypatch):
-    app = QApplication.instance() or QApplication(sys.argv)
+    QApplication.instance() or QApplication(sys.argv)
 
     auth = DummyAuthManager()
     window = LoginWindowMultiCompany(auth)
@@ -27,7 +28,8 @@ def test_open_config_no_crash(monkeypatch):
         raise _Called()
 
     import app.views.config_dialog as cfg
-    monkeypatch.setattr(cfg.ConfigDialog, 'exec', fake_exec)
+
+    monkeypatch.setattr(cfg.ConfigDialog, "exec", fake_exec)
 
     try:
         # call open_config which will call ConfigDialog(self) and exec() (monkeypatched)
@@ -40,5 +42,5 @@ def test_open_config_no_crash(monkeypatch):
         assert False, "ConfigDialog.exec was not called"
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     sys.exit(test_open_config_no_crash(None))

@@ -1,6 +1,7 @@
 """
 Script de diagnóstico para verificar la conexión a PostgreSQL
 """
+
 import sys
 from pathlib import Path
 
@@ -10,6 +11,7 @@ sys.path.insert(0, str(project_root))
 
 import psycopg2
 from sqlalchemy import text
+
 from core.db import get_engine_from_url
 
 POSTGRES_URL = "postgresql://admin:admin123@192.168.1.28:5432/creative_erp"
@@ -26,22 +28,22 @@ try:
         port=5432,
         user="admin",
         password="admin123",
-        database="creative_erp"
+        database="creative_erp",
     )
     print("   ✅ Conexión exitosa con psycopg2")
-    
+
     cursor = conn.cursor()
     cursor.execute("SELECT version();")
     version = cursor.fetchone()
     print(f"   PostgreSQL version: {version[0]}")
-    
+
     cursor.execute("SELECT current_database();")
     db = cursor.fetchone()
     print(f"   Current database: {db[0]}")
-    
+
     cursor.close()
     conn.close()
-    
+
 except Exception as e:
     print(f"   ❌ Error con psycopg2: {e}")
     print(f"   Tipo de error: {type(e).__name__}")
@@ -54,7 +56,7 @@ try:
         port=5432,
         user="admin",
         password="admin123",
-        database="postgres"  # Conectar a la BD por defecto
+        database="postgres",  # Conectar a la BD por defecto
     )
     cursor = conn.cursor()
     cursor.execute("SELECT datname FROM pg_database WHERE datistemplate = false;")
@@ -62,22 +64,26 @@ try:
     print("   Databases found:")
     for db in databases:
         print(f"      - {db[0]}")
-    
+
     # Verificar permisos del usuario admin
     print("\n   Checking privileges for user 'admin'...")
-    cursor.execute("""
+    cursor.execute(
+        """
         SELECT datname, has_database_privilege('admin', datname, 'CONNECT') as can_connect
         FROM pg_database 
         WHERE datistemplate = false;
-    """)
+    """
+    )
     perms = cursor.fetchall()
     for db, can_connect in perms:
         status = "✅" if can_connect else "❌"
-        print(f"      {status} {db}: {'Puede conectar' if can_connect else 'NO puede conectar'}")
-    
+        print(
+            f"      {status} {db}: {'Puede conectar' if can_connect else 'NO puede conectar'}"
+        )
+
     cursor.close()
     conn.close()
-    
+
 except Exception as e:
     print(f"   ❌ Error listando bases de datos: {e}")
 
@@ -88,9 +94,9 @@ try:
     with engine.connect() as connection:
         result = connection.execute(text("SELECT current_database();"))
         db = result.fetchone()
-        print(f"   ✅ Conexión exitosa con SQLAlchemy")
+        print("   ✅ Conexión exitosa con SQLAlchemy")
         print(f"   Database: {db[0]}")
-        
+
 except Exception as e:
     print(f"   ❌ Error con SQLAlchemy: {e}")
     print(f"   Tipo de error: {type(e).__name__}")

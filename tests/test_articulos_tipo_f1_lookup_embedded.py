@@ -1,6 +1,7 @@
-from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QKeyEvent
 from PySide6.QtCore import QEvent, Qt
+from PySide6.QtGui import QKeyEvent
+from PySide6.QtWidgets import QApplication
+
 from modules.articulos.view import ArticulosView
 from modules.common.db_consulta_view import DBConsultaView
 
@@ -15,21 +16,27 @@ def test_shortcutoverride_f1_is_handled(monkeypatch):
     ensure_qapp()
     v = ArticulosView()
 
-    if not hasattr(v.ui, 'txtCodigoTipo'):
+    if not hasattr(v.ui, "txtCodigoTipo"):
         return
 
     # Ensure editing enabled
-    if hasattr(v.ui, 'botGuardar'):
+    if hasattr(v.ui, "botGuardar"):
         v.ui.botGuardar.setEnabled(True)
 
-    v.controller.current_article = {'id': 1}
+    v.controller.current_article = {"id": 1}
 
-    fake_selected = {'id': 777, 'codigo': 'T-OVR', 'descripcion': 'Tipo Override', 'requiereEAN': True, 'proveedor': False}
+    fake_selected = {
+        "id": 777,
+        "codigo": "T-OVR",
+        "descripcion": "Tipo Override",
+        "requiereEAN": True,
+        "proveedor": False,
+    }
 
     def fake_select(parent, data, headers, campos=None, titulo=None):
         return fake_selected, None
 
-    monkeypatch.setattr(DBConsultaView, 'select_from_data', staticmethod(fake_select))
+    monkeypatch.setattr(DBConsultaView, "select_from_data", staticmethod(fake_select))
 
     # Ensure the widget is focused so ShortcutOverride will point to it
     v.ui.txtCodigoTipo.setFocus()
@@ -40,9 +47,9 @@ def test_shortcutoverride_f1_is_handled(monkeypatch):
     handled = v.eventFilter(v.ui.txtCodigoTipo, ev)
 
     assert handled is True
-    assert v.controller.current_article.get('id_tipo') == 777
-    assert v.ui.txtCodigoTipo.text() == 'T-OVR'
-    if hasattr(v.ui, 'txtcodigo_barras'):
+    assert v.controller.current_article.get("id_tipo") == 777
+    assert v.ui.txtCodigoTipo.text() == "T-OVR"
+    if hasattr(v.ui, "txtcodigo_barras"):
         assert v.ui.txtcodigo_barras.isVisible() is True
-    if hasattr(v.ui, 'txtcodigo_fabricante'):
+    if hasattr(v.ui, "txtcodigo_fabricante"):
         assert v.ui.txtcodigo_fabricante.isVisible() is False

@@ -1,9 +1,16 @@
-from PySide6.QtWidgets import QDialog, QVBoxLayout, QLabel, QComboBox, QPushButton, QMessageBox, QLineEdit, QHBoxLayout
-from core.ui_helpers import show_warning, show_info, show_critical
-from PySide6.QtCore import Qt
+from PySide6.QtWidgets import (
+    QComboBox,
+    QDialog,
+    QHBoxLayout,
+    QLabel,
+    QLineEdit,
+    QPushButton,
+    QVBoxLayout,
+)
 
 from core.company_manager import company_manager
 from core.db import set_database_for_company
+from core.ui_helpers import show_critical, show_info, show_warning
 
 
 class AdminInitCompanyDBDialog(QDialog):
@@ -21,7 +28,11 @@ class AdminInitCompanyDBDialog(QDialog):
 
         self.layout = QVBoxLayout()
 
-        self.info = QLabel(self.tr("Seleccione una empresa y confirme para crear/inicializar su esquema de base de datos."))
+        self.info = QLabel(
+            self.tr(
+                "Seleccione una empresa y confirme para crear/inicializar su esquema de base de datos."
+            )
+        )
         self.info.setWordWrap(True)
         self.layout.addWidget(self.info)
 
@@ -41,7 +52,9 @@ class AdminInitCompanyDBDialog(QDialog):
         self.layout.addLayout(btn_layout)
 
         self.confirm_input = QLineEdit()
-        self.confirm_input.setPlaceholderText(self.tr("Escriba CONFIRM_INIT para confirmar"))
+        self.confirm_input.setPlaceholderText(
+            self.tr("Escriba CONFIRM_INIT para confirmar")
+        )
         self.layout.addWidget(self.confirm_input)
 
         self.setLayout(self.layout)
@@ -51,7 +64,9 @@ class AdminInitCompanyDBDialog(QDialog):
             companies = company_manager.get_available_companies()
             self.combo.clear()
             for c in companies:
-                self.combo.addItem(f"{c['id']} — {c['codigo']} - {c['nombre']}", c['id'])
+                self.combo.addItem(
+                    f"{c['id']} — {c['codigo']} - {c['nombre']}", c["id"]
+                )
         except Exception as e:
             show_critical(self, self.tr("Error"), str(e))
 
@@ -61,10 +76,16 @@ class AdminInitCompanyDBDialog(QDialog):
             show_warning(self, self.tr("Seleccione"), self.tr("Seleccione una empresa"))
             return
         result = company_manager.validate_company_database(cid)
-        if result.get('valid'):
-            show_info(self, self.tr("OK"), self.tr("Conexión a la BD de la empresa válida"))
+        if result.get("valid"):
+            show_info(
+                self, self.tr("OK"), self.tr("Conexión a la BD de la empresa válida")
+            )
         else:
-            show_warning(self, self.tr("Falló"), result.get('message') or self.tr('Error de conexión'))
+            show_warning(
+                self,
+                self.tr("Falló"),
+                result.get("message") or self.tr("Error de conexión"),
+            )
 
     def _on_init(self):
         cid = self.combo.currentData()
@@ -72,22 +93,30 @@ class AdminInitCompanyDBDialog(QDialog):
             show_warning(self, self.tr("Seleccione"), self.tr("Seleccione una empresa"))
             return
 
-        if self.confirm_input.text().strip() != 'CONFIRM_INIT':
-            show_warning(self, self.tr("Confirmación"), self.tr("Debe escribir CONFIRM_INIT para confirmar la acción"))
+        if self.confirm_input.text().strip() != "CONFIRM_INIT":
+            show_warning(
+                self,
+                self.tr("Confirmación"),
+                self.tr("Debe escribir CONFIRM_INIT para confirmar la acción"),
+            )
             return
 
         # Who initiated this? Prefer session username if provided
         initiator = None
         try:
-            if self.session and getattr(self.session, 'user', None):
-                initiator = getattr(self.session.user, 'username', None)
+            if self.session and getattr(self.session, "user", None):
+                initiator = getattr(self.session.user, "username", None)
         except Exception:
             initiator = None
 
         try:
             # Switch to company DB and initialize (explicit)
             set_database_for_company(cid, init=True, initiator=initiator)
-            show_info(self, self.tr("Hecho"), self.tr("Inicialización completada. Revise logs para detalles."))
+            show_info(
+                self,
+                self.tr("Hecho"),
+                self.tr("Inicialización completada. Revise logs para detalles."),
+            )
             self.close()
         except Exception as e:
             show_critical(self, self.tr("Error"), str(e))

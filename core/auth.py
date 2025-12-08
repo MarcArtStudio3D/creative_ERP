@@ -4,17 +4,17 @@ Sistema de gestión de usuarios, roles y permisos.
 Define la estructura de usuarios, roles predefinidos y control de acceso.
 """
 
-from dataclasses import dataclass, field
-from typing import List, Dict, Optional, TYPE_CHECKING
-from enum import Enum
-from datetime import datetime
 import hashlib
+import json
+import logging
+import os
 import secrets
+from dataclasses import dataclass, field
+from datetime import datetime
+from enum import Enum
+from typing import TYPE_CHECKING, Dict, List, Optional
 
 from core.module_manager import Permission
-import json
-import os
-import logging
 
 if TYPE_CHECKING:
     from core.business import CompanyContext
@@ -25,13 +25,14 @@ class UserRole(Enum):
     Roles predefinidos del sistema.
     Cada rol tiene un conjunto de permisos asociados.
     """
-    ADMIN = "admin"                    # Acceso total al sistema
-    MANAGER = "manager"                # Gestor: acceso a todo excepto configuración
-    ACCOUNTANT = "accountant"          # Contable: acceso a contabilidad y finanzas
-    SALES = "sales"                    # Ventas: clientes, presupuestos, facturas
-    PROJECT_MANAGER = "project_manager" # Gestor de proyectos
-    EMPLOYEE = "employee"              # Empleado básico: solo sus proyectos y tiempo
-    VIEWER = "viewer"                  # Solo lectura
+
+    ADMIN = "admin"  # Acceso total al sistema
+    MANAGER = "manager"  # Gestor: acceso a todo excepto configuración
+    ACCOUNTANT = "accountant"  # Contable: acceso a contabilidad y finanzas
+    SALES = "sales"  # Ventas: clientes, presupuestos, facturas
+    PROJECT_MANAGER = "project_manager"  # Gestor de proyectos
+    EMPLOYEE = "employee"  # Empleado básico: solo sus proyectos y tiempo
+    VIEWER = "viewer"  # Solo lectura
 
 
 @dataclass
@@ -39,28 +40,33 @@ class User:
     """
     Representa un usuario del sistema.
     """
+
     id: int
-    username: str                      # Nombre de usuario (login)
+    username: str  # Nombre de usuario (login)
     email: str
-    full_name: str                     # Nombre completo
-    password_hash: str                 # Hash de la contraseña (nunca guardar en texto plano)
-    role: UserRole                     # Rol principal del usuario
-    is_active: bool = True             # Si el usuario está activo
+    full_name: str  # Nombre completo
+    password_hash: str  # Hash de la contraseña (nunca guardar en texto plano)
+    role: UserRole  # Rol principal del usuario
+    is_active: bool = True  # Si el usuario está activo
     created_at: datetime = field(default_factory=datetime.now)
     last_login: Optional[datetime] = None
-    
+
     # Multi-empresa
-    allowed_groups: List[int] = field(default_factory=list)      # IDs de grupos a los que tiene acceso
-    allowed_companies: List[int] = field(default_factory=list)   # IDs de empresas a las que tiene acceso
-    
+    allowed_groups: List[int] = field(
+        default_factory=list
+    )  # IDs de grupos a los que tiene acceso
+    allowed_companies: List[int] = field(
+        default_factory=list
+    )  # IDs de empresas a las que tiene acceso
+
     # Permisos personalizados por módulo (sobrescriben los del rol)
     custom_permissions: Dict[str, List[Permission]] = field(default_factory=dict)
-    
+
     def __post_init__(self):
         """Inicializa permisos si no existen."""
         if not self.custom_permissions:
             self.custom_permissions = {}
-    
+
     def get_effective_permissions(self) -> Dict[str, List[Permission]]:
         """
         Obtiene los permisos efectivos del usuario.
@@ -68,7 +74,7 @@ class User:
         """
         # Permisos base según el rol
         role_permissions = get_role_permissions(self.role)
-        
+
         # Combinar con permisos personalizados
         effective = role_permissions.copy()
         for module_id, perms in self.custom_permissions.items():
@@ -77,29 +83,29 @@ class User:
                 effective[module_id] = list(set(effective[module_id] + perms))
             else:
                 effective[module_id] = perms
-        
+
         return effective
-    
+
     def has_permission(self, module_id: str, permission: Permission) -> bool:
         """
         Verifica si el usuario tiene un permiso específico en un módulo.
-        
+
         Args:
             module_id: ID del módulo
             permission: Permiso a verificar
-        
+
         Returns:
             True si tiene el permiso
         """
         perms = self.get_effective_permissions()
         module_perms = perms.get(module_id, [])
-        
+
         # Admin siempre tiene acceso
         if Permission.ADMIN in module_perms:
             return True
-        
+
         return permission in module_perms
-    
+
     @staticmethod
     def hash_password(password: str) -> str:
         """
@@ -109,11 +115,11 @@ class User:
         salt = secrets.token_hex(16)
         pwd_hash = hashlib.sha256((password + salt).encode()).hexdigest()
         return f"{salt}${pwd_hash}"
-    
+
     def verify_password(self, password: str) -> bool:
         """Verifica si la contraseña es correcta."""
         try:
-            salt, stored_hash = self.password_hash.split('$')
+            salt, stored_hash = self.password_hash.split("$")
             pwd_hash = hashlib.sha256((password + salt).encode()).hexdigest()
             return pwd_hash == stored_hash
         except:
@@ -123,11 +129,11 @@ class User:
 def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
     """
     Obtiene los permisos predefinidos para cada rol.
-    
+
     Returns:
         Diccionario {module_id: [permissions]}
     """
-    
+
     # ADMIN: Acceso total a todo
     if role == UserRole.ADMIN:
         perms = {
@@ -144,34 +150,68 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "proyectos": [Permission.ADMIN],
             "tiempo": [Permission.ADMIN],
             "usuarios": [Permission.ADMIN],
-                "configuracion": [Permission.ADMIN],
-                "informes": [Permission.ADMIN],
-                "empresas": [Permission.ADMIN],
-                "gestor_modulos": [Permission.ADMIN],
+            "configuracion": [Permission.ADMIN],
+            "informes": [Permission.ADMIN],
+            "empresas": [Permission.ADMIN],
+            "gestor_modulos": [Permission.ADMIN],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     # MANAGER: Gestión completa excepto usuarios y configuración
     elif role == UserRole.MANAGER:
         perms = {
-            "clientes": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
-            "facturas": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.EXPORT, Permission.PRINT],
-            "albaranes": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.PRINT],
-            "presupuestos": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE, Permission.PRINT],
+            "clientes": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.DELETE,
+            ],
+            "facturas": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.DELETE,
+                Permission.EXPORT,
+                Permission.PRINT,
+            ],
+            "albaranes": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.DELETE,
+                Permission.PRINT,
+            ],
+            "presupuestos": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.DELETE,
+                Permission.PRINT,
+            ],
             "proveedores": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "facturas_compra": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "articulos": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "almacen": [Permission.READ, Permission.UPDATE],
             "contabilidad": [Permission.READ],
             "tesoreria": [Permission.READ, Permission.CREATE, Permission.UPDATE],
-            "proyectos": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
+            "proyectos": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.DELETE,
+            ],
             "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "informes": [Permission.READ, Permission.EXPORT],
-                "empresas": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.DELETE],
-                "gestor_modulos": [Permission.READ],
+            "empresas": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.DELETE,
+            ],
+            "gestor_modulos": [Permission.READ],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     # ACCOUNTANT: Contabilidad y finanzas
     elif role == UserRole.ACCOUNTANT:
         perms = {
@@ -184,20 +224,25 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "informes": [Permission.READ, Permission.EXPORT],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     # SALES: Ventas y clientes
     elif role == UserRole.SALES:
         perms = {
             "clientes": [Permission.READ, Permission.CREATE, Permission.UPDATE],
             "facturas": [Permission.READ, Permission.CREATE, Permission.PRINT],
             "albaranes": [Permission.READ, Permission.CREATE, Permission.PRINT],
-            "presupuestos": [Permission.READ, Permission.CREATE, Permission.UPDATE, Permission.PRINT],
+            "presupuestos": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+                Permission.PRINT,
+            ],
             "articulos": [Permission.READ],
             "proyectos": [Permission.READ],
             "informes": [Permission.READ],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     # PROJECT_MANAGER: Gestión de proyectos
     elif role == UserRole.PROJECT_MANAGER:
         perms = {
@@ -209,16 +254,20 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "informes": [Permission.READ],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     # EMPLOYEE: Empleado básico
     elif role == UserRole.EMPLOYEE:
         perms = {
             "proyectos": [Permission.READ],  # Solo sus proyectos
-            "tiempo": [Permission.READ, Permission.CREATE, Permission.UPDATE],  # Su tiempo
+            "tiempo": [
+                Permission.READ,
+                Permission.CREATE,
+                Permission.UPDATE,
+            ],  # Su tiempo
             "clientes": [Permission.READ],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     # VIEWER: Solo lectura
     elif role == UserRole.VIEWER:
         perms = {
@@ -231,7 +280,7 @@ def get_role_permissions(role: UserRole) -> Dict[str, List[Permission]]:
             "informes": [Permission.READ],
         }
         return _apply_overrides_for_role(role, perms)
-    
+
     return _apply_overrides_for_role(role, {})
 
 
@@ -239,10 +288,10 @@ def _load_role_overrides() -> Dict[str, Dict]:
     """Carga overrides de permisos por rol desde `role_permissions.json` en la raíz del repo."""
     try:
         base = os.path.dirname(os.path.dirname(__file__))
-        path = os.path.join(base, 'role_permissions.json')
+        path = os.path.join(base, "role_permissions.json")
         if not os.path.exists(path):
             return {}
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, "r", encoding="utf-8") as f:
             data = json.load(f)
         return data
     except Exception:
@@ -259,21 +308,23 @@ def _perm_from_str(s: str):
         # Normalize common names
         key = s.strip().upper()
         mapping = {
-            'READ': Permission.READ,
-            'CREATE': Permission.CREATE,
-            'UPDATE': Permission.UPDATE,
-            'DELETE': Permission.DELETE,
-            'ADMIN': Permission.ADMIN,
-            'EXPORT': Permission.EXPORT,
-            'IMPORT': Permission.IMPORT,
-            'PRINT': Permission.PRINT,
+            "READ": Permission.READ,
+            "CREATE": Permission.CREATE,
+            "UPDATE": Permission.UPDATE,
+            "DELETE": Permission.DELETE,
+            "ADMIN": Permission.ADMIN,
+            "EXPORT": Permission.EXPORT,
+            "IMPORT": Permission.IMPORT,
+            "PRINT": Permission.PRINT,
         }
         return mapping.get(key)
     except Exception:
         return None
 
 
-def _apply_overrides_for_role(role: UserRole, base: Dict[str, List[Permission]]) -> Dict[str, List[Permission]]:
+def _apply_overrides_for_role(
+    role: UserRole, base: Dict[str, List[Permission]]
+) -> Dict[str, List[Permission]]:
     """Merge overrides from `_ROLE_OVERRIDES` into the base permission map for `role`.
 
     Overrides file structure expected: { "admin": { "empresas": ["ADMIN"], ... }, ... }
@@ -313,25 +364,29 @@ class Session:
     """
     Representa una sesión de usuario activa.
     """
+
     user: User
     login_time: datetime
     token: str  # Token de sesión para validación
-    company_context: Optional['CompanyContext'] = None  # Contexto multi-empresa
-    
+    company_context: Optional["CompanyContext"] = None  # Contexto multi-empresa
+
     def is_valid(self) -> bool:
         """Verifica si la sesión es válida."""
         return self.user.is_active
-    
+
     def has_permission(self, module_id: str, permission: Permission) -> bool:
         """Shortcut para verificar permisos desde la sesión."""
         return self.user.has_permission(module_id, permission)
-    
+
     def get_company_name(self) -> str:
         """Obtiene el nombre de la empresa activa."""
         if self.company_context:
-            return self.company_context.company.nombre_comercial or self.company_context.company.nombre_fiscal
+            return (
+                self.company_context.company.nombre_comercial
+                or self.company_context.company.nombre_fiscal
+            )
         return "Sin empresa"
-    
+
     def get_group_name(self) -> str:
         """Obtiene el nombre del grupo activo."""
         if self.company_context:
@@ -343,75 +398,89 @@ class AuthenticationManager:
     """
     Gestor de autenticación y sesiones.
     """
-    
+
     def __init__(self):
         self._current_session: Optional[Session] = None
         self._logger = logging.getLogger(__name__)
-    
+
     def login(self, username: str, password: str, user_repository) -> Optional[Session]:
         """
         Intenta autenticar un usuario.
-        
+
         Args:
             username: Nombre de usuario
             password: Contraseña
             user_repository: Repositorio de usuarios (inyección de dependencia)
-        
+
         Returns:
             Session si el login es exitoso, None en caso contrario
         """
         user = user_repository.get_by_username(username)
-        
+
         if user and user.is_active and user.verify_password(password):
             token = secrets.token_urlsafe(32)
-            session = Session(
-                user=user,
-                login_time=datetime.now(),
-                token=token
-            )
+            session = Session(user=user, login_time=datetime.now(), token=token)
             self._current_session = session
             user.last_login = datetime.now()
             user_repository.update(user)
             try:
-                self._logger.info("Login successful for user=%s id=%s", user.username, getattr(user, 'id', None))
+                self._logger.info(
+                    "Login successful for user=%s id=%s",
+                    user.username,
+                    getattr(user, "id", None),
+                )
             except Exception:
                 pass
             return session
         else:
             try:
                 # Avoid logging passwords, only username and attempt
-                uname = username or '<unknown>'
+                uname = username or "<unknown>"
                 self._logger.warning("Login failed for user=%s", uname)
             except Exception:
                 pass
-        
+
         return None
-    
+
     def logout(self):
         """Cierra la sesión actual."""
         if self._current_session:
             try:
-                logging.getLogger(__name__).info("Logout: user=%s id=%s", self._current_session.user.username, getattr(self._current_session.user, 'id', None))
+                logging.getLogger(__name__).info(
+                    "Logout: user=%s id=%s",
+                    self._current_session.user.username,
+                    getattr(self._current_session.user, "id", None),
+                )
             except Exception:
                 pass
         self._current_session = None
-    
+
     def get_current_session(self) -> Optional[Session]:
         """Obtiene la sesión actual."""
         return self._current_session
-    
+
     def require_permission(self, module_id: str, permission: Permission) -> bool:
         """
         Verifica si la sesión actual tiene un permiso.
         Útil para decoradores o validaciones.
-        
+
         Returns:
             True si tiene permiso, False si no
         """
         if not self._current_session:
-            logging.getLogger(__name__).debug("Permission check failed - no active session for module=%s permission=%s", module_id, permission)
+            logging.getLogger(__name__).debug(
+                "Permission check failed - no active session for module=%s permission=%s",
+                module_id,
+                permission,
+            )
             return False
-        
+
         ok = self._current_session.has_permission(module_id, permission)
-        logging.getLogger(__name__).debug("Permission check: user=%s module=%s permission=%s result=%s", self._current_session.user.username, module_id, permission, ok)
+        logging.getLogger(__name__).debug(
+            "Permission check: user=%s module=%s permission=%s result=%s",
+            self._current_session.user.username,
+            module_id,
+            permission,
+            ok,
+        )
         return ok

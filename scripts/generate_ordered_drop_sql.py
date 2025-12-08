@@ -15,10 +15,13 @@ Usage examples:
 
 """
 from __future__ import annotations
+
 import argparse
-from typing import Set, List, Dict
-from core.db import set_current_database, get_engine, get_database_url
+from typing import Dict, List, Set
+
 from sqlalchemy import text
+
+from core.db import get_engine, set_current_database
 
 
 def find_children(engine, table: str) -> Set[str]:
@@ -100,62 +103,76 @@ def generate_drop_sql(order: List[str]) -> str:
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Generate ordered DROP SQL for main DB by FK dependencies')
-    parser.add_argument('--tables', help='Comma separated list of root tables to remove (default: articulos, clientes, familias, subfamilias, tarifas)')
-    parser.add_argument('--out-file', help='Write SQL to a file')
-    parser.add_argument('--apply', action='store_true', help='Execute the generated SQL (destructive)')
-    parser.add_argument('--confirm', help="Confirmation token required to run destructive drops. Type 'DELETE_MAIN' to confirm")
+    parser = argparse.ArgumentParser(
+        description="Generate ordered DROP SQL for main DB by FK dependencies"
+    )
+    parser.add_argument(
+        "--tables",
+        help="Comma separated list of root tables to remove (default: articulos, clientes, familias, subfamilias, tarifas)",
+    )
+    parser.add_argument("--out-file", help="Write SQL to a file")
+    parser.add_argument(
+        "--apply", action="store_true", help="Execute the generated SQL (destructive)"
+    )
+    parser.add_argument(
+        "--confirm",
+        help="Confirmation token required to run destructive drops. Type 'DELETE_MAIN' to confirm",
+    )
 
     args = parser.parse_args()
 
-    roots = ['articulos', 'clientes', 'familias', 'subfamilias', 'tarifas']
+    roots = ["articulos", "clientes", "familias", "subfamilias", "tarifas"]
     if args.tables:
-        roots = [t.strip() for t in args.tables.split(',') if t.strip()]
+        roots = [t.strip() for t in args.tables.split(",") if t.strip()]
 
-    set_current_database('main')
+    set_current_database("main")
     engine = get_engine()
 
-    print('Building dependency graph from roots:', roots)
+    print("Building dependency graph from roots:", roots)
     graph = build_dependency_graph(engine, roots)
 
-    print('Dependency graph (parent -> children):')
+    print("Dependency graph (parent -> children):")
     for parent, children in sorted(graph.items()):
-        print(f' - {parent}: {sorted(children)}')
+        print(f" - {parent}: {sorted(children)}")
 
     order = dfs_postorder(graph)
-    print('\nComputed drop order (child -> parent):')
+    print("\nComputed drop order (child -> parent):")
     for i, t in enumerate(order, 1):
-        print(f'{i:02d}. {t}')
+        print(f"{i:02d}. {t}")
 
     sql = generate_drop_sql(order)
-    print('\nGenerated DROP SQL (dry-run):')
+    print("\nGenerated DROP SQL (dry-run):")
     print(sql)
 
     if args.out_file:
-        with open(args.out_file, 'w', encoding='utf-8') as fh:
+        with open(args.out_file, "w", encoding="utf-8") as fh:
             fh.write(sql)
-        print('\nWrote SQL to', args.out_file)
+        print("\nWrote SQL to", args.out_file)
 
     if not args.apply:
-        print('\nDry-run only. Use --apply and --confirm DELETE_MAIN to actually execute.')
+        print(
+            "\nDry-run only. Use --apply and --confirm DELETE_MAIN to actually execute."
+        )
         return
 
-    if args.confirm != 'DELETE_MAIN':
-        print('\nMissing or incorrect confirmation token. To execute drops you must pass --confirm DELETE_MAIN')
+    if args.confirm != "DELETE_MAIN":
+        print(
+            "\nMissing or incorrect confirmation token. To execute drops you must pass --confirm DELETE_MAIN"
+        )
         return
 
-    print('\nExecuting DROP statements on main (this is destructive).')
+    print("\nExecuting DROP statements on main (this is destructive).")
     try:
         with engine.begin() as conn:
             for stmt in sql.splitlines():
                 if not stmt.strip():
                     continue
-                print('Executing:', stmt)
+                print("Executing:", stmt)
                 conn.execute(text(stmt))
-        print('\nAll statements executed.')
+        print("\nAll statements executed.")
     except Exception as e:
-        print('Error executing drops:', e)
+        print("Error executing drops:", e)
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     main()

@@ -1,4 +1,3 @@
-import types
 from datetime import date as _date
 
 import pytest
@@ -7,6 +6,7 @@ from core.utils import qdate_to_date
 
 try:
     from PySide6.QtCore import QDate
+
     HAS_QT = True
 except Exception:
     HAS_QT = False
@@ -21,7 +21,9 @@ def test_qt_qdate_to_date():
     qd = QDate(2023, 11, 20)
     res = qdate_to_date(qd)
     assert isinstance(res, _date)
-    assert (res.year, res.month, res.day) == (2023, 11, 20) or (res.year == 2023 and res.month == 11 and res.day == 20)
+    assert (res.year, res.month, res.day) == (2023, 11, 20) or (
+        res.year == 2023 and res.month == 11 and res.day == 20
+    )
 
 
 def test_fake_object_with_toPython():

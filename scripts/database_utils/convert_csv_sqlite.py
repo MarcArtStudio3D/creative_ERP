@@ -1,19 +1,21 @@
-import sqlite3
-import pandas as pd
 import os
+import sqlite3
+
+import pandas as pd
 
 # ----------------------------------------
 # CONFIGURACIÓN
 # ----------------------------------------
 
-CSV_FILE = "france_villes.csv"     # <-- tu CSV ya filtrado
-DB_FILE = "france.db"             # Nombre de la base de datos SQLite
-TABLE_NAME = "villes"           # Nombre de la tabla
+CSV_FILE = "france_villes.csv"  # <-- tu CSV ya filtrado
+DB_FILE = "france.db"  # Nombre de la base de datos SQLite
+TABLE_NAME = "villes"  # Nombre de la tabla
 
 
 # ----------------------------------------
 # FUNCIÓN PRINCIPAL
 # ----------------------------------------
+
 
 def csv_to_sqlite(csv_file, db_file, table_name):
     # Cargar CSV (data.gouv suele usar ';')

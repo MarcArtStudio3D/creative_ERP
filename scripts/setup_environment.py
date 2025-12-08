@@ -5,9 +5,8 @@ Genera archivos .env para desarrollo, testing y producción
 """
 
 import json
-import os
 from pathlib import Path
-from typing import Dict, Any
+from typing import Any, Dict
 
 # Directorio raíz del proyecto
 ROOT_DIR = Path(__file__).parent
@@ -15,13 +14,17 @@ ROOT_DIR = Path(__file__).parent
 # Archivo de configuración base
 CONFIG_FILE = ROOT_DIR / "core" / "config.json"
 
+
 def load_base_config() -> Dict[str, Any]:
     """Carga la configuración base desde config.json."""
     if not CONFIG_FILE.exists():
-        raise FileNotFoundError(f"Archivo de configuración no encontrado: {CONFIG_FILE}")
+        raise FileNotFoundError(
+            f"Archivo de configuración no encontrado: {CONFIG_FILE}"
+        )
 
-    with open(CONFIG_FILE, 'r', encoding='utf-8') as f:
+    with open(CONFIG_FILE, "r", encoding="utf-8") as f:
         return json.load(f)
+
 
 def generate_env_file(env_name: str, config: Dict[str, Any]) -> str:
     """
@@ -29,77 +32,84 @@ def generate_env_file(env_name: str, config: Dict[str, Any]) -> str:
     """
     lines = [
         f"# Creative ERP - Variables de entorno para {env_name.upper()}",
-        f"# Generado automáticamente - NO EDITAR MANUALMENTE",
-        f"",
-        f"# Entorno actual",
+        "# Generado automáticamente - NO EDITAR MANUALMENTE",
+        "",
+        "# Entorno actual",
         f"ENVIRONMENT={env_name}",
-        f"",
-        f"# Base de datos principal (Creative ERP Main)",
+        "",
+        "# Base de datos principal (Creative ERP Main)",
         f"MAIN_DB_HOST={config['databases']['main']['host']}",
         f"MAIN_DB_PORT={config['databases']['main']['port']}",
         f"MAIN_DB_NAME={config['databases']['main']['database']}",
         f"MAIN_DB_USER={config['databases']['main']['username']}",
         f"MAIN_DB_PASSWORD={config['databases']['main']['password']}",
-        f"",
-        f"# Base de datos ArtStudio3D",
+        "",
+        "# Base de datos ArtStudio3D",
         f"ARTSTUDIO_DB_HOST={config['databases']['artstudio3d']['host']}",
         f"ARTSTUDIO_DB_PORT={config['databases']['artstudio3d']['port']}",
         f"ARTSTUDIO_DB_NAME={config['databases']['artstudio3d']['database']}",
         f"ARTSTUDIO_DB_USER={config['databases']['artstudio3d']['username']}",
         f"ARTSTUDIO_DB_PASSWORD={config['databases']['artstudio3d']['password']}",
-        f"",
-        f"# Configuración de logging",
+        "",
+        "# Configuración de logging",
         f"LOG_LEVEL={config['logging']['level']}",
         f"LOG_FILE={config['logging']['file']}",
-        f"",
-        f"# Configuración de UI",
+        "",
+        "# Configuración de UI",
         f"UI_THEME={config['ui']['theme']}",
         f"UI_LANGUAGE={config['ui']['language']}",
-        f"",
-        f"# Configuración de seguridad",
+        "",
+        "# Configuración de seguridad",
         f"SECRET_KEY={config['security']['secret_key']}",
         f"SESSION_TIMEOUT={config['security']['session_timeout']}",
-        f"",
-        f"# Configuración de backups",
+        "",
+        "# Configuración de backups",
         f"BACKUP_ENABLED={config['backup']['enabled']}",
         f"BACKUP_PATH={config['backup']['path']}",
         f"BACKUP_RETENTION_DAYS={config['backup']['retention_days']}",
-        f"",
-        f"# Configuración de email (para notificaciones)",
+        "",
+        "# Configuración de email (para notificaciones)",
         f"SMTP_SERVER={config['email']['smtp_server']}",
         f"SMTP_PORT={config['email']['smtp_port']}",
         f"SMTP_USER={config['email']['smtp_user']}",
         f"SMTP_PASSWORD={config['email']['smtp_password']}",
         f"EMAIL_FROM={config['email']['from_address']}",
-        f"",
-        f"# Configuración específica por entorno",
+        "",
+        "# Configuración específica por entorno",
     ]
 
     # Configuración específica del entorno
     if env_name == "development":
-        lines.extend([
-            f"DEBUG=True",
-            f"SQLALCHEMY_ECHO=True",
-            f"TESTING=False",
-            f"ALLOWED_HOSTS=localhost,127.0.0.1",
-        ])
+        lines.extend(
+            [
+                "DEBUG=True",
+                "SQLALCHEMY_ECHO=True",
+                "TESTING=False",
+                "ALLOWED_HOSTS=localhost,127.0.0.1",
+            ]
+        )
     elif env_name == "testing":
-        lines.extend([
-            f"DEBUG=False",
-            f"SQLALCHEMY_ECHO=False",
-            f"TESTING=True",
-            f"ALLOWED_HOSTS=localhost,127.0.0.1,test.example.com",
-        ])
+        lines.extend(
+            [
+                "DEBUG=False",
+                "SQLALCHEMY_ECHO=False",
+                "TESTING=True",
+                "ALLOWED_HOSTS=localhost,127.0.0.1,test.example.com",
+            ]
+        )
     elif env_name == "production":
-        lines.extend([
-            f"DEBUG=False",
-            f"SQLALCHEMY_ECHO=False",
-            f"TESTING=False",
-            f"ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com",
-        ])
+        lines.extend(
+            [
+                "DEBUG=False",
+                "SQLALCHEMY_ECHO=False",
+                "TESTING=False",
+                "ALLOWED_HOSTS=yourdomain.com,www.yourdomain.com",
+            ]
+        )
 
-    lines.append(f"")
+    lines.append("")
     return "\n".join(lines)
+
 
 def create_env_files():
     """Crea archivos .env para todos los entornos."""
@@ -114,8 +124,8 @@ def create_env_files():
         print("=" * 60)
 
         for env in environments:
-            if env in base_config['environments']:
-                env_config = base_config['environments'][env]
+            if env in base_config["environments"]:
+                env_config = base_config["environments"][env]
 
                 # Generar contenido del archivo .env
                 env_content = generate_env_file(env, env_config)
@@ -124,7 +134,7 @@ def create_env_files():
                 env_file = ROOT_DIR / f".env.{env}"
 
                 # Escribir archivo
-                with open(env_file, 'w', encoding='utf-8') as f:
+                with open(env_file, "w", encoding="utf-8") as f:
                     f.write(env_content)
 
                 print(f"✅ Archivo .env.{env} generado exitosamente")
@@ -132,11 +142,13 @@ def create_env_files():
             else:
                 print(f"⚠️  Configuración para entorno '{env}' no encontrada")
 
-        print(f"\nInstructions:")
-        print(f"   1. Revisar y ajustar los valores en los archivos .env.* según su entorno")
-        print(f"   2. Copiar el archivo apropiado a .env (ej: cp .env.development .env)")
-        print(f"   3. Para producción, usar .env.production como base")
-        print(f"   4. NUNCA subir archivos .env al control de versiones")
+        print("\nInstructions:")
+        print(
+            "   1. Revisar y ajustar los valores en los archivos .env.* según su entorno"
+        )
+        print("   2. Copiar el archivo apropiado a .env (ej: cp .env.development .env)")
+        print("   3. Para producción, usar .env.production como base")
+        print("   4. NUNCA subir archivos .env al control de versiones")
 
     except Exception as e:
         print(f"❌ Error generando archivos de entorno: {e}")
@@ -144,14 +156,21 @@ def create_env_files():
 
     return True
 
+
 def validate_env_files():
     """Valida que los archivos .env generados sean correctos."""
     print("\nChecking generated .env files...")
 
     environments = ["development", "testing", "production"]
     required_vars = [
-        "ENVIRONMENT", "MAIN_DB_HOST", "MAIN_DB_NAME", "ARTSTUDIO_DB_HOST",
-        "LOG_LEVEL", "UI_THEME", "SECRET_KEY", "DEBUG"
+        "ENVIRONMENT",
+        "MAIN_DB_HOST",
+        "MAIN_DB_NAME",
+        "ARTSTUDIO_DB_HOST",
+        "LOG_LEVEL",
+        "UI_THEME",
+        "SECRET_KEY",
+        "DEBUG",
     ]
 
     all_valid = True
@@ -166,7 +185,7 @@ def validate_env_files():
 
         try:
             # Leer archivo
-            with open(env_file, 'r', encoding='utf-8') as f:
+            with open(env_file, "r", encoding="utf-8") as f:
                 content = f.read()
 
             # Verificar variables requeridas
@@ -186,6 +205,7 @@ def validate_env_files():
             all_valid = False
 
     return all_valid
+
 
 def create_env_example():
     """Crea un archivo .env.example con valores de ejemplo."""
@@ -241,10 +261,11 @@ ALLOWED_HOSTS=localhost,127.0.0.1
 """
 
     example_file = ROOT_DIR / ".env.example"
-    with open(example_file, 'w', encoding='utf-8') as f:
+    with open(example_file, "w", encoding="utf-8") as f:
         f.write(example_content)
 
     print(f"✅ Archivo .env.example creado: {example_file}")
+
 
 def main():
     """Función principal."""
@@ -265,11 +286,12 @@ def main():
     # Crear archivo de ejemplo
     create_env_example()
 
-    print(f"\nSummary:")
-    print(f"   - Archivos .env.* generados para development, testing, production")
-    print(f"   - Archivo .env.example creado como referencia")
-    print(f"   - Para usar: copiar el archivo apropiado a .env")
-    print(f"   - Ejemplo: cp .env.development .env")
+    print("\nSummary:")
+    print("   - Archivos .env.* generados para development, testing, production")
+    print("   - Archivo .env.example creado como referencia")
+    print("   - Para usar: copiar el archivo apropiado a .env")
+    print("   - Ejemplo: cp .env.development .env")
+
 
 if __name__ == "__main__":
     main()

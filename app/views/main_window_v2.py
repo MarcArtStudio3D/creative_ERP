@@ -1303,16 +1303,11 @@ class MainWindowV2(QMainWindow):
             view_class = getattr(module, view_class_name)
 
             # Crear instancia de la vista con parámetros necesarios
+            # Con Peewee no necesitamos pasar sesión
+            # Todos los módulos se inicializan sin sesión
             if module_id == "clientes":
-                # Importar get_session para obtener la sesión de la base de datos actual
-                from core.db import get_session
-
-                current_session = get_session()
-
-                # Para ClientesView, pasar la sesión correcta
-                view_instance = view_class(session=current_session)
+                view_instance = view_class(session=None)  # session=None es compatibilidad
             elif module_id == "articulos":
-                # ArticulosView no requiere sesión en el constructor por ahora, pero es bueno ser explícito
                 view_instance = view_class()
             else:
                 view_instance = view_class()

@@ -236,60 +236,62 @@ def ensure_initialized():
     return database_proxy
 
 
-def init_database(db_name: str = DEFAULT_DB) -> bool:
+def get_company_database_info(company_id: int) -> dict:
     """
-    Inicializa el sistema de base de datos.
+    Obtiene la información de configuración de base de datos de una empresa.
 
     Args:
-        db_name: Nombre de la base de datos inicial
+        company_id: ID de la empresa
 
     Returns:
-        True si se inicializó correctamente
+        Diccionario con la información de la empresa y su BD
     """
     try:
-        success = set_current_database(db_name)
-        if success:
-            logger.info("Database system initialized with: %s", db_name)
-        return success
+        # Cambiar temporalmente a BD main para consultar
+        original_db = get_current_database()
+        if original_db != "main":
+            set_current_database("main")
+
+        try:
+            from core.models import Empresa
+
+            empresa = Empresa.get_by_id(company_id)
+
+            # Construir diccionario de información
+            info = {
+                "company_id": empresa.id,
+                "company_name": empresa.nombre_fiscal,
+                "codigo_empresa": empresa.codigo_empresa,
+                "motor_base_datos": empresa.motor_base_datos,
+                "database_name": None,
+                "database_url": None,
+            }
+
+            # Determinar nombre y URL de BD según el motor
+            motor = empresa.motor_base_datos.lower()
+            if motor == "mariadb" or motor == "mysql":
+                info["database_name"] = empresa.nombre_base_datos_maria_db
+                info["database_url"] = (
+                    f"mysql+pymysql://{empresa.usuario_mariadb}:{empresa.password_mariadb}"
+                    f"@{empresa.host_mariadb}:{empresa.puerto_mariadb}/{empresa.nombre_base_datos_maria_db}"
+                )
+            elif motor == "postgresql":
+                info["database_name"] = empresa.nombre_base_datos_postgresql
+                info["database_url"] = (
+                    f"postgresql://{empresa.usuario_postgresql}:{empresa.password_postgresql}"
+                    f"@{empresa.host_postgresql}:{empresa.puerto_postgresql}/{empresa.nombre_base_datos_postgresql}"
+                )
+            elif motor == "sqlite":
+                info["database_name"] = empresa.ruta_base_datos_sqlite
+                info["database_url"] = f"sqlite:///{empresa.ruta_base_datos_sqlite}"
+
+            return info
+
+        finally:
+            # Restaurar BD original
+            if original_db and original_db != "main":
+                set_current_database(original_db)
+
     except Exception as e:
-        logger.exception("Error initializing database: %s", e)
-        return False
-
-
-def close_database():
-    """Cierra la conexión de base de datos actual."""
-    global _current_database
-
-    if _current_database is not None:
-        try:
-            _current_database.close()
-            _current_database = None
-            logger.debug("Database connection closed")
-        except Exception as e:
-            logger.exception("Error closing database: %s", e)
-
-
-# NO inicializar automáticamente al importar - dejar que la app lo haga explícitamente
-# Esto evita errores en imports antes de que la configuración esté lista
-_initialized = False
-
-def ensure_initialized():
-    """Asegurar que la BD está inicializada. Llamar antes de usar.
-
-    Solo inicializa si el proxy nunca ha sido configurado. Si ya hay una BD
-    activa (por ejemplo, seleccionada por company_manager), la respeta.
-    """
-    global _initialized, _current_database
-
-    # Si ya tenemos una BD activa, no hacer nada
-    if _current_database is not None:
-        return
-
-    # Solo inicializar si nunca se ha inicializado
-    if not _initialized:
-        try:
-            init_database()
-            _initialized = True
-        except Exception as e:
-            logger.error("Failed to initialize database: %s", e)
-
+        logger.exception("Error getting company database info for company %s: %s", company_id, e)
+        return {}

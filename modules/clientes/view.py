@@ -21,7 +21,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.db import get_session
 from core.utils import format_decimal_value, get_company_decimal_settings, qdate_to_date
 from modules.clientes.controller import ClientesController
 from modules.clientes.models import Cliente, DireccionAlternativa
@@ -112,9 +111,8 @@ class ClientesView(QWidget):
 
         QTimer.singleShot(100, self.forzar_desactivacion_campos)
 
-        # Inicializar datos - usar sesión proporcionada o crear nueva
-        # Nota: session ya no se usa con Peewee, mantener para compatibilidad
-        self.session = session if session is not None else get_session()
+        # Inicializar datos - session ya no se usa con Peewee
+        self.session = None  # Peewee no necesita sesión
 
         # Inicializar controller (maneja repository y modelo)
         # Controller Peewee no necesita session

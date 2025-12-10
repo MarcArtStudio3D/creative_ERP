@@ -26,9 +26,9 @@ class CompanyDatabaseManager:
         Retorna True si la selección fue exitosa.
         """
         try:
-            # Importar tanto peewee_db como el db antiguo para compatibilidad
+            # Usar el sistema Peewee
             from core.peewee_db import set_database_for_company as peewee_set_db
-            from core.db import get_company_database_info
+            from core.peewee_db import get_company_database_info
 
             # Usar el nuevo sistema Peewee
             peewee_set_db(company_id)
@@ -115,8 +115,7 @@ class CompanyDatabaseManager:
         Migrado a Peewee.
         """
         try:
-            from core.db import get_company_database_info
-            from core.peewee_db import create_database
+            from core.peewee_db import get_company_database_info, create_database
 
             info = get_company_database_info(company_id)
 
@@ -142,22 +141,22 @@ class CompanyDatabaseManager:
         """
         Actualiza la configuración de base de datos de una empresa.
         config debe contener: motor_base_datos, nombre_base_datos_maria_db/postgresql, etc.
+        Migrado a Peewee.
         """
         try:
-            from core.db import get_current_database, get_session, set_current_database
+            from core.peewee_db import get_current_database, set_current_database
             from core.models import Empresa
 
             # Guardar base de datos actual
             original_db = get_current_database()
 
             # Cambiar a base de datos principal
-            set_current_database("main")
+            if original_db != "main":
+                set_current_database("main")
 
-            session = None
             try:
-                session = get_session()
-                # Usar session.get para obtener por PK (más directo y eficiente)
-                empresa = session.get(Empresa, company_id)
+                # Obtener empresa con Peewee
+                empresa = Empresa.get_by_id(company_id)
 
                 if not empresa:
                     raise ValueError(f"Empresa con ID {company_id} no encontrada")
@@ -167,7 +166,8 @@ class CompanyDatabaseManager:
                     if hasattr(empresa, key):
                         setattr(empresa, key, value)
 
-                session.commit()
+                # Guardar con Peewee
+                empresa.save()
 
                 logging.getLogger(__name__).info(
                     "Database configuration updated for company %s", company_id
@@ -175,9 +175,9 @@ class CompanyDatabaseManager:
                 return True
 
             finally:
-                set_current_database(original_db)
-                if session:
-                    session.close()
+                # Restaurar BD original
+                if original_db and original_db != "main":
+                    set_current_database(original_db)
 
         except Exception:
             logging.getLogger(__name__).exception("ERROR updating configuration")

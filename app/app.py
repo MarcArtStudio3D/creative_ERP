@@ -3,15 +3,11 @@ Aplicación principal del Creative ERP.
 Gestiona el inicio, login y navegación entre módulos.
 """
 
-import atexit
 import sys
 
 from PySide6.QtWidgets import QApplication
 
-from core.db import close_all_engines
-
-# Registrar cierre de engines al salir de la aplicación
-atexit.register(close_all_engines)
+# Nota: close_all_engines eliminado - Peewee gestiona conexiones automáticamente
 
 import logging
 

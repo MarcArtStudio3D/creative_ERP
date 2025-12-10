@@ -1,58 +1,52 @@
 """
 Repository para Divisiones del Almacén (Secciones, Familias, Subfamilias)
 Sigue el patrón Repository para acceso a datos
+Migrado a Peewee.
 """
 
 from typing import List, Optional
 
-from sqlalchemy.orm import Session
-from sqlmodel import select
+from peewee import DoesNotExist
 
-from core.db import get_session
+from core.peewee_db import ensure_initialized
 from modules.articulos.models import Familia, Seccion, Subfamilia
 
 
 class DivisionesRepository:
-    """Repository para gestionar Secciones, Familias y Subfamilias"""
+    """Repository para gestionar Secciones, Familias y Subfamilias con Peewee"""
 
-    def __init__(self, session: Optional[Session] = None):
+    def __init__(self):
         """
-        Inicializa el repository.
-
-        Args:
-            session: Sesión de SQLAlchemy opcional. Si no se proporciona, usa get_session()
+        Inicializa el repository con Peewee (no necesita sesión).
         """
-        self._external_session = session
-
-    @property
-    def _session(self) -> Session:
-        """Obtiene la sesión actual"""
-        if self._external_session:
-            return self._external_session
-        return get_session()
+        ensure_initialized()
 
     # ==================== SECCIONES ====================
 
     def obtener_todas_secciones(self) -> List[Seccion]:
         """Obtiene todas las secciones ordenadas por código"""
-        stmt = select(Seccion).order_by(Seccion.codigo)
-        return self._session.exec(stmt).all()
+        try:
+            return list(Seccion.select().order_by(Seccion.codigo))
+        except Exception:
+            return []
 
     def obtener_seccion_por_id(self, id_: int) -> Optional[Seccion]:
         """Obtiene una sección por ID"""
-        return self._session.get(Seccion, id_)
+        try:
+            return Seccion.get_by_id(id_)
+        except DoesNotExist:
+            return None
 
     def obtener_seccion_por_codigo(self, codigo: str) -> Optional[Seccion]:
         """Obtiene una sección por código"""
-        stmt = select(Seccion).where(Seccion.codigo == codigo)
-        return self._session.exec(stmt).first()
+        try:
+            return Seccion.get(Seccion.codigo == codigo)
+        except DoesNotExist:
+            return None
 
     def guardar_seccion(self, seccion: Seccion) -> Seccion:
         """Guarda o actualiza una sección"""
-        if seccion.id is None:
-            self._session.add(seccion)
-        self._session.commit()
-        self._session.refresh(seccion)
+        seccion.save()
         return seccion
 
     def borrar_seccion(self, seccion: Seccion) -> bool:

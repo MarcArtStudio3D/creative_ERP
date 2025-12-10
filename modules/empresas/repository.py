@@ -1,14 +1,19 @@
+"""
+Repository Peewee para el módulo de Empresas.
+Migración completa desde SQLModel a Peewee.
+"""
+
 import logging
+import os
+import sqlite3
 from typing import List, Optional
 
-from sqlalchemy import text
-from sqlmodel import select
-
-from core.db import get_session, get_session_for_database
+from core.peewee_db import get_current_database, set_current_database
 from core.models import BusinessGroup, Empresa
 
 
 def remove_accents(input_str):
+    """Elimina acentos de una cadena."""
     import unicodedata
 
     if input_str is None:
@@ -18,76 +23,94 @@ def remove_accents(input_str):
 
 
 class EmpresaRepository:
-    def __init__(self, session=None):
-        self._external_session = session
-        self._main_session = None
+    """Repository para gestión de empresas usando Peewee."""
 
-    def _session(self):
-        # Si se proporcionó una sesión externa, usarla (útil para tests)
-        if self._external_session:
-            return self._external_session
+    def __init__(self):
+        """Inicializar repository."""
+        # Con Peewee no necesitamos gestionar sesiones manualmente
+        pass
 
-        # Si ya tenemos una sesión dedicada a main, verificar que esté activa
-        if self._main_session:
-            try:
-                # Simple check to see if session is valid
-                self._main_session.execute(text("SELECT 1"))
-                return self._main_session
-            except Exception:
-                # Si falla, recrear
-                if self._main_session:
-                    self._main_session.close()
-                self._main_session = None
+    def _ensure_main_db(self):
+        """Asegura que estamos en la BD main."""
+        current = get_current_database()
+        if current != "main":
+            set_current_database("main")
+        return current
 
-        # Obtener una sesión ligada al engine de la BD 'main' usando el helper central.
-        # Esto evita crear engines locales y centraliza la gestión de conexiones.
+    def obtener_todos(self) -> List[Empresa]:
+        """Obtiene todas las empresas."""
         try:
-            if not self._main_session:
-                self._main_session = get_session_for_database("main")
-            return self._main_session
+            original_db = self._ensure_main_db()
+            try:
+                empresas = list(Empresa.select().order_by(Empresa.nombre_fiscal))
+                return empresas
+            finally:
+                if original_db and original_db != "main":
+                    set_current_database(original_db)
         except Exception as e:
-            logging.getLogger(__name__).exception(
-                "Error connecting to main database: %s", e
-            )
-            # Fallback to global session if specific connection fails
-            return get_session()
-
-    def obtener_todos(self) -> list[type[Empresa]]:
-        sess = self._session()
-        stmt = select(Empresa).order_by(Empresa.nombre_fiscal)
-        return sess.exec(stmt).all()
+            logging.getLogger(__name__).exception("Error obteniendo empresas: %s", e)
+            return []
 
     def obtener_grupos(self) -> List[BusinessGroup]:
-        """Obtiene todos los grupos empresariales de la BD principal."""
-        sess = self._session()
-        return sess.exec(select(BusinessGroup)).all()
+        """Obtiene todos los grupos empresariales."""
+        try:
+            original_db = self._ensure_main_db()
+            try:
+                grupos = list(BusinessGroup.select())
+                return grupos
+            finally:
+                if original_db and original_db != "main":
+                    set_current_database(original_db)
+        except Exception as e:
+            logging.getLogger(__name__).exception("Error obteniendo grupos: %s", e)
+            return []
 
     def obtener_por_id(self, id_: int) -> Optional[Empresa]:
-        sess = self._session()
+        """Obtiene una empresa por ID."""
         try:
-            return sess.get(Empresa, id_)
-        except Exception:
-            return sess.exec(select(Empresa).where(Empresa.id == id_)).first()
+            original_db = self._ensure_main_db()
+            try:
+                empresa = Empresa.get_by_id(id_)
+                return empresa
+            finally:
+                if original_db and original_db != "main":
+                    set_current_database(original_db)
+        except Empresa.DoesNotExist:
+            return None
+        except Exception as e:
+            logging.getLogger(__name__).exception("Error obteniendo empresa por ID: %s", e)
+            return None
 
     def guardar(self, empresa: Empresa) -> Empresa:
-        sess = self._session()
-        sess.add(empresa)
-        sess.commit()
-        sess.refresh(empresa)
-        return empresa
+        """Guarda una empresa (crea o actualiza)."""
+        try:
+            original_db = self._ensure_main_db()
+            try:
+                empresa.save()
+                return empresa
+            finally:
+                if original_db and original_db != "main":
+                    set_current_database(original_db)
+        except Exception as e:
+            logging.getLogger(__name__).exception("Error guardando empresa: %s", e)
+            raise
 
     def borrar(self, empresa: Empresa) -> None:
-        sess = self._session()
-        sess.delete(empresa)
-        sess.commit()
+        """Elimina una empresa."""
+        try:
+            original_db = self._ensure_main_db()
+            try:
+                empresa.delete_instance()
+            finally:
+                if original_db and original_db != "main":
+                    set_current_database(original_db)
+        except Exception as e:
+            logging.getLogger(__name__).exception("Error borrando empresa: %s", e)
+            raise
 
     # Métodos para utilidades geográficas (Países y CP)
     def obtener_paises(self):
         """Obtiene la lista de países (es, fr) desde la base de datos auxiliar."""
-        import os
-        import sqlite3
-
-        # Ruta a la base de datos
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         db_path = os.path.join(base_dir, "datos", "paises_es_fr.sqlite")
 
@@ -102,38 +125,18 @@ class EmpresaRepository:
             conn.close()
             return paises
         except Exception as e:
-            logging.getLogger(__name__).exception(
-                "Error en repositorio obteniendo países: %s", e
-            )
+            logging.getLogger(__name__).exception("Error obteniendo países: %s", e)
             return []
 
     def buscar_poblacion(self, cp: str, pais: str):
         """
         Busca población por código postal.
         Retorna una tupla: (resultados, db_path, db_config)
-        resultados: lista de tuplas (poblacion, provincia) si es único, o raw rows si hay varios
-        db_path: ruta a la BD usada
-        db_config: configuración de columnas (para uso en vista si es necesario)
         """
-        import os
-        import sqlite3
-
         # Map country names to database files and table structures
         country_db_map = {
-            "francia": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
-            "france": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
+            "francia": ("france.db", "villes", "code_postal", "nom_standard_majuscule", "dep_nom"),
+            "france": ("france.db", "villes", "code_postal", "nom_standard_majuscule", "dep_nom"),
             "españa": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
             "spain": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
             "espagne": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
@@ -141,68 +144,41 @@ class EmpresaRepository:
 
         db_config = country_db_map.get(pais.lower())
         if not db_config:
-            # Default to France if country not found
             db_config = country_db_map["francia"]
 
         db_filename, table_name, cp_col, city_col, prov_col = db_config
 
-        # Connect to country database
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         db_path = os.path.join(base_dir, "datos", db_filename)
 
         if not os.path.exists(db_path):
-            return [], db_path, db_config
+            return [], None, None
 
         try:
             conn = sqlite3.connect(db_path)
             cursor = conn.cursor()
 
-            # Query for postal code
-            cursor.execute(
-                f"""
-                SELECT {city_col}, {prov_col} 
-                FROM {table_name} 
-                WHERE {cp_col} = ? 
-                ORDER BY {city_col}
-            """,
-                (cp,),
-            )
-
+            query = f"SELECT {city_col}, {prov_col} FROM {table_name} WHERE {cp_col} = ?"
+            cursor.execute(query, (cp,))
             results = cursor.fetchall()
             conn.close()
 
-            return results, db_path, db_config
+            if len(results) == 1:
+                return results, db_path, db_config
+            elif len(results) > 1:
+                return results, db_path, db_config
+            else:
+                return [], db_path, db_config
 
         except Exception as e:
-            logging.getLogger(__name__).exception(
-                "Error en repositorio buscando población: %s", e
-            )
-            return [], db_path, db_config
+            logging.getLogger(__name__).exception("Error buscando población: %s", e)
+            return [], None, None
 
-    def buscar_codigos_postales(self, poblacion: str, pais: str):
-        """
-        Busca códigos postales por nombre de población.
-        Retorna una tupla: (resultados, db_path, db_config)
-        """
-        import os
-        import sqlite3
-
-        # Map country names to database files and table structures
+    def buscar_cp_por_poblacion(self, poblacion: str, pais: str):
+        """Busca códigos postales por nombre de población."""
         country_db_map = {
-            "francia": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
-            "france": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
+            "francia": ("france.db", "villes", "code_postal", "nom_standard_majuscule", "dep_nom"),
+            "france": ("france.db", "villes", "code_postal", "nom_standard_majuscule", "dep_nom"),
             "españa": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
             "spain": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
             "espagne": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
@@ -210,51 +186,29 @@ class EmpresaRepository:
 
         db_config = country_db_map.get(pais.lower())
         if not db_config:
-            # Default to France if country not found
             db_config = country_db_map["francia"]
 
         db_filename, table_name, cp_col, city_col, prov_col = db_config
 
-        # Connect to country database
         base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
         db_path = os.path.join(base_dir, "datos", db_filename)
 
         if not os.path.exists(db_path):
-            return [], db_path, db_config
+            return []
 
         try:
             conn = sqlite3.connect(db_path)
-            conn.create_function("REMOVE_ACCENTS", 1, remove_accents)
             cursor = conn.cursor()
 
-            # Query for city name (case-insensitive and accent-insensitive LIKE search)
-            # We select ROWID to help the view filter specifically these results
-            cursor.execute(
-                f"""
-                SELECT {cp_col}, {city_col}, {prov_col}, ROWID 
-                FROM {table_name} 
-                WHERE REMOVE_ACCENTS({city_col}) LIKE ? 
-                ORDER BY {city_col}, {cp_col}
-                LIMIT 500
-            """,
-                (f"%{remove_accents(poblacion).upper()}%",),
-            )
-
+            # Búsqueda case-insensitive
+            query = f"SELECT {cp_col}, {city_col}, {prov_col} FROM {table_name} WHERE LOWER({city_col}) LIKE LOWER(?)"
+            cursor.execute(query, (f"%{poblacion}%",))
             results = cursor.fetchall()
             conn.close()
 
-            return results, db_path, db_config
+            return results
 
         except Exception as e:
-            logging.getLogger(__name__).exception(
-                "Error en repositorio buscando códigos postales: %s", e
-            )
-            return [], db_path, db_config
+            logging.getLogger(__name__).exception("Error buscando CP por población: %s", e)
+            return []
 
-    def __del__(self):
-        # Cerrar sesión y engine al destruir el repositorio
-        if self._main_session:
-            try:
-                self._main_session.close()
-            except Exception:
-                pass

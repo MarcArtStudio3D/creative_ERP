@@ -68,10 +68,11 @@ class CompanyDatabaseManager:
     def get_available_companies(self) -> list:
         """
         Obtiene la lista de empresas disponibles desde la base de datos principal.
-        Migrado a Peewee.
         """
         try:
-            from core.peewee_db import get_current_database, set_current_database
+            from sqlmodel import select
+
+            from core.db import get_current_database, get_session, set_current_database
             from core.models import Empresa
 
             # Guardar base de datos actual
@@ -80,9 +81,11 @@ class CompanyDatabaseManager:
             # Cambiar a base de datos principal
             set_current_database("main")
 
+            session = None
             try:
-                # Query con Peewee
-                empresas = Empresa.select().where(Empresa.activa == 1)
+                session = get_session()
+                stmt = select(Empresa).where(Empresa.activa == 1)
+                empresas = session.exec(stmt).all()
 
                 companies = []
                 for empresa in empresas:
@@ -101,8 +104,9 @@ class CompanyDatabaseManager:
 
             finally:
                 # Restaurar base de datos original
-                if original_db:
-                    set_current_database(original_db)
+                set_current_database(original_db)
+                if session:
+                    session.close()
 
         except Exception:
             logging.getLogger(__name__).exception("ERROR getting companies")
@@ -112,22 +116,27 @@ class CompanyDatabaseManager:
         """
         Valida que la configuración de base de datos de una empresa sea correcta.
         Retorna un diccionario con el estado de validación.
-        Migrado a Peewee.
         """
         try:
             from core.db import get_company_database_info
-            from core.peewee_db import create_database
 
             info = get_company_database_info(company_id)
 
-            # Intentar conectar con Peewee
+            # Intentar conectar a la base de datos usando el helper central
+            from sqlalchemy import text
+
+            from core.db import get_engine_from_url
+
+            engine = get_engine_from_url(info["database_url"])
             try:
-                db = create_database(info["database_url"])
-                # Test de conexión simple
-                db.execute_sql("SELECT 1")
-                db.close()
-            except Exception as e:
-                raise Exception(f"Error de conexión Peewee: {str(e)}")
+                with engine.connect() as conn:
+                    result = conn.execute(text("SELECT 1"))
+                    result.fetchone()
+            finally:
+                try:
+                    engine.dispose()
+                except Exception:
+                    pass
 
             return {"valid": True, "message": "Conexión exitosa", "company_info": info}
 

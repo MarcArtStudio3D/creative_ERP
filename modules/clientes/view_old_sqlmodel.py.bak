@@ -113,12 +113,10 @@ class ClientesView(QWidget):
         QTimer.singleShot(100, self.forzar_desactivacion_campos)
 
         # Inicializar datos - usar sesión proporcionada o crear nueva
-        # Nota: session ya no se usa con Peewee, mantener para compatibilidad
         self.session = session if session is not None else get_session()
 
         # Inicializar controller (maneja repository y modelo)
-        # Controller Peewee no necesita session
-        self.controller = ClientesController(self)
+        self.controller = ClientesController(self.session, self)
         self.repository = (
             self.controller.repository
         )  # Mantener referencia para compatibilidad
@@ -187,14 +185,6 @@ class ClientesView(QWidget):
         # Tabla de búsquedas (doble clic para abrir ficha)
         tabla = self._find_table()
         if tabla is not None:
-            # Desactivar edición directa en la tabla
-            # El usuario debe hacer doble click para ir a la página de edición
-            try:
-                from PySide6.QtWidgets import QAbstractItemView
-                tabla.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
-            except Exception:
-                pass
-
             # QTableWidget tiene señal itemDoubleClicked/cellDoubleClicked
             # QTableView tiene señal doubleClicked (index)
             if hasattr(tabla, "itemDoubleClicked"):
@@ -1123,31 +1113,14 @@ class ClientesView(QWidget):
     def _get_str(self, obj, attr: str) -> str:
         """Devuelve de forma segura el valor de un atributo como string ('' si no existe).
 
-        Maneja tanto objetos (con getattr) como diccionarios (con get).
+        Usa getattr para evitar que el type checker trate a los atributos de SQLAlchemy
+        como Column[] en tiempo estático.
         """
         try:
-            # Si es un diccionario, usar get
-            if isinstance(obj, dict):
-                val = obj.get(attr, None)
-            else:
-                # Si es un objeto, usar getattr
-                val = getattr(obj, attr, None)
+            val = getattr(obj, attr, None)
             return str(val) if val is not None else ""
         except Exception:
             return ""
-
-    def _get_value(self, obj, attr: str):
-        """Obtiene un valor de un objeto o diccionario de forma segura.
-
-        Devuelve el valor tal cual (puede ser None, int, str, etc.).
-        """
-        try:
-            if isinstance(obj, dict):
-                return obj.get(attr, None)
-            else:
-                return getattr(obj, attr, None)
-        except Exception:
-            return None
 
     def _is_valid_dni(self, dni: str) -> bool:
         """Valida DNI (formato 8 dígitos + letra de control)."""
@@ -1779,10 +1752,7 @@ class ClientesView(QWidget):
                 # Continuar con el cambio de página aunque haya errores en el formulario
 
             # Cambiar a página de edición (índice 0)
-            if hasattr(self.ui, "stackedWidget"):
-                self.ui.stackedWidget.setCurrentIndex(0)
-            else:
-                print("ERROR: stackedWidget no existe en la UI")
+            self.ui.stackedWidget.setCurrentIndex(0)
 
         except Exception as e:
             show_warning(
@@ -1852,24 +1822,18 @@ class ClientesView(QWidget):
         # Actualizar label con nombre del cliente
         if hasattr(self.ui, "txtNombreFiscal"):
             try:
-                # Si es un objeto con método nombre_completo
-                if hasattr(cliente, 'nombre_completo') and callable(getattr(cliente, 'nombre_completo')):
-                    self.ui.txtNombreFiscal.setText(str(cliente.nombre_completo()))
-                else:
-                    # Si es un diccionario, usar nombre_fiscal
-                    self.ui.txtNombreFiscal.setText(self._get_str(cliente, "nombre_fiscal"))
+                self.ui.txtNombreFiscal.setText(str(cliente.nombre_completo()))
             except Exception:
                 self.ui.txtNombreFiscal.setText(self._get_str(cliente, "nombre_fiscal"))
         # Establecer comboboxes por itemData si existe, else por index
         try:
             if hasattr(self.ui, "cboDivisa"):
-                id_divisa = self._get_value(cliente, "id_divisa")
                 for i in range(self.ui.cboDivisa.count()):
                     itemdata = self.ui.cboDivisa.itemData(i)
                     if (
                         itemdata is not None
-                        and id_divisa is not None
-                        and int(itemdata) == id_divisa
+                        and cliente.id_divisa is not None
+                        and int(itemdata) == cliente.id_divisa
                     ):
                         self.ui.cboDivisa.setCurrentIndex(i)
                         break
@@ -1877,13 +1841,12 @@ class ClientesView(QWidget):
             pass
         try:
             if hasattr(self.ui, "cboforma_pago"):
-                id_forma_pago = self._get_value(cliente, "id_forma_pago")
                 for i in range(self.ui.cboforma_pago.count()):
                     itemdata = self.ui.cboforma_pago.itemData(i)
                     if (
                         itemdata is not None
-                        and id_forma_pago is not None
-                        and int(itemdata) == id_forma_pago
+                        and cliente.id_forma_pago is not None
+                        and int(itemdata) == cliente.id_forma_pago
                     ):
                         self.ui.cboforma_pago.setCurrentIndex(i)
                         break
@@ -1891,13 +1854,12 @@ class ClientesView(QWidget):
             pass
         try:
             if hasattr(self.ui, "cbotarifa_cliente"):
-                id_tarifa = self._get_value(cliente, "id_tarifa")
                 for i in range(self.ui.cbotarifa_cliente.count()):
                     itemdata = self.ui.cbotarifa_cliente.itemData(i)
                     if (
                         itemdata is not None
-                        and id_tarifa is not None
-                        and int(itemdata) == id_tarifa
+                        and cliente.id_tarifa is not None
+                        and int(itemdata) == cliente.id_tarifa
                     ):
                         self.ui.cbotarifa_cliente.setCurrentIndex(i)
                         break
@@ -1905,13 +1867,12 @@ class ClientesView(QWidget):
             pass
         try:
             if hasattr(self.ui, "cboagente"):
-                id_agente = self._get_value(cliente, "id_agente")
                 for i in range(self.ui.cboagente.count()):
                     itemdata = self.ui.cboagente.itemData(i)
                     if (
                         itemdata is not None
-                        and id_agente is not None
-                        and int(itemdata) == id_agente
+                        and cliente.id_agente is not None
+                        and int(itemdata) == cliente.id_agente
                     ):
                         self.ui.cboagente.setCurrentIndex(i)
                         break

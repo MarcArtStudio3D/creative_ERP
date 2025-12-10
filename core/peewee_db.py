@@ -119,24 +119,46 @@ def set_database_for_company(company_id: int) -> bool:
     global _current_db, _current_database
 
     try:
-        # Importar get_database_url_for_company de config
-        from .config import get_database_url_for_company
+        # PASO 1: Cambiar temporalmente a BD main para consultar la tabla empresas
+        original_db_name = _current_db
 
-        # Obtener la URL de la BD para esta empresa
-        db_url = get_database_url_for_company(company_id)
+        # Si no estamos en main, cambiar a main primero
+        if _current_db != "main":
+            set_current_database("main")
 
-        if not db_url:
-            logger.error("No database URL found for company %s", company_id)
+        # PASO 2: Consultar la configuración de la empresa
+        from core.models import Empresa
+
+        try:
+            empresa = Empresa.get_by_id(company_id)
+        except Exception as e:
+            logger.error("No se encontró empresa con ID %s: %s", company_id, e)
             return False
 
-        # Crear el nombre de la BD para almacenarla en el registro
+        # PASO 3: Construir la URL de la BD según el motor configurado
+        motor = empresa.motor_base_datos.lower()
+
+        if motor == "mariadb" or motor == "mysql":
+            db_url = (
+                f"mysql+pymysql://{empresa.usuario_mariadb}:{empresa.password_mariadb}"
+                f"@{empresa.host_mariadb}:{empresa.puerto_mariadb}/{empresa.nombre_base_datos_maria_db}"
+            )
+        elif motor == "postgresql":
+            db_url = (
+                f"postgresql://{empresa.usuario_postgresql}:{empresa.password_postgresql}"
+                f"@{empresa.host_postgresql}:{empresa.puerto_postgresql}/{empresa.nombre_base_datos_postgresql}"
+            )
+        elif motor == "sqlite":
+            db_url = f"sqlite:///{empresa.ruta_base_datos_sqlite}"
+        else:
+            logger.error("Motor de BD no soportado: %s", motor)
+            return False
+
+        # PASO 4: Registrar la BD de la empresa
         db_name = f"company_{company_id}"
+        DATABASE_CONFIGS[db_name] = db_url
 
-        # Añadir a la configuración si no existe
-        if db_name not in DATABASE_CONFIGS:
-            DATABASE_CONFIGS[db_name] = db_url
-
-        # Cambiar a esta BD
+        # PASO 5: Cambiar a la BD de la empresa
         return set_current_database(db_name)
 
     except Exception as e:
@@ -198,6 +220,20 @@ def get_database():
         set_current_database(DEFAULT_DB)
 
     return _current_database
+
+
+def ensure_initialized():
+    """
+    Asegura que el database_proxy está inicializado correctamente.
+    Si no hay BD actual, inicializa con la BD por defecto.
+    """
+    global _current_database
+
+    if _current_database is None or not database_proxy.obj:
+        logger.debug("Initializing database proxy with default DB")
+        set_current_database(DEFAULT_DB)
+
+    return database_proxy
 
 
 def init_database(db_name: str = DEFAULT_DB) -> bool:

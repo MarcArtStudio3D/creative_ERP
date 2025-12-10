@@ -903,6 +903,14 @@ class ArticulosView(QWidget):
                     try:
                         self.ui.tablaBusqueda.setModel(self.articles_model)
 
+                        # Desactivar edición directa en la tabla
+                        # El usuario debe hacer doble click para ir a la página de edición
+                        try:
+                            from PySide6.QtWidgets import QAbstractItemView
+                            self.ui.tablaBusqueda.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
+                        except Exception:
+                            pass
+
                         # Configurar anchos de columna
                         try:
                             header = self.ui.tablaBusqueda.horizontalHeader()

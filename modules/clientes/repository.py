@@ -1,579 +1,264 @@
 """
-Repositorio para el módulo de Clientes
-Maneja todas las operaciones CRUD y lógica de negocio
+Repository Peewee para el módulo de Clientes.
+Maneja todas las operaciones CRUD siguiendo el patrón MVC.
 """
 
-# type: ignore
-# pyright: reportUnknownMemberType=false, reportGeneralTypeIssues=false
-
-from datetime import date
+import logging
 from typing import Dict, List, Optional
 
-from sqlalchemy import and_, delete, func, or_
-from sqlalchemy.orm import Session
-from sqlmodel import select
+from peewee import DoesNotExist, fn
 
-from modules.clientes.models import (
-    Cliente,
-    ClienteTipo,
-    DeudaCliente,
-    DireccionAlternativa,
-    EstadisticaClienteMes,
-    HistorialCliente,
-)
+from core.peewee_db import ensure_initialized
+
+from .models import Cliente
+
+logger = logging.getLogger(__name__)
 
 
 class ClienteRepository:
-    """Repositorio para operaciones con clientes"""
+    """Repositorio para operaciones con clientes usando Peewee."""
 
-    def __init__(self, session: Session):
-        self.session = session
+    def __init__(self):
+        """Inicializar repositorio."""
+        # Asegurar que la BD esté inicializada
+        ensure_initialized()
+
+    # ========== Conversión ==========
+
+    def _model_to_dict(self, cliente: Cliente) -> Dict:
+        """Convierte un modelo Peewee a diccionario."""
+        try:
+            return {
+                'id': cliente.id,
+                'id_web': cliente.id_web,
+                'codigo_cliente': cliente.codigo_cliente,
+                'apellido1': cliente.apellido1,
+                'apellido2': cliente.apellido2,
+                'nombre': cliente.nombre,
+                'nombre_fiscal': cliente.nombre_fiscal,
+                'nombre_comercial': cliente.nombre_comercial,
+                'persona_contacto': cliente.persona_contacto,
+                'cif_nif_siren': cliente.cif_nif_siren,
+                'siret': cliente.siret,
+                'cif_vies': cliente.cif_vies,
+                'direccion1': cliente.direccion1,
+                'direccion2': cliente.direccion2,
+                'cp': cliente.cp,
+                'poblacion': cliente.poblacion,
+                'provincia': cliente.provincia,
+                'pais': cliente.pais,
+                'telefono1': cliente.telefono1,
+                'telefono2': cliente.telefono2,
+                'fax': cliente.fax,
+                'movil': cliente.movil,
+                'email': cliente.email,
+                'web': cliente.web,
+                'fecha_alta': cliente.fecha_alta,
+                'fecha_ultima_compra': cliente.fecha_ultima_compra,
+                'fecha_nacimiento': cliente.fecha_nacimiento,
+                'acumulado_ventas': float(cliente.acumulado_ventas) if cliente.acumulado_ventas else 0.0,
+                'ventas_ejercicio': float(cliente.ventas_ejercicio) if cliente.ventas_ejercicio else 0.0,
+                'riesgo_maximo': float(cliente.riesgo_maximo) if cliente.riesgo_maximo else 0.0,
+                'deuda_actual': float(cliente.deuda_actual) if cliente.deuda_actual else 0.0,
+                'importe_pendiente': float(cliente.importe_pendiente) if cliente.importe_pendiente else 0.0,
+                'comentarios': cliente.comentarios,
+                'bloqueado': bool(cliente.bloqueado),
+                'comentario_bloqueo': cliente.comentario_bloqueo,
+                'observaciones': cliente.observaciones,
+                'porc_dto_cliente': float(cliente.porc_dto_cliente) if cliente.porc_dto_cliente else 0.0,
+                'recargo_equivalencia': bool(cliente.recargo_equivalencia),
+                'irpf': bool(cliente.irpf),
+                'grupo_iva': cliente.grupo_iva,
+                'cuenta_contable': cliente.cuenta_contable,
+                'cuenta_iva_repercutido': cliente.cuenta_iva_repercutido,
+                'cuenta_deudas': cliente.cuenta_deudas,
+                'cuenta_cobros': cliente.cuenta_cobros,
+                'id_forma_pago': cliente.id_forma_pago,
+                'dia_pago1': cliente.dia_pago1,
+                'dia_pago2': cliente.dia_pago2,
+                'entidad_bancaria': cliente.entidad_bancaria,
+                'oficina_bancaria': cliente.oficina_bancaria,
+                'dc': cliente.dc,
+                'cuenta_corriente': cliente.cuenta_corriente,
+                'importe_a_cuenta': float(cliente.importe_a_cuenta) if cliente.importe_a_cuenta else 0.0,
+                'vales': float(cliente.vales) if cliente.vales else 0.0,
+                'visa_distancia1': cliente.visa_distancia1,
+                'visa_distancia2': cliente.visa_distancia2,
+                'visa1_caduca_mes': cliente.visa1_caduca_mes,
+                'visa2_caduca_mes': cliente.visa2_caduca_mes,
+                'visa1_caduca_ano': cliente.visa1_caduca_ano,
+                'visa2_caduca_ano': cliente.visa2_caduca_ano,
+                'visa1_cod_valid': cliente.visa1_cod_valid,
+                'visa2_cod_valid': cliente.visa2_cod_valid,
+                'acceso_web': cliente.acceso_web,
+                'password_web': cliente.password_web,
+                'id_tarifa': cliente.id_tarifa,
+                'id_divisa': cliente.id_divisa,
+                'id_idioma_documentos': cliente.id_idioma_documentos,
+                'id_agente': cliente.id_agente,
+                'id_transportista': cliente.id_transportista,
+            }
+        except Exception as e:
+            logger.exception("Error converting cliente to dict: %s", e)
+            return {}
 
     # ========== CRUD Básico ==========
 
-    def obtener_todos(self, filtro: str = "") -> List[Cliente]:
-        """Obtiene todos los clientes, opcionalmente filtrados"""
-        stmt = select(Cliente)
-        if filtro:
-            filtro_like = f"%{filtro}%"
-            stmt = stmt.where(
-                or_(
-                    Cliente.codigo_cliente.ilike(filtro_like),
-                    Cliente.nombre_fiscal.ilike(filtro_like),
-                    Cliente.nombre_comercial.ilike(filtro_like),
-                    Cliente.cif_nif_siren.ilike(filtro_like),
-                    Cliente.email.ilike(filtro_like),
-                )
-            )
-
-        stmt = stmt.order_by(Cliente.nombre_fiscal)
-        return self.session.exec(stmt).all()
-
-    def obtener_por_id(self, id_cliente: int) -> Optional[Cliente]:
-        """Obtiene un cliente por su ID"""
-        # Más eficiente usar session.get para clave primaria
+    def get_by_id(self, id_cliente: int) -> Optional[Dict]:
+        """Obtiene un cliente por su ID."""
         try:
-            return self.session.get(Cliente, id_cliente)
-        except Exception:
-            # Fallback a select
-            stmt = select(Cliente).where(Cliente.id == id_cliente)
-            return self.session.exec(stmt).first()
+            cliente = Cliente.get_by_id(id_cliente)
+            return self._model_to_dict(cliente)
+        except DoesNotExist:
+            return None
+        except Exception as e:
+            logger.exception("Error getting cliente by id %s: %s", id_cliente, e)
+            return None
 
-    def obtener_por_codigo(self, codigo: str) -> Optional[Cliente]:
-        """Obtiene un cliente por su código"""
-        stmt = select(Cliente).where(Cliente.codigo_cliente == codigo)
-        return self.session.exec(stmt).first()
+    def get_by_codigo(self, codigo: str) -> Optional[Dict]:
+        """Obtiene un cliente por su código."""
+        try:
+            cliente = Cliente.get(Cliente.codigo_cliente == codigo)
+            return self._model_to_dict(cliente)
+        except DoesNotExist:
+            return None
+        except Exception as e:
+            logger.exception("Error getting cliente by codigo %s: %s", codigo, e)
+            return None
 
-    def obtener_por_cif(self, cif: str) -> Optional[Cliente]:
-        """Obtiene un cliente por su CIF/NIF"""
-        stmt = select(Cliente).where(Cliente.cif_nif_siren == cif)
-        return self.session.exec(stmt).first()
+    def get_all(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[Dict]:
+        """Obtiene todos los clientes, opcionalmente filtrados."""
+        try:
+            query = Cliente.select().order_by(Cliente.nombre_fiscal)
 
-    def crear(self, cliente: Cliente) -> Cliente:
-        """Crea un nuevo cliente"""
-        # Generar código automático si no existe
-        if not cliente.codigo_cliente:
-            cliente.codigo_cliente = self._generar_codigo()
+            if filtro:
+                filtro_like = f"%{filtro}%"
+                query = query.where(
+                    (Cliente.codigo_cliente.contains(filtro)) |
+                    (Cliente.nombre_fiscal.contains(filtro)) |
+                    (Cliente.nombre_comercial.contains(filtro)) |
+                    (Cliente.cif_nif_siren.contains(filtro)) |
+                    (Cliente.email.contains(filtro))
+                )
 
-        # Inicializar cuentas contables predeterminadas si no existen
-        if not cliente.cuenta_contable:
-            cliente.cuenta_contable = f"430{cliente.codigo_cliente}"
+            if limit:
+                query = query.limit(limit).offset(offset)
 
-        self.session.add(cliente)
-        self.session.commit()
-        self.session.refresh(cliente)
+            return [self._model_to_dict(c) for c in query]
+        except Exception as e:
+            logger.exception("Error getting all clientes: %s", e)
+            return []
 
-        # Registrar en historial
-        self._registrar_historial(cliente.id, "alta", "Cliente dado de alta", 0.0)
+    def create(self, data: Dict) -> Optional[Dict]:
+        """Crea un nuevo cliente."""
+        try:
+            # Generar código automático si no existe
+            if not data.get('codigo_cliente'):
+                data['codigo_cliente'] = self._generar_codigo()
 
-        return cliente
+            # Inicializar cuentas contables si no existen
+            if not data.get('cuenta_contable'):
+                data['cuenta_contable'] = f"430{data['codigo_cliente']}"
 
-    def actualizar(self, cliente: Cliente) -> Cliente:
-        """Actualiza un cliente existente"""
-        self.session.commit()
-        self.session.refresh(cliente)
+            # Convertir Decimales desde strings
+            decimal_fields = ['acumulado_ventas', 'ventas_ejercicio', 'riesgo_maximo',
+                             'deuda_actual', 'importe_pendiente', 'porc_dto_cliente',
+                             'importe_a_cuenta', 'vales']
+            for field in decimal_fields:
+                if field in data and isinstance(data[field], str):
+                    try:
+                        data[field] = float(data[field])
+                    except:
+                        data[field] = 0.0
 
-        # Registrar en historial
-        self._registrar_historial(
-            cliente.id, "modificacion", "Datos del cliente modificados", 0.0
-        )
+            cliente = Cliente.create(**data)
+            return self._model_to_dict(cliente)
+        except Exception as e:
+            logger.exception("Error creating cliente: %s", e)
+            return None
 
-        return cliente
+    def update(self, id_cliente: int, data: Dict) -> Optional[Dict]:
+        """Actualiza un cliente existente."""
+        try:
+            cliente = Cliente.get_by_id(id_cliente)
 
-    def eliminar(self, id_cliente: int) -> bool:
-        """Elimina un cliente (soft delete o verificación de dependencias)"""
-        cliente = self.obtener_por_id(id_cliente)
-        if not cliente:
-            return False
+            # Actualizar campos
+            for key, value in data.items():
+                if hasattr(cliente, key):
+                    setattr(cliente, key, value)
 
-        # Verificar si tiene facturas/documentos pendientes
-        # Usar select con func.count para compatibilidad con SQLModel
-        count_stmt = select(func.count()).where(
-            and_(DeudaCliente.id_cliente == id_cliente, DeudaCliente.pagado == False)
-        )
-        tiene_deudas = bool(self.session.exec(count_stmt).scalar_one())
+            cliente.save()
+            return self._model_to_dict(cliente)
+        except DoesNotExist:
+            logger.error("Cliente %s not found", id_cliente)
+            return None
+        except Exception as e:
+            logger.exception("Error updating cliente %s: %s", id_cliente, e)
+            return None
 
-        if tiene_deudas:
-            raise ValueError("No se puede eliminar un cliente con deudas pendientes")
-
-        # Eliminar registros relacionados
-        # Ejecutar deletes usando sqlalchemy.delete
-        del_stmt = delete(DireccionAlternativa).where(
-            DireccionAlternativa.id_cliente == id_cliente
-        )
-        self.session.exec(del_stmt)
-
-        del_stmt = delete(DeudaCliente).where(DeudaCliente.id_cliente == id_cliente)
-        self.session.exec(del_stmt)
-
-        del_stmt = delete(HistorialCliente).where(
-            HistorialCliente.id_cliente == id_cliente
-        )
-        self.session.exec(del_stmt)
-
-        del_stmt = delete(EstadisticaClienteMes).where(
-            EstadisticaClienteMes.id_cliente == id_cliente
-        )
-        self.session.exec(del_stmt)
-
-        # Eliminar cliente
-        self.session.delete(cliente)
-        self.session.commit()
-
-        return True
-
-    # ========== Direcciones Alternativas ==========
-
-    def obtener_direcciones(self, id_cliente: int) -> List[DireccionAlternativa]:
-        """Obtiene todas las direcciones alternativas de un cliente"""
-        stmt = select(DireccionAlternativa).where(
-            DireccionAlternativa.id_cliente == id_cliente
-        )
-        return self.session.exec(stmt).all()
-
-    def obtener_direccion_por_id(
-        self, id_direccion: int
-    ) -> Optional[DireccionAlternativa]:
-        """Obtiene una dirección alternativa por su ID"""
-        return self.session.get(DireccionAlternativa, id_direccion)
-
-    def crear_direccion(self, direccion: DireccionAlternativa) -> DireccionAlternativa:
-        """Crea una nueva dirección alternativa"""
-        self.session.add(direccion)
-        self.session.commit()
-        self.session.refresh(direccion)
-        return direccion
-
-    def guardar_direccion(
-        self, direccion: DireccionAlternativa
-    ) -> DireccionAlternativa:
-        """Guarda (crea o actualiza) una dirección alternativa"""
-        if direccion.id:
-            # Es una actualización
-            self.session.merge(direccion)
-        else:
-            # Es nueva
-            self.session.add(direccion)
-        self.session.commit()
-        self.session.refresh(direccion)
-        return direccion
-
-    def eliminar_direccion(self, id_direccion: int) -> bool:
-        """Elimina una dirección alternativa"""
-        direccion = self.session.get(DireccionAlternativa, id_direccion)
-
-        if direccion:
-            self.session.delete(direccion)
-            self.session.commit()
+    def delete(self, id_cliente: int) -> bool:
+        """Elimina un cliente."""
+        try:
+            cliente = Cliente.get_by_id(id_cliente)
+            cliente.delete_instance()
             return True
-        return False
-
-    # ========== Gestión de Deudas ==========
-
-    def obtener_deudas(
-        self, id_cliente: int, solo_pendientes: bool = True
-    ) -> List[DeudaCliente]:
-        """Obtiene las deudas de un cliente"""
-        stmt = select(DeudaCliente).where(DeudaCliente.id_cliente == id_cliente)
-        if solo_pendientes:
-            stmt = stmt.where(DeudaCliente.pagado == False)
-        stmt = stmt.order_by(DeudaCliente.fecha_vencimiento)
-        return self.session.exec(stmt).all()
-
-    def registrar_deuda(self, deuda: DeudaCliente) -> DeudaCliente:
-        """Registra una nueva deuda"""
-        self.session.add(deuda)
-
-        # Actualizar deuda actual del cliente
-        cliente = self.obtener_por_id(deuda.id_cliente)
-        if cliente:
-            cliente.deuda_actual += deuda.importe_pendiente
-
-        self.session.commit()
-        self.session.refresh(deuda)
-        return deuda
-
-    def registrar_pago(
-        self, id_deuda: int, importe_pagado: float, fecha_pago: date = None
-    ) -> bool:
-        """Registra un pago parcial o total de una deuda"""
-        deuda = self.session.get(DeudaCliente, id_deuda)
-        if not deuda:
-            # Fallback
-            deuda = self.session.exec(
-                select(DeudaCliente).where(DeudaCliente.id == id_deuda)
-            ).first()
-
-        if not deuda:
+        except DoesNotExist:
+            logger.error("Cliente %s not found", id_cliente)
+            return False
+        except Exception as e:
+            logger.exception("Error deleting cliente %s: %s", id_cliente, e)
             return False
 
-        deuda.importe_pagado += importe_pagado
-        deuda.importe_pendiente = deuda.importe_total - deuda.importe_pagado
+    # ========== Navegación ==========
 
-        if deuda.importe_pendiente <= 0:
-            deuda.pagado = True
-            deuda.fecha_pago = fecha_pago or date.today()
+    def get_next(self, current_id: int) -> Optional[Dict]:
+        """Obtiene el siguiente cliente por ID."""
+        try:
+            query = Cliente.select().where(Cliente.id > current_id).order_by(Cliente.id).limit(1)
+            cliente = query.first()
+            return self._model_to_dict(cliente) if cliente else None
+        except Exception as e:
+            logger.exception("Error getting next cliente: %s", e)
+            return None
 
-        # Actualizar deuda actual del cliente
-        cliente = self.obtener_por_id(deuda.id_cliente)
-        if cliente:
-            cliente.deuda_actual -= importe_pagado
-            if cliente.deuda_actual < 0:
-                cliente.deuda_actual = 0
-
-        # Registrar en historial
-        self._registrar_historial(
-            deuda.id_cliente,
-            "cobro",
-            f"Cobro de {importe_pagado}€ - Doc: {deuda.documento}",
-            importe_pagado,
-        )
-
-        self.session.commit()
-        return True
-
-    def calcular_deuda_total(self, id_cliente: int) -> float:
-        """Calcula la deuda total pendiente de un cliente"""
-        stmt = select(func.sum(DeudaCliente.importe_pendiente)).where(
-            and_(DeudaCliente.id_cliente == id_cliente, DeudaCliente.pagado == False)
-        )
-        total = self.session.exec(stmt).scalar_one()
-
-        return total or 0.0
-
-    # ========== Estadísticas ==========
-
-    def obtener_estadisticas_mes(self, id_cliente: int, anio: int) -> Dict[int, float]:
-        """Obtiene las estadísticas de ventas por mes para un año"""
-        stmt = select(EstadisticaClienteMes).where(
-            and_(
-                EstadisticaClienteMes.id_cliente == id_cliente,
-                EstadisticaClienteMes.anio == anio,
-            )
-        )
-        stats = self.session.exec(stmt).all()
-
-        # Crear diccionario con todos los meses (inicializados a 0)
-        resultado = {mes: 0.0 for mes in range(1, 13)}
-
-        # Rellenar con los datos reales
-        for stat in stats:
-            resultado[stat.mes] = stat.importe_ventas
-
-        return resultado
-
-    def actualizar_estadistica(self, id_cliente: int, fecha: date, importe: float):
-        """Actualiza las estadísticas de un cliente tras una venta"""
-        anio = fecha.year
-        mes = fecha.month
-
-        # Buscar registro existente
-        stmt = select(EstadisticaClienteMes).where(
-            and_(
-                EstadisticaClienteMes.id_cliente == id_cliente,
-                EstadisticaClienteMes.anio == anio,
-                EstadisticaClienteMes.mes == mes,
-            )
-        )
-        stat = self.session.exec(stmt).first()
-
-        if stat:
-            stat.importe_ventas += importe
-            stat.numero_operaciones += 1
-        else:
-            stat = EstadisticaClienteMes(
-                id_cliente=id_cliente,
-                anio=anio,
-                mes=mes,
-                importe_ventas=importe,
-                numero_operaciones=1,
-            )
-            self.session.add(stat)
-
-        # Actualizar campos del cliente
-        cliente = self.obtener_por_id(id_cliente)
-        if cliente:
-            cliente.acumulado_ventas += importe
-            cliente.ventas_ejercicio += importe
-            cliente.fecha_ultima_compra = fecha
-
-        self.session.commit()
-
-    # ========== Historial ==========
-
-    def obtener_historial(
-        self, id_cliente: int, limite: int = 100
-    ) -> List[HistorialCliente]:
-        """Obtiene el historial de operaciones de un cliente"""
-        stmt = (
-            select(HistorialCliente)
-            .where(HistorialCliente.id_cliente == id_cliente)
-            .order_by(HistorialCliente.fecha.desc())
-            .limit(limite)
-        )
-        return self.session.exec(stmt).all()
-
-    def _registrar_historial(
-        self, id_cliente: int, tipo: str, descripcion: str, importe: float = 0.0
-    ):
-        """Registra una entrada en el historial del cliente"""
-        historial = HistorialCliente(
-            id_cliente=id_cliente,
-            fecha=date.today(),
-            tipo_operacion=tipo,
-            descripcion=descripcion,
-            importe=importe,
-            usuario="sistema",  # TODO: Obtener usuario actual
-        )
-        self.session.add(historial)
+    def get_prev(self, current_id: int) -> Optional[Dict]:
+        """Obtiene el cliente anterior por ID."""
+        try:
+            query = Cliente.select().where(Cliente.id < current_id).order_by(Cliente.id.desc()).limit(1)
+            cliente = query.first()
+            return self._model_to_dict(cliente) if cliente else None
+        except Exception as e:
+            logger.exception("Error getting prev cliente: %s", e)
+            return None
 
     # ========== Utilidades ==========
 
     def _generar_codigo(self) -> str:
-        """Genera un código automático para un nuevo cliente"""
-        # Obtener el último código numérico
-        ultimo = self.session.exec(select(Cliente).order_by(Cliente.id.desc())).first()
-
-        if ultimo and ultimo.codigo_cliente:
-            # Intentar extraer número del código
-            try:
-                numero = int(ultimo.codigo_cliente.replace("C", ""))
-                return f"C{numero + 1:05d}"
-            except ValueError:
-                pass
-
-        # Código por defecto
-        return f"C{1:05d}"
-
-    def buscar(self, termino: str) -> List[Cliente]:
-        """Búsqueda avanzada de clientes"""
-        return self.obtener_todos(filtro=termino)
-
-    def obtener_con_deudas_vencidas(self) -> List[Cliente]:
-        """Obtiene clientes con deudas vencidas"""
-        hoy = date.today()
-
-        subq = (
-            select(DeudaCliente.id_cliente)
-            .where(
-                and_(DeudaCliente.pagado == False, DeudaCliente.fecha_vencimiento < hoy)
-            )
-            .distinct()
-        )
-
-        stmt = select(Cliente).where(Cliente.id.in_(subq))
-        return self.session.exec(stmt).all()
-
-    def obtener_bloqueados(self) -> List[Cliente]:
-        """Obtiene clientes bloqueados"""
-        stmt = select(Cliente).where(Cliente.bloqueado == True)
-        return self.session.exec(stmt).all()
-
-    # ========== Tipos de Cliente ==========
-
-    def obtener_tipos_cliente(self, id_cliente: int) -> List[ClienteTipo]:
-        """Obtiene los tipos asociados a un cliente"""
-        stmt = select(ClienteTipo).where(ClienteTipo.id_cliente == id_cliente)
-        # joinedload options are still applied on query execution if needed
-        return self.session.exec(stmt).all()
-
-    def agregar_tipo_cliente(
-        self, id_cliente: int, id_tipo: int, id_subtipo: Optional[int] = None
-    ) -> ClienteTipo:
-        """Asocia un tipo a un cliente"""
-        query = select(ClienteTipo).where(
-            ClienteTipo.id_cliente == id_cliente, ClienteTipo.id_tipo == id_tipo
-        )
-        if id_subtipo:
-            query = query.where(ClienteTipo.id_subtipo == id_subtipo)
-        else:
-            query = query.where(ClienteTipo.id_subtipo.is_(None))
-
-        exists = self.session.exec(query).first()
-        if exists:
-            return exists
-
-        nuevo = ClienteTipo(
-            id_cliente=id_cliente, id_tipo=id_tipo, id_subtipo=id_subtipo
-        )
-        self.session.add(nuevo)
-        self.session.commit()
-        return nuevo
-
-    def eliminar_tipo_cliente(self, id_asociacion: int):
-        """Elimina una asociación de tipo"""
-        item = self.session.get(ClienteTipo, id_asociacion)
-        if item:
-            self.session.delete(item)
-            self.session.commit()
-
-    # ========== Búsquedas Geográficas (CP/Población) ==========
-
-    def buscar_poblacion_por_cp(self, cp: str, pais: str = "Francia"):
-        """
-        Busca población por código postal.
-        Retorna una tupla: (resultados, db_path, db_config)
-        resultados: lista de tuplas (poblacion, provincia)
-        db_path: ruta a la BD usada
-        db_config: configuración de columnas (para uso en vista si es necesario)
-        """
-        import os
-        import sqlite3
-
-        # Map country names to database files and table structures
-        country_db_map = {
-            "francia": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
-            "france": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
-            "españa": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
-            "spain": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
-            "espagne": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
-        }
-
-        db_config = country_db_map.get(pais.lower())
-        if not db_config:
-            # Default to France if country not found
-            db_config = country_db_map["francia"]
-
-        db_filename, table_name, cp_col, city_col, prov_col = db_config
-
-        # Connect to country database
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        db_path = os.path.join(base_dir, "datos", db_filename)
-
-        if not os.path.exists(db_path):
-            return [], db_path, db_config
-
+        """Genera un código automático para un nuevo cliente."""
         try:
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-
-            # Query for postal code
-            cursor.execute(
-                f"""
-                SELECT {city_col}, {prov_col} 
-                FROM {table_name} 
-                WHERE {cp_col} = ? 
-                ORDER BY {city_col}
-            """,
-                (cp,),
-            )
-
-            results = cursor.fetchall()
-            conn.close()
-
-            return results, db_path, db_config
-
+            # Obtener el máximo código numérico actual
+            max_cliente = Cliente.select(fn.MAX(Cliente.id)).scalar()
+            if max_cliente:
+                return str(max_cliente + 1).zfill(6)
+            return "000001"
         except Exception as e:
-            import logging
+            logger.exception("Error generating codigo: %s", e)
+            return "000001"
 
-            logging.getLogger(__name__).exception(
-                "Error en repositorio buscando población: %s", e
-            )
-            return [], db_path, db_config
-
-    def buscar_cp_por_poblacion(self, poblacion: str, pais: str = "Francia"):
-        """
-        Busca códigos postales por nombre de población.
-        Retorna una tupla: (resultados, db_path, db_config)
-        resultados: lista de tuplas (codigo_postal, poblacion, provincia)
-        db_path: ruta a la BD usada
-        db_config: configuración de columnas
-        """
-        import os
-        import sqlite3
-
-        # Map country names to database files and table structures
-        country_db_map = {
-            "francia": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
-            "france": (
-                "france.db",
-                "villes",
-                "code_postal",
-                "nom_standard_majuscule",
-                "dep_nom",
-            ),
-            "españa": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
-            "spain": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
-            "espagne": ("spain.sqlite", "cp_info", "cp", "poblacion", "provincia"),
-        }
-
-        db_config = country_db_map.get(pais.lower())
-        if not db_config:
-            # Default to France if country not found
-            db_config = country_db_map["francia"]
-
-        db_filename, table_name, cp_col, city_col, prov_col = db_config
-
-        # Connect to country database
-        base_dir = os.path.dirname(os.path.dirname(os.path.dirname(__file__)))
-        db_path = os.path.join(base_dir, "datos", db_filename)
-
-        if not os.path.exists(db_path):
-            return [], db_path, db_config
-
+    def count(self, filtro: str = "") -> int:
+        """Cuenta el número total de clientes."""
         try:
-            conn = sqlite3.connect(db_path)
-            cursor = conn.cursor()
-
-            # Query for city name (case-insensitive LIKE search)
-            cursor.execute(
-                f"""
-                SELECT {cp_col}, {city_col}, {prov_col} 
-                FROM {table_name} 
-                WHERE {city_col} LIKE ? 
-                ORDER BY {city_col}, {cp_col}
-                LIMIT 50
-            """,
-                (f"%{poblacion.upper()}%",),
-            )
-
-            results = cursor.fetchall()
-            conn.close()
-
-            return results, db_path, db_config
-
+            query = Cliente.select()
+            if filtro:
+                query = query.where(
+                    (Cliente.codigo_cliente.contains(filtro)) |
+                    (Cliente.nombre_fiscal.contains(filtro)) |
+                    (Cliente.nombre_comercial.contains(filtro)) |
+                    (Cliente.cif_nif_siren.contains(filtro)) |
+                    (Cliente.email.contains(filtro))
+                )
+            return query.count()
         except Exception as e:
-            import logging
+            logger.exception("Error counting clientes: %s", e)
+            return 0
 
-            logging.getLogger(__name__).exception(
-                "Error en repositorio buscando códigos postales: %s", e
-            )
-            return [], db_path, db_config

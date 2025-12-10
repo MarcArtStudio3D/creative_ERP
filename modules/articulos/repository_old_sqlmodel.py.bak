@@ -1,0 +1,873 @@
+import logging
+from typing import Any, List, Optional, Tuple, cast
+
+# SQLModel se apoya en SQLAlchemy; mantenemos `text` para consultas crudas
+from sqlalchemy import text
+from sqlalchemy.exc import ProgrammingError
+from sqlmodel import Session
+from sqlmodel import select
+from sqlalchemy import func
+
+from core.db import get_session
+
+# Importar modelo Articulo local para consultas con SQLModel
+from .models import Articulo
+from .models import Seccion, Familia, Subfamilia, TarifaTipo, ArticuloTipo
+
+
+class ArticuloRepository:
+    def __init__(self, session: Session = None):
+        self._external_session = session
+
+    def _session(self) -> Session:
+        """Obtener la sesión de base de datos a usar (internamente o externa si fue pasada)."""
+        if self._external_session:
+            return self._external_session
+        # Avisar si la base de datos actual es la 'main' de configuración, lo cual
+        # explicaría por qué tablas de gestión (articulos) no existen allí.
+        try:
+            from core.db import get_current_database
+
+            current = get_current_database()
+            if current == "main":
+                logging.getLogger(__name__).warning(
+                    "La base de datos activa es 'main'. Asegúrate de seleccionar una empresa antes de llamar a repositorios de gestión."
+                )
+        except Exception:
+            # No bloquear si el helper no está disponible
+            pass
+        # El repositorio no debe cambiar la BD; la gestión de la BD por compañía
+        # se realiza en company_manager/controlador (respeta MVC). Aquí sólo se
+        # obtiene una sesión para la BD ya seleccionada.
+        return get_session()
+
+    # ==================== CRUD Operations ====================
+
+    def get_by_id(self, articulo_id: int) -> Optional[dict]:
+        """Obtener un artículo por su ID"""
+        session = self._session()
+        try:
+            try:
+                stmt = select(Articulo).where(Articulo.id == articulo_id).limit(1)
+                result = session.exec(stmt)
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug(
+                    "Table missing when querying get_by_id (likely main DB): %s", pe
+                )
+                return None
+            articulo = result.first()
+            return articulo.model_dump() if articulo else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_next(self, current_id: int) -> Optional[dict]:
+        """Obtener el siguiente artículo después del ID actual"""
+        session = self._session()
+        try:
+            try:
+                stmt = select(Articulo).where(Articulo.id > current_id).order_by(Articulo.id).limit(1)
+                result = session.exec(stmt)
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug("Table missing in get_next: %s", pe)
+                return None
+            articulo = result.first()
+            return articulo.model_dump() if articulo else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_prev(self, current_id: int) -> Optional[dict]:
+        """Obtener el artículo anterior al ID actual"""
+        session = self._session()
+        try:
+            try:
+                stmt = select(Articulo).where(Articulo.id < current_id).order_by(Articulo.id.desc()).limit(1)
+                result = session.exec(stmt)
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug("Table missing in get_prev: %s", pe)
+                return None
+            articulo = result.first()
+            return articulo.model_dump() if articulo else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_all(
+        self,
+        limit: int = None,
+        offset: int = 0,
+        order_by: str = "descripcion_reducida",
+        order_dir: str = "ASC",
+    ) -> List[dict]:
+        """Obtener todos los artículos con paginación y orden opcionales"""
+        session = self._session()
+        try:
+            # Prefer usar select(Articulo) para aprovechar SQLModel
+            order_col = getattr(Articulo, order_by, None)
+            if order_col is None:
+                order_col = Articulo.descripcion_reducida
+
+            if order_dir.upper() == "DESC":
+                order_expr = order_col.desc()
+            else:
+                order_expr = order_col
+
+            stmt = select(Articulo).order_by(order_expr).offset(offset)
+            if limit:
+                stmt = stmt.limit(limit)
+
+            try:
+                result = session.exec(stmt)
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug(
+                    "Table missing in get_all (likely main DB): %s", pe
+                )
+                return []
+
+            return [a.model_dump() for a in result.all()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def count_all(self) -> int:
+        """Obtener el número total de artículos"""
+        session = self._session()
+        try:
+            try:
+                stmt = select(func.count()).select_from(Articulo)
+                res = session.exec(stmt)
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug("Table missing in count_all: %s", pe)
+                return 0
+            try:
+                # Prefer scalar result when available
+                val = res.one()
+                # one() can return a scalar or a tuple like (count,)
+                if isinstance(val, tuple):
+                    return int(val[0])
+                return int(val)
+            except Exception:
+                # Fallback: try first()
+                row = res.first()
+                if row is None:
+                    return 0
+                try:
+                    if isinstance(row, tuple):
+                        return int(row[0])
+                    return int(row)
+                except Exception:
+                    return 0
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def create(self, codigo: str = None) -> Optional[int]:
+        """
+        Crear un nuevo artículo con código temporal.
+        Devuelve el ID del artículo creado.
+        """
+        import random
+
+        session = self._session()
+        try:
+            temp_code = codigo if codigo else f"_{random.randint(1000, 9999)}_"
+            # Insert with default values for mandatory fields to avoid "Field doesn't have a default value" error
+            result = session.execute(
+                text(
+                    """
+                    INSERT INTO articulos (
+                        codigo, coste, coste_real, porc_dto, margen, margen_min, 
+                        tipo_iva, stock_real, stock_fisico_almacen, stock_maximo, stock_minimo,
+                        unidades_compradas, importe_acumulado_compras, unidades_vendidas, importe_acumulado_ventas,
+                        cantidad_pendiente_recibir, unidades_reservadas, mostrar_web, etiquetas, paquetes
+                    ) VALUES (
+                        :codigo, 0, 0, 0, 0, 0, 
+                        0, 0, 0, 0, 0,
+                        0, 0, 0, 0,
+                        0, 0, 0, 0, 0
+                    )
+                """
+                ),
+                {"codigo": temp_code},
+            )
+
+            session.commit()
+            # SQLAlchemy Result typing doesn't expose lastrowid; cast to Any to access runtime attribute
+            return cast(Any, result).lastrowid
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def update(self, articulo_id: int, data: dict) -> bool:
+        """Actualizar un artículo con los campos proporcionados en el diccionario data"""
+        session = self._session()
+        try:
+            # Build SET clause dynamically
+            set_clauses = []
+            params = {"id": articulo_id}
+
+            for key, value in data.items():
+                set_clauses.append(f"{key} = :{key}")
+                params[key] = value
+
+            if not set_clauses:
+                return True
+
+            sql = f"UPDATE articulos SET {', '.join(set_clauses)} WHERE id = :id"
+            session.execute(text(sql), params)
+            # Only commit when repository manages the session
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception as e:
+            # Rollback only if repository manages the session
+            if not self._external_session:
+                session.rollback()
+            raise e
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete(self, articulo_id: int) -> bool:
+        """Eliminar el artículo y los datos relacionados (tarifas, etc.)"""
+        session = self._session()
+        try:
+            # Delete related tarifas first
+            session.execute(
+                text("DELETE FROM tarifas WHERE id_articulo = :id"), {"id": articulo_id}
+            )
+
+            # Delete article
+            session.execute(
+                text("DELETE FROM articulos WHERE id = :id"), {"id": articulo_id}
+            )
+
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Search & Filter ====================
+
+    def search(
+        self,
+        search_term: str,
+        field: str = "descripcion_reducida",
+        order_by: str = "descripcion_reducida",
+        order_dir: str = "ASC",
+        limit: int = 500,
+    ) -> List[dict]:
+        """
+        Buscar artículos por un campo específico.
+        """
+        session = self._session()
+        try:
+            # Get default tarifa for search view
+            try:
+                tarifa_result = session.execute(
+                    text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
+                )
+                tarifa_row = tarifa_result.fetchone()
+                id_tarifa = tarifa_row[0] if tarifa_row else 1
+            except ProgrammingError:
+                id_tarifa = 1
+
+            # Search in vistaart_tarifa view
+            sql = f"""
+                SELECT id, codigo, descripcion_reducida, codigo_barras, codigo_fabricante,
+                       tipo_iva, kit, pvp, pvp_con_iva, stock_fisico_almacen
+                FROM vistaart_tarifa
+                WHERE tarifa = :tarifa AND {field} LIKE :search
+                ORDER BY {order_by} {order_dir}
+                LIMIT :limit
+            """
+
+            try:
+                result = session.execute(
+                    text(sql),
+                    {
+                        "tarifa": id_tarifa,
+                        "search": f"%{search_term.upper()}%",
+                        "limit": limit,
+                    },
+                )
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug("Table/view missing in search: %s", pe)
+                return []
+
+            rows = result.fetchall()
+            return [dict(row._mapping) for row in rows]
+
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def search_multi_field(self, search_term: str, limit: int = 500) -> List[dict]:
+        """
+        Buscar artículos en varios campos (codigo, descripcion_reducida, codigo_barras).
+        """
+        session = self._session()
+        try:
+            # Get default tarifa for search view
+            try:
+                tarifa_result = session.execute(
+                    text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
+                )
+                tarifa_row = tarifa_result.fetchone()
+                _ = tarifa_row[0] if tarifa_row else 1
+            except ProgrammingError:
+                pass
+
+            # Search across multiple fields using OR conditions
+            sql = """
+                SELECT DISTINCT a.id, a.codigo, a.descripcion_reducida, a.codigo_barras,
+                       a.codigo_fabricante, a.stock_real, a.coste, a.margen
+                FROM articulos a
+                WHERE (
+                    UPPER(a.codigo) LIKE :search OR
+                    UPPER(a.descripcion_reducida) LIKE :search OR
+                    UPPER(a.codigo_barras) LIKE :search OR
+                    UPPER(a.codigo_fabricante) LIKE :search
+                )
+                ORDER BY a.descripcion_reducida ASC
+                LIMIT :limit
+            """
+
+            try:
+                result = session.execute(
+                    text(sql), {"search": f"%{search_term.upper()}%", "limit": limit}
+                )
+            except ProgrammingError as pe:
+                logging.getLogger(__name__).debug("Table missing in search_multi_field: %s", pe)
+                return []
+
+            rows = result.fetchall()
+            return [dict(row._mapping) for row in rows]
+
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Lookups ====================
+
+    def get_seccion(self, seccion_id: int) -> Optional[str]:
+        """Obtener el nombre de la sección por su ID"""
+        session = self._session()
+        try:
+            stmt = select(Seccion).where(Seccion.id == seccion_id).limit(1)
+            res = session.exec(stmt)
+            s = res.first()
+            return s.seccion if s else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_secciones_for_lookup(self) -> str:
+        """Devolver la consulta SQL para listar secciones en DBConsultaView"""
+        return "SELECT id, codigo, seccion FROM secciones ORDER BY codigo"
+
+    def get_secciones_data(self) -> list:
+        """Obtener datos de secciones como lista de diccionarios"""
+        session = self._session()
+        try:
+            stmt = select(Seccion).order_by(Seccion.codigo)
+            res = session.exec(stmt)
+            return [s.model_dump() for s in res.all()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_familia(self, familia_id: int) -> Optional[str]:
+        """Obtener el nombre de la familia por su ID"""
+        session = self._session()
+        try:
+            stmt = select(Familia).where(Familia.id == familia_id).limit(1)
+            res = session.exec(stmt)
+            f = res.first()
+            return f.familia if f else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_familias_for_lookup(self) -> str:
+        """Devolver la consulta SQL para listar familias en DBConsultaView"""
+        return "SELECT id, codigo, familia FROM familias ORDER BY codigo"
+
+    def get_familias_data(self, id_seccion: int = None) -> list:
+        """Obtener datos de familias como lista de diccionarios. Filtrar por id_seccion opcionalmente."""
+        session = self._session()
+        try:
+            if id_seccion:
+                stmt = select(Familia).where(Familia.id_seccion == id_seccion).order_by(Familia.codigo)
+            else:
+                stmt = select(Familia).order_by(Familia.codigo)
+            res = session.exec(stmt)
+            return [f.model_dump() for f in res.all()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_subfamilia(self, subfamilia_id: int) -> Optional[str]:
+        """Obtener el nombre de la subfamilia por su ID"""
+        session = self._session()
+        try:
+            stmt = select(Subfamilia).where(Subfamilia.id == subfamilia_id).limit(1)
+            res = session.exec(stmt)
+            s = res.first()
+            return s.subfamilia if s else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_subfamilias_for_lookup(self) -> str:
+        """Devolver la consulta SQL para listar subfamilias en DBConsultaView"""
+        return "SELECT id, codigo, subfamilia FROM subfamilias ORDER BY codigo"
+
+    def get_subfamilias_data(self, id_familia: int = None) -> list:
+        """Obtener datos de subfamilias como lista de diccionarios. Filtrar por id_familia opcionalmente."""
+        session = self._session()
+        try:
+            if id_familia:
+                stmt = select(Subfamilia).where(Subfamilia.id_familia == id_familia).order_by(Subfamilia.codigo)
+            else:
+                stmt = select(Subfamilia).order_by(Subfamilia.codigo)
+            res = session.exec(stmt)
+            return [s.model_dump() for s in res.all()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Tarifas tipo (lookup) ====================
+
+    def get_tarifa_tipos(self) -> list:
+        """Obtener todos los tipos de tarifa (tabla tarifas_tipo)"""
+        session = self._session()
+        try:
+            stmt = select(TarifaTipo).order_by(TarifaTipo.nombre)
+            res = session.exec(stmt)
+            return [t.model_dump() for t in res.all()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_tarifa_tipo(self, tipo_id: int) -> dict | None:
+        session = self._session()
+        try:
+            stmt = select(TarifaTipo).where(TarifaTipo.id == tipo_id).limit(1)
+            res = session.exec(stmt)
+            t = res.first()
+            return t.model_dump() if t else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def create_tarifa_tipo(self, payload: dict) -> int:
+        """Crear un nuevo tipo de tarifa. payload: {'codigo', 'nombre', 'descripcion', 'activo'}"""
+        session = self._session()
+        try:
+            result = session.execute(
+                text(
+                    "INSERT INTO tarifas_tipo (codigo, nombre, descripcion) VALUES (:codigo, :nombre, :descripcion)"
+                ),
+                {
+                    "codigo": payload.get("codigo"),
+                    "nombre": payload.get("nombre"),
+                    "descripcion": payload.get("descripcion"),
+                },
+            )
+            if not self._external_session:
+                session.commit()
+            return result.lastrowid
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def update_tarifa_tipo(self, tipo_id: int, data: dict) -> bool:
+        session = self._session()
+        try:
+            if not data:
+                return True
+            set_clauses = []
+            params = {"id": tipo_id}
+            for key, val in data.items():
+                # Avoid trying to update nonexistent 'activo' column
+                if key == "activo":
+                    continue
+                set_clauses.append(f"{key} = :{key}")
+                params[key] = val
+
+            sql = f"UPDATE tarifas_tipo SET {', '.join(set_clauses)} WHERE id = :id"
+            session.execute(text(sql), params)
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_tarifa_tipo(self, tipo_id: int) -> bool:
+        session = self._session()
+        try:
+            session.execute(
+                text("DELETE FROM tarifas_tipo WHERE id = :id"), {"id": tipo_id}
+            )
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Artículo tipo (lookup) ====================
+
+    def get_articulo_tipos(self) -> list:
+        """Obtener todos los tipos de artículo (tabla articulo_tipo)"""
+        session = self._session()
+        try:
+            stmt = select(ArticuloTipo).order_by(ArticuloTipo.codigo)
+            res = session.exec(stmt)
+            return [t.model_dump() for t in res.all()]
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_articulo_tipo(self, tipo_id: int) -> dict | None:
+        session = self._session()
+        try:
+            stmt = select(ArticuloTipo).where(ArticuloTipo.id == tipo_id).limit(1)
+            res = session.exec(stmt)
+            t = res.first()
+            return t.model_dump() if t else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_articulo_tipo_por_codigo(self, codigo: str) -> dict | None:
+        """Buscar un tipo de artículo por su código exacto (case-insensitive)."""
+        session = self._session()
+        try:
+            stmt = select(ArticuloTipo).where(ArticuloTipo.codigo.ilike(codigo)).limit(1)
+            res = session.exec(stmt)
+            t = res.first()
+            return t.model_dump() if t else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_proveedor(self, proveedor_id: int) -> Optional[Tuple[str, str]]:
+        """Obtener código y nombre del proveedor por ID. Devuelve (codigo, proveedor)"""
+        session = self._session()
+        try:
+            result = session.execute(
+                text("SELECT codigo, proveedor FROM proveedores WHERE id = :id"),
+                {"id": proveedor_id},
+            )
+            row = result.fetchone()
+            return (row[0], row[1]) if row else (None, None)
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Code Generation ====================
+
+    def check_code_exists(
+        self,
+        codigo: str = None,
+        codigo_barras: str = None,
+        codigo_fabricante: str = None,
+        exclude_id: int = None,
+    ) -> Optional[dict]:
+        """
+        Comprobar si ya existe un artículo con los códigos indicados.
+        Devuelve el artículo existente si se encuentra.
+        """
+        session = self._session()
+        try:
+            # Prefer using select over the Articulo model
+            # Construir condiciones dinámicamente con SQLModel
+            from sqlalchemy import or_
+
+            conditions = []
+            if codigo:
+                conditions.append(Articulo.codigo == codigo)
+            if codigo_barras:
+                conditions.append(Articulo.codigo_barras == codigo_barras)
+            if codigo_fabricante:
+                conditions.append(Articulo.codigo_fabricante == codigo_fabricante)
+
+            if not conditions:
+                return None
+
+            stmt = select(Articulo).where(or_(*conditions))
+            if exclude_id:
+                stmt = stmt.where(Articulo.id != exclude_id)
+
+            res = session.exec(stmt.limit(1))
+            art = res.first()
+            return art.model_dump() if art else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_next_code(self, prefix: str, code_length: int) -> str:
+        """
+        Generar el siguiente código secuencial con el prefijo dado.
+
+        Args:
+            prefix: Prefijo del código (p.ej. código de sección+familia+subfamilia)
+            code_length: Longitud total del código
+        """
+        session = self._session()
+        try:
+            # Usar select sobre Articulo.codigo
+            stmt = select(Articulo.codigo).where(Articulo.codigo.like(f"{prefix}%")).order_by(Articulo.codigo.desc()).limit(10)
+            res = session.exec(stmt)
+            codes = [r[0] for r in res.all()]
+
+            # Calculate next number
+            max_num = 0
+            for code in codes:
+                if code and len(code) >= len(prefix):
+                    num_part = code[len(prefix) :]
+                    if num_part.isdigit():
+                        max_num = max(max_num, int(num_part))
+
+            # Format next code
+            next_num = max_num + 1
+            num_length = code_length - len(prefix)
+            return f"{prefix}{next_num:0{num_length}d}"
+        finally:
+            if not self._external_session:
+                session.close()
+
+    # ==================== Tarifas ====================
+
+    def get_default_tarifa(self) -> int:
+        """
+        Obtener el ID de tarifa predeterminada desde la configuración.
+        Devuelve 1 si no está configurado.
+        """
+        session = self._session()
+        try:
+            # Legacy fallback: older schema stored default tarifa in configuracion table
+            try:
+                result = session.execute(
+                    text("SELECT id_tarifa_predeterminada FROM configuracion LIMIT 1")
+                )
+                row = result.fetchone()
+                return int(row[0]) if row and row[0] else 1
+            except Exception:
+                # The repository may be used in contexts without configuracion table
+                return 1
+
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def create_tarifas_for_article(self, articulo_id: int) -> bool:
+        """Crear entradas de tarifas para un nuevo artículo basadas en codigotarifa"""
+        session = self._session()
+        try:
+            # Get all tarifa codes
+            result = session.execute(
+                text(
+                    "SELECT id, id_pais, id_monedas, margen, margen_min FROM codigotarifa"
+                )
+            )
+
+            for row in result.fetchall():
+                session.execute(
+                    text(
+                        """
+                        INSERT INTO tarifas (id_articulo, id_pais, id_monedas, margen, margen_minimo, id_codigo_tarifa)
+                        VALUES (:id_articulo, :id_pais, :id_monedas, :margen, :margen_min, :id_codigo)
+                    """
+                    ),
+                    {
+                        "id_articulo": articulo_id,
+                        "id_pais": row[1],
+                        "id_monedas": row[2],
+                        "margen": row[3],
+                        "margen_min": row[4],
+                        "id_codigo": row[0],
+                    },
+                )
+
+            session.commit()
+            return True
+        except Exception as e:
+            session.rollback()
+            raise e
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def insert_oferta(self, articulo_id: int, tarifa_id: int, payload: dict) -> Optional[dict]:
+        """
+        Insertar una nueva fila en `articulos_ofertas` para el artículo+tarifa.
+        Devuelve un diccionario con los campos insertados, incluyendo 'id'.
+        """
+        session = self._session()
+        try:
+            sql = text(
+                """
+                INSERT INTO articulos_ofertas (id_articulo, id_tarifa, descripcion, fecha_inicio, fecha_fin, activa, unidades, regalo, oferta_precio_final, precio_final, dto_local, dto_web, oferta32, oferta_dto, oferta_web)
+                VALUES (:id_articulo, :id_tarifa, :descripcion, :fecha_inicio, :fecha_fin, :activa, :unidades, :regalo, :oferta_precio_final, :precio_final, :dto_local, :dto_web, :oferta32, :oferta_dto, :oferta_web)
+            """
+            )
+            params = {
+                "id_articulo": articulo_id,
+                "id_tarifa": tarifa_id,
+                "descripcion": payload.get("descripcion"),
+                "fecha_inicio": payload.get("fecha_inicio"),
+                "fecha_fin": payload.get("fecha_fin"),
+                "activa": bool(payload.get("activa")) if payload.get("activa") is not None else False,
+                "unidades": payload.get("unidades") if payload.get("unidades") is not None else 0.0,
+                "regalo": payload.get("regalo") if payload.get("regalo") is not None else 0.0,
+                "oferta_precio_final": bool(payload.get("oferta_precio_final")) if payload.get("oferta_precio_final") is not None else False,
+                "precio_final": payload.get("precio_final") if payload.get("precio_final") is not None else 0.0,
+                "dto_local": payload.get("dto_local") if payload.get("dto_local") is not None else 0.0,
+                "dto_web": payload.get("dto_web") if payload.get("dto_web") is not None else 0.0,
+                "oferta32": bool(payload.get("oferta32")) if payload.get("oferta32") is not None else False,
+                "oferta_dto": bool(payload.get("oferta_dto")) if payload.get("oferta_dto") is not None else False,
+                "oferta_web": bool(payload.get("oferta_web")) if payload.get("oferta_web") is not None else False,
+            }
+            result = session.execute(sql, params)
+            if not self._external_session:
+                session.commit()
+            inserted_id = cast(Any, result).lastrowid
+            row = {**params, "id": inserted_id}
+            return row
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_oferta_for_article(self, articulo_id: int, tarifa_id: int = None) -> Optional[dict]:
+        """Obtener la oferta más reciente para un artículo (y tarifa opcional)."""
+        session = self._session()
+        try:
+            sql = "SELECT id, id_articulo, id_tarifa, descripcion, fecha_inicio, fecha_fin, activa, unidades, regalo, oferta_precio_final as precio_final, dto_local, dto_web, oferta32, oferta_dto, oferta_web FROM articulos_ofertas WHERE id_articulo = :id"
+            params = {"id": articulo_id}
+            if tarifa_id:
+                sql += " AND id_tarifa = :tarifa"
+                params["tarifa"] = tarifa_id
+            sql += " ORDER BY id DESC LIMIT 1"
+            result = session.execute(text(sql), params)
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def get_oferta_by_id(self, oferta_id: int) -> Optional[dict]:
+        session = self._session()
+        try:
+            result = session.execute(
+                text(
+                    "SELECT id, id_articulo, id_tarifa, descripcion, fecha_inicio, fecha_fin, activa, unidades, regalo, oferta_precio_final as precio_final, dto_local, dto_web, oferta32, oferta_dto, oferta_web FROM articulos_ofertas WHERE id = :id"
+                ),
+                {"id": oferta_id},
+            )
+            row = result.fetchone()
+            return dict(row._mapping) if row else None
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def upsert_oferta(self, articulo_id: int, tarifa_id: int, payload: dict) -> bool:
+        """Actualizar si existe oferta para articulo+tarifa; si no, insertar.
+        Devuelve True si operación OK.
+        """
+        session = self._session()
+        try:
+            existing = None
+            try:
+                sql = "SELECT id FROM articulos_ofertas WHERE id_articulo = :id AND id_tarifa = :tarifa ORDER BY id DESC LIMIT 1"
+                res = session.execute(text(sql), {"id": articulo_id, "tarifa": tarifa_id})
+                row = res.fetchone()
+                existing = row[0] if row else None
+            except Exception:
+                existing = None
+
+            if existing:
+                # build update statements from payload
+                set_clauses = []
+                params = {"id": existing}
+                for k, v in payload.items():
+                    # keep column same as key (precio_final, oferta_precio_final, etc.)
+                    set_clauses.append(f"{k} = :{k}")
+                    params[k] = v
+                if not set_clauses:
+                    return True
+                sql = f"UPDATE articulos_ofertas SET {', '.join(set_clauses)} WHERE id = :id"
+                session.execute(text(sql), params)
+            else:
+                # insert
+                _ = self.insert_oferta(articulo_id, tarifa_id, payload)
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_oferta_by_id(self, oferta_id: int) -> bool:
+        session = self._session()
+        try:
+            session.execute(text("DELETE FROM articulos_ofertas WHERE id = :id"), {"id": oferta_id})
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()
+
+    def delete_oferta(self, articulo_id: int, tarifa_id: int) -> bool:
+        session = self._session()
+        try:
+            session.execute(
+                text("DELETE FROM articulos_ofertas WHERE id_articulo = :id AND id_tarifa = :tarifa"),
+                {"id": articulo_id, "tarifa": tarifa_id},
+            )
+            if not self._external_session:
+                session.commit()
+            return True
+        except Exception:
+            if not self._external_session:
+                session.rollback()
+            raise
+        finally:
+            if not self._external_session:
+                session.close()

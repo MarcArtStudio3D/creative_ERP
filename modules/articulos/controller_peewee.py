@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import QCoreApplication
 
-from .repository import ArticuloRepository
+from .peewee_repository_clean import ArticuloRepository
 
 logger = logging.getLogger(__name__)
 

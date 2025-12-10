@@ -14,3 +14,8 @@ requests
 pytest
 pyinstaller
 pandas>=1.5
+
+# Dependencies for Peewee migration (síncrono, ligero)
+peewee>=3.15
+pymysql>=1.0
+# playhouse es parte de peewee (no necesita entrada separada)

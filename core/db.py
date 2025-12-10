@@ -72,6 +72,7 @@ def get_engine():
     """Obtiene el motor de base de datos actual."""
     global _current_engine
     if _current_engine is None:
+        # Ensure a valid engine exists for the current DB
         set_current_database(_current_db)
     return _current_engine
 
@@ -79,8 +80,10 @@ def get_engine():
 def get_session():
     """Obtiene una sesión de base de datos para la base de datos actual."""
     global _current_session
-    if _current_session is None:
+    # Defensive: if _current_session is not callable, (re)initialize
+    if not callable(_current_session):
         set_current_database(_current_db)
+    # Ahora devolver la sesión creada por la fábrica de sesiones
     return _current_session()
 
 
@@ -217,6 +220,9 @@ def init_db(db_name=None, initiator: str | None = None):
             # fallback to default logger configuration
             logging.basicConfig()
 
+    # inicializar variable para evitar warning de uso antes de asignar
+    original_db = None
+
     if db_name:
         original_db = get_current_database()
         set_current_database(db_name)
@@ -231,8 +237,12 @@ def init_db(db_name=None, initiator: str | None = None):
     if get_current_database() == "main":
         # Base de datos principal: tablas globales
         try:
-            SQLModel.metadata.create_all(bind=current_engine)
-            logger.info("Global tables created in the main database")
+            # Only attempt create_all if we have a valid engine
+            if current_engine is not None:
+                SQLModel.metadata.create_all(bind=current_engine)
+                logger.info("Global tables created in the main database")
+            else:
+                logger.warning("Skipping create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"ERROR creating global tables: {e}")
             raise
@@ -247,20 +257,29 @@ def init_db(db_name=None, initiator: str | None = None):
         from modules.tipo_cliente import models as tipo_cliente_models
 
         try:
-            clientes_models.Base.metadata.create_all(bind=current_engine)
-            logger.info(f"Customers tables created in {get_current_database()}")
+            if current_engine is not None:
+                clientes_models.Base.metadata.create_all(bind=current_engine)
+                logger.info(f"Customers tables created in {get_current_database()}")
+            else:
+                logger.warning("Skipping clientes_models.create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"Error creating customer tables: {e}")
 
         try:
-            tipo_cliente_models.Base.metadata.create_all(bind=current_engine)
-            logger.info(f"Customer type tables created in {get_current_database()}")
+            if current_engine is not None:
+                tipo_cliente_models.Base.metadata.create_all(bind=current_engine)
+                logger.info(f"Customer type tables created in {get_current_database()}")
+            else:
+                logger.warning("Skipping tipo_cliente_models.create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"Error creating customer type tables: {e}")
 
         try:
-            articulos_models.Base.metadata.create_all(bind=current_engine)
-            logger.info(f"Article tables created in {get_current_database()}")
+            if current_engine is not None:
+                articulos_models.Base.metadata.create_all(bind=current_engine)
+                logger.info(f"Article tables created in {get_current_database()}")
+            else:
+                logger.warning("Skipping articulos_models.create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"Error creating article tables: {e}")
 
@@ -271,17 +290,26 @@ def init_db(db_name=None, initiator: str | None = None):
         from modules.facturas import models as facturas_models
 
         try:
-            clientes_models.Base.metadata.create_all(bind=current_engine)
+            if current_engine is not None:
+                clientes_models.Base.metadata.create_all(bind=current_engine)
+            else:
+                logger.warning("Skipping clientes_models.create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"Error creating customer tables: {e}")
 
         try:
-            facturas_models.Base.metadata.create_all(bind=current_engine)
+            if current_engine is not None:
+                facturas_models.Base.metadata.create_all(bind=current_engine)
+            else:
+                logger.warning("Skipping facturas_models.create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"Error creating invoice tables: {e}")
 
         try:
-            articulos_models.Base.metadata.create_all(bind=current_engine)
+            if current_engine is not None:
+                articulos_models.Base.metadata.create_all(bind=current_engine)
+            else:
+                logger.warning("Skipping articulos_models.create_all: current_engine is None")
         except Exception as e:
             logger.exception(f"Error creating article tables: {e}")
 
@@ -295,12 +323,15 @@ def init_db(db_name=None, initiator: str | None = None):
 
         # Con SQLModel, usar SQLModel.metadata directamente
         try:
-            _ensure_columns(SQLModel, dialect, engine=current_engine)
+            if current_engine is not None:
+                _ensure_columns(SQLModel, dialect, engine=current_engine)
+            else:
+                logger.warning("Skipping _ensure_columns: current_engine is None")
         except Exception:
             logger.exception("Error ensuring columns for SQLModel metadata")
 
     # Restaurar base de datos original si se cambió
-    if db_name:
+    if db_name and original_db is not None:
         set_current_database(original_db)
 
 
@@ -452,6 +483,7 @@ def get_company_database_info(company_id: int) -> dict:
     original_db = get_current_database()
     set_current_database("main")
 
+    session = None
     try:
         session = get_session()
         empresa = session.query(Empresa).filter_by(id=company_id).first()
@@ -489,8 +521,16 @@ def get_company_database_info(company_id: int) -> dict:
         return info
 
     finally:
-        set_current_database(original_db)
-        session.close()
+        # Restaurar DB original y cerrar sesión sólo si fue creada
+        try:
+            set_current_database(original_db)
+        except Exception:
+            logging.getLogger(__name__).exception("Error restoring original DB in get_company_database_info")
+        try:
+            if session is not None:
+                session.close()
+        except Exception:
+            logging.getLogger(__name__).exception("Error closing session in get_company_database_info")
 
 
 def list_available_databases() -> list:
@@ -760,3 +800,14 @@ def populate_sqlite_temp_with_data(qt_db, table_name: str, data: list, columns: 
     except Exception:
         logging.getLogger(__name__).exception("Error poblando tabla temporal")
         return False
+
+
+# Compatibilidad: alias antiguo solicitado por scripts/tests
+def init_database(db_name=None, initiator: str | None = None):
+    """Alias retrocompatible para `init_db`.
+
+    Algunos scripts/tests importaban `init_database` — mantenemos un wrapper que
+    delega en la implementación actual `init_db`.
+    """
+    return init_db(db_name=db_name, initiator=initiator)
+

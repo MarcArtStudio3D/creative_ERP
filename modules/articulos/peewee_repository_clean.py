@@ -9,9 +9,7 @@ from typing import Dict, List, Optional
 
 from peewee import DoesNotExist, fn
 
-from core.peewee_db import ensure_initialized
-
-from .models import (
+from .peewee_models import (
     Articulo,
     Seccion,
     Familia,
@@ -30,8 +28,7 @@ class ArticuloRepository:
 
     def __init__(self):
         """Inicializar repositorio."""
-        # Asegurar que la BD esté inicializada
-        ensure_initialized()
+        pass
 
     # ==================== CRUD Básico ====================
 

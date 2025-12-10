@@ -417,28 +417,67 @@ class AuthenticationManager:
         """
         user = user_repository.get_by_username(username)
 
-        if user and user.is_active and user.verify_password(password):
+        # Support both local dataclass User (which defines verify_password) and
+        # repository models (SQLModel/Pydantic) that may only expose password_hash.
+        pw_ok = False
+        try:
+            if user is None:
+                pw_ok = False
+            else:
+                verify_fn = getattr(user, "verify_password", None)
+                if callable(verify_fn):
+                    # dataclass User case or model exposing a method
+                    try:
+                        pw_ok = verify_fn(password)
+                    except Exception:
+                        pw_ok = False
+                else:
+                    # repository model case: compute hash from stored password_hash
+                    stored_hash = getattr(user, "password_hash", None)
+                    if stored_hash and isinstance(stored_hash, str) and "$" in stored_hash:
+                        try:
+                            salt, stored = stored_hash.split("$", 1)
+                            import hashlib
+
+                            pw_ok = hashlib.sha256((password + salt).encode()).hexdigest() == stored
+                        except Exception:
+                            pw_ok = False
+                    else:
+                        pw_ok = False
+        except Exception:
+            pw_ok = False
+
+        if user and getattr(user, "is_active", False) and pw_ok:
             token = secrets.token_urlsafe(32)
             session = Session(user=user, login_time=datetime.now(), token=token)
             self._current_session = session
-            user.last_login = datetime.now()
-            user_repository.update(user)
+            # Update last_login if attribute exists
+            try:
+                user.last_login = datetime.now()
+            except Exception:
+                pass
+            try:
+                # Some repo adapters may implement update as a no-op
+                user_repository.update(user)
+            except Exception:
+                pass
             try:
                 self._logger.info(
                     "Login successful for user=%s id=%s",
-                    user.username,
+                    getattr(user, "username", None),
                     getattr(user, "id", None),
                 )
             except Exception:
                 pass
             return session
-        else:
-            try:
-                # Avoid logging passwords, only username and attempt
-                uname = username or "<unknown>"
-                self._logger.warning("Login failed for user=%s", uname)
-            except Exception:
-                pass
+
+        # Failure path
+        try:
+            # Avoid logging passwords, only username and attempt
+            uname = username or "<unknown>"
+            self._logger.warning("Login failed for user=%s", uname)
+        except Exception:
+            pass
 
         return None
 

@@ -2,8 +2,9 @@
 Ventana de login multi-empresa con diseño moderno.
 """
 
+import logging
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QFont, QIcon, QPixmap
+from PySide6.QtGui import QFont, QPixmap
 from PySide6.QtWidgets import (
     QComboBox,
     QDialog,
@@ -211,37 +212,23 @@ class LoginWindowMultiCompany(QDialog):
         links_layout.setSpacing(30)
 
         # Forgot Password
-        forgot_link = QPushButton(self.tr("Forgot Password?"))
-        forgot_link.setObjectName("linkButton")
-        forgot_link.setMinimumHeight(30)
-        forgot_link.setCursor(Qt.CursorShape.PointingHandCursor)
-        forgot_link.clicked.connect(self.reject)  # Por ahora solo cierra
-        links_layout.addWidget(forgot_link)
+        #forgot_link = QPushButton(self.tr("Forgot Password?"))
+        #forgot_link.setObjectName("linkButton")
+        #forgot_link.setMinimumHeight(30)
+        #forgot_link.setCursor(Qt.CursorShape.PointingHandCursor)
+        #forgot_link.clicked.connect(self.reject)  # Por ahora solo cierra
+        #links_layout.addWidget(forgot_link)
 
         # Small configuration button (icon only) — kept for quick access from login
         self.config_btn = QPushButton()
         self.config_btn.setObjectName("configButton")
-        try:
-            cfg_icon = QIcon(":/PNG/resources/icons/png/LogoIcono.png")
-            self.config_btn.setIcon(cfg_icon)
-        except Exception:
-            # fallback to text if icon resource is missing
-            self.config_btn.setText("⚙️")
+        self.config_btn.setText(self.tr("Configuración"))
 
         # keep it compact
-        self.config_btn.setMinimumHeight(30)
-        self.config_btn.setMaximumWidth(40)
         self.config_btn.setCursor(Qt.CursorShape.PointingHandCursor)
         self.config_btn.clicked.connect(self.open_config)
         links_layout.addWidget(self.config_btn)
 
-        # Create Account (abre configuración)
-        create_link = QPushButton(self.tr("Create Account"))
-        create_link.setObjectName("linkButton")
-        create_link.setMinimumHeight(30)
-        create_link.setCursor(Qt.CursorShape.PointingHandCursor)
-        create_link.clicked.connect(self.open_config)
-        links_layout.addWidget(create_link)
 
         main_layout.addLayout(links_layout)
         main_layout.addStretch()
@@ -257,7 +244,7 @@ class LoginWindowMultiCompany(QDialog):
         from PySide6.QtWidgets import QFrame, QPushButton, QVBoxLayout
 
         # Guardar el showPopup original
-        combo.showPopup
+        # (intencionado) no necesitamos mantener la referencia al showPopup original
 
         def custom_show_popup():
             # Crear un frame personalizado para el popup
@@ -600,42 +587,104 @@ class LoginWindowMultiCompany(QDialog):
             show_warning(self, self.tr("Error"), self.tr("Selecciona grupo y empresa"))
             return
 
-        # Intentar login
-        if self.try_login(username, password):
-            # Crear contexto de empresa
-            context = CompanyContext(group=group, company=company)
-
-            # Guardar en la sesión
-            self.auth_manager._current_session.company_context = context  # type: ignore
-
-            # IMPORTANTE: Configurar la base de datos de la empresa
-            try:
-                company_id = company.id
-                success = company_manager.select_company(company_id)
-                if success:
-                    print(
-                        f"✅ Base de datos configurada para empresa: {company.nombre_fiscal}"
-                    )
-                else:
-                    print(
-                        f"⚠️  Error configurando BD para empresa: {company.nombre_fiscal}"
-                    )
-            except Exception as e:
-                print(f"❌ Error configurando empresa: {e}")
-
-            self.login_successful.emit(context)
-        else:
+        # Intentar login (delegar en AuthenticationManager vía repositorio)
+        session = self.try_login(username, password)
+        if not session:
             from core.ui_helpers import show_warning
 
             show_warning(
                 self, self.tr("Error"), self.tr("Usuario o contraseña incorrectos")
             )
             self.password_input.clear()
+            return
 
-    def try_login(self, username: str, password: str) -> bool:
-        """Intenta autenticar (usa los usuarios demo)."""
+        # Verificar que el usuario tiene acceso al grupo/empresa seleccionados
+        user = session.user
+        try:
+            allowed_groups = getattr(user, "allowed_groups", None)
+            allowed_companies = getattr(user, "allowed_companies", None)
+            if allowed_groups is not None and group.id not in allowed_groups:
+                from core.ui_helpers import show_warning
+
+                show_warning(
+                    self,
+                    self.tr("Error"),
+                    self.tr("Usuario no autorizado para el grupo seleccionado"),
+                )
+                return
+            if allowed_companies is not None and company.id not in allowed_companies:
+                from core.ui_helpers import show_warning
+
+                show_warning(
+                    self,
+                    self.tr("Error"),
+                    self.tr("Usuario no autorizado para la empresa seleccionada"),
+                )
+                return
+        except Exception:
+            # Si no podemos verificar permisos, denegamos acceso por seguridad
+            from core.ui_helpers import show_warning
+
+            show_warning(
+                self, self.tr("Error"), self.tr("No se pudo verificar permisos de usuario")
+            )
+            return
+
+        # Crear contexto de empresa
+        context = CompanyContext(group=group, company=company)
+
+        # Guardar en la sesión
+        try:
+            session.company_context = context
+            self.auth_manager._current_session = session
+        except Exception:
+            pass
+
+        # IMPORTANTE: Configurar la base de datos de la empresa
+        try:
+            company_id = company.id
+            success = company_manager.select_company(company_id)
+            if success:
+                print(
+                    f"✅ Base de datos configurada para empresa: {company.nombre_fiscal}"
+                )
+            else:
+                print(
+                    f"⚠️  Error configurando BD para empresa: {company.nombre_fiscal}"
+                )
+        except Exception as e:
+            print(f"❌ Error configurando empresa: {e}")
+
+        self.login_successful.emit(context)
+
+    def try_login(self, username: str, password: str):
+        """Intenta autenticar delegando en AuthenticationManager.
+
+        Devuelve un objeto Session si el login fue exitoso, o None si falló.
+        Mantiene un fallback a usuarios demo cuando el repositorio no devuelve usuario.
+        """
+        # Primero, intentar autenticar usando el repositorio real (MVC)
+        try:
+            from core.repositories import UserRepository
+
+            class _UserRepoAdapter:
+                @staticmethod
+                def get_by_username(uname: str):
+                    # Repositorio central expone `get_user_by_username`.
+                    try:
+                        return UserRepository.get_user_by_username(uname)
+                    except Exception:
+                        return None
+
+            session = self.auth_manager.login(username, password, _UserRepoAdapter)
+            if session:
+                return session
+        except Exception:
+            # Si algo falla con el repo, intentamos fallback demo
+            logging.getLogger(__name__).exception("Error usando UserRepository for login - fallback a demo users")
+
+        # Fallback: usuarios demo (local, para entornos sin BD)
         demo_users = self.create_demo_users()
-
         for user in demo_users:
             if user.username == username and user.verify_password(password):
                 import secrets
@@ -649,10 +698,9 @@ class LoginWindowMultiCompany(QDialog):
                     token=secrets.token_urlsafe(32),
                 )
 
-                self.auth_manager._current_session = session
-                return True
+                return session
 
-        return False
+        return None
 
     def create_demo_users(self):
         """Crea usuarios de demostración."""
@@ -662,7 +710,7 @@ class LoginWindowMultiCompany(QDialog):
             User(
                 id=1,
                 username="admin",
-                email="admin@artstudio3d.com",
+                email="marc.miralles@artstudio3d.com",
                 full_name="Administrador",
                 password_hash=User.hash_password("admin"),
                 role=UserRole.ADMIN,
@@ -709,21 +757,24 @@ class LoginWindowMultiCompany(QDialog):
         dialog.exec()
 
     def on_language_changed(self, language_code: str):
-        """Maneja el cambio de idioma."""
+        """Maneja el cambio de idioma: notifica que la preferencia se guardó y que es necesario reiniciar.
+
+        La preferencia ya se guarda en `QSettings` desde `ConfigDialog`. La aplicación carga
+        la traducción al arrancar (en `CreativeERPApp.initialize`), por lo que un reinicio
+        aplicará el idioma seleccionado.
+        """
         from PySide6.QtWidgets import QApplication
 
         from core.ui_helpers import show_info
 
         app = QApplication.instance()
+        # Solo informar al usuario: el idioma se guardó en QSettings en el diálogo de configuración
         if app:
-            # Cambiar el idioma (necesitaremos guardar el translator en algún lugar)
-            # Por ahora solo guardamos la preferencia, el cambio real se hará al reiniciar
-            print(f"{self.tr('Idioma cambiado a')}: {language_code}")
             show_info(
                 self,
                 self.tr("Cambio de idioma"),
                 self.tr(
-                    "La aplicación debe reiniciarse para aplicar todos los cambios"
+                    "La preferencia de idioma se ha guardado. Por favor reinicie la aplicación para aplicar los cambios."
                 ),
             )
 

@@ -39,7 +39,7 @@ class Seccion(BaseModel):
 class Familia(BaseModel):
     """Modelo de Familia - Segunda división del almacén"""
     id = AutoField(primary_key=True)
-    id_seccion = ForeignKeyField(Seccion, backref='familias', on_delete='CASCADE', column_name='id_seccion')
+    id_seccion = ForeignKeyField(Seccion, backref='familias', on_delete='CASCADE')
     codigo = CharField(max_length=10, unique=True, index=True)
     familia = CharField(max_length=100)
 
@@ -50,7 +50,7 @@ class Familia(BaseModel):
 class Subfamilia(BaseModel):
     """Modelo de Subfamilia - Tercera división del almacén"""
     id = AutoField(primary_key=True)
-    id_familia = ForeignKeyField(Familia, backref='subfamilias', on_delete='CASCADE', column_name='id_familia')
+    id_familia = ForeignKeyField(Familia, backref='subfamilias', on_delete='CASCADE')
     codigo = CharField(max_length=10, unique=True, index=True)
     subfamilia = CharField(max_length=100)
     id_seccion = IntegerField(null=True)
@@ -72,8 +72,8 @@ class ArticuloTipo(BaseModel):
 
 
 class Articulo(BaseModel):
-    """Modelo de Artículo - Refleja la estructura real de la tabla"""
-
+    """Modelo de Artículo - Refleja la estructura de RedFox SGC"""
+    
     # Identificadores
     id = AutoField(primary_key=True)
     id_web = IntegerField(null=True)
@@ -92,8 +92,8 @@ class Articulo(BaseModel):
     id_seccion = IntegerField(null=True)
     id_familia = IntegerField(null=True)
     id_subfamilia = IntegerField(null=True)
-    id_tipo = IntegerField(null=True, default=0)  # Usar IntegerField en lugar de ForeignKey
-
+    id_tipo = ForeignKeyField(ArticuloTipo, null=True, backref='articulos', on_delete='SET NULL')
+    
     # Proveedor
     id_proveedor = IntegerField(null=True)
     
@@ -115,42 +115,33 @@ class Articulo(BaseModel):
     stock_fisico_almacen = FloatField(default=0.0)
     stock_minimo = FloatField(default=0.0)
     stock_maximo = FloatField(default=0.0)
-    controlar_stock = BooleanField(default=False)
-    localizacion_en_almacen = CharField(max_length=100, null=True)
-
-    # Estadísticas de compras
+    
+    # Control
+    activo = BooleanField(default=True)
+    publicar_web = BooleanField(default=False)
+    destacado_web = BooleanField(default=False)
+    
+    # Fechas
+    fecha_alta = DateField(default=date.today)
+    fecha_modificacion = DateTimeField(null=True)
     fecha_ultima_compra = DateField(null=True)
-    unidades_compradas = FloatField(default=0.0)
-    importe_acumulado_compras = FloatField(default=0.0)
-
-    # Estadísticas de ventas
     fecha_ultima_venta = DateField(null=True)
-    unidades_vendidas = FloatField(default=0.0)
-    importe_acumulado_ventas = FloatField(default=0.0)
-
-    # Control de pedidos
-    cantidad_pendiente_recibir = FloatField(default=0.0)
-    fecha_prevista_recepcion = DateField(null=True)
-    unidades_reservadas = FloatField(default=0.0)
-
-    # Características del producto
-    tipo_unidad = CharField(max_length=20, null=True)
-    modelo = CharField(max_length=100, null=True)
-    talla = CharField(max_length=50, null=True)
-    color = CharField(max_length=50, null=True)
-    composicion = CharField(max_length=255, null=True)
-    kit = BooleanField(default=False)
-
-    # Web y promoción
-    mostrar_web = IntegerField(default=0)
-    articulo_promocionado = BooleanField(default=False)
-    mostrar_en_cuadro = BooleanField(default=False)
-    etiquetas = IntegerField(default=0)
-    paquetes = IntegerField(default=0)
-
+    
+    # Dimensiones y peso
+    largo = FloatField(default=0.0)
+    ancho = FloatField(default=0.0)
+    alto = FloatField(default=0.0)
+    peso = FloatField(default=0.0)
+    volumen = FloatField(default=0.0)
+    
+    # Unidades
+    unidad_medida = CharField(max_length=10, null=True)
+    unidades_por_caja = IntegerField(default=1)
+    
     # Observaciones
-    comentario = TextField(null=True)
-
+    observaciones = TextField(null=True)
+    notas_internas = TextField(null=True)
+    
     class Meta:
         table_name = 'articulos'
 
@@ -169,8 +160,8 @@ class TarifaTipo(BaseModel):
 class Tarifa(BaseModel):
     """Modelo de Tarifa de Artículo"""
     id = AutoField(primary_key=True)
-    id_articulo = ForeignKeyField(Articulo, backref='tarifas', on_delete='CASCADE', column_name='id_articulo')
-    id_tarifa_tipo = ForeignKeyField(TarifaTipo, backref='tarifas', on_delete='CASCADE', column_name='id_tarifa_tipo')
+    id_articulo = ForeignKeyField(Articulo, backref='tarifas', on_delete='CASCADE')
+    id_tarifa_tipo = ForeignKeyField(TarifaTipo, backref='tarifas', on_delete='CASCADE')
     precio = FloatField(default=0.0)
     porc_dto = FloatField(default=0.0)
     precio_final = FloatField(default=0.0)
@@ -185,7 +176,7 @@ class Tarifa(BaseModel):
 class Promocion(BaseModel):
     """Modelo de Promoción/Oferta de Artículo"""
     id = AutoField(primary_key=True)
-    id_articulo = ForeignKeyField(Articulo, backref='promociones', on_delete='CASCADE', column_name='id_articulo')
+    id_articulo = ForeignKeyField(Articulo, backref='promociones', on_delete='CASCADE')
     descripcion = CharField(max_length=255)
     fecha_inicio = DateField()
     fecha_fin = DateField()

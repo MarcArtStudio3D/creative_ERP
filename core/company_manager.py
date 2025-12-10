@@ -26,10 +26,12 @@ class CompanyDatabaseManager:
         Retorna True si la selección fue exitosa.
         """
         try:
-            from core.db import get_company_database_info, set_database_for_company
+            # Importar tanto peewee_db como el db antiguo para compatibilidad
+            from core.peewee_db import set_database_for_company as peewee_set_db
+            from core.db import get_company_database_info
 
-            # Configurar la base de datos para la empresa
-            set_database_for_company(company_id)
+            # Usar el nuevo sistema Peewee
+            peewee_set_db(company_id)
 
             # Obtener información de la empresa
             self.company_info = get_company_database_info(company_id)

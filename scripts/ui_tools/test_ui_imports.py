@@ -17,42 +17,52 @@ from pathlib import Path
 def find_ui_files(root_dir):
     """Find all generated UI Python files."""
     ui_files = []
+    root_dir = str(root_dir)
     # Only consider generated UI modules that are part of the app (modules/* and app/views or app/ui_generated)
     for py_file in Path(root_dir).rglob("ui_*.py"):
         if not py_file.is_file():
             continue
 
-        str_path = str(py_file)
+        # Compute relative path to root_dir for consistent checks
+        try:
+            rel = os.path.relpath(str(py_file), start=root_dir)
+        except Exception:
+            rel = str(py_file)
+
         # Skip helper modules / non-generated UI files like core/ui_helpers.py
-        if os.path.basename(str_path) == "ui_helpers.py":
+        if os.path.basename(rel) == "ui_helpers.py":
             continue
 
         # Only include UI files that live under 'modules/' or 'app/views/' or 'app/ui_generated/'
         if (
-            str_path.startswith("modules/")
-            or "/modules/" in str_path
-            or str_path.startswith("app/views/")
-            or "/app/views/" in str_path
-            or str_path.startswith("app/ui_generated/")
-            or "/app/ui_generated/" in str_path
+            rel.startswith("modules/")
+            or "/modules/" in rel
+            or rel.startswith("app/views/")
+            or "/app/views/" in rel
+            or rel.startswith("app/ui_generated/")
+            or "/app/ui_generated/" in rel
         ):
             ui_files.append(py_file)
     return sorted(ui_files)
 
 
-def test_ui_import(ui_file_path):
+def _test_ui_import(ui_file_path):
     """Test importing a single UI file."""
     try:
+        # Ensure we have a str path
+        ui_path_str = str(ui_file_path)
+
         # Get module name from file path relative to project root
-        rel_path = os.path.relpath(ui_file_path)
+        rel_path = os.path.relpath(ui_path_str)
         module_name = rel_path.replace("/", ".").replace("\\", ".").replace(".py", "")
 
         # Import the module directly from file location to avoid executing package __init__ code
         try:
             spec = importlib.util.spec_from_file_location(
-                f"_ui_test_{os.path.basename(ui_file_path)}", ui_file_path
+                f"_ui_test_{os.path.basename(ui_path_str)}", ui_path_str
             )
             module = importlib.util.module_from_spec(spec)
+            # Execute the module in its own namespace
             spec.loader.exec_module(module)
         except Exception:
             # Fallback to normal import which may trigger package __init__ side-effects
@@ -116,7 +126,7 @@ def main():
 
     for ui_file in ui_files:
         print(f"Testing: {os.path.basename(ui_file)}")
-        success, message = test_ui_import(ui_file)
+        success, message = _test_ui_import(ui_file)
 
         if success:
             print(f"  ✓ PASS: {message}")
@@ -133,20 +143,44 @@ def main():
         print("\nFailed tests:")
         # Re-run failed tests with full traceback
         for ui_file in ui_files:
-            success, message = test_ui_import(ui_file)
+            success, message = _test_ui_import(ui_file)
             if not success:
                 print(f"\n{os.path.basename(ui_file)}:")
                 print(f"  Error: {message}")
                 # Print full traceback if available
                 if "Import failed" in message:
                     try:
-                        test_ui_import(ui_file)  # This will trigger the exception again
+                        _test_ui_import(ui_file)  # This will trigger the exception again
                     except Exception:
                         traceback.print_exc()
 
         sys.exit(1)
     else:
         print("All UI imports successful!")
+
+
+import pytest
+
+
+def test_ui_imports_all():
+    """Pytest entry: verificar que todas las UI generadas se importan correctamente.
+
+    Recorre los ficheros UI detectados y falla si alguno no puede importarse o
+    instanciar sus clases Ui_. Esto evita que pytest recoja funciones no compatibles
+    que provoquen errores de colección.
+    """
+    root_dir = os.getcwd()
+    ui_files = find_ui_files(root_dir)
+    assert ui_files, "No UI files found in project"
+
+    failures = []
+    for ui_file in ui_files:
+        ok, msg = _test_ui_import(ui_file)
+        if not ok:
+            failures.append(f"{ui_file}: {msg}")
+
+    if failures:
+        pytest.fail("UI import failures:\n" + "\n".join(failures))
 
 
 if __name__ == "__main__":

@@ -38,33 +38,69 @@ class CreativeERPApp:
         self.qapp = QApplication(sys.argv)
         self.qapp.setApplicationName("Creative ERP")
         self.qapp.setOrganizationName("ArtStudio3D")
-        self.qapp.setOrganizationDomain("artstudio3d.com")
+        self.qapp.setOrganizationDomain("artstudio3d.fr")
 
-        # Configurar estilo - usar el estilo nativo del sistema para compatibilidad con dark themes
-        # self.qapp.setStyle("Fusion")  # Comentado para permitir temas del sistema
-
-        # Cargar hoja de estilos moderna
+        # Cargar estilo moderno si está disponible (aplicar globalmente)
         try:
             import os
 
-            style_path = os.path.join(
-                os.path.dirname(os.path.dirname(__file__)),
-                "resources",
-                "styles",
-                "modern.qss",
+            qss_path = os.path.join(
+                os.path.dirname(os.path.dirname(__file__)), "resources", "styles", "modern.qss"
             )
-            if os.path.exists(style_path):
-                with open(style_path, "r") as f:
-                    self.qapp.setStyleSheet(f.read())
+            if os.path.exists(qss_path):
+                with open(qss_path, "r", encoding="utf-8") as f:
+                    qss = f.read()
+                    # Aplicar al QApplication
+                    self.qapp.setStyleSheet(qss)
                     logging.getLogger(__name__).info(
-                        f"✓ Estilo moderno cargado desde {style_path}"
+                        "✓ Estilo moderno cargado desde %s", qss_path
                     )
             else:
                 logging.getLogger(__name__).warning(
-                    f"⚠ No se encontró el archivo de estilo: {style_path}"
+                    "modern.qss no encontrado en %s; se usará el estilo por defecto",
+                    qss_path,
                 )
-        except Exception as e:
-            logging.getLogger(__name__).exception(f"⚠ Error al cargar estilo: {e}")
+        except Exception:
+            logging.getLogger(__name__).exception("Error aplicando modern.qss")
+
+        # Cargar traducciones según configuración guardada (si existe)
+        try:
+            from PySide6.QtCore import QSettings
+            from core.translations import load_translation
+
+            settings = QSettings()
+            lang = settings.value("language", None)
+            # Si hay un idioma guardado, intentar cargar su traductor
+            translator = None
+            if lang:
+                try:
+                    translator = load_translation(self.qapp, lang)
+                except Exception:
+                    logging.getLogger(__name__).exception(
+                        "No se pudo cargar la traducción al iniciar: %s", lang
+                    )
+            # Guardar referencia en la instancia de QApplication para que otros
+            # módulos puedan actualizarlo (change_language) en tiempo de ejecución.
+            setattr(self.qapp, "_creative_erp_translator", translator)
+            if lang is None:
+                logging.getLogger(__name__).info(
+                    "No hay preferencia de idioma en QSettings; se usa el idioma por defecto."
+                )
+            else:
+                if translator:
+                    logging.getLogger(__name__).info(
+                        "✓ Traducción inicial cargada: %s", lang
+                    )
+                else:
+                    logging.getLogger(__name__).warning(
+                        "Se solicitó idioma %s pero no se pudo cargar la traducción (.qm faltante o inválido).",
+                        lang,
+                    )
+        except Exception:
+            # No debemos detener el inicio si algo falla en las traducciones
+            logging.getLogger(__name__).debug(
+                "No se pudo inicializar traducciones al arrancar."
+            )
 
         # Set global application icon (try resource first, fallback to file path)
         try:

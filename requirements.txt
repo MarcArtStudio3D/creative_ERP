@@ -2,20 +2,13 @@
 # requirements.txt
 # -----------------------------
 pyside6>=6.6
-sqlmodel>=0.0.14
-alembic
-Jinja2
-lxml
-pikepdf
-reportlab
-signxml
 python-dateutil
 requests
 pytest
 pyinstaller
 pandas>=1.5
-
-# Dependencies for Peewee migration (síncrono, ligero)
-peewee>=3.15
 pymysql>=1.0
-# playhouse es parte de peewee (no necesita entrada separada)
+werkzeug
+
+# Database connectivity
+# Usamos PyMySQL para conexiones SQL directas (sin ORM)

@@ -648,10 +648,18 @@ class MainWindowV2(QMainWindow):
         layout.addWidget(user_info)
 
         if self.session.company_context:
-            company_info = QLabel(
-                f"{self.session.company_context.group.name} - "
-                f"{self.session.company_context.company.nombre_comercial or self.session.company_context.company.nombre_fiscal}"
+            # Soportar group y company como dicts o objetos
+            group = self.session.company_context.group
+            company = self.session.company_context.company
+            
+            group_name = group.get("name") if isinstance(group, dict) else group.name
+            company_name = (
+                (company.get("nombre_comercial") or company.get("nombre_fiscal"))
+                if isinstance(company, dict)
+                else (company.nombre_comercial or company.nombre_fiscal)
             )
+            
+            company_info = QLabel(f"{group_name} - {company_name}")
             company_info.setFont(info_font)
             company_info.setAlignment(Qt.AlignmentFlag.AlignCenter)
             layout.addWidget(company_info)
@@ -2207,13 +2215,18 @@ class MainWindowV2(QMainWindow):
 
     def update_user_info(self) -> None:
         """Actualiza la información del usuario en la barra superior."""
-        self.user_label.setText(f"{self.session.user.username}")
+        # Soportar user como dict o objeto
+        username = self.session.user.get("username") if isinstance(self.session.user, dict) else self.session.user.username
+        self.user_label.setText(f"{username}")
 
         if self.session.company_context:
-            company_text = (
-                self.session.company_context.company.nombre_comercial
-                or self.session.company_context.company.nombre_fiscal
-            )
+            # Soportar company como dict o objeto
+            company = self.session.company_context.company
+            if isinstance(company, dict):
+                company_text = company.get("nombre_comercial") or company.get("nombre_fiscal")
+            else:
+                company_text = company.nombre_comercial or company.nombre_fiscal
+
             self.company_button.setText(f"{company_text}")
         else:
             self.company_button.setText(self.tr("Sin empresa"))
@@ -2230,7 +2243,21 @@ class MainWindowV2(QMainWindow):
             UserRole.VIEWER: self.tr("Visor"),
         }
 
-        role = role_names.get(self.session.user.role, self.tr("Usuario"))
+        # Soportar user como dict o objeto
+        user = self.session.user
+        if isinstance(user, dict):
+            username = user.get("username", "Usuario")
+            role_value = user.get("role", "employee")
+            # Convertir string a UserRole si es necesario
+            try:
+                user_role = UserRole(role_value) if isinstance(role_value, str) else role_value
+            except:
+                user_role = UserRole.EMPLOYEE
+        else:
+            username = user.username
+            user_role = user.role
+
+        role = role_names.get(user_role, self.tr("Usuario"))
 
         # Obtener normativa fiscal
         from PySide6.QtCore import QSettings
@@ -2240,11 +2267,21 @@ class MainWindowV2(QMainWindow):
         fiscal_text = self.tr("Francia") if fiscal == "fr" else self.tr("España")
 
         if self.session.company_context:
+            # Soportar group y company como dicts o objetos
+            group = self.session.company_context.group
+            company = self.session.company_context.company
+
+            group_name = group.get("name") if isinstance(group, dict) else group.name
+            company_name = (
+                (company.get("nombre_comercial") or company.get("nombre_fiscal"))
+                if isinstance(company, dict)
+                else (company.nombre_comercial or company.nombre_fiscal)
+            )
+
             return (
-                f"{self.tr('Usuario')}: {self.session.user.username} | "
+                f"{self.tr('Usuario')}: {username} | "
                 f"{self.tr('Rol')}: {role} | "
-                f"{self.session.company_context.group.name} - "
-                f"{self.session.company_context.company.nombre_comercial or self.session.company_context.company.nombre_fiscal} | "
+                f"{group_name} - {company_name} | "
                 f"{self.tr('Normativa')}: {fiscal_text}"
             )
         else:

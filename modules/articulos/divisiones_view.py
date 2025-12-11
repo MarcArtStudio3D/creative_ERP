@@ -299,8 +299,8 @@ class DivisionesView(QDialog):
             self._limpiar_formulario()
             # Restaurar selección de sección
             if self.controller.seccion_actual:
-                self.ui.txtcodigo.setText(self.controller.seccion_actual.codigo)
-                self.ui.txtnombre.setText(self.controller.seccion_actual.seccion)
+                self.ui.txtcodigo.setText(self.controller.seccion_actual['codigo'])
+                self.ui.txtnombre.setText(self.controller.seccion_actual['seccion'])
                 self.ui.btnActualizarSeccion.setEnabled(True)
             show_info(self, self.tr("Éxito"), self.tr("Familia creada correctamente"))
         else:
@@ -317,8 +317,8 @@ class DivisionesView(QDialog):
             self._limpiar_formulario()
             # Restaurar selección de familia
             if self.controller.familia_actual:
-                self.ui.txtcodigo.setText(self.controller.familia_actual.codigo)
-                self.ui.txtnombre.setText(self.controller.familia_actual.familia)
+                self.ui.txtcodigo.setText(self.controller.familia_actual['codigo'])
+                self.ui.txtnombre.setText(self.controller.familia_actual['familia'])
                 self.ui.btnActualizarFamilia.setEnabled(True)
             show_info(
                 self, self.tr("Éxito"), self.tr("Subfamilia creada correctamente")
@@ -367,8 +367,8 @@ class DivisionesView(QDialog):
                 self.ui.btnActualizarFamilia.setEnabled(False)
                 # Restaurar datos de sección
                 if self.controller.seccion_actual:
-                    self.ui.txtcodigo.setText(self.controller.seccion_actual.codigo)
-                    self.ui.txtnombre.setText(self.controller.seccion_actual.seccion)
+                    self.ui.txtcodigo.setText(self.controller.seccion_actual['codigo'])
+                    self.ui.txtnombre.setText(self.controller.seccion_actual['seccion'])
                     self.ui.btnActualizarSeccion.setEnabled(True)
             else:
                 show_warning(self, self.tr("Error"), mensaje)
@@ -386,8 +386,8 @@ class DivisionesView(QDialog):
                 self.ui.btnActualizarSubfamilia.setEnabled(False)
                 # Restaurar datos de familia
                 if self.controller.familia_actual:
-                    self.ui.txtcodigo.setText(self.controller.familia_actual.codigo)
-                    self.ui.txtnombre.setText(self.controller.familia_actual.familia)
+                    self.ui.txtcodigo.setText(self.controller.familia_actual['codigo'])
+                    self.ui.txtnombre.setText(self.controller.familia_actual['familia'])
                     self.ui.btnActualizarFamilia.setEnabled(True)
             else:
                 show_warning(self, self.tr("Error"), mensaje)
@@ -449,15 +449,15 @@ class DivisionesView(QDialog):
         arbol_texto = ""
         if self.controller.seccion_actual:
             arbol_texto = self.tr("Sección: {name}").format(
-                name=self.controller.seccion_actual.seccion
+                name=self.controller.seccion_actual['seccion']
             )
             if self.controller.familia_actual:
                 arbol_texto += self.tr(" → Familia: {name}").format(
-                    name=self.controller.familia_actual.familia
+                    name=self.controller.familia_actual['familia']
                 )
                 if self.controller.subfamilia_actual:
                     arbol_texto += self.tr(" → Subfamilia: {name}").format(
-                        name=self.controller.subfamilia_actual.subfamilia
+                        name=self.controller.subfamilia_actual['subfamilia']
                     )
 
         self.ui.lbl_tree.setText(arbol_texto)

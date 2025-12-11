@@ -1,233 +1,199 @@
 """
-Repository para Divisiones del Almacén (Secciones, Familias, Subfamilias)
-Sigue el patrón Repository para acceso a datos
-Migrado a Peewee.
+Repository SQL directo para Divisiones del Almacén (Secciones, Familias, Subfamilias)
+Migrado de Peewee a SQL directo con MultiDBManager.
+Retorna objetos Dataclass para mantener arquitectura MVC pura.
 """
-
 from typing import List, Optional
-
-from peewee import DoesNotExist
-
-from core.peewee_db import ensure_initialized
-from modules.articulos.models import Familia, Seccion, Subfamilia
-
-
-class DivisionesRepository:
-    """Repository para gestionar Secciones, Familias y Subfamilias con Peewee"""
-
+import logging
+from core.base_repository import BaseRepository
+from modules.articulos.models import Seccion, Familia, Subfamilia
+logger = logging.getLogger(__name__)
+class DivisionesRepository(BaseRepository):
+    """Repository para gestionar Secciones, Familias y Subfamilias con SQL directo"""
     def __init__(self):
-        """
-        Inicializa el repository con Peewee (no necesita sesión).
-        """
-        ensure_initialized()
-
+        """Inicializa el repository con el DB manager global."""
+        super().__init__()
     # ==================== SECCIONES ====================
-
     def obtener_todas_secciones(self) -> List[Seccion]:
         """Obtiene todas las secciones ordenadas por código"""
         try:
-            return list(Seccion.select().order_by(Seccion.codigo))
-        except Exception:
+            query = "SELECT * FROM secciones ORDER BY codigo"
+            rows = self._fetch_all(query)
+            return [Seccion.from_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obteniendo secciones: {e}")
             return []
-
     def obtener_seccion_por_id(self, id_: int) -> Optional[Seccion]:
         """Obtiene una sección por ID"""
         try:
-            return Seccion.get_by_id(id_)
-        except DoesNotExist:
+            query = "SELECT * FROM secciones WHERE id = %s"
+            row = self._fetch_one(query, (id_,))
+            return Seccion.from_dict(row) if row else None
+        except Exception as e:
+            logger.error(f"Error obteniendo sección {id_}: {e}")
             return None
-
     def obtener_seccion_por_codigo(self, codigo: str) -> Optional[Seccion]:
         """Obtiene una sección por código"""
         try:
-            return Seccion.get(Seccion.codigo == codigo)
-        except DoesNotExist:
-            return None
-
-    def guardar_seccion(self, seccion: Seccion) -> Seccion:
-        """Guarda o actualiza una sección"""
-        seccion.save()
-        return seccion
-
-    def borrar_seccion(self, seccion: Seccion) -> bool:
-        """
-        Borra una sección y todas sus familias y subfamilias asociadas.
-
-        Returns:
-            True si se borró correctamente
-        """
-        try:
-            # Primero borrar todas las familias (y sus subfamilias) de esta sección
-            familias = self.obtener_familias_por_seccion(seccion.id)
-            for familia in familias:
-                self.borrar_familia(familia)
-
-            # Luego borrar la sección
-            self._session.delete(seccion)
-            self._session.commit()
-            return True
+            query = "SELECT * FROM secciones WHERE codigo = %s"
+            row = self._fetch_one(query, (codigo,))
+            return Seccion.from_dict(row) if row else None
         except Exception as e:
-            self._session.rollback()
-            raise e
-
-    def generar_codigo_seccion(self) -> str:
-        """Genera el siguiente código de sección disponible (S001, S002, etc.)"""
-        ultima = self._session.exec(
-            select(Seccion).order_by(Seccion.codigo.desc())
-        ).first()
-        if not ultima or not ultima.codigo:
-            return "S001"
-
+            logger.error(f"Error obteniendo sección por código: {e}")
+            return None
+    def guardar_seccion(self, seccion: Seccion) -> Optional[Seccion]:
+        """Guarda o actualiza una sección"""
         try:
-            # Extrae el número del código (ej: S001 -> 1)
-            num = int(ultima.codigo[1:])
-            return f"S{num + 1:03d}"
-        except (ValueError, IndexError, TypeError):
-            # Si el formato es diferente, empezar desde S001
-            return "S001"
-
+            data = seccion.to_dict()
+            if seccion.id:
+                # Actualizar
+                self._update('secciones', data, 'id = %s', (seccion.id,))
+                return self.obtener_seccion_por_id(seccion.id)
+            else:
+                # Crear
+                new_id = self._insert('secciones', data)
+                return self.obtener_seccion_por_id(new_id)
+        except Exception as e:
+            logger.error(f"Error guardando sección: {e}")
+            return None
+    def borrar_seccion(self, seccion_id: int) -> bool:
+        """Borra una sección y todas sus familias y subfamilias asociadas"""
+        try:
+            # Primero borrar subfamilias de familias de esta sección
+            query = """
+                DELETE sf FROM subfamilias sf
+                INNER JOIN familias f ON sf.id_familia = f.id
+                WHERE f.id_seccion = %s
+            """
+            self._execute(query, (seccion_id,))
+            # Luego borrar familias de esta sección
+            self._delete('familias', 'id_seccion = %s', (seccion_id,))
+            # Finalmente borrar la sección
+            rows_deleted = self._delete('secciones', 'id = %s', (seccion_id,))
+            return rows_deleted > 0
+        except Exception as e:
+            logger.error(f"Error borrando sección: {e}")
+            return False
     # ==================== FAMILIAS ====================
-
     def obtener_todas_familias(self) -> List[Familia]:
         """Obtiene todas las familias ordenadas por código"""
-        stmt = select(Familia).order_by(Familia.codigo)
-        return self._session.exec(stmt).all()
-
+        try:
+            query = "SELECT * FROM familias ORDER BY codigo"
+            rows = self._fetch_all(query)
+            return [Familia.from_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obteniendo familias: {e}")
+            return []
     def obtener_familias_por_seccion(self, id_seccion: int) -> List[Familia]:
-        """Obtiene todas las familias de una sección específica"""
-        stmt = (
-            select(Familia)
-            .where(Familia.id_seccion == id_seccion)
-            .order_by(Familia.codigo)
-        )
-        return self._session.exec(stmt).all()
-
+        """Obtiene todas las familias de una sección"""
+        try:
+            query = "SELECT * FROM familias WHERE id_seccion = %s ORDER BY codigo"
+            rows = self._fetch_all(query, (id_seccion,))
+            return [Familia.from_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obteniendo familias de sección: {e}")
+            return []
     def obtener_familia_por_id(self, id_: int) -> Optional[Familia]:
         """Obtiene una familia por ID"""
-        return self._session.get(Familia, id_)
-
+        try:
+            query = "SELECT * FROM familias WHERE id = %s"
+            row = self._fetch_one(query, (id_,))
+            return Familia.from_dict(row) if row else None
+        except Exception as e:
+            logger.error(f"Error obteniendo familia {id_}: {e}")
+            return None
     def obtener_familia_por_codigo(self, codigo: str) -> Optional[Familia]:
         """Obtiene una familia por código"""
-        stmt = select(Familia).where(Familia.codigo == codigo)
-        return self._session.exec(stmt).first()
-
-    def guardar_familia(self, familia: Familia) -> Familia:
-        """Guarda o actualiza una familia"""
-        if familia.id is None:
-            self._session.add(familia)
-        self._session.commit()
-        self._session.refresh(familia)
-        return familia
-
-    def borrar_familia(self, familia: Familia) -> bool:
-        """
-        Borra una familia y todas sus subfamilias asociadas.
-
-        Returns:
-            True si se borró correctamente
-        """
         try:
-            # Primero borrar todas las subfamilias de esta familia
-            subfamilias = self.obtener_subfamilias_por_familia(familia.id)
-            for subfamilia in subfamilias:
-                self.borrar_subfamilia(subfamilia)
-
-            # Luego borrar la familia
-            self._session.delete(familia)
-            self._session.commit()
-            return True
+            query = "SELECT * FROM familias WHERE codigo = %s"
+            row = self._fetch_one(query, (codigo,))
+            return Familia.from_dict(row) if row else None
         except Exception as e:
-            self._session.rollback()
-            raise e
-
-    def generar_codigo_familia(self, id_seccion: int) -> str:
-        """
-        Genera el siguiente código de familia disponible para una sección.
-        Formato: F001, F002, etc.
-        """
-        ultima = self._session.exec(
-            select(Familia)
-            .where(Familia.id_seccion == id_seccion)
-            .order_by(Familia.codigo.desc())
-        ).first()
-
-        if not ultima or not ultima.codigo:
-            return "F001"
-
+            logger.error(f"Error obteniendo familia por código: {e}")
+            return None
+    def guardar_familia(self, familia: Familia) -> Optional[Familia]:
+        """Guarda o actualiza una familia"""
         try:
-            # Extrae el número del código (ej: F001 -> 1)
-            num = int(ultima.codigo[1:])
-            return f"F{num + 1:03d}"
-        except (ValueError, IndexError, TypeError):
-            # Si el formato es diferente, empezar desde F001
-            return "F001"
-
+            data = familia.to_dict()
+            if familia.id:
+                # Actualizar
+                self._update('familias', data, 'id = %s', (familia.id,))
+                return self.obtener_familia_por_id(familia.id)
+            else:
+                # Crear
+                new_id = self._insert('familias', data)
+                return self.obtener_familia_por_id(new_id)
+        except Exception as e:
+            logger.error(f"Error guardando familia: {e}")
+            return None
+    def borrar_familia(self, familia_id: int) -> bool:
+        """Borra una familia y todas sus subfamilias asociadas"""
+        try:
+            # Primero borrar subfamilias
+            self._delete('subfamilias', 'id_familia = %s', (familia_id,))
+            # Luego borrar la familia
+            rows_deleted = self._delete('familias', 'id = %s', (familia_id,))
+            return rows_deleted > 0
+        except Exception as e:
+            logger.error(f"Error borrando familia: {e}")
+            return False
     # ==================== SUBFAMILIAS ====================
-
     def obtener_todas_subfamilias(self) -> List[Subfamilia]:
         """Obtiene todas las subfamilias ordenadas por código"""
-        stmt = select(Subfamilia).order_by(Subfamilia.codigo)
-        return self._session.exec(stmt).all()
-
+        try:
+            query = "SELECT * FROM subfamilias ORDER BY codigo"
+            rows = self._fetch_all(query)
+            return [Subfamilia.from_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obteniendo subfamilias: {e}")
+            return []
     def obtener_subfamilias_por_familia(self, id_familia: int) -> List[Subfamilia]:
-        """Obtiene todas las subfamilias de una familia específica"""
-        stmt = (
-            select(Subfamilia)
-            .where(Subfamilia.id_familia == id_familia)
-            .order_by(Subfamilia.codigo)
-        )
-        return self._session.exec(stmt).all()
-
-    def obtener_subfamilias_por_id(self, id_: int) -> Optional[Subfamilia]:
+        """Obtiene todas las subfamilias de una familia"""
+        try:
+            query = "SELECT * FROM subfamilias WHERE id_familia = %s ORDER BY codigo"
+            rows = self._fetch_all(query, (id_familia,))
+            return [Subfamilia.from_dict(row) for row in rows]
+        except Exception as e:
+            logger.error(f"Error obteniendo subfamilias de familia: {e}")
+            return []
+    def obtener_subfamilia_por_id(self, id_: int) -> Optional[Subfamilia]:
         """Obtiene una subfamilia por ID"""
-        return self._session.get(Subfamilia, id_)
-
+        try:
+            query = "SELECT * FROM subfamilias WHERE id = %s"
+            row = self._fetch_one(query, (id_,))
+            return Subfamilia.from_dict(row) if row else None
+        except Exception as e:
+            logger.error(f"Error obteniendo subfamilia {id_}: {e}")
+            return None
     def obtener_subfamilias_por_codigo(self, codigo: str) -> Optional[Subfamilia]:
         """Obtiene una subfamilia por código"""
-        stmt = select(Subfamilia).where(Subfamilia.codigo == codigo)
-        return self._session.exec(stmt).first()
-
-    def guardar_subfamilia(self, subfamilia: Subfamilia) -> Subfamilia:
-        """Guarda o actualiza una subfamilia"""
-        if subfamilia.id is None:
-            self._session.add(subfamilia)
-        self._session.commit()
-        self._session.refresh(subfamilia)
-        return subfamilia
-
-    def borrar_subfamilia(self, subfamilia: Subfamilia) -> bool:
-        """
-        Borra una subfamilia.
-
-        Returns:
-            True si se borró correctamente
-        """
         try:
-            self._session.delete(subfamilia)
-            self._session.commit()
-            return True
+            query = "SELECT * FROM subfamilias WHERE codigo = %s"
+            row = self._fetch_one(query, (codigo,))
+            return Subfamilia.from_dict(row) if row else None
         except Exception as e:
-            self._session.rollback()
-            raise e
-
-    def generar_codigo_subfamilia(self, id_familia: int) -> str:
-        """
-        Genera el siguiente código de subfamilia disponible para una familia.
-        Formato: SF001, SF002, etc.
-        """
-        ultima = self._session.exec(
-            select(Subfamilia)
-            .where(Subfamilia.id_familia == id_familia)
-            .order_by(Subfamilia.codigo.desc())
-        ).first()
-
-        if not ultima or not ultima.codigo:
-            return "SF001"
-
+            logger.error(f"Error obteniendo subfamilia por código: {e}")
+            return None
+    def guardar_subfamilia(self, subfamilia: Subfamilia) -> Optional[Subfamilia]:
+        """Guarda o actualiza una subfamilia"""
         try:
-            # Extrae el número del código (ej: SF001 -> 1)
-            num = int(ultima.codigo[2:])
-            return f"SF{num + 1:03d}"
-        except (ValueError, IndexError, TypeError):
-            # Si el formato es diferente, empezar desde SF001
-            return "SF001"
+            data = subfamilia.to_dict()
+            if subfamilia.id:
+                # Actualizar
+                self._update('subfamilias', data, 'id = %s', (subfamilia.id,))
+                return self.obtener_subfamilia_por_id(subfamilia.id)
+            else:
+                # Crear
+                new_id = self._insert('subfamilias', data)
+                return self.obtener_subfamilia_por_id(new_id)
+        except Exception as e:
+            logger.error(f"Error guardando subfamilia: {e}")
+            return None
+    def borrar_subfamilia(self, subfamilia_id: int) -> bool:
+        """Borra una subfamilia"""
+        try:
+            rows_deleted = self._delete('subfamilias', 'id = %s', (subfamilia_id,))
+            return rows_deleted > 0
+        except Exception as e:
+            logger.error(f"Error borrando subfamilia: {e}")
+            return False

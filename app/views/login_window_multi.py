@@ -513,11 +513,11 @@ class LoginWindowMultiCompany(QDialog):
             return
 
         # Cargar empresas desde la base de datos
-        companies = CompanyRepository.get_empresas_by_group(group.id)
+        group_id = group.id
+        companies = CompanyRepository.get_companies_by_group(group_id)
         for company in companies:
-            name = getattr(company, "nombre_comercial", "") or getattr(
-                company, "nombre_fiscal", "Empresa"
-            )
+            # company es ahora un objeto Empresa
+            name = company.nombre_comercial or company.nombre_fiscal or "Empresa"
             self.company_combo.addItem(name, company)  # type: ignore
 
         # Intentar seleccionar la empresa por defecto:
@@ -601,9 +601,19 @@ class LoginWindowMultiCompany(QDialog):
         # Verificar que el usuario tiene acceso al grupo/empresa seleccionados
         user = session.user
         try:
-            allowed_groups = getattr(user, "allowed_groups", None)
-            allowed_companies = getattr(user, "allowed_companies", None)
-            if allowed_groups is not None and group.id not in allowed_groups:
+            # Soportar tanto dicts (BD) como objetos User (demo)
+            if isinstance(user, dict):
+                allowed_groups = user.get("allowed_groups")
+                allowed_companies = user.get("allowed_companies")
+            else:
+                allowed_groups = getattr(user, "allowed_groups", None)
+                allowed_companies = getattr(user, "allowed_companies", None)
+
+            # Soportar tanto dicts (BD) como objetos (legacy)
+            group_id = group.id
+            company_id = company.id
+
+            if allowed_groups is not None and group_id not in allowed_groups:
                 from core.ui_helpers import show_warning
 
                 show_warning(
@@ -612,7 +622,7 @@ class LoginWindowMultiCompany(QDialog):
                     self.tr("Usuario no autorizado para el grupo seleccionado"),
                 )
                 return
-            if allowed_companies is not None and company.id not in allowed_companies:
+            if allowed_companies is not None and company_id not in allowed_companies:
                 from core.ui_helpers import show_warning
 
                 show_warning(
@@ -621,8 +631,9 @@ class LoginWindowMultiCompany(QDialog):
                     self.tr("Usuario no autorizado para la empresa seleccionada"),
                 )
                 return
-        except Exception:
+        except Exception as e:
             # Si no podemos verificar permisos, denegamos acceso por seguridad
+            logging.getLogger(__name__).exception(f"Error verificando permisos: {e}")
             from core.ui_helpers import show_warning
 
             show_warning(
@@ -641,8 +652,12 @@ class LoginWindowMultiCompany(QDialog):
             pass
 
         # IMPORTANTE: Configurar la base de datos de la empresa
+        logger = logging.getLogger(__name__)
         try:
+            # Soportar tanto dicts como objetos
             company_id = company.id
+            company_name = company.nombre_fiscal
+
             success = company_manager.select_company(company_id)
             if not success:
                 from core.ui_helpers import show_warning
@@ -655,15 +670,23 @@ class LoginWindowMultiCompany(QDialog):
                     ),
                 )
                 return
-            else:
-                logging.getLogger(__name__).info(
-                    "✅ Base de datos configurada para empresa: %s", company.nombre_fiscal
-                )
+
+            logger.info("✅ Base de datos configurada para empresa: %s", company_name)
+
         except Exception as e:
-            print(f"❌ Error configurando empresa: {e}")
+            logger.exception("❌ Error configurando empresa: %s", e)
+            from core.ui_helpers import show_warning
+            show_warning(
+                self,
+                self.tr("Error"),
+                self.tr(f"Error al configurar empresa: {str(e)}")
+            )
+            return  # No continuar si falla
 
         # Emitir solo si todo ha ido bien
         self.login_successful.emit(context)
+
+
 
     def try_login(self, username: str, password: str):
         """Intenta autenticar delegando en AuthenticationManager.
@@ -671,6 +694,9 @@ class LoginWindowMultiCompany(QDialog):
         Devuelve un objeto Session si el login fue exitoso, o None si falló.
         Mantiene un fallback a usuarios demo cuando el repositorio no devuelve usuario.
         """
+        logger = logging.getLogger(__name__)
+        logger.debug(f"try_login called for user: {username}")
+
         # Primero, intentar autenticar usando el repositorio real (MVC)
         try:
             from core.repositories import UserRepository
@@ -680,26 +706,38 @@ class LoginWindowMultiCompany(QDialog):
                 def get_by_username(uname: str):
                     # Repositorio central expone `get_user_by_username`.
                     try:
-                        return UserRepository.get_user_by_username(uname)
-                    except Exception:
+                        user = UserRepository.get_user_by_username(uname)
+                        logger.debug(f"UserRepository returned: {type(user).__name__ if user else 'None'}")
+                        return user
+                    except Exception as e:
+                        logger.debug(f"UserRepository exception: {e}")
                         return None
 
             session = self.auth_manager.login(username, password, _UserRepoAdapter)
             if session:
+                logger.info(f"Login successful via repository for {username}")
                 return session
-        except Exception:
+            else:
+                logger.debug(f"Repository login failed for {username}, trying demo users")
+        except Exception as e:
             # Si algo falla con el repo, intentamos fallback demo
-            logging.getLogger(__name__).exception("Error usando UserRepository for login - fallback a demo users")
+            logger.exception(f"Error usando UserRepository for login - fallback a demo users: {e}")
 
         # Fallback: usuarios demo (local, para entornos sin BD)
+        logger.debug("Trying demo users fallback")
         demo_users = self.create_demo_users()
+        logger.debug(f"Created {len(demo_users)} demo users")
+
         for user in demo_users:
+            # user es un objeto User (no dict)
+            logger.debug(f"Checking demo user: {user.username}")
             if user.username == username and user.verify_password(password):
                 import secrets
                 from datetime import datetime
 
                 from core.auth import Session
 
+                logger.info(f"Login successful via demo user for {username}")
                 session = Session(
                     user=user,
                     login_time=datetime.now(),
@@ -708,6 +746,7 @@ class LoginWindowMultiCompany(QDialog):
 
                 return session
 
+        logger.warning(f"Login failed for {username} - no matching user found")
         return None
 
     def create_demo_users(self):

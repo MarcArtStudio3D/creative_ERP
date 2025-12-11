@@ -1,15 +1,13 @@
 """
-Módulo de Clientes
+Módulo de Clientes - Migrado a SQL directo
 """
 
-from . import models
 from .controller import ClientesController
-from .repository_sql import ClienteRepository  # Usando SQL directo (sin ORM)
+from .repository_sql import ClienteRepository
 from .view import ClientesView
 
 __all__ = [
     "ClienteRepository",
     "ClientesController",
     "ClientesView",
-    "models",
 ]

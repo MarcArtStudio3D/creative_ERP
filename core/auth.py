@@ -363,34 +363,65 @@ def _apply_overrides_for_role(
 class Session:
     """
     Representa una sesión de usuario activa.
+    Soporta tanto objetos User (demo) como dicts (BD).
     """
 
-    user: User
+    user: User  # Puede ser objeto User o dict
     login_time: datetime
     token: str  # Token de sesión para validación
     company_context: Optional["CompanyContext"] = None  # Contexto multi-empresa
 
     def is_valid(self) -> bool:
         """Verifica si la sesión es válida."""
+        if isinstance(self.user, dict):
+            return bool(self.user.get("is_active", False))
         return self.user.is_active
 
     def has_permission(self, module_id: str, permission: Permission) -> bool:
-        """Shortcut para verificar permisos desde la sesión."""
-        return self.user.has_permission(module_id, permission)
+        """
+        Shortcut para verificar permisos desde la sesión.
+        Soporta tanto objetos User como dicts.
+        """
+        if isinstance(self.user, dict):
+            # Usuario de BD (dict) - calcular permisos manualmente
+            role_str = self.user.get("role", "")
+            try:
+                role = UserRole(role_str) if role_str else UserRole.EMPLOYEE
+            except:
+                role = UserRole.EMPLOYEE
+
+            # Obtener permisos base del rol
+            role_perms = get_role_permissions(role)
+            module_perms = role_perms.get(module_id, [])
+
+            # Admin siempre tiene acceso
+            if Permission.ADMIN in module_perms:
+                return True
+
+            return permission in module_perms
+        else:
+            # Objeto User (demo) - usar método del objeto
+            return self.user.has_permission(module_id, permission)
 
     def get_company_name(self) -> str:
         """Obtiene el nombre de la empresa activa."""
         if self.company_context:
+            company = self.company_context.company
+            if isinstance(company, dict):
+                return company.get("nombre_comercial") or company.get("nombre_fiscal", "Sin empresa")
             return (
-                self.company_context.company.nombre_comercial
-                or self.company_context.company.nombre_fiscal
+                company.nombre_comercial
+                or company.nombre_fiscal
             )
         return "Sin empresa"
 
     def get_group_name(self) -> str:
         """Obtiene el nombre del grupo activo."""
         if self.company_context:
-            return self.company_context.group.name
+            group = self.company_context.group
+            if isinstance(group, dict):
+                return group.get("name", "Sin grupo")
+            return group.name
         return "Sin grupo"
 
 
@@ -415,45 +446,78 @@ class AuthenticationManager:
         Returns:
             Session si el login es exitoso, None en caso contrario
         """
+        self._logger.debug(f"Login attempt for user: {username}")
         user = user_repository.get_by_username(username)
 
-        # Support both local dataclass User (which defines verify_password) and
-        # repository models (SQLModel/Pydantic) that may only expose password_hash.
+        if user is None:
+            self._logger.debug(f"User {username} not found in repository")
+            self._logger.warning("Login failed for user=%s", username)
+            return None
+
+        self._logger.debug(f"User found: {type(user).__name__}, is_dict: {isinstance(user, dict)}")
+
+        # Support both dict (from SQL repository) and User objects (demo users)
         pw_ok = False
         try:
-            if user is None:
-                pw_ok = False
+            # Check if user is a dict (from SQL repository)
+            if isinstance(user, dict):
+                self._logger.debug(f"User is dict, keys: {user.keys()}")
+                # Dict from SQL repository - use verify_password function from models
+                stored_hash = user.get("password_hash")
+                self._logger.debug(f"Stored hash exists: {stored_hash is not None}")
+                if stored_hash:
+                    from core.models import verify_password
+                    try:
+                        pw_ok = verify_password(stored_hash, password)
+                        self._logger.debug(f"Password verification result: {pw_ok}")
+                    except Exception as e:
+                        self._logger.debug(f"Password verification failed: {e}")
+                        pw_ok = False
+                else:
+                    self._logger.debug("No password_hash in user dict")
+                    pw_ok = False
             else:
+                self._logger.debug("User is object, using object methods")
+                # Object User (demo users or legacy)
                 verify_fn = getattr(user, "verify_password", None)
                 if callable(verify_fn):
                     # dataclass User case or model exposing a method
                     try:
                         pw_ok = verify_fn(password)
-                    except Exception:
+                        self._logger.debug(f"Object password verification result: {pw_ok}")
+                    except Exception as e:
+                        self._logger.debug(f"Object password verification failed: {e}")
                         pw_ok = False
                 else:
                     # repository model case: compute hash from stored password_hash
                     stored_hash = getattr(user, "password_hash", None)
-                    if stored_hash and isinstance(stored_hash, str) and "$" in stored_hash:
+                    if stored_hash and isinstance(stored_hash, str):
+                        from core.models import verify_password
                         try:
-                            salt, stored = stored_hash.split("$", 1)
-                            import hashlib
-
-                            pw_ok = hashlib.sha256((password + salt).encode()).hexdigest() == stored
+                            pw_ok = verify_password(stored_hash, password)
                         except Exception:
                             pw_ok = False
                     else:
                         pw_ok = False
-        except Exception:
+        except Exception as e:
+            self._logger.error(f"Error during password verification: {e}", exc_info=True)
             pw_ok = False
 
-        if user and getattr(user, "is_active", False) and pw_ok:
+        # Check if user is active (support both dict and object)
+        is_active = user.get("is_active") if isinstance(user, dict) else getattr(user, "is_active", False)
+        self._logger.debug(f"User is_active: {is_active}, pw_ok: {pw_ok}")
+
+        if user and is_active and pw_ok:
             token = secrets.token_urlsafe(32)
             session = Session(user=user, login_time=datetime.now(), token=token)
             self._current_session = session
-            # Update last_login if attribute exists
+            # Update last_login if possible
             try:
-                user.last_login = datetime.now()
+                if isinstance(user, dict):
+                    # For dict users, we'd need to update via repository
+                    pass  # Repository doesn't support update yet
+                else:
+                    user.last_login = datetime.now()
             except Exception:
                 pass
             try:
@@ -462,10 +526,12 @@ class AuthenticationManager:
             except Exception:
                 pass
             try:
+                username_val = user.get("username") if isinstance(user, dict) else getattr(user, "username", None)
+                user_id = user.get("id") if isinstance(user, dict) else getattr(user, "id", None)
                 self._logger.info(
                     "Login successful for user=%s id=%s",
-                    getattr(user, "username", None),
-                    getattr(user, "id", None),
+                    username_val,
+                    user_id,
                 )
             except Exception:
                 pass

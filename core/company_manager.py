@@ -69,7 +69,9 @@ class CompanyDatabaseManager:
 
             # Registrar empresa en MultiDBManager si no está registrada
             try:
+                logging.getLogger(__name__).debug(f"Intentando registrar empresa {company_id} en MultiDBManager...")
                 db_manager.register_empresa(company_id, db_config)
+                logging.getLogger(__name__).debug(f"✓ Empresa {company_id} registrada")
             except Exception as e:
                 # Ya puede estar registrada, solo loguear
                 logging.getLogger(__name__).debug(
@@ -77,7 +79,9 @@ class CompanyDatabaseManager:
                 )
 
             # Cambiar a la empresa activa
+            logging.getLogger(__name__).debug(f"Cambiando a empresa activa: {company_id}")
             db_manager.switch_empresa(company_id)
+            logging.getLogger(__name__).debug(f"✓ Cambiado a empresa {company_id}, current_empresa_id={db_manager.current_empresa_id}")
 
             # Guardar info de la empresa
             self.company_info = {

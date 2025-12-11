@@ -23,7 +23,7 @@ from PySide6.QtWidgets import (
 
 from core.utils import format_decimal_value, get_company_decimal_settings, qdate_to_date
 from modules.clientes.controller import ClientesController
-from modules.clientes.models import Cliente, DireccionAlternativa
+# Ya no usamos modelos ORM - ahora trabajamos con dicts
 from modules.clientes.ui_frmClientes import Ui_frmClientes
 from modules.common.db_consulta_view import DBConsultaView
 from modules.tipo_cliente.view import TipoClienteView
@@ -116,11 +116,17 @@ class ClientesView(QWidget):
 
         # Inicializar controller (maneja repository y modelo)
         # Controller Peewee no necesita session
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.debug("Inicializando ClientesController...")
+
         self.controller = ClientesController(self)
         self.repository = (
             self.controller.repository
         )  # Mantener referencia para compatibilidad
         self._modo_edicion = False  # Bandera para controlar el modo de edición
+
+        logger.debug("ClientesController inicializado correctamente")
 
         # Conectar señales del controller
         self.controller.data_changed.connect(self._on_data_changed)
@@ -431,7 +437,7 @@ class ClientesView(QWidget):
 
                     if tipo_id:
                         self.repository.agregar_tipo_cliente(
-                            self.cliente_actual.get('id'), tipo_id, subtipo_id
+                            self.cliente_actual.id, tipo_id, subtipo_id
                         )
                         self.cargar_tipos_cliente()
 
@@ -441,7 +447,7 @@ class ClientesView(QWidget):
                                 self.cliente_actual, "id"
                             ):
                                 self._reseleccionar_cliente_en_tabla(
-                                    self.cliente_actual.get('id')
+                                    self.cliente_actual.id
                                 )
                         except Exception:
                             pass
@@ -476,7 +482,7 @@ class ClientesView(QWidget):
             # Re-seleccionar cliente actual si existe (para mantener navegación)
             if self.cliente_actual and hasattr(self.cliente_actual, "id"):
                 try:
-                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.get('id'))
+                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
                 except Exception:
                     pass
 
@@ -506,7 +512,7 @@ class ClientesView(QWidget):
 
         try:
             tipos_asociados = self.repository.obtener_tipos_cliente(
-                self.cliente_actual.get('id')
+                self.cliente_actual.id
             )
 
             for asociacion in tipos_asociados:
@@ -1532,7 +1538,7 @@ class ClientesView(QWidget):
                 for row, cliente in enumerate(clientes):
                     # Código
                     item = QTableWidgetItem(self._get_str(cliente, "codigo_cliente"))
-                    item.setData(Qt.ItemDataRole.UserRole, cliente.get('id'))
+                    item.setData(Qt.ItemDataRole.UserRole, cliente.id)
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 0, item)
                     # CIF/NIF
@@ -1582,7 +1588,7 @@ class ClientesView(QWidget):
                         return it
 
                     # Obtener ID una sola vez
-                    cliente_id = cliente.get('id')
+                    cliente_id = cliente.id
 
                     model.setItem(
                         row,
@@ -1812,7 +1818,7 @@ class ClientesView(QWidget):
                 self, self.tr("Error"), f"Error al abrir la ficha del cliente: {e}"
             )
 
-    def cargar_datos_en_formulario(self, cliente: Cliente):
+    def cargar_datos_en_formulario(self, cliente: dict):
         """Carga los datos del cliente en los campos del formulario"""
         # Activar bandera para evitar eventos automáticos durante carga
         self._loading_data = True
@@ -1992,7 +1998,7 @@ class ClientesView(QWidget):
             pass
 
         # Cargar datos adicionales
-        cid = cliente.get('id') if cliente is not None else None
+        cid = cliente.id if cliente is not None else None
         if cid is not None:
             try:
                 self.cargar_direcciones_alternativas(int(cid))
@@ -2262,13 +2268,11 @@ class ClientesView(QWidget):
         )
 
         if reply == QMessageBox.StandardButton.Yes:
-            # Delegar eliminación al controller
-            if self.controller.borrar_cliente(id_cliente):
-                # Volver a la vista de lista después de borrar
-                if hasattr(self.ui, "stackedWidget"):
-                    self.ui.stackedWidget.setCurrentIndex(1)
-                # Limpiar cliente actual
-                self.cliente_actual = None
+            # Volver a la vista de lista después de borrar
+            if hasattr(self.ui, "stackedWidget"):
+                self.ui.stackedWidget.setCurrentIndex(1)
+            # Limpiar cliente actual
+            self.cliente_actual = None
 
     def guardar_cliente(self):
         """Guarda el cliente actual"""
@@ -2499,6 +2503,7 @@ class ClientesView(QWidget):
                     if w is not None:
                         cliente_kwargs[attr] = val_bool(widget_name)
 
+                # Comboboxes (IDs)
                 for attr, widget_name in cbo_map:
                     v = self.get_combo_value(widget_name)
                     if v is not None:
@@ -2986,7 +2991,7 @@ class ClientesView(QWidget):
             # Si existe y NO es el cliente actual
             if cliente_existente and (
                 self.cliente_actual is None
-                or cliente_existente.get('id') != self.cliente_actual.get('id')
+                or cliente_existente.id != self.cliente_actual.id
             ):
                 return cliente_existente
         except Exception as e:
@@ -3697,7 +3702,7 @@ class ClientesView(QWidget):
                 )
                 # Recargar lista
                 if self.cliente_actual:
-                    self.cargar_direcciones_alternativas(self.cliente_actual.get('id'))
+                    self.cargar_direcciones_alternativas(self.cliente_actual.id)
             else:
                 show_warning(
                     self, self.tr("Error"), self.tr("No se pudo eliminar la dirección.")
@@ -3734,7 +3739,7 @@ class ClientesView(QWidget):
                 )
 
             # Recargar lista
-            self.cargar_direcciones_alternativas(self.cliente_actual.get('id'))
+            self.cargar_direcciones_alternativas(self.cliente_actual.id)
 
             # Salir del modo edición
             self.deshacer_direccion_alternativa()
@@ -3867,6 +3872,11 @@ class ClientesView(QWidget):
             if widget:
                 widget.setEnabled(False)
 
+    def cargar_direccion_en_campos_solo_lectura(self, direccion):
+        """Carga los datos de una dirección en los campos del formulario en modo solo lectura"""
+        # Usar el método existente de carga pero sin activar edición
+        self.cargar_direccion_en_campos(direccion)
+
     def cargar_direccion_en_campos(self, direccion):
         """Carga los datos de una dirección en los campos del formulario"""
         # Activar bandera para evitar eventos automáticos durante carga
@@ -3908,79 +3918,4 @@ class ClientesView(QWidget):
         finally:
             # Desactivar bandera de carga programática
             self._loading_data = False
-
-    def crear_direccion_desde_campos(self):
-        """Crea una nueva instancia de DireccionAlternativa desde los campos"""
-        from datetime import datetime
-
-        direccion = DireccionAlternativa()
-        direccion.id_cliente = self.cliente_actual.get('id')
-
-        campos_map = {
-            "descripcion": "txtdescripcion_direccion",
-            "cp": "txtcpPoblacionAlternativa",
-            "poblacion": "txtpoblacionAlternativa",
-            "direccion1": "txtdireccion1Alternativa1",
-            "direccion2": "txtdireccion1Alternativa2",
-            "provincia": "txtprovinciaAlternativa",
-            "email": "txtemail_alternativa",
-            "comentarios": "txtcomentarios_alternativa",
-        }
-
-        for attr, campo in campos_map.items():
-            widget = getattr(self.ui, campo, None)
-            if widget:
-                if hasattr(widget, "text"):
-                    valor = widget.text().strip()
-                elif hasattr(widget, "toPlainText"):
-                    valor = widget.toPlainText().strip()
-                else:
-                    valor = ""
-                setattr(direccion, attr, valor if valor else None)
-
-        # País
-        if hasattr(self.ui, "cbopaisAlternativa"):
-            pais_valor = self.get_combo_value("cbopaisAlternativa")
-            direccion.pais = pais_valor if pais_valor else "Francia"
-
-        # Fechas
-        now = datetime.now()
-        direccion.fecha_creacion = now
-        direccion.fecha_modificacion = now
-
-        return direccion
-
-    def actualizar_direccion_desde_campos(self, direccion):
-        """Actualiza una dirección existente desde los campos"""
-        from datetime import datetime
-
-        campos_map = {
-            "descripcion": "txtdescripcion_direccion",
-            "cp": "txtcpPoblacionAlternativa",
-            "poblacion": "txtpoblacionAlternativa",
-            "direccion1": "txtdireccion1Alternativa1",
-            "direccion2": "txtdireccion1Alternativa2",
-            "provincia": "txtprovinciaAlternativa",
-            "email": "txtemail_alternativa",
-            "comentarios": "txtcomentarios_alternativa",
-        }
-
-        for attr, campo in campos_map.items():
-            widget = getattr(self.ui, campo, None)
-            if widget:
-                if hasattr(widget, "text"):
-                    valor = widget.text().strip()
-                elif hasattr(widget, "toPlainText"):
-                    valor = widget.toPlainText().strip()
-                else:
-                    valor = ""
-                setattr(direccion, attr, valor if valor else None)
-
-        # País
-        if hasattr(self.ui, "cbopaisAlternativa"):
-            pais_valor = self.get_combo_value("cbopaisAlternativa")
-            direccion.pais = pais_valor if pais_valor else "Francia"
-
-        # Fecha de modificación
-        direccion.fecha_modificacion = datetime.now()
 

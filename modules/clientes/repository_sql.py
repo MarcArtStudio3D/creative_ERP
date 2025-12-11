@@ -1,15 +1,17 @@
 """
 Repository para Clientes usando SQL directo (sin ORM).
 Optimizado para aplicación multi-empresa con MultiDBManager.
+Retorna objetos Dataclass para mantener arquitectura MVC pura.
 """
 
 import logging
-from typing import Dict, List, Optional
+from typing import List, Optional
 from datetime import date, datetime
 from decimal import Decimal
 
 from core.base_repository import BaseRepository
 from core.db_manager import get_db_manager
+from modules.clientes.models import Cliente, DireccionAlternativa
 
 logger = logging.getLogger(__name__)
 
@@ -51,7 +53,7 @@ class ClienteRepository(BaseRepository):
 
     # ========== Consultas básicas ==========
 
-    def obtener_todos(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[dict]:
+    def obtener_todos(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[Cliente]:
         """
         Obtiene todos los clientes, opcionalmente filtrados.
 
@@ -61,7 +63,7 @@ class ClienteRepository(BaseRepository):
             offset: Offset para paginación
 
         Returns:
-            Lista de clientes como diccionarios
+            Lista de clientes como objetos Cliente
         """
         try:
             sql = "SELECT * FROM clientes WHERE 1=1"
@@ -83,13 +85,14 @@ class ClienteRepository(BaseRepository):
             if limit:
                 sql += f" LIMIT {limit} OFFSET {offset}"
 
-            return self._fetch_all(sql, tuple(params) if params else None)
+            rows = self._fetch_all(sql, tuple(params) if params else None)
+            return [Cliente.from_dict(row) for row in rows]
 
         except Exception as e:
             logger.error(f"Error obteniendo todos los clientes: {e}")
             return []
 
-    def obtener_por_id(self, id_cliente: int) -> Optional[dict]:
+    def obtener_por_id(self, id_cliente: int) -> Optional[Cliente]:
         """
         Obtiene un cliente por su ID.
 
@@ -97,16 +100,17 @@ class ClienteRepository(BaseRepository):
             id_cliente: ID del cliente
 
         Returns:
-            Cliente como diccionario o None
+            Cliente como objeto Cliente o None
         """
         try:
             sql = "SELECT * FROM clientes WHERE id = %s"
-            return self._fetch_one(sql, (id_cliente,))
+            row = self._fetch_one(sql, (id_cliente,))
+            return Cliente.from_dict(row) if row else None
         except Exception as e:
             logger.error(f"Error obteniendo cliente por ID {id_cliente}: {e}")
             return None
 
-    def obtener_por_codigo(self, codigo: str) -> Optional[dict]:
+    def obtener_por_codigo(self, codigo: str) -> Optional[Cliente]:
         """
         Obtiene un cliente por su código.
 
@@ -114,16 +118,17 @@ class ClienteRepository(BaseRepository):
             codigo: Código del cliente
 
         Returns:
-            Cliente como diccionario o None
+            Cliente como objeto Cliente o None
         """
         try:
             sql = "SELECT * FROM clientes WHERE codigo_cliente = %s"
-            return self._fetch_one(sql, (codigo,))
+            row = self._fetch_one(sql, (codigo,))
+            return Cliente.from_dict(row) if row else None
         except Exception as e:
             logger.error(f"Error obteniendo cliente por código {codigo}: {e}")
             return None
 
-    def obtener_por_cif(self, cif: str) -> Optional[dict]:
+    def obtener_por_cif(self, cif: str) -> Optional[Cliente]:
         """
         Obtiene un cliente por su CIF/NIF/SIREN.
 
@@ -131,28 +136,32 @@ class ClienteRepository(BaseRepository):
             cif: CIF/NIF/SIREN del cliente
 
         Returns:
-            Cliente como diccionario o None
+            Cliente como objeto Cliente o None
         """
         try:
             sql = "SELECT * FROM clientes WHERE cif_nif_siren = %s"
-            return self._fetch_one(sql, (cif,))
+            row = self._fetch_one(sql, (cif,))
+            return Cliente.from_dict(row) if row else None
         except Exception as e:
             logger.error(f"Error obteniendo cliente por CIF {cif}: {e}")
             return None
 
     # ========== Crear y actualizar ==========
 
-    def crear(self, data: dict) -> Optional[dict]:
+    def crear(self, cliente: Cliente) -> Optional[Cliente]:
         """
         Crea un nuevo cliente.
 
         Args:
-            data: Diccionario con datos del cliente
+            cliente: Objeto Cliente con datos
 
         Returns:
-            Cliente creado como diccionario o None si falla
+            Cliente creado como objeto Cliente o None si falla
         """
         try:
+            # Convertir a dict
+            data = cliente.to_dict()
+
             # Generar código automático si no existe
             if not data.get('codigo_cliente'):
                 data['codigo_cliente'] = self._generar_codigo()
@@ -184,19 +193,20 @@ class ClienteRepository(BaseRepository):
             logger.error(f"Error creando cliente: {e}")
             return None
 
-    def actualizar(self, id_cliente: int, data: dict) -> Optional[dict]:
+    def actualizar(self, id_cliente: int, cliente: Cliente) -> Optional[Cliente]:
         """
         Actualiza un cliente existente.
 
         Args:
             id_cliente: ID del cliente
-            data: Diccionario con campos a actualizar
+            cliente: Objeto Cliente con datos actualizados
 
         Returns:
-            Cliente actualizado como diccionario o None
+            Cliente actualizado como objeto Cliente o None
         """
         try:
-            # Preparar datos
+            # Convertir a dict y preparar datos
+            data = cliente.to_dict()
             data = self._preparar_datos_para_insertar(data)
 
             # Actualizar
@@ -229,7 +239,7 @@ class ClienteRepository(BaseRepository):
             logger.error(f"Error eliminando cliente {id_cliente}: {e}")
             return False
 
-    def obtener_siguiente(self, id_cliente: int) -> Optional[dict]:
+    def obtener_siguiente(self, id_cliente: int) -> Optional[Cliente]:
         """Obtiene el siguiente cliente después del ID actual."""
         try:
             sql = """
@@ -238,12 +248,13 @@ class ClienteRepository(BaseRepository):
                 ORDER BY id ASC
                 LIMIT 1
             """
-            return self._fetch_one(sql, (id_cliente,))
+            row = self._fetch_one(sql, (id_cliente,))
+            return Cliente.from_dict(row) if row else None
         except Exception as e:
             logger.error(f"Error obteniendo siguiente cliente: {e}")
             return None
 
-    def obtener_anterior(self, id_cliente: int) -> Optional[dict]:
+    def obtener_anterior(self, id_cliente: int) -> Optional[Cliente]:
         """Obtiene el cliente anterior al ID actual."""
         try:
             sql = """
@@ -252,7 +263,8 @@ class ClienteRepository(BaseRepository):
                 ORDER BY id DESC
                 LIMIT 1
             """
-            return self._fetch_one(sql, (id_cliente,))
+            row = self._fetch_one(sql, (id_cliente,))
+            return Cliente.from_dict(row) if row else None
         except Exception as e:
             logger.error(f"Error obteniendo anterior cliente: {e}")
             return None

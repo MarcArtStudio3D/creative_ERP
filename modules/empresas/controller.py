@@ -3,11 +3,10 @@ from typing import List, Optional
 
 from PySide6.QtCore import QObject, Qt, Signal
 from PySide6.QtGui import QStandardItem, QStandardItemModel
-from sqlalchemy import text
 
-from core.db import set_database_for_company
-from core.models import BusinessGroup, Empresa
-from modules.empresas.repository import EmpresaRepository
+from modules.empresas.repository_sql import EmpresaRepository
+from modules.empresas.models import Empresa
+from core.models_dataclass import BusinessGroup
 
 
 class EmpresasController(QObject):
@@ -42,10 +41,10 @@ class EmpresasController(QObject):
             empresas = self.repo.obtener_todos()
             for e in empresas:
                 items = [
-                    QStandardItem(getattr(e, "codigo_empresa", "") or ""),
-                    QStandardItem(getattr(e, "nombre_fiscal", "") or ""),
-                    QStandardItem(getattr(e, "cif_nif", "") or ""),
-                    QStandardItem(getattr(e, "poblacion", "") or ""),
+                    QStandardItem(e.codigo_empresa or ""),
+                    QStandardItem(e.nombre_fiscal or ""),
+                    QStandardItem(e.cif_nif or ""),
+                    QStandardItem(e.poblacion or ""),
                 ]
                 for it in items:
                     it.setEditable(False)

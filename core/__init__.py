@@ -15,18 +15,10 @@ from .company_manager import (
     get_current_company_context,
 )
 
-# Database (Peewee)
-from .peewee_db import (
-    create_database,
-    database_proxy,
-    ensure_initialized,
-    get_company_database_info,
-    get_current_database,
-    set_current_database,
-    set_database_for_company,
-)
+# Database - Ahora usando MultiDBManager con SQL directo
+from .db_manager import get_db_manager, init_db_manager
 
-# Models
+# Models - Ahora son helpers y tipos de compatibilidad
 from .models import (
     BusinessGroup,
     Empresa,
@@ -50,13 +42,8 @@ __all__ = [
     "company_manager",
     "get_current_company_context",
     # Database
-    "create_database",
-    "database_proxy",
-    "ensure_initialized",
-    "get_company_database_info",
-    "get_current_database",
-    "set_current_database",
-    "set_database_for_company",
+    "get_db_manager",
+    "init_db_manager",
     # Models
     "BusinessGroup",
     "Empresa",

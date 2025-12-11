@@ -14,7 +14,6 @@ from PySide6.QtWidgets import (
     QWidget,
 )
 
-from core.db import get_current_database
 from core.utils import (
     format_decimal_value,
 )

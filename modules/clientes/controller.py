@@ -1,21 +1,23 @@
 """
 Controller para el módulo de Clientes usando SQL directo.
 Maneja la lógica de negocio entre la vista y el repositorio.
+Migrado a arquitectura MVC pura con modelos Dataclass.
 """
 
 import logging
-from typing import List, Optional, Dict
+from typing import List, Optional
 
 from PySide6.QtCore import QObject, Signal, Qt
 from PySide6.QtGui import QStandardItem, QStandardItemModel
 
 from .repository_sql import ClienteRepository
+from .models import Cliente, DireccionAlternativa
 
 logger = logging.getLogger(__name__)
 
 
 class ClientesController(QObject):
-    """Controlador para el módulo de Clientes usando SQL directo (sin ORM)."""
+    """Controlador para el módulo de Clientes usando objetos Dataclass."""
 
     # Señales para comunicar eventos a la vista
     data_changed = Signal()
@@ -26,9 +28,9 @@ class ClientesController(QObject):
     def __init__(self, parent=None):
         super().__init__(parent)
         self.repository = ClienteRepository()
-        # Ahora guardamos dicts en lugar de modelos ORM
-        self._current_cliente: Optional[Dict] = None
-        self._clientes_cache: List[Dict] = []
+        # Ahora guardamos objetos Cliente en lugar de dicts
+        self._current_cliente: Optional[Cliente] = None
+        self._clientes_cache: List[Cliente] = []
         self._current_index: int = -1
 
         # Modelo Qt para la tabla (compatibilidad con vista)
@@ -41,26 +43,26 @@ class ClientesController(QObject):
 
     # ========== Propiedades ==========
 
-    def get_current_cliente(self) -> Optional[Dict]:
-        """Obtiene el cliente actual (diccionario)."""
+    def get_current_cliente(self) -> Optional[Cliente]:
+        """Obtiene el cliente actual (objeto Cliente)."""
         return self._current_cliente
 
-    def set_current_cliente(self, cliente: Dict):
+    def set_current_cliente(self, cliente: Cliente):
         """Establece el cliente actual."""
         self._current_cliente = cliente
-        cid = cliente.get("id", None)
+        cid = cliente.id if cliente else None
         if cid:
             self.cliente_changed.emit(int(cid))
 
     # ========== Propiedades de compatibilidad ==========
 
     @property
-    def cliente_actual(self) -> Optional[Dict]:
+    def cliente_actual(self) -> Optional[Cliente]:
         """Propiedad para compatibilidad con vista."""
         return self._current_cliente
 
     @cliente_actual.setter
-    def cliente_actual(self, value: Optional[Dict]):
+    def cliente_actual(self, value: Optional[Cliente]):
         """Setter para compatibilidad con vista."""
         self._current_cliente = value
         cid = getattr(value, "id", None)
@@ -69,7 +71,7 @@ class ClientesController(QObject):
 
     # ========== Carga de datos ==========
 
-    def get_clientes(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[Dict]:
+    def get_clientes(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[Cliente]:
         """Obtiene lista de clientes (instancias de modelo)."""
         try:
             clientes = self.repository.obtener_todos(filtro=filtro, limit=limit, offset=offset)
@@ -86,7 +88,7 @@ class ClientesController(QObject):
             cliente = self.repository.obtener_por_id(id_cliente)
             if cliente:
                 self._current_cliente = cliente
-                cid = cliente.get("id", None)
+                cid = (cliente.id if cliente else None)
                 if cid:
                     self.cliente_changed.emit(int(cid))
                 return True
@@ -102,7 +104,7 @@ class ClientesController(QObject):
             cliente = self.repository.obtener_por_codigo(codigo)
             if cliente:
                 self._current_cliente = cliente
-                cid = cliente.get("id", None)
+                cid = (cliente.id if cliente else None)
                 if cid:
                     self.cliente_changed.emit(int(cid))
                 return True
@@ -148,7 +150,7 @@ class ClientesController(QObject):
         # nueva firma con flags para forzar comportamiento
         return self.save_current_cliente_with_flags()
 
-    def create_cliente(self, data: Dict) -> Optional[Dict]:
+    def create_cliente(self, data: Cliente) -> Optional[Cliente]:
         """Crea un cliente delegando al repositorio."""
         try:
             return self.repository.crear(data)
@@ -156,7 +158,7 @@ class ClientesController(QObject):
             logger.exception("Error in create_cliente: %s", e)
             return None
 
-    def update_cliente(self, id_cliente: int, data: Dict) -> Optional[Dict]:
+    def update_cliente(self, id_cliente: int, data: Cliente) -> Optional[Cliente]:
         """Actualiza un cliente delegando al repositorio."""
         try:
             return self.repository.actualizar(id_cliente, data)
@@ -176,9 +178,9 @@ class ClientesController(QObject):
                 return False
 
             data = self._current_cliente  # Ya es un dict, no necesita conversión
-            cid = self._current_cliente.get('id', None)
+            cid = self._current_(cliente.id if cliente else None)
 
-            cliente: Optional[Dict] = None
+            cliente: Optional[Cliente] = None
             if force_create:
                 cliente = self.create_cliente(data)
             elif force_update:
@@ -213,7 +215,7 @@ class ClientesController(QObject):
             if success:
                 self.operation_success.emit("Cliente eliminado correctamente")
                 self.data_changed.emit()
-                if self._current_cliente and self._current_cliente.get('id', None) == id_cliente:
+                if self._current_cliente and self._current_(cliente.id if cliente else None) == id_cliente:
                     self._current_cliente = None
             return success
         except Exception as e:
@@ -224,7 +226,7 @@ class ClientesController(QObject):
     def undo_current_cliente(self):
         """Deshace cambios en el cliente actual (recarga desde BD si existe)."""
         try:
-            cid = self._current_cliente.get('id', None)
+            cid = self._current_(cliente.id if cliente else None)
             if cid:
                 self.load_by_id(int(cid))
         except Exception as e:
@@ -235,14 +237,14 @@ class ClientesController(QObject):
     def next_cliente(self) -> bool:
         """Navega al siguiente cliente."""
         try:
-            cid = self._current_cliente.get('id', None)
+            cid = self._current_(cliente.id if cliente else None)
             if not cid:
                 return False
 
             next_cliente = self.repository.obtener_siguiente(int(cid))
             if next_cliente:
                 self._current_cliente = next_cliente
-                self.cliente_changed.emit(int(next_cliente.get('id')))
+                self.cliente_changed.emit(int(next_cliente.id))
                 return True
             return False
         except Exception as e:
@@ -252,14 +254,14 @@ class ClientesController(QObject):
     def prev_cliente(self) -> bool:
         """Navega al cliente anterior."""
         try:
-            cid = self._current_cliente.get('id', None)
+            cid = self._current_(cliente.id if cliente else None)
             if not cid:
                 return False
 
             prev_cliente = self.repository.obtener_anterior(int(cid))
             if prev_cliente:
                 self._current_cliente = prev_cliente
-                self.cliente_changed.emit(int(prev_cliente.get('id')))
+                self.cliente_changed.emit(int(prev_cliente.id))
                 return True
             return False
         except Exception as e:
@@ -276,7 +278,7 @@ class ClientesController(QObject):
             logger.exception("Error counting clientes: %s", e)
             return 0
 
-    def search(self, filtro: str) -> List[Dict]:
+    def search(self, filtro: str) -> List[Cliente]:
         """Busca clientes por filtro (devuelve instancias)."""
         return self.get_clientes(filtro=filtro)
 
@@ -296,15 +298,15 @@ class ClientesController(QObject):
             clientes = self.get_clientes(filtro=filtro)
             for cliente in clientes:
                 # Obtener valores de forma segura desde el diccionario
-                codigo = cliente.get('codigo_cliente', '') or ''
-                nif = cliente.get('cif_nif_siren', '') or ''
-                nombre = cliente.get('nombre_fiscal', '') or ''
-                telefono = cliente.get('telefono1', '') or ''
-                email = cliente.get('email', '') or ''
+                codigo = (cliente.codigo_cliente if cliente else '') or ''
+                nif = (cliente.cif_nif_siren if cliente else '') or ''
+                nombre = (cliente.nombre_fiscal if cliente else '') or ''
+                telefono = (cliente.telefono1 if cliente else '') or ''
+                email = (cliente.email if cliente else '') or ''
 
                 items = [QStandardItem(codigo), QStandardItem(nif), QStandardItem(nombre), QStandardItem(telefono), QStandardItem(email)]
                 # Guardar el ID del cliente en el primer item para recuperarlo al hacer doble click
-                cid = cliente.get('id', None)
+                cid = (cliente.id if cliente else None)
                 if cid is not None:
                     items[0].setData(int(cid), Qt.ItemDataRole.UserRole)
                 self.model.appendRow(items)
@@ -313,20 +315,20 @@ class ClientesController(QObject):
             logger.exception("Error loading clientes: %s", e)
             self.error_occurred.emit(f"Error al cargar clientes: {str(e)}")
 
-    def obtener_cliente(self, id_cliente: int) -> Optional[Dict]:
+    def obtener_cliente(self, id_cliente: int) -> Optional[Cliente]:
         """Obtiene un cliente por ID (compatibilidad con vista)."""
         return self.repository.obtener_por_id(id_cliente)
 
-    def obtener_cliente_por_codigo(self, codigo: str) -> Optional[Dict]:
+    def obtener_cliente_por_codigo(self, codigo: str) -> Optional[Cliente]:
         """Obtiene un cliente por código (compatibilidad con vista)."""
         return self.repository.obtener_por_codigo(codigo)
 
-    def nuevo_cliente(self) -> Dict:
+    def nuevo_cliente(self) -> Cliente:
         """Crea un nuevo cliente vacío (compatibilidad con vista)."""
         self.add_new()
         return self._current_cliente
 
-    def guardar_cliente(self, cliente: Dict) -> Optional[Dict]:
+    def guardar_cliente(self, cliente: Cliente) -> Optional[Cliente]:
         """Guarda un cliente (compatibilidad con vista)."""
         try:
             # Nueva firma: aceptar flags opcionales dentro de un dict especial o kwargs
@@ -360,7 +362,7 @@ class ClientesController(QObject):
         """Elimina un cliente (compatibilidad con vista)."""
         return self.delete_cliente(id_cliente)
 
-    def buscar_clientes(self, termino: str) -> List[Dict]:
+    def buscar_clientes(self, termino: str) -> List[Cliente]:
         """Busca clientes por término (compatibilidad con vista)."""
         return self.search(termino)
 
@@ -371,7 +373,7 @@ class ClientesController(QObject):
 
     # Métodos de CP/poblacion siguen siendo stubs
 
-    def obtener_cliente_en_posicion(self, posicion: int) -> Optional[Dict]:
+    def obtener_cliente_en_posicion(self, posicion: int) -> Optional[Cliente]:
         """Obtiene cliente en posición (stub para compatibilidad)."""
         try:
             if 0 <= posicion < len(self._clientes_cache):

@@ -25,7 +25,7 @@ class ArticuloRepository(BaseRepository):
         'id', 'codigo', 'codigo_barras', 'codigo_tipo', 'descripcion_reducida',
         'descripcion_ampliada', 'descripcion_proveedor', 'activo', 'id_seccion',
         'id_familia', 'id_subfamilia', 'id_proveedor', 'fecha_alta',
-        'fecha_modificacion', 'coste', 'precio_venta', 'precio_compra',
+        'coste', 'precio_venta', 'precio_compra',
         'iva', 'req_eq', 'stock_real', 'stock_minimo', 'stock_maximo',
         'peso', 'volumen', 'ubicacion', 'imagen', 'observaciones',
         'visible_web', 'destacado_web', 'oferta_web', 'novedad_web',
@@ -212,8 +212,6 @@ class ArticuloRepository(BaseRepository):
             Artículo actualizado como diccionario o None
         """
         try:
-            # Añadir fecha de modificación
-            data['fecha_modificacion'] = datetime.now()
 
             # Preparar datos
             data = self._preparar_datos_para_insertar(data)
@@ -236,7 +234,7 @@ class ArticuloRepository(BaseRepository):
         try:
             # Primero eliminar tarifas y promociones asociadas
             self._delete('tarifas', 'id_articulo = %s', (articulo_id,))
-            self._delete('promociones', 'id_articulo = %s', (articulo_id,))
+            self._delete('articulos_ofertas', 'id_articulo = %s', (articulo_id,))
 
             # Eliminar artículo
             rows_affected = self._delete('articulos', 'id = %s', (articulo_id,))
@@ -323,8 +321,8 @@ class ArticuloRepository(BaseRepository):
     def obtener_promociones(self, articulo_id: int) -> List[dict]:
         """Obtiene todas las promociones de un artículo."""
         try:
-            sql = """
-                SELECT * FROM promociones
+            query = """
+                SELECT * FROM articulos_ofertas
                 WHERE id_articulo = %s
                 ORDER BY fecha_inicio DESC
             """
@@ -336,7 +334,7 @@ class ArticuloRepository(BaseRepository):
     def obtener_promocion_por_id(self, promocion_id: int) -> Optional[dict]:
         """Obtiene una promoción por su ID."""
         try:
-            sql = "SELECT * FROM promociones WHERE id = %s"
+            sql = "SELECT * FROM articulos_ofertas WHERE id = %s"
             return self._fetch_one(sql, (promocion_id,))
         except Exception as e:
             logger.error(f"Error obteniendo promoción {promocion_id}: {e}")
@@ -345,7 +343,7 @@ class ArticuloRepository(BaseRepository):
     def crear_promocion(self, data: dict) -> Optional[dict]:
         """Crea una nueva promoción."""
         try:
-            promocion_id = self._insert('promociones', data)
+            promocion_id = self._insert('articulos_ofertas', data)
             return self.obtener_promocion_por_id(promocion_id)
         except Exception as e:
             logger.error(f"Error creando promoción: {e}")
@@ -354,7 +352,7 @@ class ArticuloRepository(BaseRepository):
     def actualizar_promocion(self, promocion_id: int, data: dict) -> Optional[dict]:
         """Actualiza una promoción."""
         try:
-            rows_affected = self._update('promociones', data, 'id = %s', (promocion_id,))
+            rows_affected = self._update('articulos_ofertas', data, 'id = %s', (promocion_id,))
 
             if rows_affected > 0:
                 return self.obtener_promocion_por_id(promocion_id)
@@ -366,7 +364,7 @@ class ArticuloRepository(BaseRepository):
     def eliminar_promocion(self, promocion_id: int) -> bool:
         """Elimina una promoción."""
         try:
-            rows_affected = self._delete('promociones', 'id = %s', (promocion_id,))
+            rows_affected = self._delete('articulos_ofertas', 'id = %s', (promocion_id,))
             return rows_affected > 0
         except Exception as e:
             logger.error(f"Error eliminando promoción {promocion_id}: {e}")
@@ -500,7 +498,7 @@ class ArticuloRepository(BaseRepository):
                 continue
 
             # Convertir fechas
-            if key in ['fecha_alta', 'fecha_modificacion']:
+            if key == 'fecha_alta':
                 if isinstance(value, (date, datetime)):
                     resultado[key] = value
                 elif isinstance(value, str):

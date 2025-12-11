@@ -1,6 +1,7 @@
 """
 Controller para Divisiones del Almacén (Secciones, Familias, Subfamilias)
-Coordina la lógica de negocio entre la vista y el repository
+Coordina la lógica de negocio entre la vista y el repository.
+Arquitectura MVC pura con modelos Dataclass.
 """
 
 from typing import List, Optional, Tuple
@@ -8,7 +9,7 @@ from typing import List, Optional, Tuple
 from PySide6.QtCore import QCoreApplication
 
 from modules.articulos.divisiones_repository import DivisionesRepository
-from modules.articulos.models import Familia, Seccion, Subfamilia
+from modules.articulos.models import Seccion, Familia, Subfamilia
 
 
 class DivisionesController:
@@ -17,7 +18,7 @@ class DivisionesController:
     def __init__(self):
         self.repository = DivisionesRepository()
 
-        # Estado actual de la navegación
+        # Estado actual de la navegación (objetos Dataclass)
         self.seccion_actual: Optional[Seccion] = None
         self.familia_actual: Optional[Familia] = None
         self.subfamilia_actual: Optional[Subfamilia] = None
@@ -61,8 +62,9 @@ class DivisionesController:
                     ).format(codigo=codigo),
                 )
 
-            seccion = Seccion(codigo=codigo, seccion=nombre)
-            self.repository.guardar_seccion(seccion)
+            # Crear objeto Seccion
+            nueva_seccion = Seccion(id=None, codigo=codigo, seccion=nombre)
+            self.repository.guardar_seccion(nueva_seccion)
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -81,7 +83,7 @@ class DivisionesController:
             # Verificar duplicados si cambia el código
             if self.seccion_actual.codigo != codigo:
                 existente = self.repository.obtener_seccion_por_codigo(codigo)
-                if existente:
+                if existente and existente['id'] != self.seccion_actual.id:
                     return (
                         False,
                         QCoreApplication.translate(
@@ -90,9 +92,16 @@ class DivisionesController:
                         ).format(codigo=codigo),
                     )
 
+            # Actualizar dict
+            seccion_data = {
+                'id': self.seccion_actual.id,
+                'codigo': codigo,
+                'seccion': nombre
+            }
+            self.repository.guardar_seccion(seccion_data)
+            # Actualizar el dict actual
             self.seccion_actual.codigo = codigo
             self.seccion_actual.seccion = nombre
-            self.repository.guardar_seccion(self.seccion_actual)
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -119,7 +128,7 @@ class DivisionesController:
                     ).format(n=len(familias)),
                 )
 
-            self.repository.borrar_seccion(self.seccion_actual)
+            self.repository.borrar_seccion(self.seccion_actual.id)
             self.seccion_actual = None
             self.tipo_seleccion = None
             return (True, "")
@@ -128,7 +137,7 @@ class DivisionesController:
 
     # ==================== FAMILIAS ====================
 
-    def obtener_familias_seccion_actual(self) -> List[Familia]:
+    def obtener_familias_seccion_actual(self) -> List[Seccion]:
         if not self.seccion_actual:
             return []
         return self.repository.obtener_familias_por_seccion(self.seccion_actual.id)
@@ -170,10 +179,13 @@ class DivisionesController:
                     ).format(codigo=codigo),
                 )
 
-            familia = Familia(
-                codigo=codigo, familia=nombre, id_seccion=self.seccion_actual.id
-            )
-            self.repository.guardar_familia(familia)
+            # Crear dict
+            familia_data = {
+                'codigo': codigo,
+                'familia': nombre,
+                'id_seccion': self.seccion_actual.id
+            }
+            self.repository.guardar_familia(familia_data)
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -190,7 +202,7 @@ class DivisionesController:
         try:
             if self.familia_actual.codigo != codigo:
                 existente = self.repository.obtener_familia_por_codigo(codigo)
-                if existente:
+                if existente and existente['id'] != self.familia_actual.id:
                     return (
                         False,
                         QCoreApplication.translate(
@@ -199,9 +211,15 @@ class DivisionesController:
                         ).format(codigo=codigo),
                     )
 
+            familia_data = {
+                'id': self.familia_actual.id,
+                'codigo': codigo,
+                'familia': nombre,
+                'id_seccion': self.familia_actual.id_seccion
+            }
+            self.repository.guardar_familia(familia_data)
             self.familia_actual.codigo = codigo
             self.familia_actual.familia = nombre
-            self.repository.guardar_familia(self.familia_actual)
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -228,7 +246,7 @@ class DivisionesController:
                     ).format(n=len(subfamilias)),
                 )
 
-            self.repository.borrar_familia(self.familia_actual)
+            self.repository.borrar_familia(self.familia_actual.id)
             self.familia_actual = None
             self.tipo_seleccion = "seccion"
             return (True, "")
@@ -237,7 +255,7 @@ class DivisionesController:
 
     # ==================== SUBFAMILIAS ====================
 
-    def obtener_subfamilias_familia_actual(self) -> List[Subfamilia]:
+    def obtener_subfamilias_familia_actual(self) -> List[Seccion]:
         if not self.familia_actual:
             return []
         return self.repository.obtener_subfamilias_por_familia(self.familia_actual.id)
@@ -274,10 +292,12 @@ class DivisionesController:
                     ).format(codigo=codigo),
                 )
 
-            subfamilia = Subfamilia(
-                codigo=codigo, subfamilia=nombre, id_familia=self.familia_actual.id
-            )
-            self.repository.guardar_subfamilia(subfamilia)
+            subfamilia_data = {
+                'codigo': codigo,
+                'subfamilia': nombre,
+                'id_familia': self.familia_actual.id
+            }
+            self.repository.guardar_subfamilia(subfamilia_data)
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -296,7 +316,7 @@ class DivisionesController:
         try:
             if self.subfamilia_actual.codigo != codigo:
                 existente = self.repository.obtener_subfamilias_por_codigo(codigo)
-                if existente:
+                if existente and existente['id'] != self.subfamilia_actual.id:
                     return (
                         False,
                         QCoreApplication.translate(
@@ -305,9 +325,15 @@ class DivisionesController:
                         ).format(codigo=codigo),
                     )
 
+            subfamilia_data = {
+                'id': self.subfamilia_actual.id,
+                'codigo': codigo,
+                'subfamilia': nombre,
+                'id_familia': self.subfamilia_actual.id_familia
+            }
+            self.repository.guardar_subfamilia(subfamilia_data)
             self.subfamilia_actual.codigo = codigo
             self.subfamilia_actual.subfamilia = nombre
-            self.repository.guardar_subfamilia(self.subfamilia_actual)
             return (True, "")
         except Exception as e:
             return (False, str(e))
@@ -322,7 +348,7 @@ class DivisionesController:
             )
 
         try:
-            self.repository.borrar_subfamilia(self.subfamilia_actual)
+            self.repository.borrar_subfamilia(self.subfamilia_actual.id)
             self.subfamilia_actual = None
             self.tipo_seleccion = "familia"
             return (True, "")

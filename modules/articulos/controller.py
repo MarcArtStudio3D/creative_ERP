@@ -8,7 +8,7 @@ from typing import Any, Dict, List, Optional, Tuple
 
 from PySide6.QtCore import QCoreApplication
 
-from .repository import ArticuloRepository
+from .repository_sql import ArticuloRepository
 
 logger = logging.getLogger(__name__)
 
@@ -28,15 +28,15 @@ class ArticuloController:
     def add_new(self) -> bool:
         """Crear un nuevo artículo temporal."""
         try:
-            new_id = self.repository.create()
+            new_id = self.repository.crear()
             if not new_id:
                 return False
 
             # Create tarifas for the new article
-            self.repository.create_tarifas_for_article(new_id)
+            self.repository.crear_tarifas_articulo(new_id)
 
             # Load the new article
-            self.current_article = self.repository.get_by_id(new_id)
+            self.current_article = self.repository.obtener_por_id(new_id)
             self.is_new = True
             self.codigo_anterior = self.current_article.get("codigo") if self.current_article else None
 
@@ -48,7 +48,7 @@ class ArticuloController:
     def load_by_id(self, articulo_id: int) -> bool:
         """Cargar un artículo por su ID."""
         try:
-            article = self.repository.get_by_id(articulo_id)
+            article = self.repository.obtener_por_id(articulo_id)
             if article:
                 self.current_article = article
                 self.is_new = False
@@ -75,7 +75,7 @@ class ArticuloController:
             # Remove keys that shouldn't be saved
             save_data = {k: v for k, v in data.items() if k != "id"}
 
-            success = self.repository.update(article_id, save_data)
+            success = self.repository.actualizar(article_id, save_data)
 
             if success:
                 # Reload to get updated data
@@ -91,7 +91,7 @@ class ArticuloController:
     def delete_article(self, articulo_id: int) -> bool:
         """Eliminar un artículo."""
         try:
-            return self.repository.delete(articulo_id)
+            return self.repository.eliminar(articulo_id)
         except Exception as e:
             logger.exception("Error deleting article: %s", e)
             return False
@@ -109,7 +109,7 @@ class ArticuloController:
             return False
 
         try:
-            next_art = self.repository.get_next(self.current_article["id"])
+            next_art = self.repository.obtener_siguiente(self.current_article["id"])
             if next_art:
                 self.current_article = next_art
                 self.is_new = False
@@ -126,7 +126,7 @@ class ArticuloController:
             return False
 
         try:
-            prev_art = self.repository.get_prev(self.current_article["id"])
+            prev_art = self.repository.obtener_anterior(self.current_article["id"])
             if prev_art:
                 self.current_article = prev_art
                 self.is_new = False
@@ -149,7 +149,7 @@ class ArticuloController:
     ) -> List[Dict]:
         """Obtener lista de artículos."""
         try:
-            arts = self.repository.get_all(
+            arts = self.repository.obtener_todos(
                 limit=limit,
                 offset=offset,
                 order_by=order_by,
@@ -174,7 +174,7 @@ class ArticuloController:
     def count_articles(self, filtro: str = "") -> int:
         """Contar artículos."""
         try:
-            return self.repository.count_all(filtro)
+            return self.repository.contar_todos(filtro)
         except Exception as e:
             logger.exception("Error counting articles: %s", e)
             return 0
@@ -187,7 +187,7 @@ class ArticuloController:
             return []
 
         try:
-            return self.repository.get_tarifas(self.current_article["id"])
+            return self.repository.obtener_tarifas(self.current_article["id"])
         except Exception as e:
             logger.exception("Error getting tarifas: %s", e)
             return []
@@ -195,7 +195,7 @@ class ArticuloController:
     def update_tarifa(self, tarifa_id: int, data: Dict) -> bool:
         """Actualizar una tarifa."""
         try:
-            return self.repository.update_tarifa(tarifa_id, data)
+            return self.repository.actualizar_tarifa(tarifa_id, data)
         except Exception as e:
             logger.exception("Error updating tarifa: %s", e)
             return False
@@ -208,7 +208,7 @@ class ArticuloController:
             return []
 
         try:
-            return self.repository.get_promociones(self.current_article["id"])
+            return self.repository.obtener_promociones(self.current_article["id"])
         except Exception as e:
             logger.exception("Error getting promociones: %s", e)
             return []
@@ -227,11 +227,11 @@ class ArticuloController:
 
             if oferta_id:
                 # Update existing
-                success = self.repository.update_promocion(oferta_id, oferta_data)
+                success = self.repository.actualizar_promocion(oferta_id, oferta_data)
                 msg = "Promoción actualizada" if success else "Error al actualizar"
             else:
                 # Create new
-                new_id = self.repository.create_promocion(oferta_data)
+                new_id = self.repository.crear_promocion(oferta_data)
                 success = new_id is not None
                 msg = "Promoción creada" if success else "Error al crear"
 
@@ -244,7 +244,7 @@ class ArticuloController:
     def delete_oferta(self, oferta_id: int) -> bool:
         """Eliminar una promoción."""
         try:
-            return self.repository.delete_promocion(oferta_id)
+            return self.repository.eliminar_promocion(oferta_id)
         except Exception as e:
             logger.exception("Error deleting oferta: %s", e)
             return False
@@ -258,7 +258,7 @@ class ArticuloController:
     def get_secciones(self) -> List[Dict]:
         """Obtener todas las secciones."""
         try:
-            return self.repository.get_secciones()
+            return self.repository.obtener_secciones()
         except Exception as e:
             logger.exception("Error getting secciones: %s", e)
             return []
@@ -266,7 +266,7 @@ class ArticuloController:
     def get_familias(self, id_seccion: int = None) -> List[Dict]:
         """Obtener familias, opcionalmente filtradas por sección."""
         try:
-            return self.repository.get_familias(id_seccion)
+            return self.repository.obtener_familias(id_seccion)
         except Exception as e:
             logger.exception("Error getting familias: %s", e)
             return []
@@ -274,7 +274,7 @@ class ArticuloController:
     def get_subfamilias(self, id_familia: int = None) -> List[Dict]:
         """Obtener subfamilias, opcionalmente filtradas por familia."""
         try:
-            return self.repository.get_subfamilias(id_familia)
+            return self.repository.obtener_subfamilias(id_familia)
         except Exception as e:
             logger.exception("Error getting subfamilias: %s", e)
             return []
@@ -282,7 +282,7 @@ class ArticuloController:
     def get_tipos(self) -> List[Dict]:
         """Obtener todos los tipos de artículo."""
         try:
-            return self.repository.get_tipos()
+            return self.repository.obtener_tipos()
         except Exception as e:
             logger.exception("Error getting tipos: %s", e)
             return []

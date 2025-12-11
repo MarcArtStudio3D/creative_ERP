@@ -1,9 +1,12 @@
-from . import models
+"""
+Módulo de Artículos - Migrado a SQL directo
+"""
+
 from .controller import ArticuloController
 from .divisiones_controller import DivisionesController
 from .divisiones_repository import DivisionesRepository
 from .divisiones_view import DivisionesView
-from .repository_sql import ArticuloRepository  # Usando SQL directo (sin ORM)
+from .repository_sql import ArticuloRepository
 
 __all__ = [
     "ArticuloRepository",
@@ -11,5 +14,4 @@ __all__ = [
     "DivisionesRepository",
     "DivisionesController",
     "DivisionesView",
-    "models",
 ]

@@ -644,17 +644,25 @@ class LoginWindowMultiCompany(QDialog):
         try:
             company_id = company.id
             success = company_manager.select_company(company_id)
-            if success:
-                print(
-                    f"✅ Base de datos configurada para empresa: {company.nombre_fiscal}"
+            if not success:
+                from core.ui_helpers import show_warning
+
+                show_warning(
+                    self,
+                    self.tr("Error"),
+                    self.tr(
+                        "No se pudo configurar la base de datos de la empresa seleccionada. Comprueba la configuración y vuelve a intentarlo."
+                    ),
                 )
+                return
             else:
-                print(
-                    f"⚠️  Error configurando BD para empresa: {company.nombre_fiscal}"
+                logging.getLogger(__name__).info(
+                    "✅ Base de datos configurada para empresa: %s", company.nombre_fiscal
                 )
         except Exception as e:
             print(f"❌ Error configurando empresa: {e}")
 
+        # Emitir solo si todo ha ido bien
         self.login_successful.emit(context)
 
     def try_login(self, username: str, password: str):
@@ -710,7 +718,7 @@ class LoginWindowMultiCompany(QDialog):
             User(
                 id=1,
                 username="admin",
-                email="marc.miralles@artstudio3d.com",
+                email="marc.miralles@artstudio3d.fr",
                 full_name="Administrador",
                 password_hash=User.hash_password("admin"),
                 role=UserRole.ADMIN,

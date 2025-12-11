@@ -431,7 +431,7 @@ class ClientesView(QWidget):
 
                     if tipo_id:
                         self.repository.agregar_tipo_cliente(
-                            self.cliente_actual.id, tipo_id, subtipo_id
+                            self.cliente_actual.get('id'), tipo_id, subtipo_id
                         )
                         self.cargar_tipos_cliente()
 
@@ -441,7 +441,7 @@ class ClientesView(QWidget):
                                 self.cliente_actual, "id"
                             ):
                                 self._reseleccionar_cliente_en_tabla(
-                                    self.cliente_actual.id
+                                    self.cliente_actual.get('id')
                                 )
                         except Exception:
                             pass
@@ -476,7 +476,7 @@ class ClientesView(QWidget):
             # Re-seleccionar cliente actual si existe (para mantener navegación)
             if self.cliente_actual and hasattr(self.cliente_actual, "id"):
                 try:
-                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.id)
+                    self._reseleccionar_cliente_en_tabla(self.cliente_actual.get('id'))
                 except Exception:
                     pass
 
@@ -486,7 +486,7 @@ class ClientesView(QWidget):
 
     def _on_operation_success(self, mensaje: str):
         """Maneja la señal operation_success del controller."""
-        show_info(self, self.tr("Éxito"), mensaje)
+        QMessageBox.information(self, self.tr("Éxito"), mensaje)
 
     def _on_cliente_changed(self, cliente_id: int):
         """Maneja la señal cliente_changed del controller."""
@@ -506,7 +506,7 @@ class ClientesView(QWidget):
 
         try:
             tipos_asociados = self.repository.obtener_tipos_cliente(
-                self.cliente_actual.id
+                self.cliente_actual.get('id')
             )
 
             for asociacion in tipos_asociados:
@@ -1118,6 +1118,20 @@ class ClientesView(QWidget):
             # No hacer nada si no se puede ajustar
             pass
 
+    def aplicar_estilos_pestanas(self):
+        """
+        Aplica estilos CSS personalizados a las pestañas del QTabWidget.
+
+        Por ahora se usa el estilo global modern.qss, así que este método
+        puede estar vacío o aplicar ajustes específicos si es necesario.
+        """
+        try:
+            # El estilo global modern.qss ya se encarga de los estilos
+            # Aquí se pueden añadir estilos específicos si es necesario
+            pass
+        except Exception as e:
+            logger.debug(f"No se pudieron aplicar estilos a pestañas: {e}")
+
     def _get_str(self, obj, attr: str) -> str:
         """Devuelve de forma segura el valor de un atributo como string ('' si no existe).
 
@@ -1518,7 +1532,7 @@ class ClientesView(QWidget):
                 for row, cliente in enumerate(clientes):
                     # Código
                     item = QTableWidgetItem(self._get_str(cliente, "codigo_cliente"))
-                    item.setData(Qt.ItemDataRole.UserRole, cliente.id)
+                    item.setData(Qt.ItemDataRole.UserRole, cliente.get('id'))
                     item.setFlags(item.flags() & ~Qt.ItemFlag.ItemIsEditable)
                     tabla.setItem(row, 0, item)
                     # CIF/NIF
@@ -1567,36 +1581,34 @@ class ClientesView(QWidget):
                         it.setData(cid, Qt.ItemDataRole.UserRole)
                         return it
 
+                    # Obtener ID una sola vez
+                    cliente_id = cliente.get('id')
+
                     model.setItem(
                         row,
                         0,
-                        std_item(self._get_str(cliente, "codigo_cliente"), cliente.id),
+                        std_item(self._get_str(cliente, "codigo_cliente"), cliente_id),
                     )
                     model.setItem(
                         row,
                         1,
-                        std_item(self._get_str(cliente, "cif_nif_siren"), cliente.id),
+                        std_item(self._get_str(cliente, "cif_nif_siren"), cliente_id),
                     )
                     model.setItem(
                         row,
                         2,
                         std_item(
-                            self._get_str(cliente, "nombre_fiscal")
-                            or (
-                                cliente.nombre_completo()
-                                if hasattr(cliente, "nombre_completo")
-                                else ""
-                            ),
-                            cliente.id,
+                            self._get_str(cliente, "nombre_fiscal"),
+                            cliente_id,
                         ),
                     )
                     model.setItem(
                         row,
                         3,
-                        std_item(self._get_str(cliente, "telefono1"), cliente.id),
+                        std_item(self._get_str(cliente, "telefono1"), cliente_id),
                     )
                     model.setItem(
-                        row, 4, std_item(self._get_str(cliente, "email"), cliente.id)
+                        row, 4, std_item(self._get_str(cliente, "email"), cliente_id)
                     )
                 tabla.setModel(model)
                 tabla.resizeColumnsToContents()
@@ -1748,7 +1760,12 @@ class ClientesView(QWidget):
             if not first_item:
                 return
 
-            id_cliente = first_item.data()
+            # Recuperar ID almacenado en el role UserRole (consistente con controller)
+            try:
+                id_cliente = first_item.data(Qt.ItemDataRole.UserRole)
+            except Exception:
+                # Fallback: recoger sin role por compatibilidad
+                id_cliente = first_item.data()
             if not id_cliente:
                 return
 
@@ -1766,6 +1783,14 @@ class ClientesView(QWidget):
                     self, self.tr("Error"), self.tr("No se pudo cargar el cliente")
                 )
                 return
+
+            # Establecer el cliente actual en la vista/controller para que los
+            # posteriores guardados actualicen este registro en lugar de crear uno nuevo.
+            try:
+                self.cliente_actual = cliente
+            except Exception:
+                # No bloquear si no se puede setear por alguna razón
+                pass
 
             # Cargar datos en formulario (con manejo robusto de errores)
             try:
@@ -1917,12 +1942,13 @@ class ClientesView(QWidget):
             pass
         try:
             if hasattr(self.ui, "cbotransportista"):
+                id_transportista = self._get_value(cliente, "id_transportista")
                 for i in range(self.ui.cbotransportista.count()):
                     itemdata = self.ui.cbotransportista.itemData(i)
                     if (
                         itemdata is not None
-                        and cliente.id_transportista is not None
-                        and int(itemdata) == cliente.id_transportista
+                        and id_transportista is not None
+                        and int(itemdata) == id_transportista
                     ):
                         self.ui.cbotransportista.setCurrentIndex(i)
                         break
@@ -1930,12 +1956,13 @@ class ClientesView(QWidget):
             pass
         try:
             if hasattr(self.ui, "cboidiomaDocumentos"):
+                id_idioma_documentos = self._get_value(cliente, "id_idioma_documentos")
                 for i in range(self.ui.cboidiomaDocumentos.count()):
                     itemdata = self.ui.cboidiomaDocumentos.itemData(i)
                     if (
                         itemdata is not None
-                        and cliente.id_idioma_documentos is not None
-                        and int(itemdata) == cliente.id_idioma_documentos
+                        and id_idioma_documentos is not None
+                        and int(itemdata) == id_idioma_documentos
                     ):
                         self.ui.cboidiomaDocumentos.setCurrentIndex(i)
                         break
@@ -1965,7 +1992,7 @@ class ClientesView(QWidget):
             pass
 
         # Cargar datos adicionales
-        cid = cliente.id if cliente is not None else None
+        cid = cliente.get('id') if cliente is not None else None
         if cid is not None:
             try:
                 self.cargar_direcciones_alternativas(int(cid))
@@ -2098,6 +2125,8 @@ class ClientesView(QWidget):
 
     def nuevo_cliente(self):
         """Crea un nuevo cliente"""
+        # Flag de estado: 'A' = Añadir, 'E' = Editar
+        self._estado = 'A'
         self.cliente_actual = None
         self.limpiar_formulario()
         self.ui.stackedWidget.setCurrentIndex(0)
@@ -2152,6 +2181,8 @@ class ClientesView(QWidget):
 
     def editar_cliente(self):
         """Edita el cliente seleccionado"""
+        # Marcar estado de edición explícito
+        self._estado = 'E'
         # Si ya tenemos un cliente cargado y estamos en la ficha (página 0), editar directamente
         if (
             self.cliente_actual is not None
@@ -2384,51 +2415,59 @@ class ClientesView(QWidget):
 
             if self.cliente_actual:
                 # Actualizar campos (UI -> Modelo) usando los mapeos
+                # Ahora cliente_actual es un dict, no un objeto
                 for attr, widget_name in txt_map:
                     w = getattr(self.ui, widget_name, None)
                     if w is not None:
-                        setattr(self.cliente_actual, attr, txt(widget_name))
+                        self.cliente_actual[attr] = txt(widget_name)
 
                 for attr, widget_name in date_map:
                     v = val_qdate_to_date(widget_name)
                     if v is not None:
-                        setattr(self.cliente_actual, attr, v)
+                        self.cliente_actual[attr] = v
 
                 for attr, widget_name in int_map:
                     v = val_int(widget_name)
                     if v is not None:
-                        setattr(self.cliente_actual, attr, v)
+                        self.cliente_actual[attr] = v
 
                 for attr, widget_name in float_map:
                     v = val_float(widget_name)
                     if v is not None:
-                        setattr(self.cliente_actual, attr, v)
+                        self.cliente_actual[attr] = v
 
                 for attr, widget_name in bool_map:
                     w = getattr(self.ui, widget_name, None)
                     if w is not None:
-                        setattr(self.cliente_actual, attr, val_bool(widget_name))
+                        self.cliente_actual[attr] = val_bool(widget_name)
 
                 # Comboboxes (IDs)
                 for attr, widget_name in cbo_map:
                     try:
                         w = getattr(self.ui, widget_name, None)
                         if w is not None:
-                            setattr(
-                                self.cliente_actual,
-                                attr,
-                                self.get_combo_value(widget_name),
-                            )
+                            self.cliente_actual[attr] = self.get_combo_value(widget_name)
                     except Exception:
                         continue
                 # Persistir cambios en la base de datos usando el controller
-                cliente_guardado = self.controller.guardar_cliente(self.cliente_actual)
-                if not cliente_guardado:
+                # Decidir create vs update en función de _estado simple
+                estado = getattr(self, '_estado', None)
+                if estado == 'A':
+                    ok = self.controller.save_current_cliente_with_flags(force_create=True)
+                else:
+                    # Por defecto o si 'E' -> actualizar
+                    ok = self.controller.save_current_cliente_with_flags(force_update=True)
+
+                if not ok:
                     # El controller ya emitió la señal de error
                     return
 
-                # Actualizar referencia con el cliente guardado
-                self.cliente_actual = cliente_guardado
+                # Actualizar referencia con el cliente guardado desde el controller
+                try:
+                    self.cliente_actual = self.controller.get_current_cliente()
+                except Exception:
+                    # fallback: mantener lo que ya había
+                    pass
 
             else:
                 # Crear nuevo de forma declarativa con mapping
@@ -2475,14 +2514,14 @@ class ClientesView(QWidget):
 
                 cliente = Cliente(**cliente_kwargs)
 
-                # Guardar usando el controller
-                cliente_guardado = self.controller.guardar_cliente(cliente)
-                if not cliente_guardado:
-                    # El controller ya emitió la señal de error
+                # Guardar usando el controller: creación explícita (estado 'A')
+                ok = self.controller.save_current_cliente_with_flags(force_create=True)
+                if not ok:
                     return
-
-                # Actualizar referencia al cliente actual con el cliente guardado
-                self.cliente_actual = cliente_guardado
+                try:
+                    self.cliente_actual = self.controller.get_current_cliente()
+                except Exception:
+                    pass
 
             # Mantenerse en la página de edición pero desactivar campos
             # (no volver a la lista de clientes). El usuario pidió que
@@ -2514,7 +2553,7 @@ class ClientesView(QWidget):
                     ).format(error_msg),
                 )
             else:
-                show_critical(
+                QMessageBox.critical(
                     self,
                     self.tr("Error"),
                     self.tr("Error al guardar: {}").format(error_msg),
@@ -2947,7 +2986,7 @@ class ClientesView(QWidget):
             # Si existe y NO es el cliente actual
             if cliente_existente and (
                 self.cliente_actual is None
-                or cliente_existente.id != self.cliente_actual.id
+                or cliente_existente.get('id') != self.cliente_actual.get('id')
             ):
                 return cliente_existente
         except Exception as e:
@@ -2960,11 +2999,11 @@ class ClientesView(QWidget):
         # Ask user whether to load the existing client or cancel changes.
         text = (
             self.tr("Ya existe un cliente con el CIF/NIF")
-            + f": {cliente_existente.cif_nif_siren}\n\n"
+            + f": {cliente_existente.get('cif_nif_siren', '')}\n\n"
             + self.tr("Cliente")
-            + f": {cliente_existente.nombre_fiscal}\n"
+            + f": {cliente_existente.get('nombre_fiscal', '')}\n"
             + self.tr("Código")
-            + f": {cliente_existente.codigo_cliente}\n\n"
+            + f": {cliente_existente.get('codigo_cliente', '')}\n\n"
             + self.tr("¿Qué desea hacer?")
         )
 
@@ -3185,7 +3224,11 @@ class ClientesView(QWidget):
 
             if len(results) == 1:
                 # Single result - fill fields directly
-                poblacion, provincia = results[0]
+                # results[0] es un dict con keys: cp, poblacion, provincia
+                result = results[0]
+                poblacion = result.get('poblacion', '')
+                provincia = result.get('provincia', '')
+
                 if hasattr(self.ui, "txtpoblacion"):
                     self.ui.txtpoblacion.setText(poblacion or "")
                 if hasattr(self.ui, "txtprovincia"):
@@ -3206,24 +3249,28 @@ class ClientesView(QWidget):
                         ORDER BY {city_col}
                     """
 
+                    headers = [
+                        "ID",
+                        self.tr("CP"),
+                        self.tr("Población"),
+                        self.tr("Provincia"),
+                    ]
+                    campos = [cp_col, city_col]
+                    tamanos = [0, 80, 250, 200]  # ID (hidden), CP, Población, Provincia
+
                     id_selected, record = DBConsultaView.select_from_sql(
-                        parent=self,
-                        sql=sql,
-                        db=country_db,
-                        headers=["ID", self.tr("Población"), self.tr("Provincia")],
-                        campos=[city_col],
-                        titulo=self.tr("Seleccionar población para CP {cp}").format(
-                            cp=cp
-                        ),
-                        tamanos=[0, 250, 200],  # ID (hidden), Población, Provincia
+                        parent=self, sql=sql, db=country_db, headers=headers, campos=campos, titulo=self.tr("Seleccionar población"), tamanos=tamanos
                     )
 
-                    if record and record.count() >= 3:  # Make sure we have all columns
-                        poblacion = record.value(1)  # City column
-                        provincia = record.value(2)  # Province column
+                    if record and record.count() >= 4:  # Make sure we have all columns
+                        cp = record.value(1)  # CP column
+                        ciudad = record.value(2)  # City column
+                        provincia = record.value(3)  # Province column
 
+                        if hasattr(self.ui, "txtcp"):
+                            self.ui.txtcp.setText(cp or "")
                         if hasattr(self.ui, "txtpoblacion"):
-                            self.ui.txtpoblacion.setText(poblacion or "")
+                            self.ui.txtpoblacion.setText(ciudad or "")
                         if hasattr(self.ui, "txtprovincia"):
                             self.ui.txtprovincia.setText(provincia or "")
 
@@ -3340,24 +3387,17 @@ class ClientesView(QWidget):
                         LIMIT 50
                     """
 
+                    headers = [
+                        "ID",
+                        self.tr("CP"),
+                        self.tr("Población"),
+                        self.tr("Provincia"),
+                    ]
+                    campos = [cp_col, city_col]
+                    tamanos = [0, 80, 250, 200]  # ID (hidden), CP, Población, Provincia
+
                     id_selected, record = DBConsultaView.select_from_sql(
-                        parent=self,
-                        sql=sql,
-                        db=country_db,
-                        headers=[
-                            "ID",
-                            self.tr("CP"),
-                            self.tr("Población"),
-                            self.tr("Provincia"),
-                        ],
-                        campos=[cp_col, city_col],
-                        titulo=self.tr("Seleccionar población"),
-                        tamanos=[
-                            0,
-                            80,
-                            250,
-                            200,
-                        ],  # ID (hidden), CP, Población, Provincia
+                        parent=self, sql=sql, db=country_db, headers=headers, campos=campos, titulo=self.tr("Seleccionar población"), tamanos=tamanos
                     )
 
                     if record and record.count() >= 4:  # Make sure we have all columns
@@ -3461,7 +3501,7 @@ class ClientesView(QWidget):
                     combo.setCurrentIndex(i)
                     return
 
-                # Comparar con los datos del item (formato {'es': 'España', 'fr': 'Espagne'})
+                # Comparar con los datos del item (formato {'es': pais_es, 'fr': pais_fr})
                 if itemdata and isinstance(itemdata, dict):
                     pais_es = itemdata.get("es", "")
                     pais_fr = itemdata.get("fr", "")
@@ -3509,19 +3549,17 @@ class ClientesView(QWidget):
                 else:
                     sql = f"SELECT ROWID, code_postal, nom_standard_majuscule, nom_departement FROM communes WHERE nom_standard_majuscule LIKE '%{search_term.upper()}%' ORDER BY nom_standard_majuscule LIMIT 50"
 
+                headers = [
+                    "ID",
+                    self.tr("CP"),
+                    self.tr("Población"),
+                    self.tr("Provincia"),
+                ]
+                campos = ["code_postal", "nom_standard_majuscule"]
+                tamanos = [0, 80, 250, 200]
+
                 id_selected, record = DBConsultaView.select_from_sql(
-                    parent=self,
-                    sql=sql,
-                    db=france_db,
-                    headers=[
-                        "ID",
-                        self.tr("CP"),
-                        self.tr("Población"),
-                        self.tr("Provincia"),
-                    ],
-                    campos=["code_postal", "nom_standard_majuscule"],
-                    titulo=self.tr("Seleccionar población (Dirección Alternativa)"),
-                    tamanos=[0, 80, 250, 200],
+                    parent=self, sql=sql, db=france_db, headers=headers, campos=campos, titulo=self.tr("Seleccionar población (Dirección Alternativa)"), tamanos=tamanos
                 )
 
                 if record and record.count() >= 4:
@@ -3659,7 +3697,7 @@ class ClientesView(QWidget):
                 )
                 # Recargar lista
                 if self.cliente_actual:
-                    self.cargar_direcciones_alternativas(self.cliente_actual.id)
+                    self.cargar_direcciones_alternativas(self.cliente_actual.get('id'))
             else:
                 show_warning(
                     self, self.tr("Error"), self.tr("No se pudo eliminar la dirección.")
@@ -3696,7 +3734,7 @@ class ClientesView(QWidget):
                 )
 
             # Recargar lista
-            self.cargar_direcciones_alternativas(self.cliente_actual.id)
+            self.cargar_direcciones_alternativas(self.cliente_actual.get('id'))
 
             # Salir del modo edición
             self.deshacer_direccion_alternativa()
@@ -3876,7 +3914,7 @@ class ClientesView(QWidget):
         from datetime import datetime
 
         direccion = DireccionAlternativa()
-        direccion.id_cliente = self.cliente_actual.id
+        direccion.id_cliente = self.cliente_actual.get('id')
 
         campos_map = {
             "descripcion": "txtdescripcion_direccion",
@@ -3946,94 +3984,3 @@ class ClientesView(QWidget):
         # Fecha de modificación
         direccion.fecha_modificacion = datetime.now()
 
-    def mostrar_direccion_alternativa(self):
-        """Muestra los datos de la dirección alternativa seleccionada en los campos (solo en modo no edición)"""
-        # Solo mostrar datos si NO estamos en modo edición de dirección
-        if getattr(self, "_modo_edicion_direccion", False):
-            return
-
-        if not hasattr(self.ui, "lista_direccionesAlternativas"):
-            return
-
-        # Obtener la dirección seleccionada
-        current_index = self.ui.lista_direccionesAlternativas.currentIndex()
-        if not current_index.isValid():
-            # No hay selección, limpiar campos
-            self.limpiar_campos_direccion_alternativa()
-            return
-
-        # Obtener el ID de la dirección desde el modelo
-        model = self.ui.lista_direccionesAlternativas.model()
-        if not model:
-            self.limpiar_campos_direccion_alternativa()
-            return
-
-        item = model.itemFromIndex(current_index)
-        if not item:
-            self.limpiar_campos_direccion_alternativa()
-            return
-
-        id_direccion = item.data(Qt.ItemDataRole.UserRole)
-        if not id_direccion:
-            self.limpiar_campos_direccion_alternativa()
-            return
-
-        # Obtener la dirección desde el repositorio
-        direccion = self.repository.obtener_direccion_por_id(id_direccion)
-        if not direccion:
-            self.limpiar_campos_direccion_alternativa()
-            return
-
-        # Cargar datos en los campos (sin activar modo edición)
-        self.cargar_direccion_en_campos_solo_lectura(direccion)
-
-    def cargar_direccion_en_campos_solo_lectura(self, direccion):
-        """Carga los datos de una dirección en los campos para solo lectura"""
-        # Activar bandera para evitar eventos automáticos durante carga
-        self._loading_data = True
-
-        try:
-            campos_map = {
-                "txtdescripcion_direccion": direccion.descripcion,
-                "txtcpPoblacionAlternativa": direccion.cp,
-                "txtpoblacionAlternativa": direccion.poblacion,
-                "txtdireccion1Alternativa1": direccion.direccion1,
-                "txtdireccion1Alternativa2": direccion.direccion2,
-                "txtprovinciaAlternativa": direccion.provincia,
-                "txtemail_alternativa": direccion.email,
-                "txtcomentarios_alternativa": direccion.comentarios,
-            }
-
-            for campo, valor in campos_map.items():
-                widget = getattr(self.ui, campo, None)
-                if widget and valor is not None:
-                    if hasattr(widget, "setText"):
-                        widget.setText(str(valor))
-                    elif hasattr(widget, "setPlainText"):
-                        widget.setPlainText(str(valor))
-
-            # País
-            if hasattr(self.ui, "cbopaisAlternativa") and direccion.pais:
-                # Intentar buscar por nombre (en ambos idiomas)
-                for i in range(self.ui.cbopaisAlternativa.count()):
-                    itemdata = self.ui.cbopaisAlternativa.itemData(i)
-                    if itemdata is not None and isinstance(itemdata, dict):
-                        # itemdata es {'es': pais_es, 'fr': pais_fr}
-                        if (
-                            itemdata.get("es") == direccion.pais
-                            or itemdata.get("fr") == direccion.pais
-                        ):
-                            self.ui.cbopaisAlternativa.setCurrentIndex(i)
-                            break
-        finally:
-            # Desactivar bandera de carga programática
-            self._loading_data = False
-
-    def aplicar_estilos_pestanas(self):
-        """No aplica estilos a pestañas - reservado para otros elementos"""
-
-    def _save_changes(self) -> bool:
-        """Intenta guardar los cambios. Retorna True si tuvo éxito."""
-        self.guardar_cliente()
-        # Si el guardado fue exitoso, _modo_edicion se habrá puesto a False
-        return not getattr(self, "_modo_edicion", False)

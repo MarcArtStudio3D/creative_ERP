@@ -30,6 +30,29 @@ class CreativeERPApp:
 
     def initialize(self):
         """Inicializa la aplicación."""
+        # Inicializar MultiDBManager con la BD principal
+        try:
+            from core.db_manager import init_db_manager
+
+            # Configuración de la BD principal (MariaDB)
+            main_db_config = {
+                'type': 'mariadb',
+                'host': '127.0.0.1',
+                'port': 3306,
+                'user': 'admin',
+                'password': 'admin123',
+                'database': 'creative_erp_main'
+            }
+
+            db_manager = init_db_manager(main_db_config)
+            logging.getLogger(__name__).info("✓ MultiDBManager inicializado")
+        except Exception as e:
+            logging.getLogger(__name__).error(f"❌ Error inicializando MultiDBManager: {e}")
+            import traceback
+            traceback.print_exc()
+            # CRÍTICO: Si falla MultiDBManager, la app no funcionará con multi-empresa
+            # pero permitimos continuar para que al menos arranque
+
         # Crear aplicación Qt
         self.qapp = QApplication(sys.argv)
         self.qapp.setApplicationName("Creative ERP")

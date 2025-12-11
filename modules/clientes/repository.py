@@ -6,11 +6,12 @@ Maneja todas las operaciones CRUD siguiendo el patrón MVC.
 import logging
 from typing import Dict, List, Optional
 
-from peewee import DoesNotExist, fn
+from peewee import DoesNotExist, fn, IntegrityError
 
 from core.peewee_db import ensure_initialized
 
 from .models import Cliente
+from .models import DireccionAlternativa
 
 logger = logging.getLogger(__name__)
 
@@ -22,6 +23,41 @@ class ClienteRepository:
         """Inicializar repositorio."""
         # Asegurar que la BD esté inicializada
         ensure_initialized()
+
+    def obtener_direcciones(self, id_cliente: int):
+        """Devuelve lista de DireccionAlternativa asociadas al cliente (instancias)."""
+        try:
+            query = DireccionAlternativa.select().where(DireccionAlternativa.id_cliente == int(id_cliente)).order_by(DireccionAlternativa.id)
+            return list(query)
+        except Exception as e:
+            logger.exception("Error obteniendo direcciones para cliente %s: %s", id_cliente, e)
+            return []
+
+    def obtener_por_cif(self, cif: str) -> Optional[Cliente]:
+        """Obtiene un cliente por su CIF/NIF/SIREN. Devuelve la instancia o None."""
+        try:
+            cliente = Cliente.get(Cliente.cif_nif_siren == cif)
+            return cliente
+        except DoesNotExist:
+            return None
+        except Exception as e:
+            logger.exception("Error obteniendo cliente por CIF %s: %s", cif, e)
+            return None
+
+    def obtener_deudas(self, id_cliente: int):
+        """Devuelve las deudas asociadas a un cliente. Si no existe modelo, devuelve lista vacía."""
+        try:
+            # Intentar usar un modelo 'Deuda' si existe
+            try:
+                from .models import Deuda
+            except Exception:
+                return []
+
+            query = Deuda.select().where(Deuda.id_cliente == int(id_cliente)).order_by(Deuda.id)
+            return list(query)
+        except Exception as e:
+            logger.exception("Error obteniendo deudas para cliente %s: %s", id_cliente, e)
+            return []
 
     # ========== Conversión ==========
 
@@ -102,32 +138,37 @@ class ClienteRepository:
             logger.exception("Error converting cliente to dict: %s", e)
             return {}
 
+    # Hacer público el conversor por si otras partes necesitan dicts
+    def model_to_dict(self, cliente: Cliente) -> Dict:
+        """Public helper: convierte un modelo Peewee a dict."""
+        return self._model_to_dict(cliente)
+
     # ========== CRUD Básico ==========
 
-    def get_by_id(self, id_cliente: int) -> Optional[Dict]:
-        """Obtiene un cliente por su ID."""
+    def get_by_id(self, id_cliente: int) -> Optional[Cliente]:
+        """Obtiene un cliente por su ID. Devuelve la instancia de modelo (no dict)."""
         try:
             cliente = Cliente.get_by_id(id_cliente)
-            return self._model_to_dict(cliente)
+            return cliente
         except DoesNotExist:
             return None
         except Exception as e:
             logger.exception("Error getting cliente by id %s: %s", id_cliente, e)
             return None
 
-    def get_by_codigo(self, codigo: str) -> Optional[Dict]:
-        """Obtiene un cliente por su código."""
+    def get_by_codigo(self, codigo: str) -> Optional[Cliente]:
+        """Obtiene un cliente por su código. Devuelve instancia de modelo."""
         try:
             cliente = Cliente.get(Cliente.codigo_cliente == codigo)
-            return self._model_to_dict(cliente)
+            return cliente
         except DoesNotExist:
             return None
         except Exception as e:
             logger.exception("Error getting cliente by codigo %s: %s", codigo, e)
             return None
 
-    def get_all(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[Dict]:
-        """Obtiene todos los clientes, opcionalmente filtrados."""
+    def get_all(self, filtro: str = "", limit: int = None, offset: int = 0) -> List[Cliente]:
+        """Obtiene todos los clientes, opcionalmente filtrados. Devuelve lista de modelos."""
         try:
             query = Cliente.select().order_by(Cliente.nombre_fiscal)
 
@@ -144,17 +185,28 @@ class ClienteRepository:
             if limit:
                 query = query.limit(limit).offset(offset)
 
-            return [self._model_to_dict(c) for c in query]
+            return list(query)
         except Exception as e:
             logger.exception("Error getting all clientes: %s", e)
             return []
 
-    def create(self, data: Dict) -> Optional[Dict]:
-        """Crea un nuevo cliente."""
+    def create(self, data: Dict) -> Optional[Cliente]:
+        """Crea un nuevo cliente. Devuelve la instancia creada."""
         try:
             # Generar código automático si no existe
             if not data.get('codigo_cliente'):
                 data['codigo_cliente'] = self._generar_codigo()
+
+            # Asegurar codigo único: si ya existe, intentar generar alternativas controladas
+            max_attempts = 5
+            attempts = 0
+            while attempts < max_attempts:
+                existing = self.get_by_codigo(data['codigo_cliente'])
+                if existing is None:
+                    break
+                # generar un nuevo codigo
+                data['codigo_cliente'] = self._generar_codigo()
+                attempts += 1
 
             # Inicializar cuentas contables si no existen
             if not data.get('cuenta_contable'):
@@ -171,14 +223,25 @@ class ClienteRepository:
                     except:
                         data[field] = 0.0
 
-            cliente = Cliente.create(**data)
-            return self._model_to_dict(cliente)
+            try:
+                cliente = Cliente.create(**data)
+                return cliente
+            except IntegrityError as ie:
+                logger.warning("IntegrityError creando cliente con codigo %s: %s", data.get('codigo_cliente'), ie)
+                # Intentar generar un codigo alternativo y reintentar una vez
+                data['codigo_cliente'] = self._generar_codigo()
+                try:
+                    cliente = Cliente.create(**data)
+                    return cliente
+                except Exception as e:
+                    logger.exception("Segundo intento fallido creando cliente: %s", e)
+                    return None
         except Exception as e:
             logger.exception("Error creating cliente: %s", e)
             return None
 
-    def update(self, id_cliente: int, data: Dict) -> Optional[Dict]:
-        """Actualiza un cliente existente."""
+    def update(self, id_cliente: int, data: Dict) -> Optional[Cliente]:
+        """Actualiza un cliente existente. Devuelve la instancia actualizada."""
         try:
             cliente = Cliente.get_by_id(id_cliente)
 
@@ -188,7 +251,7 @@ class ClienteRepository:
                     setattr(cliente, key, value)
 
             cliente.save()
-            return self._model_to_dict(cliente)
+            return cliente
         except DoesNotExist:
             logger.error("Cliente %s not found", id_cliente)
             return None
@@ -211,22 +274,22 @@ class ClienteRepository:
 
     # ========== Navegación ==========
 
-    def get_next(self, current_id: int) -> Optional[Dict]:
-        """Obtiene el siguiente cliente por ID."""
+    def get_next(self, current_id: int) -> Optional[Cliente]:
+        """Obtiene el siguiente cliente por ID. Devuelve instancia de modelo o None."""
         try:
             query = Cliente.select().where(Cliente.id > current_id).order_by(Cliente.id).limit(1)
             cliente = query.first()
-            return self._model_to_dict(cliente) if cliente else None
+            return cliente if cliente else None
         except Exception as e:
             logger.exception("Error getting next cliente: %s", e)
             return None
 
-    def get_prev(self, current_id: int) -> Optional[Dict]:
-        """Obtiene el cliente anterior por ID."""
+    def get_prev(self, current_id: int) -> Optional[Cliente]:
+        """Obtiene el cliente anterior por ID. Devuelve instancia de modelo o None."""
         try:
             query = Cliente.select().where(Cliente.id < current_id).order_by(Cliente.id.desc()).limit(1)
             cliente = query.first()
-            return self._model_to_dict(cliente) if cliente else None
+            return cliente if cliente else None
         except Exception as e:
             logger.exception("Error getting prev cliente: %s", e)
             return None
@@ -261,4 +324,3 @@ class ClienteRepository:
         except Exception as e:
             logger.exception("Error counting clientes: %s", e)
             return 0
-

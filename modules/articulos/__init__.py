@@ -3,9 +3,7 @@ from .controller import ArticuloController
 from .divisiones_controller import DivisionesController
 from .divisiones_repository import DivisionesRepository
 from .divisiones_view import DivisionesView
-
-# Forzar implementación Peewee
-from .peewee_repository import ArticuloRepository
+from .repository_sql import ArticuloRepository  # Usando SQL directo (sin ORM)
 
 __all__ = [
     "ArticuloRepository",

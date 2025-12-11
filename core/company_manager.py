@@ -26,15 +26,66 @@ class CompanyDatabaseManager:
         Retorna True si la selección fue exitosa.
         """
         try:
-            # Usar el sistema Peewee
-            from core.peewee_db import set_database_for_company as peewee_set_db
-            from core.peewee_db import get_company_database_info
+            # Usar MultiDBManager (nuevo sistema sin ORM)
+            from core.db_manager import get_db_manager
 
-            # Usar el nuevo sistema Peewee
-            peewee_set_db(company_id)
+            db_manager = get_db_manager()
 
-            # Obtener información de la empresa
-            self.company_info = get_company_database_info(company_id)
+            # Obtener info de la empresa desde BD principal
+            empresa_info = db_manager.fetch_one(
+                "SELECT * FROM empresas WHERE id = %s",
+                (company_id,),
+                use_main=True
+            )
+
+            if not empresa_info:
+                logging.getLogger(__name__).error(
+                    "Empresa %s no encontrada en la BD principal", company_id
+                )
+                return False
+
+            # Determinar configuración de BD según el motor
+            motor = empresa_info.get('motor_base_datos', 'mariadb')
+
+            if motor.lower() == 'mariadb' or motor.lower() == 'mysql':
+                db_config = {
+                    'type': 'mariadb',
+                    'host': empresa_info.get('host_mariadb', 'localhost'),
+                    'port': empresa_info.get('puerto_mariadb', 3306),
+                    'user': empresa_info.get('usuario_mariadb', 'admin'),
+                    'password': empresa_info.get('password_mariadb', 'admin123'),
+                    'database': empresa_info.get('nombre_base_datos_maria_db')
+                }
+            elif motor.lower() == 'sqlite':
+                db_config = {
+                    'type': 'sqlite',
+                    'path': empresa_info.get('ruta_base_datos_sqlite')
+                }
+            else:
+                logging.getLogger(__name__).error(
+                    "Motor de BD no soportado: %s", motor
+                )
+                return False
+
+            # Registrar empresa en MultiDBManager si no está registrada
+            try:
+                db_manager.register_empresa(company_id, db_config)
+            except Exception as e:
+                # Ya puede estar registrada, solo loguear
+                logging.getLogger(__name__).debug(
+                    "Empresa %s ya registrada o error registrando: %s", company_id, e
+                )
+
+            # Cambiar a la empresa activa
+            db_manager.switch_empresa(company_id)
+
+            # Guardar info de la empresa
+            self.company_info = {
+                'company_id': company_id,
+                'company_name': empresa_info.get('nombre_fiscal'),
+                'motor_base_datos': motor,
+                'database_name': db_config.get('database') or db_config.get('path')
+            }
             self.current_company_id = company_id
 
             logging.getLogger(__name__).info(
@@ -68,120 +119,42 @@ class CompanyDatabaseManager:
     def get_available_companies(self) -> list:
         """
         Obtiene la lista de empresas disponibles desde la base de datos principal.
-        Migrado a Peewee.
+        Migrado a MultiDBManager (sin ORM).
         """
         try:
-            from core.peewee_db import get_current_database, set_current_database
-            from core.models import Empresa
+            from core.db_manager import get_db_manager
 
-            # Guardar base de datos actual
-            original_db = get_current_database()
+            db_manager = get_db_manager()
 
-            # Cambiar a base de datos principal
-            set_current_database("main")
+            # Query directa a BD principal
+            sql = """
+                SELECT id, codigo_empresa, nombre_fiscal, motor_base_datos,
+                       nombre_base_datos_maria_db, nombre_base_datos_postgresql,
+                       ruta_base_datos_sqlite
+                FROM empresas
+                WHERE activa = 1
+                ORDER BY nombre_fiscal
+            """
 
-            try:
-                # Query con Peewee
-                empresas = Empresa.select().where(Empresa.activa == 1)
+            empresas = db_manager.fetch_all(sql, use_main=True)
 
-                companies = []
-                for empresa in empresas:
-                    companies.append(
-                        {
-                            "id": empresa.id,
-                            "codigo": empresa.codigo_empresa,
-                            "nombre": empresa.nombre_fiscal,
-                            "motor_bd": empresa.motor_base_datos,
-                            "bd_mariadb": empresa.nombre_base_datos_maria_db,
-                            "bd_postgresql": empresa.nombre_base_datos_postgresql,
-                        }
-                    )
+            companies = []
+            for empresa in empresas:
+                companies.append({
+                    "id": empresa['id'],
+                    "codigo": empresa['codigo_empresa'],
+                    "nombre": empresa['nombre_fiscal'],
+                    "motor_bd": empresa['motor_base_datos'],
+                    "bd_mariadb": empresa['nombre_base_datos_maria_db'],
+                    "bd_postgresql": empresa['nombre_base_datos_postgresql'],
+                })
 
-                return companies
-
-            finally:
-                # Restaurar base de datos original
-                if original_db:
-                    set_current_database(original_db)
+            return companies
 
         except Exception:
             logging.getLogger(__name__).exception("ERROR getting companies")
             return []
 
-    def validate_company_database(self, company_id: int) -> dict:
-        """
-        Valida que la configuración de base de datos de una empresa sea correcta.
-        Retorna un diccionario con el estado de validación.
-        Migrado a Peewee.
-        """
-        try:
-            from core.peewee_db import get_company_database_info, create_database
-
-            info = get_company_database_info(company_id)
-
-            # Intentar conectar con Peewee
-            try:
-                db = create_database(info["database_url"])
-                # Test de conexión simple
-                db.execute_sql("SELECT 1")
-                db.close()
-            except Exception as e:
-                raise Exception(f"Error de conexión Peewee: {str(e)}")
-
-            return {"valid": True, "message": "Conexión exitosa", "company_info": info}
-
-        except Exception as e:
-            return {
-                "valid": False,
-                "message": f"Error de conexión: {str(e)}",
-                "company_info": None,
-            }
-
-    def update_company_database_config(self, company_id: int, config: dict) -> bool:
-        """
-        Actualiza la configuración de base de datos de una empresa.
-        config debe contener: motor_base_datos, nombre_base_datos_maria_db/postgresql, etc.
-        Migrado a Peewee.
-        """
-        try:
-            from core.peewee_db import get_current_database, set_current_database
-            from core.models import Empresa
-
-            # Guardar base de datos actual
-            original_db = get_current_database()
-
-            # Cambiar a base de datos principal
-            if original_db != "main":
-                set_current_database("main")
-
-            try:
-                # Obtener empresa con Peewee
-                empresa = Empresa.get_by_id(company_id)
-
-                if not empresa:
-                    raise ValueError(f"Empresa con ID {company_id} no encontrada")
-
-                # Actualizar configuración
-                for key, value in config.items():
-                    if hasattr(empresa, key):
-                        setattr(empresa, key, value)
-
-                # Guardar con Peewee
-                empresa.save()
-
-                logging.getLogger(__name__).info(
-                    "Database configuration updated for company %s", company_id
-                )
-                return True
-
-            finally:
-                # Restaurar BD original
-                if original_db and original_db != "main":
-                    set_current_database(original_db)
-
-        except Exception:
-            logging.getLogger(__name__).exception("ERROR updating configuration")
-            return False
 
 
 # Instancia global del gestor
@@ -226,15 +199,7 @@ def on_company_selected(company_id: int) -> bool:
         logging.getLogger(__name__).warning("No company selected")
         return False
 
-    # Validar configuración antes de seleccionar
-    validation = company_manager.validate_company_database(company_id)
-    if not validation["valid"]:
-        logging.getLogger(__name__).warning(
-            "Invalid DB configuration: %s", validation.get("message")
-        )
-        return False
-
-    # Seleccionar empresa
+    # Seleccionar empresa directamente (MultiDBManager valida internamente)
     success = company_manager.select_company(company_id)
     if success:
         # Aquí se podría emitir una señal Qt para actualizar la UI
@@ -297,22 +262,17 @@ if __name__ == "__main__":
         first_company = companies[0]
         logger.info("\nSelecting company: %s", first_company.get("codigo"))
 
-        # Validar configuración
-        validation = company_manager.validate_company_database(first_company["id"])
-        if validation["valid"]:
-            logger.info("Configuration valid")
+        # Seleccionar empresa directamente
+        success = company_manager.select_company(first_company["id"])
+        if success:
+            logger.info("Company selected successfully")
 
-            # Seleccionar empresa
-            success = company_manager.select_company(first_company["id"])
-            if success:
-                logger.info("Company selected successfully")
-
-                # Mostrar contexto actual
-                context = get_current_company_context()
-                logger.info("Current context: %s", context.get("company_name"))
-                logger.debug("   Base de datos: %s", context.get("database_name"))
+            # Mostrar contexto actual
+            context = get_current_company_context()
+            logger.info("Current context: %s", context.get("company_name"))
+            logger.debug("   Base de datos: %s", context.get("database_name"))
         else:
-            logger.warning("Invalid DB configuration: %s", validation.get("message"))
+            logger.warning("Failed to select company")
 
     logger.info("\nNote: To integrate with Qt:")
     logger.info("   1. Importar company_manager en tu módulo Qt")

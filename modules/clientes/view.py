@@ -23,7 +23,6 @@ from PySide6.QtWidgets import (
 
 from core.utils import format_decimal_value, get_company_decimal_settings, qdate_to_date
 from modules.clientes.controller import ClientesController
-# Ya no usamos modelos ORM - ahora trabajamos con dicts
 from modules.clientes.ui_frmClientes import Ui_frmClientes
 from modules.common.db_consulta_view import DBConsultaView
 from modules.tipo_cliente.view import TipoClienteView
@@ -117,6 +116,7 @@ class ClientesView(QWidget):
         # Inicializar controller (maneja repository y modelo)
         # Controller Peewee no necesita session
         import logging
+
         logger = logging.getLogger(__name__)
         logger.debug("Inicializando ClientesController...")
 
@@ -195,6 +195,7 @@ class ClientesView(QWidget):
             # El usuario debe hacer doble click para ir a la página de edición
             try:
                 from PySide6.QtWidgets import QAbstractItemView
+
                 tabla.setEditTriggers(QAbstractItemView.EditTrigger.NoEditTriggers)
             except Exception:
                 pass
@@ -226,6 +227,7 @@ class ClientesView(QWidget):
             ("btnSiguiente", self.siguiente_cliente),
             ("btnAnterior", self.anterior_cliente),
             ("btnBuscar", self.volver_a_lista),
+            ("btnCerrar", self.close),
         ):
             w = self._get_widget(name)
             if w is not None and hasattr(w, "clicked"):
@@ -1454,7 +1456,9 @@ class ClientesView(QWidget):
                     val = (
                         int(w.value())
                         if hasattr(w, "value")
-                        else int(w.text()) if hasattr(w, "text") and w.text() else None
+                        else int(w.text())
+                        if hasattr(w, "text") and w.text()
+                        else None
                     )
                     if val is not None and not (0 <= int(val) <= 31):
                         errores.append(
@@ -1498,14 +1502,14 @@ class ClientesView(QWidget):
                     c
                     for c in clientes
                     if (
-                        (search_lower in ((c.codigo_cliente or "")).lower())
-                        or (search_lower in ((c.cif_nif_siren or "")).lower())
-                        or (search_lower in ((c.nombre_fiscal or "")).lower())
-                        or (search_lower in ((c.nombre or "")).lower())
-                        or (search_lower in ((c.apellido1 or "")).lower())
-                        or (search_lower in ((c.apellido2 or "")).lower())
-                        or (search_lower in ((c.telefono1 or "")).lower())
-                        or (search_lower in ((c.email or "")).lower())
+                        (search_lower in (c.codigo_cliente or "").lower())
+                        or (search_lower in (c.cif_nif_siren or "").lower())
+                        or (search_lower in (c.nombre_fiscal or "").lower())
+                        or (search_lower in (c.nombre or "").lower())
+                        or (search_lower in (c.apellido1 or "").lower())
+                        or (search_lower in (c.apellido2 or "").lower())
+                        or (search_lower in (c.telefono1 or "").lower())
+                        or (search_lower in (c.email or "").lower())
                     )
                 ]
 
@@ -1882,11 +1886,15 @@ class ClientesView(QWidget):
         if hasattr(self.ui, "txtNombreFiscal"):
             try:
                 # Si es un objeto con método nombre_completo
-                if hasattr(cliente, 'nombre_completo') and callable(getattr(cliente, 'nombre_completo')):
+                if hasattr(cliente, "nombre_completo") and callable(
+                    getattr(cliente, "nombre_completo")
+                ):
                     self.ui.txtNombreFiscal.setText(str(cliente.nombre_completo()))
                 else:
                     # Si es un diccionario, usar nombre_fiscal
-                    self.ui.txtNombreFiscal.setText(self._get_str(cliente, "nombre_fiscal"))
+                    self.ui.txtNombreFiscal.setText(
+                        self._get_str(cliente, "nombre_fiscal")
+                    )
             except Exception:
                 self.ui.txtNombreFiscal.setText(self._get_str(cliente, "nombre_fiscal"))
         # Establecer comboboxes por itemData si existe, else por index
@@ -2132,7 +2140,7 @@ class ClientesView(QWidget):
     def nuevo_cliente(self):
         """Crea un nuevo cliente"""
         # Flag de estado: 'A' = Añadir, 'E' = Editar
-        self._estado = 'A'
+        self._estado = "A"
         self.cliente_actual = None
         self.limpiar_formulario()
         self.ui.stackedWidget.setCurrentIndex(0)
@@ -2188,7 +2196,7 @@ class ClientesView(QWidget):
     def editar_cliente(self):
         """Edita el cliente seleccionado"""
         # Marcar estado de edición explícito
-        self._estado = 'E'
+        self._estado = "E"
         # Si ya tenemos un cliente cargado y estamos en la ficha (página 0), editar directamente
         if (
             self.cliente_actual is not None
@@ -2297,7 +2305,9 @@ class ClientesView(QWidget):
                     v = (
                         w.value()
                         if hasattr(w, "value")
-                        else int(w.text()) if w.text() else None
+                        else int(w.text())
+                        if w.text()
+                        else None
                     )
                     return int(v) if v is not None else None
                 except Exception:
@@ -2450,17 +2460,23 @@ class ClientesView(QWidget):
                     try:
                         w = getattr(self.ui, widget_name, None)
                         if w is not None:
-                            self.cliente_actual[attr] = self.get_combo_value(widget_name)
+                            self.cliente_actual[attr] = self.get_combo_value(
+                                widget_name
+                            )
                     except Exception:
                         continue
                 # Persistir cambios en la base de datos usando el controller
                 # Decidir create vs update en función de _estado simple
-                estado = getattr(self, '_estado', None)
-                if estado == 'A':
-                    ok = self.controller.save_current_cliente_with_flags(force_create=True)
+                estado = getattr(self, "_estado", None)
+                if estado == "A":
+                    ok = self.controller.save_current_cliente_with_flags(
+                        force_create=True
+                    )
                 else:
                     # Por defecto o si 'E' -> actualizar
-                    ok = self.controller.save_current_cliente_with_flags(force_update=True)
+                    ok = self.controller.save_current_cliente_with_flags(
+                        force_update=True
+                    )
 
                 if not ok:
                     # El controller ya emitió la señal de error
@@ -3231,8 +3247,8 @@ class ClientesView(QWidget):
                 # Single result - fill fields directly
                 # results[0] es un dict con keys: cp, poblacion, provincia
                 result = results[0]
-                poblacion = result.get('poblacion', '')
-                provincia = result.get('provincia', '')
+                poblacion = result.get("poblacion", "")
+                provincia = result.get("provincia", "")
 
                 if hasattr(self.ui, "txtpoblacion"):
                     self.ui.txtpoblacion.setText(poblacion or "")
@@ -3248,9 +3264,9 @@ class ClientesView(QWidget):
 
                 if country_db.open():
                     sql = f"""
-                        SELECT ROWID, {city_col}, {prov_col} 
-                        FROM {table_name} 
-                        WHERE {cp_col} = '{cp}' 
+                        SELECT ROWID, {city_col}, {prov_col}
+                        FROM {table_name}
+                        WHERE {cp_col} = '{cp}'
                         ORDER BY {city_col}
                     """
 
@@ -3264,7 +3280,13 @@ class ClientesView(QWidget):
                     tamanos = [0, 80, 250, 200]  # ID (hidden), CP, Población, Provincia
 
                     id_selected, record = DBConsultaView.select_from_sql(
-                        parent=self, sql=sql, db=country_db, headers=headers, campos=campos, titulo=self.tr("Seleccionar población"), tamanos=tamanos
+                        parent=self,
+                        sql=sql,
+                        db=country_db,
+                        headers=headers,
+                        campos=campos,
+                        titulo=self.tr("Seleccionar población"),
+                        tamanos=tamanos,
                     )
 
                     if record and record.count() >= 4:  # Make sure we have all columns
@@ -3385,9 +3407,9 @@ class ClientesView(QWidget):
 
                 if country_db.open():
                     sql = f"""
-                        SELECT ROWID, {cp_col}, {city_col}, {prov_col} 
-                        FROM {table_name} 
-                        WHERE {city_col} LIKE '%{poblacion.upper()}%' 
+                        SELECT ROWID, {cp_col}, {city_col}, {prov_col}
+                        FROM {table_name}
+                        WHERE {city_col} LIKE '%{poblacion.upper()}%'
                         ORDER BY {city_col}, {cp_col}
                         LIMIT 50
                     """
@@ -3402,7 +3424,13 @@ class ClientesView(QWidget):
                     tamanos = [0, 80, 250, 200]  # ID (hidden), CP, Población, Provincia
 
                     id_selected, record = DBConsultaView.select_from_sql(
-                        parent=self, sql=sql, db=country_db, headers=headers, campos=campos, titulo=self.tr("Seleccionar población"), tamanos=tamanos
+                        parent=self,
+                        sql=sql,
+                        db=country_db,
+                        headers=headers,
+                        campos=campos,
+                        titulo=self.tr("Seleccionar población"),
+                        tamanos=tamanos,
                     )
 
                     if record and record.count() >= 4:  # Make sure we have all columns
@@ -3529,9 +3557,9 @@ class ClientesView(QWidget):
         try:
             import os
 
+            from core.db import get_france_db_path
             from PySide6.QtSql import QSqlDatabase
 
-            from core.db import get_france_db_path
             from modules.common.db_consulta_view import DBConsultaView
 
             # Conectar a la base de datos de Francia
@@ -3564,7 +3592,13 @@ class ClientesView(QWidget):
                 tamanos = [0, 80, 250, 200]
 
                 id_selected, record = DBConsultaView.select_from_sql(
-                    parent=self, sql=sql, db=france_db, headers=headers, campos=campos, titulo=self.tr("Seleccionar población (Dirección Alternativa)"), tamanos=tamanos
+                    parent=self,
+                    sql=sql,
+                    db=france_db,
+                    headers=headers,
+                    campos=campos,
+                    titulo=self.tr("Seleccionar población (Dirección Alternativa)"),
+                    tamanos=tamanos,
                 )
 
                 if record and record.count() >= 4:
@@ -3918,4 +3952,3 @@ class ClientesView(QWidget):
         finally:
             # Desactivar bandera de carga programática
             self._loading_data = False
-

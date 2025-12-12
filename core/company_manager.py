@@ -33,9 +33,7 @@ class CompanyDatabaseManager:
 
             # Obtener info de la empresa desde BD principal
             empresa_info = db_manager.fetch_one(
-                "SELECT * FROM empresas WHERE id = %s",
-                (company_id,),
-                use_main=True
+                "SELECT * FROM empresas WHERE id = %s", (company_id,), use_main=True
             )
 
             if not empresa_info:
@@ -45,31 +43,40 @@ class CompanyDatabaseManager:
                 return False
 
             # Determinar configuración de BD según el motor
-            motor = empresa_info.get('motor_base_datos', 'mariadb')
+            motor = empresa_info.get("motor_base_datos", "mariadb")
 
-            if motor.lower() == 'mariadb' or motor.lower() == 'mysql':
+            if motor.lower() == "mariadb" or motor.lower() == "mysql":
                 db_config = {
-                    'type': 'mariadb',
-                    'host': empresa_info.get('host_mariadb', 'localhost'),
-                    'port': empresa_info.get('puerto_mariadb', 3306),
-                    'user': empresa_info.get('usuario_mariadb', 'admin'),
-                    'password': empresa_info.get('password_mariadb', 'admin123'),
-                    'database': empresa_info.get('nombre_base_datos_maria_db')
+                    "type": "mariadb",
+                    "host": empresa_info.get("host_mariadb", "localhost"),
+                    "port": empresa_info.get("puerto_mariadb", 3306),
+                    "user": empresa_info.get("usuario_mariadb", "admin"),
+                    "password": empresa_info.get("password_mariadb", "admin123"),
+                    "database": empresa_info.get("nombre_base_datos_maria_db"),
                 }
-            elif motor.lower() == 'sqlite':
+            elif motor.lower() == "sqlite":
                 db_config = {
-                    'type': 'sqlite',
-                    'path': empresa_info.get('ruta_base_datos_sqlite')
+                    "type": "sqlite",
+                    "path": empresa_info.get("ruta_base_datos_sqlite"),
+                }
+            elif motor.lower() == "postgresql":
+                db_config = {
+                    "type": "postgresql",
+                    "host": empresa_info.get("host_postgresql", "localhost"),
+                    "port": empresa_info.get("puerto_postgresql", 5432),
+                    "user": empresa_info.get("usuario_postgresql", "admin"),
+                    "password": empresa_info.get("password_postgresql", "admin123"),
+                    "database": empresa_info.get("nombre_base_datos_postgresql"),
                 }
             else:
-                logging.getLogger(__name__).error(
-                    "Motor de BD no soportado: %s", motor
-                )
+                logging.getLogger(__name__).error("Motor de BD no soportado: %s", motor)
                 return False
 
             # Registrar empresa en MultiDBManager si no está registrada
             try:
-                logging.getLogger(__name__).debug(f"Intentando registrar empresa {company_id} en MultiDBManager...")
+                logging.getLogger(__name__).debug(
+                    f"Intentando registrar empresa {company_id} en MultiDBManager..."
+                )
                 db_manager.register_empresa(company_id, db_config)
                 logging.getLogger(__name__).debug(f"✓ Empresa {company_id} registrada")
             except Exception as e:
@@ -79,16 +86,20 @@ class CompanyDatabaseManager:
                 )
 
             # Cambiar a la empresa activa
-            logging.getLogger(__name__).debug(f"Cambiando a empresa activa: {company_id}")
+            logging.getLogger(__name__).debug(
+                f"Cambiando a empresa activa: {company_id}"
+            )
             db_manager.switch_empresa(company_id)
-            logging.getLogger(__name__).debug(f"✓ Cambiado a empresa {company_id}, current_empresa_id={db_manager.current_empresa_id}")
+            logging.getLogger(__name__).debug(
+                f"✓ Cambiado a empresa {company_id}, current_empresa_id={db_manager.current_empresa_id}"
+            )
 
             # Guardar info de la empresa
             self.company_info = {
-                'company_id': company_id,
-                'company_name': empresa_info.get('nombre_fiscal'),
-                'motor_base_datos': motor,
-                'database_name': db_config.get('database') or db_config.get('path')
+                "company_id": company_id,
+                "company_name": empresa_info.get("nombre_fiscal"),
+                "motor_base_datos": motor,
+                "database_name": db_config.get("database") or db_config.get("path"),
             }
             self.current_company_id = company_id
 
@@ -144,21 +155,22 @@ class CompanyDatabaseManager:
 
             companies = []
             for empresa in empresas:
-                companies.append({
-                    "id": empresa['id'],
-                    "codigo": empresa['codigo_empresa'],
-                    "nombre": empresa['nombre_fiscal'],
-                    "motor_bd": empresa['motor_base_datos'],
-                    "bd_mariadb": empresa['nombre_base_datos_maria_db'],
-                    "bd_postgresql": empresa['nombre_base_datos_postgresql'],
-                })
+                companies.append(
+                    {
+                        "id": empresa["id"],
+                        "codigo": empresa["codigo_empresa"],
+                        "nombre": empresa["nombre_fiscal"],
+                        "motor_bd": empresa["motor_base_datos"],
+                        "bd_mariadb": empresa["nombre_base_datos_maria_db"],
+                        "bd_postgresql": empresa["nombre_base_datos_postgresql"],
+                    }
+                )
 
             return companies
 
         except Exception:
             logging.getLogger(__name__).exception("ERROR getting companies")
             return []
-
 
 
 # Instancia global del gestor

@@ -1,3 +1,4 @@
+# Migrado a Creative Flow en Kotlin por ser mejor para este proyecto que qt6+Python además de facilitar mucho el multiplataforma usando KMP
 # Creative ERP - Sistema Multi-Base de Datos
 
 **Creative ERP** es una aplicación de gestión empresarial desarrollada con Qt6 y Python, que utiliza un sistema avanzado de múltiples bases de datos para una arquitectura escalable y modular.
